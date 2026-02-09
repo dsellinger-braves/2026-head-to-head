@@ -13,7 +13,7 @@ YEAR = 2025
 
 # Load secrets from Environment Variables (Best for GitHub Actions/Cloud Run)
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY-If51A")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 GCS_BUCKET_NAME = os.environ.get("GCS_BUCKET_NAME")
 GCS_CREDENTIALS_JSON = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_JSON") 
 
