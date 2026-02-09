@@ -162,7 +162,7 @@ if __name__ == "__main__":
     # Define the period to scrape. 
     # For automation, you might want: current_period = get_current_espn_period()
     # For now, we use a range or a specific set.
-    PERIODS = range(195, 196) 
+    PERIODS = range(1, 196) 
 
     data = get_espn_data(LEAGUE_ID, TEAMS, PERIODS)
 
