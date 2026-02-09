@@ -28,4 +28,4 @@ jobs:
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
           GCS_BUCKET_NAME: ${{ secrets.GCS_BUCKET_NAME }}
           GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GCP_SA_KEY }}
-        run: python daily_scraper.py
+        run: python active-stats-pull.py
