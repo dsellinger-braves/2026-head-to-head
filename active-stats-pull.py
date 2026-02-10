@@ -29,19 +29,21 @@ STAT_MAPPING = {
     '5': 'HR',
     '10': 'BB',
     '16': 'PA',
+    '17': 'OBP',
     '20': 'R',
     '21': 'RBI',
     '23': 'SB',
     '47': 'WIN',
     '48': 'LOSS',
-    '53': 'SV',
-    '61': 'IP',
-    '62': 'H_ALLOWED',
-    '63': 'ER',
+    '57': 'SV',
+    '60': 'HD',
+    '34': 'IP',
+    '37': 'H_ALLOWED',
+    '63': 'QS',
     '64': 'HR_ALLOWED',
     '65': 'BB_ALLOWED',
-    '67': 'K',
-    '79': 'QS'
+    '48': 'K',
+    '63': 'QS'
     # Add the rest of your mapping here...
 }
 
