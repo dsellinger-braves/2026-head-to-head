@@ -3,7 +3,7 @@ import json
 import requests
 from datetime import datetime, timedelta, date
 from supabase import create_client, Client
-import google.generativeai as genai
+import google.genai as genai
 
 # --- CONFIGURATION ---
 LEAGUE_ID = 130215
@@ -12,7 +12,7 @@ YEAR = 2026
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL")
-ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
 # Hardcoded team name mapping: ESPN team_id -> owner name
 TEAM_NAMES = {
@@ -123,10 +123,12 @@ def find_top_player(records: list[dict], stat: str) -> dict | None:
 # ---------------------------------------------------------------------------
 
 def generate_ai_summary(prompt: str) -> str:
-    genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
-    model = genai.GenerativeModel("gemini-3.1-pro-preview")
-    response = model.generate_content(prompt)
-    return response.text
+    client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+    response = client.models.generate_content(
+        model="gemini-2.0-flash",
+        contents=prompt
+    )
+    return response.tex
 
 
 def build_daily_prompt(period_date: date, team_totals: dict, records: list[dict]) -> str:
