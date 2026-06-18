@@ -7,7 +7,7 @@ from anthropic import Anthropic
 
 # --- CONFIGURATION ---
 LEAGUE_ID = 130215
-YEAR = 2025
+YEAR = 2026
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
@@ -16,16 +16,15 @@ ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 
 # Hardcoded team name mapping: ESPN team_id -> owner name
 TEAM_NAMES = {
-    1:  "Team 1",
-    2:  "Team 2",
-    3:  "Team 3",
-    5:  "Team 5",
-    6:  "Team 6",
-    8:  "Team 8",
-    9:  "Team 9",
-    11: "Team 11",
-    12: "Team 12",
-    13: "Team 13",
+    1:  "Tim",
+    2:  "Adrian",
+    3:  "Garrett",
+    5:  "Dan",
+    6:  "Anil",
+    8:  "Alex",
+    12: "Will",
+    13: "Mark",
+    14: "Preston"
 }
 
 # Hitting and pitching categories we care about for summaries
@@ -35,7 +34,7 @@ PITCHING_CATS = ["K", "IP", "QS", "SV", "HD", "ER", "H_Allowed", "BB_Allowed"]
 # Scoring period -> calendar date mapping helper
 # ESPN scoring periods for MLB typically start on Opening Day.
 # Adjust SEASON_START to the actual first day of your league's season.
-SEASON_START = date(2025, 3, 27)  # Update to your league's Opening Day
+SEASON_START = date(2026, 3, 25)  # Update to your league's Opening Day
 
 
 def scoring_period_for_date(target_date: date) -> int:
