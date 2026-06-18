@@ -3,7 +3,7 @@ import json
 import requests
 from datetime import datetime, timedelta, date
 from supabase import create_client, Client
-from anthropic import Anthropic
+import google.generativeai as genai
 
 # --- CONFIGURATION ---
 LEAGUE_ID = 130215
@@ -123,14 +123,10 @@ def find_top_player(records: list[dict], stat: str) -> dict | None:
 # ---------------------------------------------------------------------------
 
 def generate_ai_summary(prompt: str) -> str:
-    """Call Claude to generate the recap text."""
-    client = Anthropic(api_key=ANTHROPIC_API_KEY)
-    message = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=1024,
-        messages=[{"role": "user", "content": prompt}],
-    )
-    return message.content[0].text
+    genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+    model = genai.GenerativeModel("gemini-3.1-pro-preview")
+    response = model.generate_content(prompt)
+    return response.text
 
 
 def build_daily_prompt(period_date: date, team_totals: dict, records: list[dict]) -> str:
