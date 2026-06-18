@@ -128,7 +128,7 @@ def generate_ai_summary(prompt: str) -> str:
         model="gemini-2.5-flash",
         contents=prompt
     )
-    return response.tex
+    return response.text
 
 
 def build_daily_prompt(period_date: date, team_totals: dict, records: list[dict]) -> str:
