@@ -9,7 +9,7 @@ from datetime import datetime
 
 # --- CONFIGURATION ---
 LEAGUE_ID = 130215
-YEAR = 2025
+YEAR = 2026
 
 # Load secrets from Environment Variables (Best for GitHub Actions/Cloud Run)
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
@@ -157,7 +157,7 @@ def upload_to_gcs(records, filename):
 
 if __name__ == "__main__":
     # Define the teams in your league
-    TEAMS = [1, 2, 3, 5, 6, 8, 9, 11, 12, 13]
+    TEAMS = [1, 2, 3, 5, 6, 8, 12, 13, 14]
     
     # Define the period to scrape. 
     # For automation, you might want: current_period = get_current_espn_period()
