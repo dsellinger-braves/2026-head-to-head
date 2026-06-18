@@ -34,7 +34,7 @@ PITCHING_CATS = ["K", "IP", "QS", "SV", "HD", "ER", "H_Allowed", "BB_Allowed"]
 # Scoring period -> calendar date mapping helper
 # ESPN scoring periods for MLB typically start on Opening Day.
 # Adjust SEASON_START to the actual first day of your league's season.
-SEASON_START = date(2026, 3, 25)  # Update to your league's Opening Day
+SEASON_START = date(2026, 3, 29)  # Update to your league's Opening Day
 
 
 def scoring_period_for_date(target_date: date) -> int:
