@@ -369,7 +369,7 @@ def format_weekly_movers_block(delta: dict) -> str:
 
 def generate_ai_summary(prompt: str) -> str:
     client   = genai.Client(api_key=GEMINI_API_KEY)
-    response = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
+    response = client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
     return response.text
 
 
