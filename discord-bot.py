@@ -388,23 +388,40 @@ class HEFTYBot(discord.Client):
         await self.tree.sync()
         print("Slash commands synced with Discord.")
 
-async def on_ready(self):
-    print(f"Bot online: {self.user} (ID: {self.user.id})")
-    await self.change_presence(
-        activity=discord.Activity(
-            type=discord.ActivityType.watching,
-            name="HEFTYSTRONG standings 👀"
+    async def on_ready(self):                          # ← indented inside class
+        print(f"Bot online: {self.user} (ID: {self.user.id})")
+        await self.change_presence(
+            activity=discord.Activity(
+                type=discord.ActivityType.watching,
+                name="HEFTYSTRONG standings 👀"
+            )
         )
-    )
-    # Supabase connectivity test
+        try:
+            result = get_supabase().table("player_daily_stats").select("scoring_period_id").limit(1).execute()
+            print(f"Supabase OK — sample row: {result.data}")
+        except Exception as e:
+            print(f"Supabase FAILED — {e}")
+
+
+bot = HEFTYBot()                                       # ← bot defined here
+
+
+@bot.tree.command(name="ping", description="Test bot and database connectivity")
+async def ping_command(interaction: discord.Interaction):     # ← after bot
+    await interaction.response.defer()
     try:
-        result = get_supabase().table("player_daily_stats").select("scoring_period_id").limit(1).execute()
-        print(f"Supabase OK — sample row: {result.data}")
+        result = (
+            get_supabase()
+            .table("player_daily_stats")
+            .select("id, scoring_period_id, full_name")
+            .limit(1)
+            .execute()
+        )
+        await interaction.followup.send(f"✅ DB connected. Sample row: `{result.data}`")
     except Exception as e:
-        print(f"Supabase FAILED — {e}")
+        await interaction.followup.send(f"❌ DB failed: `{type(e).__name__}: {str(e)[:400]}`")
 
 
-bot = HEFTYBot()
 
 
 @bot.tree.command(name="ask", description="Ask about HEFTYSTRONG stats, standings, trends, and more")
