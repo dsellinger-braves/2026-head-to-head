@@ -71,17 +71,17 @@ MSG_TYPE_NAMES = {
 # ---------------------------------------------------------------------------
 
 def fetch_transactions() -> List[Dict]:
-    """Fetch transactions from ESPN's mTransactions2 view.
-
-    The mTransactions2 view typically returns all transactions for the
-    league/season. For private leagues you must supply ESPN_S2 and ESPN_SWID
-    cookies to get full history.
     """
-    url = (
+    Fetch all transactions for the year.
+    Since ESPN caps mTransactions2 to the current scoring period by default,
+    we dynamically fetch the current period via mStatus and loop through all 
+    periods up to today.
+    """
+    base_url = (
         f"https://lm-api-reads.fantasy.espn.com/apis/v3/games/flb"
         f"/seasons/{YEAR}/segments/0/leagues/{LEAGUE_ID}"
-        f"?view=mTransactions2"
     )
+    
     cookies = {}
     if ESPN_S2 and ESPN_SWID:
         cookies = {"espn_s2": ESPN_S2, "SWID": ESPN_SWID}
@@ -89,15 +89,39 @@ def fetch_transactions() -> List[Dict]:
     else:
         print("No ESPN cookies set — attempting unauthenticated request.")
 
-    # Added x-fantasy-filter header to bypass ESPN's default cap and pull the whole year
-    headers = {
-        "x-fantasy-filter": '{"transactions": {"limit": 5000}}'
-    }
+    # 1. Fetch current scoring period so we know how many days to loop through
+    try:
+        status_resp = requests.get(f"{base_url}?view=mStatus", cookies=cookies, timeout=10)
+        status_resp.raise_for_status()
+        current_period = status_resp.json().get("status", {}).get("latestScoringPeriod", 185)
+        print(f"Current scoring period is {current_period}. Fetching all periods...")
+    except Exception as e:
+        print(f"Failed to fetch current scoring period: {e}. Defaulting to 185 (full season).")
+        current_period = 185
+        
+    if current_period < 1:
+        current_period = 1
 
-    resp = requests.get(url, headers=headers, cookies=cookies, timeout=30)
-    resp.raise_for_status()
-    data = resp.json()
-    return data.get("transactions", [])
+    all_transactions = []
+
+    # 2. Loop through all scoring periods using a Session for fast connection pooling
+    with requests.Session() as session:
+        session.cookies.update(cookies)
+        
+        # Start at 0 to catch preseason draft/trades, go up to current_period
+        for period in range(0, current_period + 1):
+            url = f"{base_url}?view=mTransactions2&scoringPeriodId={period}"
+            resp = session.get(url, timeout=10)
+            
+            if resp.status_code == 200:
+                data = resp.json()
+                txns = data.get("transactions", [])
+                if txns:
+                    all_transactions.extend(txns)
+            else:
+                print(f"Warning: Failed to fetch period {period} (Status {resp.status_code})")
+
+    return all_transactions
 
 
 def fetch_player_name(player_id: int) -> str:
