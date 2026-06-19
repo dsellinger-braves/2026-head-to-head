@@ -126,33 +126,56 @@ def parse_transactions(raw: List[Dict]) -> List[Dict]:
 # ---------------------------------------------------------------------------
 
 def fetch_activity_trades() -> List[Dict]:
-    """Fetch executed trades exclusively from the Recent Activity feed."""
+    """Fetch executed trades by safely paging through the Recent Activity feed."""
     url = (
         f"https://lm-api-reads.fantasy.espn.com/apis/v3/games/flb/seasons/{YEAR}"
         f"/segments/0/leagues/{LEAGUE_ID}/communication/?view=kona_league_communication"
     )
     
-    filters = {
-        "topics": {
-            "filterType": {"value": ["ACTIVITY_TRANSACTIONS"]},
-            "limit": 500, # Large limit to catch all season trades
-            "limitPerMessageSet": {"value": 50},
-            "offset": 0,
-            "filterCommunicationTopic": {"value": ["TRADE"]}
-        }
-    }
-    
-    headers = {"x-fantasy-filter": json.dumps(filters)}
     cookies = {"espn_s2": ESPN_S2, "SWID": ESPN_SWID} if ESPN_S2 else {}
+    all_topics = []
+    offset = 0
+    limit = 50
     
-    try:
-        resp = requests.get(url, headers=headers, cookies=cookies, timeout=10)
-        resp.raise_for_status()
-        return resp.json().get("topics", [])
-    except Exception as e:
-        print(f"Failed to fetch activity trades: {e}")
-        return []
+    print("  Paging through activity feed for trades...")
+    
+    with requests.Session() as session:
+        session.cookies.update(cookies)
+        
+        while True:
+            filters = {
+                "topics": {
+                    "filterType": {"value": ["ACTIVITY_TRANSACTIONS"]},
+                    "limit": limit,
+                    "limitPerMessageSet": {"value": 50},
+                    "offset": offset,
+                    "filterCommunicationTopic": {"value": ["TRADE"]}
+                }
+            }
+            headers = {"x-fantasy-filter": json.dumps(filters)}
+            
+            try:
+                resp = session.get(url, headers=headers, timeout=10)
+                resp.raise_for_status()
+                
+                topics = resp.json().get("topics", [])
+                if not topics:
+                    break  # No more topics found, exit loop
+                    
+                all_topics.extend(topics)
+                
+                # If we got fewer topics than our limit, we are at the end of the history
+                if len(topics) < limit:
+                    break
+                    
+                offset += limit
+                
+            except Exception as e:
+                print(f"Failed to fetch activity trades at offset {offset}: {e}")
+                break
 
+    return all_topics
+    
 def parse_activity_trades(topics: List[Dict]) -> List[Dict]:
     """Parse only the fully executed system trades from the activity feed."""
     rows = []
