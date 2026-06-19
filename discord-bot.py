@@ -139,38 +139,40 @@ def fetch_stats_for_periods(periods: list[int]) -> list[dict]:
         last_id = batch[-1]["id"]
     return all_records
 
-def fetch_recent_transactions(days: int = 14) -> list[dict]:
-    """Fetch transactions from the last N days."""
+def fetch_recent_transactions(days: int = 30) -> list[dict]:
+    """Fetch transactions from the last N days using range pagination."""
     from datetime import timezone
     cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
-    all_records, last_id, page_size = [], 0, 500
+    
+    all_records = []
+    offset, page_size = 0, 500
+    
     while True:
         batch = (
             get_supabase()
             .table("transactions")
             .select("*")
             .gte("transaction_date", cutoff)
-            .gt("id", last_id)
-            .order("id", desc=False)
-            .limit(page_size)
+            .order("transaction_date", desc=True)
+            .range(offset, offset + page_size - 1)
             .execute()
             .data or []
         )
         all_records.extend(batch)
         if len(batch) < page_size:
             break
-        last_id = batch[-1]["id"]
+        offset += page_size
+        
     return all_records
- 
- 
+
 def fetch_team_transactions(team_id: int, days: int = 60) -> list[dict]:
-    """Fetch a specific team's transactions."""
+    """Fetch a specific team's transactions using range pagination."""
     from datetime import timezone
     cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
-    # Fetch both acquisitions (to_team_id) and drops (from_team_id)
+    
     all_records = []
     for field in ["to_team_id", "from_team_id"]:
-        last_id, page_size = 0, 500
+        offset, page_size = 0, 500
         while True:
             batch = (
                 get_supabase()
@@ -178,16 +180,16 @@ def fetch_team_transactions(team_id: int, days: int = 60) -> list[dict]:
                 .select("*")
                 .eq(field, team_id)
                 .gte("transaction_date", cutoff)
-                .gt("id", last_id)
-                .order("id", desc=False)
-                .limit(page_size)
+                .order("transaction_date", desc=True)
+                .range(offset, offset + page_size - 1)
                 .execute()
                 .data or []
             )
             all_records.extend(batch)
             if len(batch) < page_size:
                 break
-            last_id = batch[-1]["id"]
+            offset += page_size
+            
     # Deduplicate by espn_transaction_id
     seen = set()
     deduped = []
@@ -195,6 +197,7 @@ def fetch_team_transactions(team_id: int, days: int = 60) -> list[dict]:
         if r["espn_transaction_id"] not in seen:
             seen.add(r["espn_transaction_id"])
             deduped.append(r)
+            
     return sorted(deduped, key=lambda x: x["transaction_date"], reverse=True)
  
 
@@ -637,7 +640,7 @@ def build_context(question: str, current_period: int) -> str:
             if all_txns:
                 parts.append(format_transaction_context(all_txns))
                 # If grading is the intent, add stats too
-                if any(kw in q for kw in ["grade", "worth it", "good move", "bad move", "how has"]):
+                if any(kw in q for kw in ["grade", "worth it", "good move", "bad move", "how has", "analyze", "evaluate"]]):
                     parts.append(format_transaction_with_stats(all_txns, cumulative))
         except Exception as e:
             print(f"  Transaction fetch failed: {e}")
