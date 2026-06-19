@@ -139,7 +139,7 @@ def fetch_stats_for_periods(periods: list[int]) -> list[dict]:
         last_id = batch[-1]["id"]
     return all_records
 
-def fetch_recent_transactions(days: int = 365) -> list[dict]:
+def fetch_recent_transactions(days: int = 30) -> list[dict]:
     """Fetch transactions from the last N days using range pagination."""
     from datetime import timezone
     cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
@@ -165,7 +165,7 @@ def fetch_recent_transactions(days: int = 365) -> list[dict]:
         
     return all_records
 
-def fetch_team_transactions(team_id: int, days: int = 360) -> list[dict]:
+def fetch_team_transactions(team_id: int, days: int = 60) -> list[dict]:
     """Fetch a specific team's transactions using range pagination."""
     from datetime import timezone
     cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
