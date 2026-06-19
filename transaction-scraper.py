@@ -5,18 +5,13 @@ and stores them in the Supabase `transactions` table.
 
 Run on a schedule (e.g. every 2 hours) via GitHub Actions.
 
-This version fetches all transactions from ESPN and can overwrite the
-Supabase `transactions` table on each run so the DB matches the
-current scrape (no stale rows remain). It also:
- - uses a PostgREST-friendly DELETE with a WHERE clause
- - deduplicates incoming rows by espn_transaction_id
- - retries delete up to 3 times
- - falls back to upsert for failed insert batches (to avoid unique constraint errors)
- - controlled by TRANSACTIONS_OVERWRITE env var (true/false)
+This version fetches all regular transactions via mTransactions2,
+fetches all executed trades via the Activity Feed, and merges them.
 """
 
 import os
 import time
+import json
 import requests
 from datetime import datetime, timezone
 from supabase import create_client
@@ -32,143 +27,66 @@ YEAR       = 2026
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 
-# Optional: ESPN private league cookies (needed if the league is private)
 ESPN_S2 = os.environ.get("ESPN_S2", "")
 ESPN_SWID = os.environ.get("ESPN_SWID", "")
 
-# Toggle overwrite behavior via env var. Defaults to true.
-TRANSACTIONS_OVERWRITE = os.environ.get("TRANSACTIONS_OVERWRITE", "true").lower() in (
-    "1",
-    "true",
-    "yes",
-)
-
-TEAM_NAMES = {
-    1:  "Tim",
-    2:  "Adrian",
-    3:  "Garrett",
-    5:  "Dan",
-    6:  "Anil",
-    8:  "Alex",
-    12: "Will",
-    13: "Mark",
-    14: "Preston",
-}
-
-# ESPN transaction type IDs in the activity log
-MSG_TYPE_NAMES = {
-    178: "TRADE_ACCEPT",
-    180: "TRADE_PROPOSAL",
-    181: "TRADE_DECLINE",
-    244: "ADD",
-    245: "DROP",
-    239: "WAIVER_ADD",
-    243: "WAIVER_DROP",
-}
+TRANSACTIONS_OVERWRITE = os.environ.get("TRANSACTIONS_OVERWRITE", "true").lower() in ("1", "true", "yes")
 
 # ---------------------------------------------------------------------------
-# ESPN API
+# ESPN API: REGULAR ADDS & DROPS
 # ---------------------------------------------------------------------------
 
 def fetch_transactions() -> List[Dict]:
-    """
-    Fetch all transactions for the year.
-    Since ESPN caps mTransactions2 to the current scoring period by default,
-    we dynamically fetch the current period via mStatus and loop through all 
-    periods up to today.
-    """
+    """Fetch regular transactions (Adds/Drops) dynamically for the year."""
     base_url = (
         f"https://lm-api-reads.fantasy.espn.com/apis/v3/games/flb"
         f"/seasons/{YEAR}/segments/0/leagues/{LEAGUE_ID}"
     )
     
-    cookies = {}
-    if ESPN_S2 and ESPN_SWID:
-        cookies = {"espn_s2": ESPN_S2, "SWID": ESPN_SWID}
-        print("Using ESPN auth cookies.")
-    else:
-        print("No ESPN cookies set — attempting unauthenticated request.")
+    cookies = {"espn_s2": ESPN_S2, "SWID": ESPN_SWID} if ESPN_S2 else {}
 
-    # 1. Fetch current scoring period so we know how many days to loop through
     try:
         status_resp = requests.get(f"{base_url}?view=mStatus", cookies=cookies, timeout=10)
         status_resp.raise_for_status()
         current_period = status_resp.json().get("status", {}).get("latestScoringPeriod", 185)
-        print(f"Current scoring period is {current_period}. Fetching all periods...")
-    except Exception as e:
-        print(f"Failed to fetch current scoring period: {e}. Defaulting to 185 (full season).")
+    except Exception:
         current_period = 185
         
     if current_period < 1:
         current_period = 1
 
     all_transactions = []
-
-    # 2. Loop through all scoring periods using a Session for fast connection pooling
     with requests.Session() as session:
         session.cookies.update(cookies)
-        
-        # Start at 0 to catch preseason draft/trades, go up to current_period
         for period in range(0, current_period + 1):
             url = f"{base_url}?view=mTransactions2&scoringPeriodId={period}"
             resp = session.get(url, timeout=10)
-            
             if resp.status_code == 200:
-                data = resp.json()
-                txns = data.get("transactions", [])
+                txns = resp.json().get("transactions", [])
                 if txns:
                     all_transactions.extend(txns)
-            else:
-                print(f"Warning: Failed to fetch period {period} (Status {resp.status_code})")
 
     return all_transactions
 
-
-def fetch_player_name(player_id: int) -> str:
-    """Look up a player name from ESPN. Fallback to player_id if not found."""
-    url = (
-        f"https://lm-api-reads.fantasy.espn.com/apis/v3/games/flb"
-        f"/seasons/{YEAR}/players/{player_id}?view=players_wl"
-    )
-    try:
-        resp = requests.get(url, timeout=10)
-        if resp.status_code == 200:
-            data = resp.json()
-            return data.get("fullName", f"Player {player_id}")
-    except Exception:
-        pass
-    return f"Player {player_id}"
-
-
-# ---------------------------------------------------------------------------
-# PARSING
-# ---------------------------------------------------------------------------
-
 def parse_transactions(raw: List[Dict]) -> List[Dict]:
-    """
-    Parse ESPN transaction objects into flat rows for Supabase.
-    Each player movement in a transaction becomes its own row.
-    Trades produce multiple rows (one per player moved).
-    """
+    """Parse standard adds/drops. (Trades are handled separately)"""
     rows: List[Dict] = []
     for txn in raw:
         status = txn.get("status", "")
-        
-        # Only process successfully executed moves
         if status != "EXECUTED":
             continue
 
         txn_id   = txn.get("id", "")
         raw_type = txn.get("type", "UNKNOWN")
 
-        # Skip daily lineup changes, but KEEP them if they contain an executed trade
+        # Skip roster lineup changes completely here
         if raw_type in ("ROSTER", "FUTURE_ROSTER"):
-            # Check if any player inside this roster move is tagged as a TRADE
-            is_trade = any(item.get("type") == "TRADE" for item in txn.get("items", []))
-            if not is_trade:
-                continue
+            continue
+            
+        # Skip trade objects here (we will grab them from the activity feed instead)
+        if "TRADE" in raw_type:
+            continue
 
-        # ESPN stores dates in milliseconds
         executed_ms = txn.get("executedDate") or txn.get("proposedDate", 0)
         txn_date    = datetime.fromtimestamp(executed_ms / 1000, tz=timezone.utc)
         period_id   = txn.get("scoringPeriodId", 0)
@@ -179,17 +97,13 @@ def parse_transactions(raw: List[Dict]) -> List[Dict]:
             from_team_id = item.get("fromTeamId", -1)
             player_id    = item.get("playerId")
 
-            # If there's no player attached (like in a vote receipt), skip it
             if not player_id:
                 continue
 
-            # Classify the transaction based on the item type
             if item_type in ("ADD", "WAIVER") or raw_type in ("ADD", "WAIVER"):
                 txn_type = "WAIVER_ADD" if txn.get("executionType") == "WAIVER" else "ADD"
             elif item_type == "DROP" or raw_type == "DROP":
                 txn_type = "DROP"
-            elif item_type in ("TRADED", "TRADE") or raw_type in ("TRADE", "TRADE_ACCEPT"):
-                txn_type = "TRADE"
             else:
                 txn_type = item_type or raw_type
 
@@ -208,14 +122,89 @@ def parse_transactions(raw: List[Dict]) -> List[Dict]:
     return rows
 
 # ---------------------------------------------------------------------------
+# ESPN API: ACTIVITY FEED TRADES
+# ---------------------------------------------------------------------------
+
+def fetch_activity_trades() -> List[Dict]:
+    """Fetch executed trades exclusively from the Recent Activity feed."""
+    url = (
+        f"https://lm-api-reads.fantasy.espn.com/apis/v3/games/flb/seasons/{YEAR}"
+        f"/segments/0/leagues/{LEAGUE_ID}/communication/?view=kona_league_communication"
+    )
+    
+    filters = {
+        "topics": {
+            "filterType": {"value": ["ACTIVITY_TRANSACTIONS"]},
+            "limit": 500, # Large limit to catch all season trades
+            "limitPerMessageSet": {"value": 50},
+            "offset": 0,
+            "filterCommunicationTopic": {"value": ["TRADE"]}
+        }
+    }
+    
+    headers = {"x-fantasy-filter": json.dumps(filters)}
+    cookies = {"espn_s2": ESPN_S2, "SWID": ESPN_SWID} if ESPN_S2 else {}
+    
+    try:
+        resp = requests.get(url, headers=headers, cookies=cookies, timeout=10)
+        resp.raise_for_status()
+        return resp.json().get("topics", [])
+    except Exception as e:
+        print(f"Failed to fetch activity trades: {e}")
+        return []
+
+def parse_activity_trades(topics: List[Dict]) -> List[Dict]:
+    """Parse only the fully executed system trades from the activity feed."""
+    rows = []
+    for topic in topics:
+        # We only want trades processed by the system (not the user acceptances)
+        if topic.get("author") != "TradeTaskProcessor":
+            continue
+            
+        topic_id = topic.get("id", "")
+        
+        for msg in topic.get("messages", []):
+            player_id = msg.get("targetId")
+            from_team_id = msg.get("from")
+            to_team_id = msg.get("to")
+            
+            if not player_id or not from_team_id or not to_team_id:
+                continue
+                
+            date_ms = msg.get("date", 0)
+            txn_date = datetime.fromtimestamp(date_ms / 1000, tz=timezone.utc)
+            
+            rows.append({
+                "espn_transaction_id": f"{topic_id}_{player_id}_{to_team_id}",
+                "transaction_type":    "TRADE",
+                "transaction_date":    txn_date.isoformat(),
+                "scoring_period_id":   0, # Activity feed doesn't attach scoring periods
+                "to_team_id":          to_team_id,
+                "from_team_id":        from_team_id,
+                "player_id":           player_id,
+                "player_name":         f"Player {player_id}",
+                "raw_type":            "ACTIVITY_TRADE"
+            })
+    return rows
+
+# ---------------------------------------------------------------------------
 # PLAYER NAME ENRICHMENT
 # ---------------------------------------------------------------------------
 
+def fetch_player_name(player_id: int) -> str:
+    url = (
+        f"https://lm-api-reads.fantasy.espn.com/apis/v3/games/flb"
+        f"/seasons/{YEAR}/players/{player_id}?view=players_wl"
+    )
+    try:
+        resp = requests.get(url, timeout=10)
+        if resp.status_code == 200:
+            return resp.json().get("fullName", f"Player {player_id}")
+    except Exception:
+        pass
+    return f"Player {player_id}"
+
 def enrich_player_names(rows: List[Dict]) -> List[Dict]:
-    """
-    Fill in player_name for rows that only have 'Player {id}'.
-    Batches lookups to avoid hammering the ESPN API.
-    """
     needs_lookup = {r["player_id"] for r in rows if r["player_name"].startswith("Player ")}
     name_map: Dict[int, str] = {}
 
@@ -228,23 +217,11 @@ def enrich_player_names(rows: List[Dict]) -> List[Dict]:
 
     return rows
 
-
 # ---------------------------------------------------------------------------
-# SUPABASE UPSERT / OVERWRITE
+# SUPABASE UPSERT
 # ---------------------------------------------------------------------------
 
 def upsert_transactions(rows: List[Dict], overwrite: bool = TRANSACTIONS_OVERWRITE):
-    """
-    Upload transactions to Supabase.
-
-    If overwrite is True (default controlled by TRANSACTIONS_OVERWRITE env var),
-    delete all rows in the `transactions` table first using a WHERE clause
-    acceptable to PostgREST, then insert the scraped rows in batches.
-
-    The function deduplicates incoming rows by espn_transaction_id and will
-    fall back to upsert for any batch that fails to insert due to unique
-    constraint violations.
-    """
     if not SUPABASE_URL or not SUPABASE_KEY:
         print("Supabase credentials not set. Skipping upload.")
         return
@@ -252,88 +229,72 @@ def upsert_transactions(rows: List[Dict], overwrite: bool = TRANSACTIONS_OVERWRI
     supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
     print(f"Uploading {len(rows)} transaction rows (overwrite={overwrite})...")
 
-    # Deduplicate incoming rows by espn_transaction_id
-    unique = {}
-    for r in rows:
-        key = r.get("espn_transaction_id")
-        if key:
-            unique[key] = r
+    unique = {r.get("espn_transaction_id"): r for r in rows if r.get("espn_transaction_id")}
     rows = list(unique.values())
     print(f"  After dedupe: {len(rows)} rows")
 
-    # If requested, clear the entire table first so this run fully replaces it.
     if overwrite:
         delete_success = False
         max_retries = 3
         for attempt in range(1, max_retries + 1):
             try:
-                print(f"Attempt {attempt}: Clearing existing transactions table (DELETE WHERE espn_transaction_id != '')...")
-                # PostgREST requires a WHERE clause; remove all rows where espn_transaction_id is not empty.
+                print(f"Attempt {attempt}: Clearing existing transactions table...")
                 supabase.table("transactions").delete().neq("espn_transaction_id", "").execute()
                 delete_success = True
                 print("Existing transactions deleted.")
                 break
             except Exception as e:
-                print(f"Error clearing transactions table on attempt {attempt}: {e}")
-                if attempt < max_retries:
-                    time.sleep(1 * attempt)
+                print(f"Error clearing table on attempt {attempt}: {e}")
+                if attempt < max_retries: time.sleep(1 * attempt)
 
-        if not delete_success:
-            print("Warning: failed to clear transactions table after retries. Proceeding with inserts (some duplicates may remain).")
-
-        # Insert fresh rows in batches. If an insert batch fails with a unique constraint,
-        # fallback to upsert for that batch to avoid failing the whole run.
         batch_size = 200
-        inserted = 0
-        upserted = 0
+        inserted, upserted = 0, 0
         for i in range(0, len(rows), batch_size):
             batch = rows[i : i + batch_size]
             try:
                 supabase.table("transactions").insert(batch).execute()
                 inserted += len(batch)
             except Exception as e:
-                print(f"Insert error for batch starting at {i}: {e}")
-                # Fallback to upsert for this batch
                 try:
                     supabase.table("transactions").upsert(batch, on_conflict="espn_transaction_id").execute()
                     upserted += len(batch)
-                    print(f"Fallback upsert succeeded for batch starting at {i}.")
                 except Exception as e2:
-                    print(f"Fallback upsert failed for batch starting at {i}: {e2}")
+                    print(f"Fallback upsert failed: {e2}")
 
-        print(f"Transaction upload (overwrite) complete. Inserted: {inserted}, Upserted (fallback): {upserted}.")
+        print(f"Upload complete. Inserted: {inserted}, Upserted (fallback): {upserted}.")
     else:
-        # Backwards-compatible behavior: upsert on espn_transaction_id
         batch_size = 200
         upserted = 0
         for i in range(0, len(rows), batch_size):
             batch = rows[i : i + batch_size]
             try:
-                supabase.table("transactions").upsert(
-                    batch, on_conflict="espn_transaction_id"
-                ).execute()
+                supabase.table("transactions").upsert(batch, on_conflict="espn_transaction_id").execute()
                 upserted += len(batch)
             except Exception as e:
                 print(f"Error on upsert batch {i}: {e}")
 
-        print(f"Transaction upload (upsert) complete. Upserted: {upserted}.")
-
+        print(f"Upload complete. Upserted: {upserted}.")
 
 # ---------------------------------------------------------------------------
 # ENTRY POINT
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    print(f"Fetching transactions for league {LEAGUE_ID} ({YEAR})...")
-    raw  = fetch_transactions()
-    print(f"  Raw transactions returned: {len(raw)}")
+    print(f"Fetching standard transactions for league {LEAGUE_ID}...")
+    raw_txns = fetch_transactions()
+    base_rows = parse_transactions(raw_txns)
+    print(f"  Parsed standard rows: {len(base_rows)}")
 
-    rows = parse_transactions(raw)
-    print(f"  Parsed rows (executed moves): {len(rows)}")
+    print(f"Fetching trade transactions from activity feed...")
+    raw_trades = fetch_activity_trades()
+    trade_rows = parse_activity_trades(raw_trades)
+    print(f"  Parsed trade rows: {len(trade_rows)}")
 
-    if rows:
-        rows = enrich_player_names(rows)
-        # Use environment toggle to control overwrite vs upsert
-        upsert_transactions(rows, overwrite=TRANSACTIONS_OVERWRITE)
+    # Merge everything
+    all_rows = base_rows + trade_rows
+
+    if all_rows:
+        all_rows = enrich_player_names(all_rows)
+        upsert_transactions(all_rows, overwrite=TRANSACTIONS_OVERWRITE)
     else:
-        print("  No executed transactions found.")
+        print("  No transactions found.")
