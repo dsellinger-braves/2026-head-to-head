@@ -223,19 +223,109 @@ def aggregate_by_player(records: list[dict]) -> dict:
 
 
 def get_player_leaders_block(records: list[dict], top_n: int = 5) -> str:
-    """Top N players per key stat for the AI to reference."""
     players = aggregate_by_player(records)
-    key_stats = ["HR", "RBI", "R", "SB", "K", "QS", "SV", "HD"]
-    lines = [f"TOP {top_n} PLAYERS BY STAT (season to date):"]
-    for stat in key_stats:
+
+    # Compute rate stats for pitchers
+    for p in players.values():
+        ip_dec = p.get("IP", 0) / 3.0
+        if ip_dec > 0:
+            p["ERA"]  = round((p.get("ER", 0) / ip_dec) * 9, 2)
+            p["WHIP"] = round((p.get("H_Allowed", 0) + p.get("BB_Allowed", 0)) / ip_dec, 3)
+        else:
+            p["ERA"] = p["WHIP"] = None
+
+    lines = [f"TOP {top_n} PLAYERS BY STAT (period covered):"]
+
+    for stat in ["HR", "RBI", "R", "SB", "K", "QS", "SV", "HD"]:
         top = sorted(players.values(), key=lambda x: x.get(stat, 0), reverse=True)[:top_n]
         top = [p for p in top if p.get(stat, 0) > 0]
         if top:
-            entries = ", ".join(
-                f"{p['full_name']} ({TEAM_NAMES.get(p['team_id'], '?')}): {int(p.get(stat, 0))}"
+            lines.append(f"  {stat}: " + ", ".join(
+                f"{p['full_name']} ({TEAM_NAMES.get(p['team_id'], '?')}): {int(p[stat])}"
                 for p in top
+            ))
+
+    # ERA and WHIP leaders — require at least 10 IP (30 outs)
+    eligible = [p for p in players.values() if p.get("IP", 0) >= 30 and p["ERA"] is not None]
+    if eligible:
+        best_era  = sorted(eligible, key=lambda x: x["ERA"])[:top_n]
+        worst_era = sorted(eligible, key=lambda x: x["ERA"], reverse=True)[:top_n]
+        best_whip = sorted(eligible, key=lambda x: x["WHIP"])[:top_n]
+
+        lines.append("  ERA (best): " + ", ".join(
+            f"{p['full_name']} ({TEAM_NAMES.get(p['team_id'], '?')}): {p['ERA']:.2f}" for p in best_era
+        ))
+        lines.append("  ERA (worst): " + ", ".join(
+            f"{p['full_name']} ({TEAM_NAMES.get(p['team_id'], '?')}): {p['ERA']:.2f}" for p in worst_era
+        ))
+        lines.append("  WHIP (best): " + ", ".join(
+            f"{p['full_name']} ({TEAM_NAMES.get(p['team_id'], '?')}): {p['WHIP']:.3f}" for p in best_whip
+        ))
+
+    return "\n".join(lines)
+
+def get_team_player_block(records: list[dict], team_id: int, label: str) -> str:
+    """Full player-level breakdown for a specific team over a set of records."""
+    team_records = [r for r in records if r["team_id"] == team_id]
+    if not team_records:
+        return f"{label}: no data found."
+
+    players = aggregate_by_player(team_records)
+    hitters, pitchers = [], []
+
+    for p in players.values():
+        ip_dec = p.get("IP", 0) / 3.0
+        ab     = p.get("AB", 0)
+        if ip_dec > 0:
+            ip_outs       = int(round(p.get("IP", 0)))
+            innings_whole = ip_outs // 3
+            extra_outs    = ip_outs % 3
+            era  = round((p.get("ER", 0) / ip_dec) * 9, 2)
+            whip = round((p.get("H_Allowed", 0) + p.get("BB_Allowed", 0)) / ip_dec, 3)
+            pitchers.append({
+                "name": p["full_name"],
+                "ip":   f"{innings_whole}.{extra_outs}",
+                "k":    int(p.get("K", 0)),
+                "er":   int(p.get("ER", 0)),
+                "era":  era,
+                "whip": whip,
+                "qs":   int(p.get("QS", 0)),
+                "svhd": int(p.get("SV", 0) + p.get("HD", 0)),
+            })
+        elif ab > 0:
+            pa  = p.get("PA", 0)
+            obp = round((p.get("H", 0) + p.get("BB", 0) + p.get("HBP", 0)) / pa, 3) if pa > 0 else 0.0
+            hitters.append({
+                "name": p["full_name"],
+                "ab":   int(ab),
+                "h":    int(p.get("H", 0)),
+                "hr":   int(p.get("HR", 0)),
+                "rbi":  int(p.get("RBI", 0)),
+                "r":    int(p.get("R", 0)),
+                "sb":   int(p.get("SB", 0)),
+                "obp":  obp,
+            })
+
+    lines = [f"{label} — PLAYER BREAKDOWN:"]
+
+    if hitters:
+        hitters.sort(key=lambda x: -(x["hr"] * 4 + x["rbi"] * 2 + x["r"] + x["sb"] * 2))
+        lines.append("  HITTERS:")
+        for h in hitters:
+            lines.append(
+                f"    {h['name']}: {h['ab']} AB, {h['h']} H, {h['hr']} HR, "
+                f"{h['rbi']} RBI, {h['r']} R, {h['sb']} SB, {h['obp']:.3f} OBP"
             )
-            lines.append(f"  {stat}: {entries}")
+
+    if pitchers:
+        pitchers.sort(key=lambda x: x["era"])
+        lines.append("  PITCHERS (sorted by ERA, best→worst):")
+        for p in pitchers:
+            lines.append(
+                f"    {p['name']}: {p['ip']} IP, {p['k']} K, {p['er']} ER, "
+                f"{p['era']:.2f} ERA, {p['whip']:.3f} WHIP, {p['qs']} QS, {p['svhd']} SV+H"
+            )
+
     return "\n".join(lines)
 
 
@@ -286,20 +376,39 @@ HISTORY_KEYWORDS  = ["history", "all season", "since the start", "beginning of",
                      "back in", "early season", "compare"]
 
 
-def build_context(question: str, current_period: int) -> str:
-    """
-    Build a focused data context for Gemini based on what the question is asking.
-    Always includes standings. Adds trend or player data as needed.
-    """
-    q      = question.lower()
-    parts  = []
+import re
 
-    # --- Core: current roto standings (always) ---
+TREND_KEYWORDS   = ["recent", "lately", "this week", "last week", "trending",
+                    "hot", "cold", "streak", "momentum", "moving"]
+PLAYER_KEYWORDS  = ["who leads", "who has the most", "who has the best", "top player",
+                    "best pitcher", "best hitter", "which player", "who is leading",
+                    "strikeout leader", "home run leader", "hr leader", "era", "whip"]
+
+
+def _parse_window(q: str, current_period: int) -> tuple[list[int] | None, str]:
+    """Return (period list or None for full season, label)."""
+    if re.search(r"last\s+2\s+weeks|past\s+2\s+weeks|two\s+weeks", q):
+        return list(range(max(1, current_period - 13), current_period + 1)), "LAST 2 WEEKS"
+    if re.search(r"last\s+3\s+weeks|past\s+3\s+weeks|three\s+weeks", q):
+        return list(range(max(1, current_period - 20), current_period + 1)), "LAST 3 WEEKS"
+    if re.search(r"last\s+month|past\s+month|this\s+month", q):
+        return list(range(max(1, current_period - 29), current_period + 1)), "LAST 30 DAYS"
+    if re.search(r"last\s+week|past\s+week|this\s+week", q):
+        return list(range(max(1, current_period - 6), current_period + 1)), "LAST 7 DAYS"
+    if re.search(r"yesterday|last\s+night", q):
+        return [current_period - 1] if current_period > 1 else [1], "YESTERDAY"
+    return None, "FULL SEASON"
+
+
+def build_context(question: str, current_period: int) -> str:
+    q     = question.lower()
+    parts = []
+
+    # --- Always: current standings ---
     print(f"  Fetching cumulative records through period {current_period}...")
     cumulative = fetch_stats_up_to_period(current_period)
     standings  = compute_roto_standings(cumulative)
 
-    # Standings table with roto points per category
     sorted_teams = sorted(standings.items(), key=lambda x: x[1]["standing"])
     header = f"{'#':<3} {'Team':<14} {'Pts':>5}  " + "  ".join(f"{CAT_DISPLAY[c]:>5}" for c in ROTO_CATS)
     rows   = [header]
@@ -309,7 +418,6 @@ def build_context(question: str, current_period: int) -> str:
         rows.append(f"{data['standing']:<3} {name:<14} {data['roto_points']:>5.1f}  {cats}")
     parts.append("CURRENT ROTO STANDINGS (roto points per category):\n" + "\n".join(rows))
 
-    # Actual stat values
     fmt = {"R":"d","HR":"d","RBI":"d","OBP":".3f","SB":"d","QS":"d","ERA":".2f","WHIP":".3f","K":"d","SV_HD":"d"}
     val_header = f"{'#':<3} {'Team':<14}  " + "  ".join(f"{CAT_DISPLAY[c]:>7}" for c in ROTO_CATS)
     val_rows   = [val_header]
@@ -319,20 +427,40 @@ def build_context(question: str, current_period: int) -> str:
         val_rows.append(f"{data['standing']:<3} {name:<14}  {vals}")
     parts.append("ACTUAL CATEGORY VALUES:\n" + "\n".join(val_rows))
 
-    # --- Trends: last 7 vs prior 7 ---
+    # --- Detect mentioned team names ---
+    window_periods, window_label = _parse_window(q, current_period)
+    mentioned_teams = [
+        tid for name, tid in TEAM_NAME_TO_ID.items()
+        if re.search(r'\b' + re.escape(name) + r'\b', q)
+    ]
+
+    if mentioned_teams:
+        print(f"  Building player breakdowns for {len(mentioned_teams)} team(s) [{window_label}]...")
+        for tid in mentioned_teams:
+            team_name = TEAM_NAMES.get(tid, f"Team {tid}")
+            if window_periods:
+                scoped = [r for r in cumulative if r["scoring_period_id"] in set(window_periods)]
+            else:
+                scoped = cumulative
+            parts.append(get_team_player_block(scoped, tid, f"{team_name} ({window_label})"))
+
+    # --- Trends ---
     if any(kw in q for kw in TREND_KEYWORDS):
-        print("  Fetching trend data (last 14 periods)...")
+        print("  Fetching trend data...")
         trend_block = get_trend_block(current_period)
         if trend_block:
             parts.append(trend_block)
 
-    # --- Player leaders ---
+    # --- League-wide player leaders ---
     if any(kw in q for kw in PLAYER_KEYWORDS) or "who" in q:
         print("  Computing player leaders...")
-        parts.append(get_player_leaders_block(cumulative))
+        if window_periods:
+            scoped = [r for r in cumulative if r["scoring_period_id"] in set(window_periods)]
+        else:
+            scoped = cumulative
+        parts.append(get_player_leaders_block(scoped))
 
     return "\n\n".join(parts)
-
 
 # ---------------------------------------------------------------------------
 # GEMINI  — answer the question using the assembled context
