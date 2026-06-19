@@ -369,14 +369,20 @@ class HEFTYBot(discord.Client):
         await self.tree.sync()
         print("Slash commands synced with Discord.")
 
-    async def on_ready(self):
-        print(f"Bot online: {self.user} (ID: {self.user.id})")
-        await self.change_presence(
-            activity=discord.Activity(
-                type=discord.ActivityType.watching,
-                name="HEFTYSTRONG standings 👀"
-            )
+async def on_ready(self):
+    print(f"Bot online: {self.user} (ID: {self.user.id})")
+    await self.change_presence(
+        activity=discord.Activity(
+            type=discord.ActivityType.watching,
+            name="HEFTYSTRONG standings 👀"
         )
+    )
+    # Supabase connectivity test
+    try:
+        result = get_supabase().table("player_daily_stats").select("scoring_period_id").limit(1).execute()
+        print(f"Supabase OK — sample row: {result.data}")
+    except Exception as e:
+        print(f"Supabase FAILED — {e}")
 
 
 bot = HEFTYBot()
