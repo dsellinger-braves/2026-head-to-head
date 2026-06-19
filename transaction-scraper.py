@@ -139,40 +139,51 @@ def fetch_activity_trades() -> List[Dict]:
     
     print("  Paging through activity feed for trades...")
     
-    with requests.Session() as session:
-        session.cookies.update(cookies)
-        
-        while True:
-            filters = {
-                "topics": {
-                    "filterType": {"value": ["ACTIVITY_TRANSACTIONS"]},
-                    "limit": limit,
-                    "limitPerMessageSet": {"value": 50},
-                    "offset": offset,
-                    "filterCommunicationTopic": {"value": ["TRADE"]}
-                }
+    while True:
+        filters = {
+            "topics": {
+                "filterType": {"value": ["ACTIVITY_TRANSACTIONS"]},
+                "limit": limit,
+                "limitPerMessageSet": {"value": 50},
+                "offset": offset,
+                "filterCommunicationTopic": {"value": ["TRADE"]}
             }
-            headers = {"x-fantasy-filter": json.dumps(filters)}
+        }
+        
+        # 1. Compress the JSON to remove spaces using separators
+        # 2. Add a standard User-Agent so ESPN's firewall doesn't block the automated request
+        headers = {
+            "x-fantasy-filter": json.dumps(filters, separators=(',', ':')),
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "application/json"
+        }
+        
+        try:
+            # Use requests.get instead of a Session to avoid triggering WAF blocks
+            resp = requests.get(url, headers=headers, cookies=cookies, timeout=10)
+            resp.raise_for_status()
             
-            try:
-                resp = session.get(url, headers=headers, timeout=10)
-                resp.raise_for_status()
+            topics = resp.json().get("topics", [])
+            if not topics:
+                break  # No more topics found, exit loop
                 
-                topics = resp.json().get("topics", [])
-                if not topics:
-                    break  # No more topics found, exit loop
-                    
-                all_topics.extend(topics)
-                
-                # If we got fewer topics than our limit, we are at the end of the history
-                if len(topics) < limit:
-                    break
-                    
-                offset += limit
-                
-            except Exception as e:
-                print(f"Failed to fetch activity trades at offset {offset}: {e}")
+            all_topics.extend(topics)
+            
+            # If we got fewer topics than our limit, we are at the end of the history
+            if len(topics) < limit:
                 break
+                
+            offset += limit
+            time.sleep(0.5)  # Brief pause between pages so we don't hammer the API
+            
+        except requests.exceptions.HTTPError as e:
+            print(f"Failed to fetch activity trades at offset {offset}: {e}")
+            # If it fails again, this will print the exact reason ESPN rejected it!
+            print(f"ESPN API Response: {e.response.text}")
+            break
+        except Exception as e:
+            print(f"Error fetching trades at offset {offset}: {e}")
+            break
 
     return all_topics
     
