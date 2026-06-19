@@ -22,17 +22,17 @@ SUPABASE_KEY      = os.environ.get("SUPABASE_KEY")
 GEMINI_API_KEY    = os.environ.get("GEMINI_API_KEY")
 
 TEAM_NAMES = {
-    1:  "Team 1",
-    2:  "Team 2",
-    3:  "Team 3",
-    5:  "Team 5",
-    6:  "Team 6",
-    8:  "Team 8",
-    9:  "Team 9",
-    11: "Team 11",
-    12: "Team 12",
-    13: "Team 13",
+    1:  "Tim",
+    2:  "Adrian",
+    3:  "Garrett",
+    5:  "Dan",
+    6:  "Anil",
+    8:  "Alex",
+    12: "Will",
+    13: "Mark",
+    14: "Preston"
 }
+
 
 # Reverse map so questions mentioning team names can be resolved to IDs
 TEAM_NAME_TO_ID = {v.lower(): k for k, v in TEAM_NAMES.items()}
@@ -47,7 +47,7 @@ CAT_DISPLAY = {
     "QS": "QS", "ERA": "ERA", "WHIP": "WHIP", "K": "K", "SV_HD": "SV+H",
 }
 
-SEASON_START = date(2025, 3, 27)
+SEASON_START = date(2026, 3, 25)
 
 
 def current_scoring_period() -> int:
