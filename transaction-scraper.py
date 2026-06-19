@@ -146,7 +146,9 @@ def fetch_activity_trades() -> List[Dict]:
                 "limit": limit,
                 "limitPerMessageSet": {"value": 50},
                 "offset": offset,
-                "filterCommunicationTopic": {"value": ["TRADE"]}
+                "filterCommunicationTopic": {"value": ["TRADE"]},
+                # Added sort parameter to satisfy ESPN's backend requirement for pagination
+                "sortMessageDate": {"sortPriority": 1, "sortAsc": False}
             }
         }
         
