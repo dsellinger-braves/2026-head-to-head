@@ -5,16 +5,22 @@ and stores them in the Supabase `transactions` table.
 
 Run on a schedule (e.g. every 2 hours) via GitHub Actions.
 
-This version fetches all transactions from ESPN and overwrites the
+This version fetches all transactions from ESPN and can overwrite the
 Supabase `transactions` table on each run so the DB matches the
-current scrape (no stale rows remain).
+current scrape (no stale rows remain). It also:
+ - uses a PostgREST-friendly DELETE with a WHERE clause
+ - deduplicates incoming rows by espn_transaction_id
+ - retries delete up to 3 times
+ - falls back to upsert for failed insert batches (to avoid unique constraint errors)
+ - controlled by TRANSACTIONS_OVERWRITE env var (true/false)
 """
 
 import os
-import json
+import time
 import requests
 from datetime import datetime, timezone
 from supabase import create_client
+from typing import List, Dict
 
 # ---------------------------------------------------------------------------
 # CONFIG
@@ -29,6 +35,13 @@ SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 # Optional: ESPN private league cookies (needed if the league is private)
 ESPN_S2 = os.environ.get("ESPN_S2", "")
 ESPN_SWID = os.environ.get("ESPN_SWID", "")
+
+# Toggle overwrite behavior via env var. Defaults to true.
+TRANSACTIONS_OVERWRITE = os.environ.get("TRANSACTIONS_OVERWRITE", "true").lower() in (
+    "1",
+    "true",
+    "yes",
+)
 
 TEAM_NAMES = {
     1:  "Tim",
@@ -57,12 +70,12 @@ MSG_TYPE_NAMES = {
 # ESPN API
 # ---------------------------------------------------------------------------
 
-def fetch_transactions() -> list[dict]:
+def fetch_transactions() -> List[Dict]:
     """Fetch transactions from ESPN's mTransactions2 view.
 
-    The mTransactions2 view returns all transactions for the league/season
-    (not just today's). If you need a different view or pagination, update
-    this function accordingly.
+    The mTransactions2 view typically returns all transactions for the
+    league/season. For private leagues you must supply ESPN_S2 and ESPN_SWID
+    cookies to get full history.
     """
     url = (
         f"https://lm-api-reads.fantasy.espn.com/apis/v3/games/flb"
@@ -102,13 +115,13 @@ def fetch_player_name(player_id: int) -> str:
 # PARSING
 # ---------------------------------------------------------------------------
 
-def parse_transactions(raw: list[dict]) -> list[dict]:
+def parse_transactions(raw: List[Dict]) -> List[Dict]:
     """
     Parse ESPN transaction objects into flat rows for Supabase.
     Each player movement in a transaction becomes its own row.
     Trades produce multiple rows (one per player moved).
     """
-    rows = []
+    rows: List[Dict] = []
     for txn in raw:
         txn_id   = txn.get("id", "")
         status   = txn.get("status", "")
@@ -160,13 +173,13 @@ def parse_transactions(raw: list[dict]) -> list[dict]:
 # PLAYER NAME ENRICHMENT
 # ---------------------------------------------------------------------------
 
-def enrich_player_names(rows: list[dict]) -> list[dict]:
+def enrich_player_names(rows: List[Dict]) -> List[Dict]:
     """
     Fill in player_name for rows that only have 'Player {id}'.
     Batches lookups to avoid hammering the ESPN API.
     """
     needs_lookup = {r["player_id"] for r in rows if r["player_name"].startswith("Player ")}
-    name_map = {}
+    name_map: Dict[int, str] = {}
 
     for pid in needs_lookup:
         name_map[pid] = fetch_player_name(pid)
@@ -182,15 +195,17 @@ def enrich_player_names(rows: list[dict]) -> list[dict]:
 # SUPABASE UPSERT / OVERWRITE
 # ---------------------------------------------------------------------------
 
-def upsert_transactions(rows: list[dict], overwrite: bool = True):
+def upsert_transactions(rows: List[Dict], overwrite: bool = TRANSACTIONS_OVERWRITE):
     """
     Upload transactions to Supabase.
 
-    If overwrite is True, delete all rows in the `transactions` table first,
-    then insert the scraped rows in batches. This ensures the table is an
-    exact mirror of the current scrape (no stale rows remain).
+    If overwrite is True (default controlled by TRANSACTIONS_OVERWRITE env var),
+    delete all rows in the `transactions` table first using a WHERE clause
+    acceptable to PostgREST, then insert the scraped rows in batches.
 
-    If overwrite is False, fall back to upsert behavior on espn_transaction_id.
+    The function deduplicates incoming rows by espn_transaction_id and will
+    fall back to upsert for any batch that fails to insert due to unique
+    constraint violations.
     """
     if not SUPABASE_URL or not SUPABASE_KEY:
         print("Supabase credentials not set. Skipping upload.")
@@ -199,39 +214,71 @@ def upsert_transactions(rows: list[dict], overwrite: bool = True):
     supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
     print(f"Uploading {len(rows)} transaction rows (overwrite={overwrite})...")
 
+    # Deduplicate incoming rows by espn_transaction_id
+    unique = {}
+    for r in rows:
+        key = r.get("espn_transaction_id")
+        if key:
+            unique[key] = r
+    rows = list(unique.values())
+    print(f"  After dedupe: {len(rows)} rows")
+
     # If requested, clear the entire table first so this run fully replaces it.
     if overwrite:
-        try:
-            print("Clearing existing transactions table...")
-            # Delete all rows. The Python client allows delete without a filter to remove all rows.
-            supabase.table("transactions").delete().execute()
-            print("Existing transactions deleted.")
-        except Exception as e:
-            print(f"Error clearing transactions table: {e}")
+        delete_success = False
+        max_retries = 3
+        for attempt in range(1, max_retries + 1):
+            try:
+                print(f"Attempt {attempt}: Clearing existing transactions table (DELETE WHERE espn_transaction_id != '')...")
+                # PostgREST requires a WHERE clause; remove all rows where espn_transaction_id is not empty.
+                supabase.table("transactions").delete().neq("espn_transaction_id", "").execute()
+                delete_success = True
+                print("Existing transactions deleted.")
+                break
+            except Exception as e:
+                print(f"Error clearing transactions table on attempt {attempt}: {e}")
+                if attempt < max_retries:
+                    time.sleep(1 * attempt)
 
-        # Insert fresh rows in batches
+        if not delete_success:
+            print("Warning: failed to clear transactions table after retries. Proceeding with inserts (some duplicates may remain).")
+
+        # Insert fresh rows in batches. If an insert batch fails with a unique constraint,
+        # fallback to upsert for that batch to avoid failing the whole run.
         batch_size = 200
+        inserted = 0
+        upserted = 0
         for i in range(0, len(rows), batch_size):
             batch = rows[i : i + batch_size]
             try:
                 supabase.table("transactions").insert(batch).execute()
+                inserted += len(batch)
             except Exception as e:
-                print(f"Error inserting batch {i}: {e}")
+                print(f"Insert error for batch starting at {i}: {e}")
+                # Fallback to upsert for this batch
+                try:
+                    supabase.table("transactions").upsert(batch, on_conflict="espn_transaction_id").execute()
+                    upserted += len(batch)
+                    print(f"Fallback upsert succeeded for batch starting at {i}.")
+                except Exception as e2:
+                    print(f"Fallback upsert failed for batch starting at {i}: {e2}")
 
-        print("Transaction upload (overwrite) complete.")
+        print(f"Transaction upload (overwrite) complete. Inserted: {inserted}, Upserted (fallback): {upserted}.")
     else:
         # Backwards-compatible behavior: upsert on espn_transaction_id
         batch_size = 200
+        upserted = 0
         for i in range(0, len(rows), batch_size):
             batch = rows[i : i + batch_size]
             try:
                 supabase.table("transactions").upsert(
                     batch, on_conflict="espn_transaction_id"
                 ).execute()
+                upserted += len(batch)
             except Exception as e:
-                print(f"Error on batch {i}: {e}")
+                print(f"Error on upsert batch {i}: {e}")
 
-        print("Transaction upload (upsert) complete.")
+        print(f"Transaction upload (upsert) complete. Upserted: {upserted}.")
 
 
 # ---------------------------------------------------------------------------
@@ -248,7 +295,7 @@ if __name__ == "__main__":
 
     if rows:
         rows = enrich_player_names(rows)
-        # Overwrite the table every run so the DB is a complete snapshot of all transactions
-        upsert_transactions(rows, overwrite=True)
+        # Use environment toggle to control overwrite vs upsert
+        upsert_transactions(rows, overwrite=TRANSACTIONS_OVERWRITE)
     else:
         print("  No executed transactions found.")
