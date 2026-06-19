@@ -474,7 +474,7 @@ def format_delta_block(standings: dict, delta: dict) -> str:
 
 def generate_ai_summary(prompt: str) -> str:
     client   = genai.Client(api_key=GEMINI_API_KEY)
-    response = client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
+    response = client.models.generate_content(model="gemini-3.1-pro-preview", contents=prompt)
     return response.text
 
 
