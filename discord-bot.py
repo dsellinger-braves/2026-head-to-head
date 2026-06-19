@@ -112,20 +112,7 @@ def fetch_stats_for_periods(periods: list[int]) -> list[dict]:
         last_id = batch[-1]["id"]
     return all_records
 
-@bot.tree.command(name="ping", description="Test bot and database connectivity")
-async def ping_command(interaction: discord.Interaction):
-    await interaction.response.defer()
-    try:
-        result = (
-            get_supabase()
-            .table("player_daily_stats")
-            .select("id, scoring_period_id, full_name")
-            .limit(1)
-            .execute()
-        )
-        await interaction.followup.send(f"✅ DB connected. Sample row: `{result.data}`")
-    except Exception as e:
-        await interaction.followup.send(f"❌ DB failed: `{type(e).__name__}: {str(e)[:400]}`")
+
 
 
 # ---------------------------------------------------------------------------
