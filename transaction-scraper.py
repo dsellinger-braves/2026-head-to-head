@@ -89,7 +89,12 @@ def fetch_transactions() -> List[Dict]:
     else:
         print("No ESPN cookies set — attempting unauthenticated request.")
 
-    resp = requests.get(url, cookies=cookies, timeout=30)
+    # Added x-fantasy-filter header to bypass ESPN's default cap and pull the whole year
+    headers = {
+        "x-fantasy-filter": '{"transactions": {"limit": 5000}}'
+    }
+
+    resp = requests.get(url, headers=headers, cookies=cookies, timeout=30)
     resp.raise_for_status()
     data = resp.json()
     return data.get("transactions", [])
