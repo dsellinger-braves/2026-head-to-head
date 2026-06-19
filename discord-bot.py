@@ -640,7 +640,7 @@ def build_context(question: str, current_period: int) -> str:
             if all_txns:
                 parts.append(format_transaction_context(all_txns))
                 # If grading is the intent, add stats too
-                if any(kw in q for kw in ["grade", "worth it", "good move", "bad move", "how has", "analyze", "evaluate"]]):
+                if any(kw in q for kw in ["grade", "worth it", "good move", "bad move", "how has", "analyze", "evaluate"]):
                     parts.append(format_transaction_with_stats(all_txns, cumulative))
         except Exception as e:
             print(f"  Transaction fetch failed: {e}")
