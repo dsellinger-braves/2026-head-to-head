@@ -147,28 +147,30 @@ def fetch_player_name(player_id: int) -> str:
 def parse_transactions(raw: List[Dict]) -> List[Dict]:
     """
     Parse ESPN transaction objects into flat rows for Supabase.
-    Includes a debug catcher for trades to see how ESPN formats the players.
+    Includes a targeted debug catcher for the actual trade proposals/accepts.
     """
     rows: List[Dict] = []
     for txn in raw:
         txn_id   = txn.get("id", "")
         status   = txn.get("status", "")
-        
-        if status != "EXECUTED":
-            continue  # skip pending/declined transactions
-
         raw_type = txn.get("type", "UNKNOWN")
 
         # Skip daily lineup changes
         if raw_type in ("ROSTER", "FUTURE_ROSTER"):
             continue
 
-        # --- DEBUG CATCHER FOR TRADES ---
-        # If this is a trade, let's print the raw JSON so we can see its structure
-        if "TRADE" in raw_type:
-            print(f"\n--- FOUND A TRADE (ID: {txn_id}) ---")
+        # --- NEW DEBUG CATCHER ---
+        # Look for real trades, ignoring the useless vote/decline receipts.
+        # Notice we are doing this BEFORE the "EXECUTED" check.
+        if raw_type in ("TRADE_PROPOSAL", "TRADE_ACCEPT", "TRADE"):
+            print(f"\n--- POTENTIAL REAL TRADE (ID: {txn_id} | Status: {status} | Type: {raw_type}) ---")
             print(txn)
             print("------------------------------------\n")
+
+        # Now apply the executed check for standard adds/drops
+        # (We will eventually change this once we see the trade output)
+        if status != "EXECUTED":
+            continue 
 
         # ESPN stores dates in milliseconds
         executed_ms = txn.get("executedDate") or txn.get("proposedDate", 0)
