@@ -63,7 +63,7 @@ def scoring_period_for_date(d: date) -> int:
 # SUPABASE  (paginated to handle 50k+ rows)
 # ---------------------------------------------------------------------------
 
-pythondef get_supabase() -> Client:
+def get_supabase() -> Client:
     url = SUPABASE_URL or "NOT SET"
     key = SUPABASE_KEY or "NOT SET"
     print(f"Supabase URL: '{url}' (len={len(url)})")
