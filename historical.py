@@ -16,7 +16,6 @@ HISTORICAL_OWNER_MAP = {
     "daniel":                 "Dan",
     "dan":                    "Dan",
     "anil":                   "Anil",
-    "anurag komavarelli":     "Anil",   # same person, old registration name
     "alex":                   "Alex",
     "will":                   "Will",
     "mark":                   "Mark",
