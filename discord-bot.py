@@ -605,24 +605,21 @@ def _parse_window(q: str, current_period: int) -> tuple[list[int] | None, str]:
     return None, "FULL SEASON"
 
 
-def build_context(question: str, current_period: int) -> str:
+def build_context(question: str, current_period: int, asking_owner: str | None = None) -> str:
     q     = question.lower()
-        # If the asker is identified and uses first-person, treat it as if they named their team
-    first_person_triggers = ["my team", "my players", "my pitcher", "my hitter", 
-                              "my roster", "my stats", "i have", "do i", "am i",
-                              "my era", "my whip", "my trade", "my adds"]
-    
-    if asking_owner and any(trigger in q for trigger in first_person_triggers):
-        owner_team_id = TEAM_NAME_TO_ID.get(asking_owner.lower())
-        if owner_team_id and owner_team_id not in mentioned_teams:
-            mentioned_teams.append(owner_team_id)
     parts = []
- 
+
+    first_person_triggers = [
+        "my team", "my players", "my pitcher", "my hitter",
+        "my roster", "my stats", "i have", "do i", "am i",
+        "my era", "my whip", "my trade", "my adds",
+    ]
+
     # --- Always: current standings ---
     print(f"  Fetching cumulative records through period {current_period}...")
     cumulative = fetch_stats_up_to_period(current_period)
     standings  = compute_roto_standings(cumulative)
- 
+
     sorted_teams = sorted(standings.items(), key=lambda x: x[1]["standing"])
     header = f"{'#':<3} {'Team':<14} {'Pts':>5}  " + "  ".join(f"{CAT_DISPLAY[c]:>5}" for c in ROTO_CATS)
     rows   = [header]
@@ -631,7 +628,7 @@ def build_context(question: str, current_period: int) -> str:
         cats = "  ".join(f"{data['cat_points'].get(c, 0):>5.1f}" for c in ROTO_CATS)
         rows.append(f"{data['standing']:<3} {name:<14} {data['roto_points']:>5.1f}  {cats}")
     parts.append("CURRENT ROTO STANDINGS (roto points per category):\n" + "\n".join(rows))
- 
+
     fmt = {"R":"d","HR":"d","RBI":"d","OBP":".3f","SB":"d","QS":"d","ERA":".2f","WHIP":".3f","K":"d","SV_HD":"d"}
     val_header = f"{'#':<3} {'Team':<14}  " + "  ".join(f"{CAT_DISPLAY[c]:>7}" for c in ROTO_CATS)
     val_rows   = [val_header]
@@ -640,41 +637,7 @@ def build_context(question: str, current_period: int) -> str:
         vals = "  ".join(f"{data[c]:{fmt[c]}}".rjust(7) for c in ROTO_CATS)
         val_rows.append(f"{data['standing']:<3} {name:<14}  {vals}")
     parts.append("ACTUAL CATEGORY VALUES:\n" + "\n".join(val_rows))
- 
-    # --- Transactions ---
-    if any(kw in q for kw in TRANSACTION_KEYWORDS):
-    print("  Fetching transactions...")
-    try:
-        if mentioned_teams:
-            all_txns = []
-            for tid in mentioned_teams:
-                all_txns.extend(fetch_team_transactions(tid, days=365))
-        else:
-            all_txns = fetch_recent_transactions(days=14)
 
-        if all_txns:
-            parts.append(format_transaction_context(all_txns))
-            if any(kw in q for kw in ["grade", "worth it", "good move", "bad move", "how has", "analyze", "evaluate"]):
-                parts.append(format_transaction_with_stats(all_txns, cumulative))
-
-        # Always pull all trades separately if the question mentions trades
-        if any(kw in q for kw in ["trade", "traded", "trades"]):
-            print("  Fetching all season trades...")
-            all_trades = (
-                get_supabase()
-                .table("transactions")
-                .select("*")
-                .eq("transaction_type", "TRADE")
-                .order("transaction_date", desc=True)
-                .execute()
-                .data or []
-            )
-            if all_trades:
-                parts.append(format_trades_block(all_trades))
-
-    except Exception as e:
-        print(f"  Transaction fetch failed: {e}")
-    
     # --- Detect mentioned team names ---
     window_periods, window_label = _parse_window(q, current_period)
     mentioned_teams = [
@@ -682,18 +645,19 @@ def build_context(question: str, current_period: int) -> str:
         if re.search(r'\b' + re.escape(name) + r'\b', q)
     ]
 
-        if asking_owner and any(t in q for t in first_person_triggers):
+    # If asker is identified and uses first-person, add their team automatically
+    if asking_owner and any(t in q for t in first_person_triggers):
         owner_team_id = TEAM_NAME_TO_ID.get(asking_owner.lower())
         if owner_team_id and owner_team_id not in mentioned_teams:
             mentioned_teams.append(owner_team_id)
- 
+
     if mentioned_teams:
         print(f"  Building player breakdowns for {len(mentioned_teams)} team(s) [{window_label}]...")
         for tid in mentioned_teams:
             team_name = TEAM_NAMES.get(tid, f"Team {tid}")
             scoped = [r for r in cumulative if r["scoring_period_id"] in set(window_periods)] if window_periods else cumulative
             parts.append(get_team_player_block(scoped, tid, f"{team_name} ({window_label})"))
- 
+
     # --- Historical context ---
     if any(kw in q for kw in HISTORY_KEYWORDS):
         print("  Loading league history...")
@@ -702,18 +666,15 @@ def build_context(question: str, current_period: int) -> str:
             parts.append(format_all_active_owner_summaries())
         except Exception as e:
             print(f"  History load failed: {e}")
- 
-    # Per-owner history if an owner is specifically mentioned
+
     if mentioned_teams:
         try:
             for tid in mentioned_teams:
                 owner_name = TEAM_NAMES.get(tid, "")
-                hist_name  = HISTORICAL_OWNER_MAP.get(owner_name.lower(), owner_name)
-                # format_owner_history takes the canonical name
                 parts.append(format_owner_history(owner_name))
         except Exception as e:
             print(f"  Owner history load failed: {e}")
- 
+
     # --- Transactions ---
     if any(kw in q for kw in TRANSACTION_KEYWORDS):
         print("  Fetching transactions...")
@@ -721,31 +682,46 @@ def build_context(question: str, current_period: int) -> str:
             if mentioned_teams:
                 all_txns = []
                 for tid in mentioned_teams:
-                    all_txns.extend(fetch_team_transactions(tid, days=60))
+                    all_txns.extend(fetch_team_transactions(tid, days=365))
             else:
                 all_txns = fetch_recent_transactions(days=14)
- 
+
             if all_txns:
                 parts.append(format_transaction_context(all_txns))
-                # If grading is the intent, add stats too
                 if any(kw in q for kw in ["grade", "worth it", "good move", "bad move", "how has", "analyze", "evaluate"]):
                     parts.append(format_transaction_with_stats(all_txns, cumulative))
+
+            # Always pull all trades separately when trades are mentioned
+            if any(kw in q for kw in ["trade", "traded", "trades"]):
+                print("  Fetching all season trades...")
+                all_trades = (
+                    get_supabase()
+                    .table("transactions")
+                    .select("*")
+                    .eq("transaction_type", "TRADE")
+                    .order("transaction_date", desc=True)
+                    .execute()
+                    .data or []
+                )
+                if all_trades:
+                    parts.append(format_trades_block(all_trades))
+
         except Exception as e:
             print(f"  Transaction fetch failed: {e}")
- 
+
     # --- Trends ---
     if any(kw in q for kw in TREND_KEYWORDS):
         print("  Fetching trend data...")
         trend_block = get_trend_block(current_period)
         if trend_block:
             parts.append(trend_block)
- 
+
     # --- League-wide player leaders ---
     if any(kw in q for kw in PLAYER_KEYWORDS) or "who" in q:
         print("  Computing player leaders...")
         scoped = [r for r in cumulative if r["scoring_period_id"] in set(window_periods)] if window_periods else cumulative
         parts.append(get_player_leaders_block(scoped))
- 
+
     return "\n\n".join(parts)
  
 
