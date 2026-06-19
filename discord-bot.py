@@ -37,6 +37,15 @@ TEAM_NAMES = {
 # Reverse map so questions mentioning team names can be resolved to IDs
 TEAM_NAME_TO_ID = {v.lower(): k for k, v in TEAM_NAMES.items()}
 
+# Common name variations — add anything your leaguemates might type
+TEAM_ALIASES = {
+    "daniel": 5,   # Dan
+    "danny":  5,   # Dan
+}
+
+# Merge aliases into the lookup
+TEAM_NAME_TO_ID.update(TEAM_ALIASES)
+
 ROTO_CATS = ["R", "HR", "RBI", "OBP", "SB", "QS", "ERA", "WHIP", "K", "SV_HD"]
 CAT_HIGHER_IS_BETTER = {
     "R": True, "HR": True, "RBI": True, "OBP": True, "SB": True,
