@@ -72,6 +72,8 @@ def scoring_period_for_date(target_date: date) -> int:
 # ---------------------------------------------------------------------------
 # SUPABASE  (paginated to handle 50k+ rows)
 # ---------------------------------------------------------------------------
+def get_supabase() -> Client:
+    return create_client(SUPABASE_URL, SUPABASE_KEY)
 
 def fetch_stats_up_to_period(max_period: int) -> list[dict]:
     all_records, last_id, page_size = [], 0, 1000
