@@ -351,7 +351,7 @@ LEAGUE DATA:
 Answer the question directly. If the data doesn't support a specific claim, say so rather than guessing."""
 
     client   = genai.Client(api_key=GEMINI_API_KEY)
-    response = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
+    response = client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
     return response.text
 
 
