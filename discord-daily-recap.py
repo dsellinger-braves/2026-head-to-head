@@ -1,7 +1,7 @@
 """
 HEFTYSTRONG Fantasy Baseball — Discord Daily Recap
 Produces three Discord posts per day:
-  1. AI narrative recap
+  1. AI narrative recap (with recent trades + historical context)
   2. Best / Worst 5 hitters and pitchers for the day
   3. Roto standings changes summary
 """
@@ -9,9 +9,15 @@ Produces three Discord posts per day:
 import os
 import json
 import requests
-from datetime import datetime, timedelta, date
+from collections import defaultdict
+from datetime import datetime, timedelta, date, timezone
 from supabase import create_client, Client
 import google.genai as genai
+from historical import (
+    format_owner_history,
+    format_league_champions,
+    format_all_active_owner_summaries,
+)
 
 # ---------------------------------------------------------------------------
 # CONFIGURATION
@@ -34,20 +40,14 @@ TEAM_NAMES = {
     8:  "Alex",
     12: "Will",
     13: "Mark",
-    14: "Preston"
+    14: "Preston",
 }
 
 # ---------------------------------------------------------------------------
 # LINEUP SLOT IDs
-# Verify these against your league by running:
-#   SELECT DISTINCT lineup_slot_id FROM player_daily_stats ORDER BY lineup_slot_id;
-# Standard ESPN MLB slot IDs:
-#   0=C  1=1B  2=2B  3=3B  4=SS  5-7=OF  8=UTIL
-#   9-12=SP  13-15=RP/P
-#   16=IL  17=IL+  20-22=Bench (BE)
 # ---------------------------------------------------------------------------
 
-BENCH_IL_SLOTS  = {16, 17, 20, 21, 22}   # excluded from daily tables
+BENCH_IL_SLOTS  = {16, 17, 20, 21, 22}
 HITTING_SLOTS   = {0, 1, 2, 3, 4, 5, 6, 7, 8}
 PITCHING_SLOTS  = {9, 10, 11, 12, 13, 14, 15}
 
@@ -70,10 +70,12 @@ def scoring_period_for_date(target_date: date) -> int:
 
 
 # ---------------------------------------------------------------------------
-# SUPABASE  (paginated to handle 50k+ rows)
+# SUPABASE
 # ---------------------------------------------------------------------------
+
 def get_supabase() -> Client:
     return create_client(SUPABASE_URL, SUPABASE_KEY)
+
 
 def fetch_stats_up_to_period(max_period: int) -> list[dict]:
     all_records, last_id, page_size = [], 0, 1000
@@ -117,12 +119,33 @@ def fetch_stats_for_periods(periods: list[int]) -> list[dict]:
     return all_records
 
 
+def fetch_all_trades() -> list[dict]:
+    """Fetch all TRADE transactions for the season."""
+    all_records, last_id, page_size = [], 0, 500
+    while True:
+        batch = (
+            get_supabase()
+            .table("transactions")
+            .select("*")
+            .eq("transaction_type", "TRADE")
+            .gt("id", last_id)
+            .order("id", desc=False)
+            .limit(page_size)
+            .execute()
+            .data or []
+        )
+        all_records.extend(batch)
+        if len(batch) < page_size:
+            break
+        last_id = batch[-1]["id"]
+    return all_records
+
+
 # ---------------------------------------------------------------------------
 # AGGREGATION HELPERS
 # ---------------------------------------------------------------------------
 
 def filter_active(records: list[dict]) -> list[dict]:
-    """Remove bench and IL players from a set of records."""
     return [r for r in records if r.get("lineup_slot_id") not in BENCH_IL_SLOTS]
 
 
@@ -173,11 +196,15 @@ def compute_roto_standings(records: list[dict]) -> dict:
         whip   = round((stats.get("H_Allowed", 0) + stats.get("BB_Allowed", 0)) / ip_dec, 3) if ip_dec > 0 else 0.0
 
         team_cats[tid] = {
-            "R": int(stats.get("R", 0)),   "HR": int(stats.get("HR", 0)),
-            "RBI": int(stats.get("RBI", 0)), "OBP": obp,
-            "SB": int(stats.get("SB", 0)),  "QS": int(stats.get("QS", 0)),
-            "ERA": era, "WHIP": whip,
-            "K": int(stats.get("K", 0)),
+            "R":     int(stats.get("R", 0)),
+            "HR":    int(stats.get("HR", 0)),
+            "RBI":   int(stats.get("RBI", 0)),
+            "OBP":   obp,
+            "SB":    int(stats.get("SB", 0)),
+            "QS":    int(stats.get("QS", 0)),
+            "ERA":   era,
+            "WHIP":  whip,
+            "K":     int(stats.get("K", 0)),
             "SV_HD": int(stats.get("SV", 0) + stats.get("HD", 0)),
         }
 
@@ -227,11 +254,50 @@ def compute_standings_delta(prev: dict, curr: dict) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# TRANSACTION HELPERS
+# ---------------------------------------------------------------------------
+
+def filter_trades_by_days(all_trades: list[dict], days: int) -> list[dict]:
+    """Filter pre-fetched trades to those within the last N days."""
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+    return [t for t in all_trades if t.get("transaction_date", "") >= cutoff]
+
+
+def format_trades_block(trades: list[dict], label: str = "RECENT TRADES") -> str:
+    """Group trade rows by transaction UUID and display as complete swaps."""
+    if not trades:
+        return ""
+
+    grouped: dict[str, list] = defaultdict(list)
+    for t in trades:
+        txn_uuid = t["espn_transaction_id"].rsplit("_", 2)[0]
+        grouped[txn_uuid].append(t)
+
+    lines = [f"{label} ({len(grouped)} trade(s)):"]
+    for uuid, items in sorted(
+        grouped.items(),
+        key=lambda x: x[1][0]["transaction_date"],
+        reverse=True,
+    ):
+        date_str = items[0]["transaction_date"][:10]
+        by_team: dict[int, list[str]] = defaultdict(list)
+        for item in items:
+            by_team[item["to_team_id"]].append(item["player_name"])
+
+        sides = [
+            f"{TEAM_NAMES.get(tid, f'T{tid}')} gets {', '.join(players)}"
+            for tid, players in by_team.items()
+        ]
+        lines.append(f"  {date_str}: " + " | ".join(sides))
+
+    return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
 # DAILY PERFORMANCE TABLES  (active players only)
 # ---------------------------------------------------------------------------
 
 def _hitter_score(stats: dict) -> float:
-    """Composite score for ranking a hitter's day. Higher = better."""
     return (stats.get("HR", 0)  * 4 +
             stats.get("RBI", 0) * 2 +
             stats.get("R",   0) * 1 +
@@ -240,19 +306,13 @@ def _hitter_score(stats: dict) -> float:
 
 
 def _pitcher_score(stats: dict) -> float:
-    """Composite score for ranking a pitcher's day. Higher = better."""
-    return (stats.get("K",  0)  * 1 +
-            stats.get("QS", 0)  * 10 +
+    return (stats.get("K",  0) * 1 +
+            stats.get("QS", 0) * 10 +
             (stats.get("SV", 0) + stats.get("HD", 0)) * 5 -
-            stats.get("ER", 0)  * 3)
+            stats.get("ER", 0) * 3)
 
 
 def get_best_worst_players(records: list[dict], n: int = 5):
-    """
-    Returns (best_hitters, worst_hitters, best_pitchers, worst_pitchers)
-    using active-roster players only (bench/IL filtered out).
-    Hitters must have at least 1 AB; pitchers must have pitched.
-    """
     active   = filter_active(records)
     hitters  = []
     pitchers = []
@@ -263,13 +323,13 @@ def get_best_worst_players(records: list[dict], n: int = 5):
         if isinstance(stats, str):
             stats = json.loads(stats)
 
-        name    = row["full_name"]
-        team    = TEAM_NAMES.get(row["team_id"], f"T{row['team_id']}")
+        name = row["full_name"]
+        team = TEAM_NAMES.get(row["team_id"], f"T{row['team_id']}")
 
         if slot in HITTING_SLOTS:
             ab = int(stats.get("AB", 0))
             pa = int(stats.get("PA", 0))
-            if ab + pa < 1:      # didn't bat at all — skip
+            if ab + pa < 1:
                 continue
             hitters.append({
                 "name":  name,
@@ -285,12 +345,12 @@ def get_best_worst_players(records: list[dict], n: int = 5):
 
         elif slot in PITCHING_SLOTS:
             ip_raw = stats.get("IP", 0)
-            if ip_raw <= 0:      # didn't pitch — skip
+            if ip_raw <= 0:
                 continue
-                  ip_outs       = int(round(ip_raw))
-                  innings_whole = ip_outs // 3
-                  extra_outs    = ip_outs % 3
-                  pitchers.append({
+            ip_outs       = int(round(ip_raw))
+            innings_whole = ip_outs // 3
+            extra_outs    = ip_outs % 3
+            pitchers.append({
                 "name":  name,
                 "team":  team,
                 "score": _pitcher_score(stats),
@@ -301,11 +361,9 @@ def get_best_worst_players(records: list[dict], n: int = 5):
                 "svhd":  int(stats.get("SV", 0) + stats.get("HD", 0)),
             })
 
-    # Best: highest score, tiebreak by AB desc for hitters
-    best_hitters   = sorted(hitters,  key=lambda x: (-x["score"], -x["ab"]))[:n]
-    # Worst: lowest score among those with enough ABs (min 2 to exclude pinch hitters)
-    worst_hitters  = sorted(
-        [h for h in hitters if h["ab"] >= 2],
+    best_hitters  = sorted(hitters,  key=lambda x: (-x["score"], -x["ab"]))[:n]
+    worst_hitters = sorted(
+        [h for h in hitters if h["ab"] >= 1],
         key=lambda x: (x["score"], -x["ab"])
     )[:n]
     best_pitchers  = sorted(pitchers, key=lambda x: -x["score"])[:n]
@@ -339,13 +397,10 @@ def _pitcher_table(players: list[dict], title: str) -> str:
     return "\n".join(rows)
 
 
-def format_performance_embed_body(
-    best_h, worst_h, best_p, worst_p
-) -> str:
-    """Combine all four tables into one code-block string for a Discord embed."""
+def format_performance_embed_body(best_h, worst_h, best_p, worst_p) -> str:
     sections = [
-        _hitter_table(best_h,  "🟢 BEST HITTERS"),
-        _hitter_table(worst_h, "🔴 WORST HITTERS"),
+        _hitter_table(best_h,   "🟢 BEST HITTERS"),
+        _hitter_table(worst_h,  "🔴 WORST HITTERS"),
         _pitcher_table(best_p,  "🟢 BEST PITCHERS"),
         _pitcher_table(worst_p, "🔴 WORST PITCHERS"),
     ]
@@ -357,25 +412,19 @@ def format_performance_embed_body(
 # ---------------------------------------------------------------------------
 
 def format_standings_changes_body(standings: dict, delta: dict) -> str:
-    """
-    Two sections:
-      1. Overall rank movers (teams that changed position)
-      2. Category-level roto point changes
-    """
     lines = []
 
-    # --- Overall rank movers ---
     movers = [(tid, d) for tid, d in delta.items() if d["rank_change"] != 0]
     movers.sort(key=lambda x: abs(x[1]["rank_change"]), reverse=True)
 
     if movers:
         lines.append("**Overall rank changes**")
         for tid, d in movers:
-            name  = TEAM_NAMES.get(tid, f"Team {tid}")
-            pts   = standings[tid]["roto_points"]
-            rc    = d["rank_change"]
-            pc    = d["points_change"]
-            arrow = "▲" if rc > 0 else "▼"
+            name   = TEAM_NAMES.get(tid, f"Team {tid}")
+            pts    = standings[tid]["roto_points"]
+            rc     = d["rank_change"]
+            pc     = d["points_change"]
+            arrow  = "▲" if rc > 0 else "▼"
             pc_str = f"+{pc}" if pc > 0 else str(pc)
             lines.append(
                 f"{arrow} **{name}** #{d['prev_standing']} → #{d['curr_standing']} "
@@ -386,8 +435,6 @@ def format_standings_changes_body(standings: dict, delta: dict) -> str:
 
     lines.append("")
 
-    # --- Category movers ---
-    # For each roto category, list teams that gained or lost roto points
     cat_moved = False
     cat_lines = ["**Category roto point changes**"]
 
@@ -396,7 +443,7 @@ def format_standings_changes_body(standings: dict, delta: dict) -> str:
             [(tid, d["cat_changes"][cat]) for tid, d in delta.items() if d["cat_changes"].get(cat, 0) > 0],
             key=lambda x: -x[1]
         )
-        losers  = sorted(
+        losers = sorted(
             [(tid, d["cat_changes"][cat]) for tid, d in delta.items() if d["cat_changes"].get(cat, 0) < 0],
             key=lambda x:  x[1]
         )
@@ -404,12 +451,8 @@ def format_standings_changes_body(standings: dict, delta: dict) -> str:
             continue
 
         cat_moved = True
-        g_str = ", ".join(
-            f"{TEAM_NAMES.get(tid, f'T{tid}')} +{v:.1f}" for tid, v in gainers
-        )
-        l_str = ", ".join(
-            f"{TEAM_NAMES.get(tid, f'T{tid}')} {v:.1f}" for tid, v in losers
-        )
+        g_str = ", ".join(f"{TEAM_NAMES.get(tid, f'T{tid}')} +{v:.1f}" for tid, v in gainers)
+        l_str = ", ".join(f"{TEAM_NAMES.get(tid, f'T{tid}')} {v:.1f}"  for tid, v in losers)
         parts = []
         if g_str: parts.append(f"▲ {g_str}")
         if l_str: parts.append(f"▼ {l_str}")
@@ -424,7 +467,7 @@ def format_standings_changes_body(standings: dict, delta: dict) -> str:
 
 
 # ---------------------------------------------------------------------------
-# STANDINGS SUMMARY BLOCK  (for AI prompt context — not the embed)
+# STANDINGS SUMMARY BLOCKS  (for AI prompt context)
 # ---------------------------------------------------------------------------
 
 def format_standings_block(standings: dict) -> str:
@@ -456,14 +499,14 @@ def format_delta_block(standings: dict, delta: dict) -> str:
     for tid, _ in sorted_t:
         if tid not in delta:
             continue
-        d    = delta[tid]
-        name = TEAM_NAMES.get(tid, f"Team {tid}")
-        rc   = d["rank_change"]
-        pc   = d["points_change"]
+        d     = delta[tid]
+        name  = TEAM_NAMES.get(tid, f"Team {tid}")
+        rc    = d["rank_change"]
+        pc    = d["points_change"]
         arrow = f"▲{rc}" if rc > 0 else (f"▼{abs(rc)}" if rc < 0 else "—")
         pc_s  = f"+{pc}" if pc > 0 else str(pc)
         notable = [f"{CAT_DISPLAY[c]}: {'+' if v > 0 else ''}{v}" for c, v in d["cat_changes"].items() if v != 0]
-        cat_s = ", ".join(notable) if notable else "no movement"
+        cat_s   = ", ".join(notable) if notable else "no movement"
         lines.append(f"  {name} ({arrow}, {pc_s} pts): {cat_s}")
     return "\n".join(lines)
 
@@ -474,7 +517,7 @@ def format_delta_block(standings: dict, delta: dict) -> str:
 
 def generate_ai_summary(prompt: str) -> str:
     client   = genai.Client(api_key=GEMINI_API_KEY)
-    response = client.models.generate_content(model="gemini-3.1-pro-preview", contents=prompt)
+    response = client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
     return response.text
 
 
@@ -484,22 +527,18 @@ def build_daily_prompt(
     today_records: list[dict],
     standings: dict,
     delta: dict,
+    recent_trades: list[dict] | None = None,
 ) -> str:
-    """
-    Prompt for the narrative recap only.
-    Stat tables and standings changes are posted as separate embeds,
-    so this prompt focuses on storytelling, not listing numbers.
-    """
-    # Find individual standouts among active players only
-    active   = filter_active(today_records)
-    top_hr   = max(active, key=lambda r: json.loads(r["stats"]).get("HR", 0) if isinstance(r["stats"], str) else r["stats"].get("HR", 0), default=None)
-    top_k    = max(active, key=lambda r: json.loads(r["stats"]).get("K", 0)  if isinstance(r["stats"], str) else r["stats"].get("K", 0),  default=None)
-    top_rbi  = max(active, key=lambda r: json.loads(r["stats"]).get("RBI", 0) if isinstance(r["stats"], str) else r["stats"].get("RBI", 0), default=None)
+    active  = filter_active(today_records)
 
     def stat_val(row, s):
         st = row["stats"]
         if isinstance(st, str): st = json.loads(st)
         return st.get(s, 0)
+
+    top_hr  = max(active, key=lambda r: stat_val(r, "HR"),  default=None)
+    top_k   = max(active, key=lambda r: stat_val(r, "K"),   default=None)
+    top_rbi = max(active, key=lambda r: stat_val(r, "RBI"), default=None)
 
     notes = []
     if top_hr  and stat_val(top_hr,  "HR")  > 0:
@@ -512,6 +551,13 @@ def build_daily_prompt(
 
     n_teams = len(standings)
 
+    # Optional recent trades block
+    trades_section = ""
+    if recent_trades:
+        block = format_trades_block(recent_trades, "TRADES IN THE LAST 7 DAYS")
+        if block:
+            trades_section = f"\n{block}\n"
+
     return f"""You are the commissioner's snarky, trash-talking fantasy baseball bot for the HEFTYSTRONG league.
 Write a short narrative daily recap for {period_date.strftime('%A, %B %d, %Y')}.
 
@@ -520,7 +566,8 @@ Do NOT include a title. Format for Discord (plain text, no markdown headers).
 
 IMPORTANT: Specific stat tables and standings changes will be shown separately in Discord.
 Do NOT list every team's stat line. Instead, tell the story — reference 2-3 notable things
-and weave in what the day meant for the roto race.
+and weave in what the day meant for the roto race. If there were recent trades, you can
+reference them briefly (e.g. "still settling in after last week's deal").
 
 TOP INDIVIDUAL PERFORMANCES TODAY:
 {standouts}
@@ -528,7 +575,7 @@ TOP INDIVIDUAL PERFORMANCES TODAY:
 {format_standings_block(standings)}
 
 {format_delta_block(standings, delta)}
-
+{trades_section}
 Write the narrative recap now:"""
 
 
@@ -541,7 +588,6 @@ def post_to_discord(title: str, body: str, color: int = 0x1DB954):
         print(f"\n{'='*60}\n{title}\n{'='*60}\n{body}\n")
         return
 
-    # Discord embed description limit is 4096 chars
     if len(body) > 4000:
         body = body[:3997] + "..."
 
@@ -580,7 +626,7 @@ def run_daily_recap(target_date: date | None = None):
         print("No records found for this period. Skipping.")
         return
 
-    print(f"Fetching cumulative standings data through period {period_id}...")
+    print("Fetching cumulative standings data...")
     all_curr = fetch_stats_up_to_period(period_id)
     all_prev = fetch_stats_up_to_period(prev_period_id) if prev_period_id >= 1 else []
 
@@ -591,9 +637,22 @@ def run_daily_recap(target_date: date | None = None):
     totals = aggregate_by_team(filter_active(today_records))
     totals = compute_averages(totals)
 
+    # Fetch recent trades for daily context (last 7 days)
+    print("Fetching recent trades for context...")
+    try:
+        all_trades    = fetch_all_trades()
+        recent_trades = filter_trades_by_days(all_trades, days=7)
+        print(f"  Found {len(recent_trades)} trade rows in last 7 days.")
+    except Exception as e:
+        print(f"  Trade fetch failed (non-fatal): {e}")
+        recent_trades = []
+
     # --- Post 1: AI narrative recap ---
     print("Generating AI recap...")
-    prompt  = build_daily_prompt(target_date, totals, today_records, standings_curr, delta)
+    prompt  = build_daily_prompt(
+        target_date, totals, today_records, standings_curr, delta,
+        recent_trades=recent_trades,
+    )
     summary = generate_ai_summary(prompt)
     post_to_discord(
         f"⚾  Daily Recap — {target_date.strftime('%A, %b %d')}",
@@ -605,20 +664,12 @@ def run_daily_recap(target_date: date | None = None):
     print("Building performance tables...")
     best_h, worst_h, best_p, worst_p = get_best_worst_players(today_records, n=5)
     perf_body = format_performance_embed_body(best_h, worst_h, best_p, worst_p)
-    post_to_discord(
-        "📊  Today's Top & Bottom Performers",
-        perf_body,
-        color=0x2ECC71,
-    )
+    post_to_discord("📊  Today's Top & Bottom Performers", perf_body, color=0x2ECC71)
 
     # --- Post 3: Standings changes ---
     print("Building standings changes...")
     standings_body = format_standings_changes_body(standings_curr, delta)
-    post_to_discord(
-        "📈  Roto Standings Update",
-        standings_body,
-        color=0xFFD700,
-    )
+    post_to_discord("📈  Roto Standings Update", standings_body, color=0xFFD700)
 
     print("Daily recap complete.")
 
@@ -677,7 +728,7 @@ def run_weekly_recap(week_end_date: date | None = None):
                 best_day_team   = TEAM_NAMES.get(tid, f"Team {tid}")
                 best_day_period = pid
 
-    # Weekly movers for prompt
+    # Weekly movers
     movers = []
     for tid, d in sorted(weekly_delta.items(), key=lambda x: abs(x[1]["rank_change"]), reverse=True):
         if d["rank_change"] != 0:
@@ -685,6 +736,40 @@ def run_weekly_recap(week_end_date: date | None = None):
             dir_ = "up" if d["rank_change"] > 0 else "down"
             pc   = d["points_change"]
             movers.append(f"  {name} moved {dir_} {abs(d['rank_change'])} spot(s) ({'+' if pc > 0 else ''}{pc} pts)")
+
+    # Trades this week
+    print("Fetching trades for weekly context...")
+    try:
+        all_trades    = fetch_all_trades()
+        weekly_trades = filter_trades_by_days(all_trades, days=7)
+        trades_block  = format_trades_block(weekly_trades, "TRADES THIS WEEK") if weekly_trades else ""
+        print(f"  Found {len(weekly_trades)} trade rows this week.")
+    except Exception as e:
+        print(f"  Trade fetch failed (non-fatal): {e}")
+        trades_block = ""
+
+    # Historical context — champions + per-owner summaries
+    print("Loading historical context...")
+    try:
+        history_block = format_league_champions() + "\n\n" + format_all_active_owner_summaries()
+    except Exception as e:
+        print(f"  History load failed (non-fatal): {e}")
+        history_block = ""
+
+    # Owner history for teams that moved significantly this week
+    print("Loading mover owner histories...")
+    mover_histories = []
+    try:
+        big_movers = [
+            tid for tid, d in weekly_delta.items()
+            if abs(d["rank_change"]) >= 2 or abs(d["points_change"]) >= 5
+        ]
+        for tid in big_movers:
+            owner_name = TEAM_NAMES.get(tid, "")
+            if owner_name:
+                mover_histories.append(format_owner_history(owner_name))
+    except Exception as e:
+        print(f"  Mover history load failed (non-fatal): {e}")
 
     n_teams = len(standings_curr)
 
@@ -694,6 +779,10 @@ Generate a WEEKLY RECAP for the week of {week_start_date.strftime('%b %d')} – 
 Under 400 words. Fun and opinionated. No title. Format for Discord (plain text).
 Our 10 roto scoring categories: R, HR, RBI, OBP, SB, QS, ERA, WHIP, K, SV+Holds.
 Roto points: 1 (worst) to {n_teams} (best) per category.
+
+Use the historical data to add color — e.g. "Tim's 5-time champion instincts kicked in" or
+"Mark continues his proud tradition of basement-dwelling." Keep it fun, not mean-spirited.
+If there were trades this week, weave them in — who gave up what, who might have won it.
 
 Cover: weekly category leaders, best single-day performance, standings movement, who to watch next week.
 
@@ -708,6 +797,12 @@ BEST SINGLE DAY: {best_day_team} (period {best_day_period}, HR+RBI+R = {best_day
 
 WEEKLY STANDINGS MOVEMENT:
 {chr(10).join(movers) if movers else '  No rank changes this week'}
+
+{trades_block}
+
+{history_block}
+
+{chr(10).join(mover_histories) if mover_histories else ''}
 
 Write the weekly recap now:"""
 
