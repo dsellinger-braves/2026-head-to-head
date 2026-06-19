@@ -157,12 +157,16 @@ def parse_transactions(raw: List[Dict]) -> List[Dict]:
         if status != "EXECUTED":
             continue  # skip pending/declined transactions
 
+        raw_type = txn.get("type", "UNKNOWN")
+
+        # Skip daily lineup changes and future lineup changes
+        if raw_type in ("ROSTER", "FUTURE_ROSTER"):
+            continue
+
         # ESPN stores dates in milliseconds
         executed_ms = txn.get("executedDate") or txn.get("proposedDate", 0)
         txn_date    = datetime.fromtimestamp(executed_ms / 1000, tz=timezone.utc)
         period_id   = txn.get("scoringPeriodId", 0)
-
-        raw_type = txn.get("type", "UNKNOWN")
 
         for item in txn.get("items", []):
             item_type    = item.get("type", raw_type)
