@@ -67,10 +67,18 @@ def get_supabase() -> Client:
     return create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
-def _paginated_fetch(query_builder, page_size: int = 1000) -> list[dict]:
-    all_records, offset = [], 0
+def fetch_stats_up_to_period(max_period: int) -> list[dict]:
+    all_records, offset, page_size = [], 0, 1000
     while True:
-        batch = (query_builder.range(offset, offset + page_size - 1).execute().data or [])
+        batch = (
+            get_supabase()
+            .table("player_daily_stats")
+            .select("*")
+            .lte("scoring_period_id", max_period)
+            .range(offset, offset + page_size - 1)
+            .execute()
+            .data or []
+        )
         all_records.extend(batch)
         if len(batch) < page_size:
             break
@@ -78,14 +86,23 @@ def _paginated_fetch(query_builder, page_size: int = 1000) -> list[dict]:
     return all_records
 
 
-def fetch_stats_up_to_period(max_period: int) -> list[dict]:
-    qb = get_supabase().table("player_daily_stats").select("*").lte("scoring_period_id", max_period)
-    return _paginated_fetch(qb)
-
-
 def fetch_stats_for_periods(periods: list[int]) -> list[dict]:
-    qb = get_supabase().table("player_daily_stats").select("*").in_("scoring_period_id", periods)
-    return _paginated_fetch(qb)
+    all_records, offset, page_size = [], 0, 1000
+    while True:
+        batch = (
+            get_supabase()
+            .table("player_daily_stats")
+            .select("*")
+            .in_("scoring_period_id", periods)
+            .range(offset, offset + page_size - 1)
+            .execute()
+            .data or []
+        )
+        all_records.extend(batch)
+        if len(batch) < page_size:
+            break
+        offset += page_size
+    return all_records
 
 
 # ---------------------------------------------------------------------------
