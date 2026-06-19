@@ -147,30 +147,26 @@ def fetch_player_name(player_id: int) -> str:
 def parse_transactions(raw: List[Dict]) -> List[Dict]:
     """
     Parse ESPN transaction objects into flat rows for Supabase.
-    Includes a targeted debug catcher for the actual trade proposals/accepts.
+    Each player movement in a transaction becomes its own row.
+    Trades produce multiple rows (one per player moved).
     """
     rows: List[Dict] = []
     for txn in raw:
-        txn_id   = txn.get("id", "")
-        status   = txn.get("status", "")
-        raw_type = txn.get("type", "UNKNOWN")
-
-        # Skip daily lineup changes
-        if raw_type in ("ROSTER", "FUTURE_ROSTER"):
+        status = txn.get("status", "")
+        
+        # Only process successfully executed moves
+        if status != "EXECUTED":
             continue
 
-        # --- NEW DEBUG CATCHER ---
-        # Look for real trades, ignoring the useless vote/decline receipts.
-        # Notice we are doing this BEFORE the "EXECUTED" check.
-        if raw_type in ("TRADE_PROPOSAL", "TRADE_ACCEPT", "TRADE"):
-            print(f"\n--- POTENTIAL REAL TRADE (ID: {txn_id} | Status: {status} | Type: {raw_type}) ---")
-            print(txn)
-            print("------------------------------------\n")
+        txn_id   = txn.get("id", "")
+        raw_type = txn.get("type", "UNKNOWN")
 
-        # Now apply the executed check for standard adds/drops
-        # (We will eventually change this once we see the trade output)
-        if status != "EXECUTED":
-            continue 
+        # Skip daily lineup changes, but KEEP them if they contain an executed trade
+        if raw_type in ("ROSTER", "FUTURE_ROSTER"):
+            # Check if any player inside this roster move is tagged as a TRADE
+            is_trade = any(item.get("type") == "TRADE" for item in txn.get("items", []))
+            if not is_trade:
+                continue
 
         # ESPN stores dates in milliseconds
         executed_ms = txn.get("executedDate") or txn.get("proposedDate", 0)
@@ -183,15 +179,16 @@ def parse_transactions(raw: List[Dict]) -> List[Dict]:
             from_team_id = item.get("fromTeamId", -1)
             player_id    = item.get("playerId")
 
+            # If there's no player attached (like in a vote receipt), skip it
             if not player_id:
                 continue
 
-            # Classify the transaction
+            # Classify the transaction based on the item type
             if item_type in ("ADD", "WAIVER") or raw_type in ("ADD", "WAIVER"):
                 txn_type = "WAIVER_ADD" if txn.get("executionType") == "WAIVER" else "ADD"
             elif item_type == "DROP" or raw_type == "DROP":
                 txn_type = "DROP"
-            elif item_type in ("TRADED",) or raw_type in ("TRADE", "TRADE_ACCEPT"):
+            elif item_type in ("TRADED", "TRADE") or raw_type in ("TRADE", "TRADE_ACCEPT"):
                 txn_type = "TRADE"
             else:
                 txn_type = item_type or raw_type
@@ -209,7 +206,6 @@ def parse_transactions(raw: List[Dict]) -> List[Dict]:
             })
 
     return rows
-
 
 # ---------------------------------------------------------------------------
 # PLAYER NAME ENRICHMENT
