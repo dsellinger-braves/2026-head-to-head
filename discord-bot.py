@@ -10,6 +10,11 @@ import discord
 from discord import app_commands
 from datetime import date, timedelta, datetime
 from supabase import create_client, Client
+from historical import (
+load_historical_data, format_owner_history,
+format_league_champions, format_all_active_owner_summaries,
+HISTORICAL_OWNER_MAP,
+)
 import google.genai as genai
 
 # ---------------------------------------------------------------------------
@@ -36,6 +41,19 @@ TEAM_NAMES = {
 
 # Reverse map so questions mentioning team names can be resolved to IDs
 TEAM_NAME_TO_ID = {v.lower(): k for k, v in TEAM_NAMES.items()}
+
+TRANSACTION_KEYWORDS = [
+    "trade", "traded", "add", "added", "drop", "dropped",
+    "pickup", "waiver", "acquire", "acquisition", "grade",
+    "worth it", "good move", "bad move", "fa", "free agent",
+]
+ 
+HISTORY_KEYWORDS = [
+    "history", "historical", "all time", "all-time", "ever",
+    "championship", "championships", "won", "champion",
+    "best season", "worst season", "years", "since the start",
+    "back in", "previous", "past seasons",
+]
 
 # Common name variations — add anything your leaguemates might type
 TEAM_ALIASES = {
@@ -121,7 +139,64 @@ def fetch_stats_for_periods(periods: list[int]) -> list[dict]:
         last_id = batch[-1]["id"]
     return all_records
 
-
+def fetch_recent_transactions(days: int = 14) -> list[dict]:
+    """Fetch transactions from the last N days."""
+    from datetime import timezone
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+    all_records, last_id, page_size = [], 0, 500
+    while True:
+        batch = (
+            get_supabase()
+            .table("transactions")
+            .select("*")
+            .gte("transaction_date", cutoff)
+            .gt("id", last_id)
+            .order("id", desc=False)
+            .limit(page_size)
+            .execute()
+            .data or []
+        )
+        all_records.extend(batch)
+        if len(batch) < page_size:
+            break
+        last_id = batch[-1]["id"]
+    return all_records
+ 
+ 
+def fetch_team_transactions(team_id: int, days: int = 60) -> list[dict]:
+    """Fetch a specific team's transactions."""
+    from datetime import timezone
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+    # Fetch both acquisitions (to_team_id) and drops (from_team_id)
+    all_records = []
+    for field in ["to_team_id", "from_team_id"]:
+        last_id, page_size = 0, 500
+        while True:
+            batch = (
+                get_supabase()
+                .table("transactions")
+                .select("*")
+                .eq(field, team_id)
+                .gte("transaction_date", cutoff)
+                .gt("id", last_id)
+                .order("id", desc=False)
+                .limit(page_size)
+                .execute()
+                .data or []
+            )
+            all_records.extend(batch)
+            if len(batch) < page_size:
+                break
+            last_id = batch[-1]["id"]
+    # Deduplicate by espn_transaction_id
+    seen = set()
+    deduped = []
+    for r in all_records:
+        if r["espn_transaction_id"] not in seen:
+            seen.add(r["espn_transaction_id"])
+            deduped.append(r)
+    return sorted(deduped, key=lambda x: x["transaction_date"], reverse=True)
+ 
 
 
 # ---------------------------------------------------------------------------
@@ -371,6 +446,84 @@ def get_trend_block(current_period: int) -> str:
         lines.append(f"  {name} ({arrow}, {pts} pts this week): {move}")
     return "\n".join(lines)
 
+def format_transaction_context(transactions: list[dict], label: str = "RECENT TRANSACTIONS") -> str:
+    """Format a list of transactions for AI context."""
+    if not transactions:
+        return f"{label}: No transactions found."
+ 
+    lines = [f"{label} ({len(transactions)} moves):"]
+    for t in sorted(transactions, key=lambda x: x["transaction_date"], reverse=True)[:50]:
+        date_str   = t["transaction_date"][:10]
+        to_name    = TEAM_NAMES.get(t.get("to_team_id"), f"T{t.get('to_team_id')}")
+        from_name  = TEAM_NAMES.get(t.get("from_team_id"), "Free Agent") if t.get("from_team_id", -1) != -1 else "Free Agent/Waivers"
+        txn_type   = t.get("transaction_type", "?")
+        player     = t.get("player_name", f"Player {t.get('player_id')}")
+ 
+        if txn_type == "TRADE":
+            lines.append(f"  {date_str} TRADE: {player} — {from_name} → {to_name}")
+        elif txn_type in ("ADD", "WAIVER_ADD"):
+            lines.append(f"  {date_str} ADD:   {to_name} added {player} from {from_name}")
+        elif txn_type == "DROP":
+            lines.append(f"  {date_str} DROP:  {to_name} dropped {player}")
+        else:
+            lines.append(f"  {date_str} {txn_type}: {player} ({from_name} → {to_name})")
+ 
+    return "\n".join(lines)
+ 
+ 
+def format_transaction_with_stats(transactions: list[dict], cumulative_records: list[dict]) -> str:
+    """
+    Enrich transactions with post-acquisition stats for grading.
+    For each acquired player, show their stats since the transaction date.
+    """
+    from datetime import date as date_type
+ 
+    # Build player stats lookup: player_id -> {stat: total}
+    player_stats: dict[int, dict] = {}
+    for row in cumulative_records:
+        pid   = row["player_id"]
+        stats = row.get("stats", {})
+        if isinstance(stats, str):
+            import json as _json
+            stats = _json.loads(stats)
+        if pid not in player_stats:
+            player_stats[pid] = {"team_id": row["team_id"], "name": row["full_name"]}
+        for s, v in stats.items():
+            if isinstance(v, (int, float)):
+                player_stats[pid][s] = player_stats[pid].get(s, 0) + v
+ 
+    lines = ["TRANSACTION GRADES (with post-acquisition stats):"]
+    adds = [t for t in transactions if t.get("transaction_type") in ("ADD", "WAIVER_ADD", "TRADE")]
+ 
+    for t in adds[:20]:
+        pid      = t.get("player_id")
+        player   = t.get("player_name", f"Player {pid}")
+        to_name  = TEAM_NAMES.get(t.get("to_team_id"), "?")
+        date_str = t["transaction_date"][:10]
+        txn_type = t.get("transaction_type", "?")
+ 
+        p = player_stats.get(pid)
+        if p:
+            ip_dec = p.get("IP", 0) / 3.0
+            era    = round((p.get("ER", 0) / ip_dec) * 9, 2) if ip_dec > 0 else None
+            whip   = round((p.get("H_Allowed", 0) + p.get("BB_Allowed", 0)) / ip_dec, 3) if ip_dec > 0 else None
+            stats_str = (
+                f"HR:{int(p.get('HR',0))} RBI:{int(p.get('RBI',0))} "
+                f"R:{int(p.get('R',0))} SB:{int(p.get('SB',0))} K:{int(p.get('K',0))} "
+                f"QS:{int(p.get('QS',0))}"
+            )
+            if era is not None:
+                ip_outs = int(round(p.get("IP", 0)))
+                ip_disp = f"{ip_outs//3}.{ip_outs%3}"
+                stats_str += f" ERA:{era} WHIP:{whip} IP:{ip_disp}"
+        else:
+            stats_str = "(no stats recorded yet)"
+ 
+        lines.append(f"  {date_str} {txn_type}: {to_name} acquired {player}")
+        lines.append(f"    Season stats: {stats_str}")
+ 
+    return "\n".join(lines)
+ 
 
 # ---------------------------------------------------------------------------
 # CONTEXT BUILDER  — selects what data to include based on the question
@@ -412,12 +565,12 @@ def _parse_window(q: str, current_period: int) -> tuple[list[int] | None, str]:
 def build_context(question: str, current_period: int) -> str:
     q     = question.lower()
     parts = []
-
+ 
     # --- Always: current standings ---
     print(f"  Fetching cumulative records through period {current_period}...")
     cumulative = fetch_stats_up_to_period(current_period)
     standings  = compute_roto_standings(cumulative)
-
+ 
     sorted_teams = sorted(standings.items(), key=lambda x: x[1]["standing"])
     header = f"{'#':<3} {'Team':<14} {'Pts':>5}  " + "  ".join(f"{CAT_DISPLAY[c]:>5}" for c in ROTO_CATS)
     rows   = [header]
@@ -426,7 +579,7 @@ def build_context(question: str, current_period: int) -> str:
         cats = "  ".join(f"{data['cat_points'].get(c, 0):>5.1f}" for c in ROTO_CATS)
         rows.append(f"{data['standing']:<3} {name:<14} {data['roto_points']:>5.1f}  {cats}")
     parts.append("CURRENT ROTO STANDINGS (roto points per category):\n" + "\n".join(rows))
-
+ 
     fmt = {"R":"d","HR":"d","RBI":"d","OBP":".3f","SB":"d","QS":"d","ERA":".2f","WHIP":".3f","K":"d","SV_HD":"d"}
     val_header = f"{'#':<3} {'Team':<14}  " + "  ".join(f"{CAT_DISPLAY[c]:>7}" for c in ROTO_CATS)
     val_rows   = [val_header]
@@ -435,41 +588,75 @@ def build_context(question: str, current_period: int) -> str:
         vals = "  ".join(f"{data[c]:{fmt[c]}}".rjust(7) for c in ROTO_CATS)
         val_rows.append(f"{data['standing']:<3} {name:<14}  {vals}")
     parts.append("ACTUAL CATEGORY VALUES:\n" + "\n".join(val_rows))
-
+ 
     # --- Detect mentioned team names ---
     window_periods, window_label = _parse_window(q, current_period)
     mentioned_teams = [
         tid for name, tid in TEAM_NAME_TO_ID.items()
         if re.search(r'\b' + re.escape(name) + r'\b', q)
     ]
-
+ 
     if mentioned_teams:
         print(f"  Building player breakdowns for {len(mentioned_teams)} team(s) [{window_label}]...")
         for tid in mentioned_teams:
             team_name = TEAM_NAMES.get(tid, f"Team {tid}")
-            if window_periods:
-                scoped = [r for r in cumulative if r["scoring_period_id"] in set(window_periods)]
-            else:
-                scoped = cumulative
+            scoped = [r for r in cumulative if r["scoring_period_id"] in set(window_periods)] if window_periods else cumulative
             parts.append(get_team_player_block(scoped, tid, f"{team_name} ({window_label})"))
-
+ 
+    # --- Historical context ---
+    if any(kw in q for kw in HISTORY_KEYWORDS):
+        print("  Loading league history...")
+        try:
+            parts.append(format_league_champions())
+            parts.append(format_all_active_owner_summaries())
+        except Exception as e:
+            print(f"  History load failed: {e}")
+ 
+    # Per-owner history if an owner is specifically mentioned
+    if mentioned_teams:
+        try:
+            for tid in mentioned_teams:
+                owner_name = TEAM_NAMES.get(tid, "")
+                hist_name  = HISTORICAL_OWNER_MAP.get(owner_name.lower(), owner_name)
+                # format_owner_history takes the canonical name
+                parts.append(format_owner_history(owner_name))
+        except Exception as e:
+            print(f"  Owner history load failed: {e}")
+ 
+    # --- Transactions ---
+    if any(kw in q for kw in TRANSACTION_KEYWORDS):
+        print("  Fetching transactions...")
+        try:
+            if mentioned_teams:
+                all_txns = []
+                for tid in mentioned_teams:
+                    all_txns.extend(fetch_team_transactions(tid, days=60))
+            else:
+                all_txns = fetch_recent_transactions(days=14)
+ 
+            if all_txns:
+                parts.append(format_transaction_context(all_txns))
+                # If grading is the intent, add stats too
+                if any(kw in q for kw in ["grade", "worth it", "good move", "bad move", "how has"]):
+                    parts.append(format_transaction_with_stats(all_txns, cumulative))
+        except Exception as e:
+            print(f"  Transaction fetch failed: {e}")
+ 
     # --- Trends ---
     if any(kw in q for kw in TREND_KEYWORDS):
         print("  Fetching trend data...")
         trend_block = get_trend_block(current_period)
         if trend_block:
             parts.append(trend_block)
-
+ 
     # --- League-wide player leaders ---
     if any(kw in q for kw in PLAYER_KEYWORDS) or "who" in q:
         print("  Computing player leaders...")
-        if window_periods:
-            scoped = [r for r in cumulative if r["scoring_period_id"] in set(window_periods)]
-        else:
-            scoped = cumulative
+        scoped = [r for r in cumulative if r["scoring_period_id"] in set(window_periods)] if window_periods else cumulative
         parts.append(get_player_leaders_block(scoped))
-
+ 
     return "\n\n".join(parts)
+ 
 
 # ---------------------------------------------------------------------------
 # GEMINI  — answer the question using the assembled context
