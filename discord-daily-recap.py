@@ -153,9 +153,8 @@ def compute_averages(totals: dict) -> dict:
 
 
 def espn_ip_to_innings(ip_val: float) -> float:
-    whole = int(ip_val)
-    outs  = round((ip_val - whole) * 10)
-    return whole + outs / 3.0
+    """ESPN stores IP as total outs. Divide by 3 for decimal innings."""
+    return ip_val / 3.0
 
 
 # ---------------------------------------------------------------------------
@@ -288,13 +287,14 @@ def get_best_worst_players(records: list[dict], n: int = 5):
             ip_raw = stats.get("IP", 0)
             if ip_raw <= 0:      # didn't pitch — skip
                 continue
-            whole  = int(ip_raw)
-            outs   = round((ip_raw - whole) * 10)
-            pitchers.append({
+                  ip_outs       = int(round(ip_raw))
+                  innings_whole = ip_outs // 3
+                  extra_outs    = ip_outs % 3
+                  pitchers.append({
                 "name":  name,
                 "team":  team,
                 "score": _pitcher_score(stats),
-                "ip":    f"{whole}.{outs}",
+                "ip":    f"{innings_whole}.{extra_outs}",
                 "k":     int(stats.get("K",  0)),
                 "er":    int(stats.get("ER", 0)),
                 "qs":    int(stats.get("QS", 0)),
