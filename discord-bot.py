@@ -38,6 +38,18 @@ TEAM_NAMES = {
     14: "Preston"
 }
 
+# Maps Discord username (lowercase) → owner name in TEAM_NAMES
+DISCORD_TO_OWNER = {
+    "dsellinger":   "Dan",
+    "aznchuy":    "Tim",       # replace with actual Discord usernames
+    "adriaxx":    "Adrian",
+    "ghutch":   "Garrett",
+    "anilbhairo":      "Anil",
+    "ay0h":      "Alex",
+    "senorspice":      "Will",
+    "mrussell38":      "Mark",
+    "pston3":   "Preston",
+}
 
 # Reverse map so questions mentioning team names can be resolved to IDs
 TEAM_NAME_TO_ID = {v.lower(): k for k, v in TEAM_NAMES.items()}
@@ -595,6 +607,15 @@ def _parse_window(q: str, current_period: int) -> tuple[list[int] | None, str]:
 
 def build_context(question: str, current_period: int) -> str:
     q     = question.lower()
+        # If the asker is identified and uses first-person, treat it as if they named their team
+    first_person_triggers = ["my team", "my players", "my pitcher", "my hitter", 
+                              "my roster", "my stats", "i have", "do i", "am i",
+                              "my era", "my whip", "my trade", "my adds"]
+    
+    if asking_owner and any(trigger in q for trigger in first_person_triggers):
+        owner_team_id = TEAM_NAME_TO_ID.get(asking_owner.lower())
+        if owner_team_id and owner_team_id not in mentioned_teams:
+            mentioned_teams.append(owner_team_id)
     parts = []
  
     # --- Always: current standings ---
@@ -660,6 +681,11 @@ def build_context(question: str, current_period: int) -> str:
         tid for name, tid in TEAM_NAME_TO_ID.items()
         if re.search(r'\b' + re.escape(name) + r'\b', q)
     ]
+
+        if asking_owner and any(t in q for t in first_person_triggers):
+        owner_team_id = TEAM_NAME_TO_ID.get(asking_owner.lower())
+        if owner_team_id and owner_team_id not in mentioned_teams:
+            mentioned_teams.append(owner_team_id)
  
     if mentioned_teams:
         print(f"  Building player breakdowns for {len(mentioned_teams)} team(s) [{window_label}]...")
@@ -727,9 +753,20 @@ def build_context(question: str, current_period: int) -> str:
 # GEMINI  — answer the question using the assembled context
 # ---------------------------------------------------------------------------
 
-def generate_answer(question: str, context: str) -> str:
+def generate_answer(question: str, context: str, asking_owner: str | None = None) -> str:
     n_teams = len(TEAM_NAMES)
-    prompt  = f"""You are the HEFTYSTRONG fantasy baseball league's stats bot.
+    
+    if asking_owner:
+        owner_context = (
+            f"The person asking this question is {asking_owner}, "
+            f"who manages their own team in this league. "
+            f"If they use first-person ('my team', 'my players', 'I'), "
+            f"they are referring to {asking_owner}'s team."
+        )
+    else:
+        owner_context = "The person asking is not identified as a league member."
+
+    prompt = f"""You are the HEFTYSTRONG fantasy baseball league's stats bot.
 Answer the following question using ONLY the data provided. Be direct, concise, and a little snarky.
 Keep your answer under 300 words so it fits comfortably in Discord.
 
@@ -737,6 +774,8 @@ League format: {n_teams}-team roto league.
 Scoring categories: R, HR, RBI, OBP, SB, QS, ERA, WHIP, K, SV+Holds.
 ERA and WHIP: lower = better. All other categories: higher = better.
 Roto points: 1 (worst in category) to {n_teams} (best in category). Max possible score = {n_teams * 10}.
+
+ABOUT THE PERSON ASKING: {owner_context}
 
 QUESTION: {question}
 
@@ -748,7 +787,6 @@ Answer the question directly. If the data doesn't support a specific claim, say 
     client   = genai.Client(api_key=GEMINI_API_KEY)
     response = client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
     return response.text
-
 
 # ---------------------------------------------------------------------------
 # DISCORD BOT
@@ -803,17 +841,18 @@ async def ping_command(interaction: discord.Interaction):     # ← after bot
 @bot.tree.command(name="ask", description="Ask about HEFTYSTRONG stats, standings, trends, and more")
 @app_commands.describe(question="Your question about the league — e.g. 'Who leads in HR?' or 'Which team has the best ERA?'")
 async def ask_command(interaction: discord.Interaction, question: str):
-    # Defer immediately — Supabase + Gemini will take a few seconds
     await interaction.response.defer(thinking=True)
-
     print(f"[{datetime.now().strftime('%H:%M:%S')}] /ask from {interaction.user}: {question}")
 
     try:
         period = current_scoring_period()
+        
+        # Resolve asking user to their fantasy team
+        discord_username = str(interaction.user.name).lower()
+        asking_owner = DISCORD_TO_OWNER.get(discord_username)
 
-        # Run blocking I/O off the event loop so we don't freeze the bot
-        context = await asyncio.to_thread(build_context, question, period)
-        answer  = await asyncio.to_thread(generate_answer, question, context)
+        context = await asyncio.to_thread(build_context, question, period, asking_owner)
+        answer  = await asyncio.to_thread(generate_answer, question, context, asking_owner)
 
         # Discord messages cap at 2000 chars — truncate gracefully if needed
         if len(answer) > 1900:
