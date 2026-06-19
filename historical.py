@@ -10,7 +10,6 @@ HISTORICAL_DATA_URL = "https://storage.googleapis.com/fantasy-draft-2026/histori
 # Maps all known Owner name variants in the JSON → canonical name in TEAM_NAMES
 HISTORICAL_OWNER_MAP = {
     "tim":                    "Tim",
-    "tim ficken":             "Tim",
     "adrian":                 "Adrian",
     "garrett":                "Garrett",
     "daniel":                 "Dan",
