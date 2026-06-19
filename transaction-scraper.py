@@ -147,21 +147,28 @@ def fetch_player_name(player_id: int) -> str:
 def parse_transactions(raw: List[Dict]) -> List[Dict]:
     """
     Parse ESPN transaction objects into flat rows for Supabase.
-    Each player movement in a transaction becomes its own row.
-    Trades produce multiple rows (one per player moved).
+    Includes a debug catcher for trades to see how ESPN formats the players.
     """
     rows: List[Dict] = []
     for txn in raw:
         txn_id   = txn.get("id", "")
         status   = txn.get("status", "")
+        
         if status != "EXECUTED":
             continue  # skip pending/declined transactions
 
         raw_type = txn.get("type", "UNKNOWN")
 
-        # Skip daily lineup changes and future lineup changes
+        # Skip daily lineup changes
         if raw_type in ("ROSTER", "FUTURE_ROSTER"):
             continue
+
+        # --- DEBUG CATCHER FOR TRADES ---
+        # If this is a trade, let's print the raw JSON so we can see its structure
+        if "TRADE" in raw_type:
+            print(f"\n--- FOUND A TRADE (ID: {txn_id}) ---")
+            print(txn)
+            print("------------------------------------\n")
 
         # ESPN stores dates in milliseconds
         executed_ms = txn.get("executedDate") or txn.get("proposedDate", 0)
@@ -193,7 +200,7 @@ def parse_transactions(raw: List[Dict]) -> List[Dict]:
                 "transaction_date":    txn_date.isoformat(),
                 "scoring_period_id":   period_id,
                 "to_team_id":          to_team_id,
-                "from_team_id":        from_team_id,  # -1 = free agent / waivers
+                "from_team_id":        from_team_id, 
                 "player_id":           player_id,
                 "player_name":         item.get("playerNote") or f"Player {player_id}",
                 "raw_type":            raw_type,
