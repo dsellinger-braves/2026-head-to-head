@@ -455,7 +455,7 @@ def format_transaction_context(transactions: list[dict], label: str = "RECENT TR
         return f"{label}: No transactions found."
  
     lines = [f"{label} ({len(transactions)} moves):"]
-    for t in sorted(transactions, key=lambda x: x["transaction_date"], reverse=True)[:50]:
+    for t in sorted(transactions, key=lambda x: x["transaction_date"], reverse=True)[:200]:
         date_str   = t["transaction_date"][:10]
         to_name    = TEAM_NAMES.get(t.get("to_team_id"), f"T{t.get('to_team_id')}")
         from_name  = TEAM_NAMES.get(t.get("from_team_id"), "Free Agent") if t.get("from_team_id", -1) != -1 else "Free Agent/Waivers"
@@ -526,7 +526,35 @@ def format_transaction_with_stats(transactions: list[dict], cumulative_records: 
         lines.append(f"    Season stats: {stats_str}")
  
     return "\n".join(lines)
- 
+
+def format_trades_block(trades: list[dict]) -> str:
+    """Group trade rows by transaction ID and display as complete swaps."""
+    from collections import defaultdict
+    grouped: dict[str, list] = defaultdict(list)
+    for t in trades:
+        # Group by the ESPN transaction UUID (first part of espn_transaction_id)
+        txn_uuid = t["espn_transaction_id"].rsplit("_", 2)[0]
+        grouped[txn_uuid].append(t)
+
+    lines = [f"ALL SEASON TRADES ({len(grouped)} trades):"]
+    # Sort groups by most recent transaction_date within each group
+    for uuid, items in sorted(grouped.items(),
+                               key=lambda x: x[1][0]["transaction_date"],
+                               reverse=True):
+        date_str = items[0]["transaction_date"][:10]
+        # Organize by direction
+        by_team: dict[int, list[str]] = defaultdict(list)
+        for item in items:
+            by_team[item["to_team_id"]].append(item["player_name"])
+
+        sides = []
+        for team_id, players in by_team.items():
+            team_name = TEAM_NAMES.get(team_id, f"T{team_id}")
+            sides.append(f"{team_name} gets {', '.join(players)}")
+
+        lines.append(f"  {date_str}: " + " | ".join(sides))
+
+    return "\n".join(lines)
 
 # ---------------------------------------------------------------------------
 # CONTEXT BUILDER  — selects what data to include based on the question
@@ -592,6 +620,40 @@ def build_context(question: str, current_period: int) -> str:
         val_rows.append(f"{data['standing']:<3} {name:<14}  {vals}")
     parts.append("ACTUAL CATEGORY VALUES:\n" + "\n".join(val_rows))
  
+    # --- Transactions ---
+    if any(kw in q for kw in TRANSACTION_KEYWORDS):
+    print("  Fetching transactions...")
+    try:
+        if mentioned_teams:
+            all_txns = []
+            for tid in mentioned_teams:
+                all_txns.extend(fetch_team_transactions(tid, days=365))
+        else:
+            all_txns = fetch_recent_transactions(days=14)
+
+        if all_txns:
+            parts.append(format_transaction_context(all_txns))
+            if any(kw in q for kw in ["grade", "worth it", "good move", "bad move", "how has", "analyze", "evaluate"]):
+                parts.append(format_transaction_with_stats(all_txns, cumulative))
+
+        # Always pull all trades separately if the question mentions trades
+        if any(kw in q for kw in ["trade", "traded", "trades"]):
+            print("  Fetching all season trades...")
+            all_trades = (
+                get_supabase()
+                .table("transactions")
+                .select("*")
+                .eq("transaction_type", "TRADE")
+                .order("transaction_date", desc=True)
+                .execute()
+                .data or []
+            )
+            if all_trades:
+                parts.append(format_trades_block(all_trades))
+
+    except Exception as e:
+        print(f"  Transaction fetch failed: {e}")
+    
     # --- Detect mentioned team names ---
     window_periods, window_label = _parse_window(q, current_period)
     mentioned_teams = [
