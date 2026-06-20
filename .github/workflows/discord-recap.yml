@@ -3,7 +3,7 @@ name: Discord Fantasy Recap
 on:
   schedule:
     # Daily recap: runs at 11:30 PM ET (03:30 UTC next day)
-    - cron: "30 3 * * *"
+    - cron: "30 8 * * *"
     # Weekly recap: runs Monday at 8:00 AM ET (12:00 UTC) — recaps the previous week
     - cron: "0 12 * * 1"
 
