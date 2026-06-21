@@ -2,11 +2,8 @@ name: Daily ESPN Scraper
 
 on:
   schedule:
-    # Runs at 10:00 AM UTC (6:00 AM ET) every day.
-    # MLB west coast games end by ~5:00-5:30 AM UTC on normal nights,
-    # so this gives a 30-60 minute buffer for final scores to be posted.
-    # If late extra-inning west coast games are missing, consider pushing to 10:30 UTC.
-    - cron: '0 10 * * *'
+    - cron: '0 10 * * *'   # 6 AM ET — captures overnight/morning finalized stats
+    - cron: '0 5 * * *'    # 1 AM ET — captures late west coast games that finished ~midnight
   workflow_dispatch: # Allows you to click "Run Now" manually
 
 jobs:
