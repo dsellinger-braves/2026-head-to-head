@@ -104,10 +104,21 @@ SEASON_START   = date(2026, 3, 25)
 
 MLB_API_BASE = "https://statsapi.mlb.com/api/v1"
 
-# Simple in-memory cache so repeated /ask calls in the same minute
-# don't hammer the MLB API. TTL = 2 minutes.
+# Stable MLB team ID → abbreviation lookup.
+# The schedule API's hydrate=teams doesn't reliably return abbreviation,
+# so we use this as the primary source and fall back to the API value.
+MLB_TEAM_ABBREV = {
+    108: "LAA", 109: "ARI", 110: "BAL", 111: "BOS", 112: "CHC",
+    113: "CIN", 114: "CLE", 115: "COL", 116: "DET", 117: "HOU",
+    118: "KC",  119: "LAD", 120: "WSH", 121: "NYM", 133: "OAK",
+    134: "PIT", 135: "SD",  136: "SEA", 137: "SF",  138: "STL",
+    139: "TB",  140: "TEX", 141: "TOR", 142: "MIN", 143: "PHI",
+    144: "ATL", 145: "CWS", 146: "MIA", 147: "NYY", 158: "MIL",
+}
+
+# In-memory cache — TTL 2 minutes so repeated /ask calls don't hammer the API
 _mlb_cache: dict[str, tuple[float, object]] = {}
-MLB_CACHE_TTL = 120  # seconds
+MLB_CACHE_TTL = 120
 
 
 def _mlb_get(url: str, params: dict | None = None) -> dict | None:
@@ -116,7 +127,6 @@ def _mlb_get(url: str, params: dict | None = None) -> dict | None:
         ts, data = _mlb_cache[cache_key]
         if time.time() - ts < MLB_CACHE_TTL:
             return data
-
     try:
         resp = requests.get(url, params=params, timeout=10)
         resp.raise_for_status()
@@ -128,6 +138,35 @@ def _mlb_get(url: str, params: dict | None = None) -> dict | None:
         return None
 
 
+def _team_abbrev(team_dict: dict) -> str:
+    """
+    Resolve a team dict from the MLB API to a 2-3 letter abbreviation.
+    Prefers the hardcoded lookup (more reliable) over the API's abbreviation field.
+    """
+    team_id = team_dict.get("id", 0)
+    if team_id in MLB_TEAM_ABBREV:
+        return MLB_TEAM_ABBREV[team_id]
+    abbrev = team_dict.get("abbreviation", "")
+    if abbrev:
+        return abbrev
+    return team_dict.get("name", "???")[:3].upper()
+
+
+def _mlb_ip_to_decimal(ip_str) -> float:
+    """
+    MLB API returns IP as 'X.Y' where Y is outs (0, 1, or 2), not fractions.
+    '6.2' = 6 innings + 2 outs = 6.667 real innings.
+    """
+    try:
+        s = str(ip_str)
+        if "." in s:
+            inn, outs = s.split(".", 1)
+            return int(inn) + int(outs) / 3
+        return float(s)
+    except Exception:
+        return 0.0
+
+
 def normalize_name(name: str) -> str:
     """Lowercase, strip punctuation and suffixes for fuzzy matching."""
     name = name.lower().strip()
@@ -136,14 +175,13 @@ def normalize_name(name: str) -> str:
     return name
 
 
-def build_roster_name_map(active_cumulative: list[dict]) -> dict[str, dict]:
+def build_roster_name_map(records: list[dict]) -> dict[str, dict]:
     """
-    Build {normalized_name: {owner, team_id, full_name}} from the current
-    active cumulative records. Used to match MLB API player names back to
-    fantasy team owners.
+    Build {normalized_name: {owner, team_id, full_name}} from a set of records.
+    Pass the CURRENT PERIOD'S active records so roster is up-to-date.
     """
     roster: dict[str, dict] = {}
-    for row in active_cumulative:
+    for row in records:
         key = normalize_name(row["full_name"])
         if key not in roster:
             roster[key] = {
@@ -171,14 +209,14 @@ def _match_player(mlb_name: str, roster_map: dict) -> dict | None:
 
 
 def fetch_mlb_schedule_today() -> list[dict]:
-    """Return today's MLB games with status, score, and probable pitchers."""
+    """Return today's MLB games with status, linescore, and probable pitchers."""
     today_str = date.today().strftime("%Y-%m-%d")
     data = _mlb_get(
         f"{MLB_API_BASE}/schedule",
         params={
             "sportId": 1,
-            "date": today_str,
-            "hydrate": "probablePitcher,linescore,teams,game(content(summary))",
+            "date":    today_str,
+            "hydrate": "probablePitcher,linescore,teams",
         },
     )
     if not data:
@@ -194,159 +232,212 @@ def fetch_mlb_boxscore(game_pk: int) -> dict | None:
     return _mlb_get(f"https://statsapi.mlb.com/api/v1.1/game/{game_pk}/feed/live")
 
 
+def _game_time_et(game: dict) -> str:
+    """Parse the game's UTC start time and return a human-readable ET string."""
+    game_time = game.get("gameDate", "")
+    if not game_time:
+        return ""
+    try:
+        dt = datetime.fromisoformat(game_time.replace("Z", "+00:00"))
+        et = dt.astimezone(timezone(timedelta(hours=-4)))  # EDT
+        return et.strftime("%-I:%M %p ET")
+    except Exception:
+        return ""
+
+
 def _game_status_label(game: dict) -> str:
-    status = game.get("status", {}).get("abstractGameState", "")
-    code   = game.get("status", {}).get("statusCode", "")
-    if status == "Live":
-        inning     = game.get("linescore", {}).get("currentInning", "?")
-        inning_str = game.get("linescore", {}).get("inningHalf", "")[:3].upper()
-        return f"LIVE — {inning_str} {inning}"
-    if status == "Final":
+    """Return a short status string: inning, FINAL, or start time."""
+    state = game.get("status", {}).get("abstractGameState", "")
+    if state == "Live":
+        inning = game.get("linescore", {}).get("currentInning", "?")
+        half   = game.get("linescore", {}).get("inningHalf", "")[:3].upper()
+        return f"{half} {inning}"
+    if state == "Final":
         return "FINAL"
-    if code in ("S", "PW", "P"):
-        game_time = game.get("gameDate", "")
-        if game_time:
-            try:
-                dt = datetime.fromisoformat(game_time.replace("Z", "+00:00"))
-                et = dt.astimezone(timezone(timedelta(hours=-4)))  # EDT
-                return f"UPCOMING {et.strftime('%-I:%M %p ET')}"
-            except Exception:
-                pass
-        return "UPCOMING"
-    return status
+    t = _game_time_et(game)
+    return t if t else "TBD"
 
 
-def build_mlb_live_context(roster_map: dict[str, dict]) -> str:
+def _rostered_players_in_game(game_pk: int, roster_map: dict) -> dict:
     """
-    Fetch today's schedule, match rostered players to games,
-    pull boxscores for live/final games, and return a formatted
-    context block for Gemini.
+    Fetch boxscore and return rostered players split into hitters and pitchers.
+    Hitters: starters only (battingOrder % 100 == 0).
+    Pitchers: anyone who has actually thrown a pitch (IP > 0).
+    Returns {"hitters": [str], "pitchers": [str]}
     """
-    games = fetch_mlb_schedule_today()
-    if not games:
-        return "MLB LIVE DATA: No games found for today."
+    feed = fetch_mlb_boxscore(game_pk)
+    if not feed:
+        return {"hitters": [], "pitchers": []}
 
-    lines       = [f"TODAY'S MLB GAMES — {date.today().strftime('%A, %B %d')}:"]
-    live_games  = []
-    final_games = []
-    upcoming    = []
+    hitters, pitchers = [], []
+    box = feed.get("liveData", {}).get("boxscore", {})
+
+    for side in ("away", "home"):
+        players = box.get("teams", {}).get(side, {}).get("players", {})
+        for _, pdata in players.items():
+            mlb_name = pdata.get("person", {}).get("fullName", "")
+            fantasy  = _match_player(mlb_name, roster_map)
+            if not fantasy:
+                continue
+
+            stats = pdata.get("stats", {})
+            bat   = stats.get("batting",  {})
+            pit   = stats.get("pitching", {})
+
+            # --- Hitters: starters only via battingOrder ---
+            batting_order = pdata.get("battingOrder", "")
+            is_starter = (
+                batting_order != ""
+                and str(batting_order).isdigit()
+            )
+            ab = bat.get("atBats", 0)
+            pa = bat.get("plateAppearances", 0)
+
+            if is_starter and (ab > 0 or pa > 0):
+                h   = bat.get("hits",       0)
+                hr  = bat.get("homeRuns",   0)
+                rbi = bat.get("rbi",        0)
+                r   = bat.get("runs",       0)
+                sb  = bat.get("stolenBases",0)
+                bb  = bat.get("baseOnBalls",0)
+                line = f"{mlb_name} ({fantasy['owner']}): {h}/{ab}"
+                extras = []
+                if hr:  extras.append(f"{hr}HR")
+                if rbi: extras.append(f"{rbi}RBI")
+                if r:   extras.append(f"{r}R")
+                if sb:  extras.append(f"{sb}SB")
+                if bb:  extras.append(f"{bb}BB")
+                if extras:
+                    line += " " + " ".join(extras)
+                hitters.append(line)
+
+            # --- Pitchers: anyone who threw at least one pitch ---
+            elif pit.get("inningsPitched") and pit["inningsPitched"] not in ("0.0", "0"):
+                ip_str = pit.get("inningsPitched", "0.0")
+                ip_dec = _mlb_ip_to_decimal(ip_str)
+                k      = pit.get("strikeOuts", 0)
+                er     = pit.get("earnedRuns", 0)
+                svhd   = pit.get("saves", 0) + pit.get("holds", 0)
+                qs     = ip_dec >= 6.0 and er <= 3
+                line   = f"{mlb_name} ({fantasy['owner']}): {ip_str}IP {k}K {er}ER"
+                if qs:   line += " ✓QS"
+                if svhd: line += f" {svhd}SV+H"
+                pitchers.append(line)
+
+    return {"hitters": hitters, "pitchers": pitchers}
+
+
+def build_mlb_live_data(roster_map: dict) -> dict:
+    """
+    Fetch today's schedule and boxscores, return structured data:
+    {
+        "live":      [{"header": str, "hitters": [str], "pitchers": [str]}],
+        "final":     [{"header": str, "hitters": [str], "pitchers": [str]}],
+        "probables": [str],   # only rostered probable starters
+        "date_str":  str,
+    }
+    Only includes live/final games that have at least one rostered player.
+    Only includes upcoming entries if a probable pitcher is rostered.
+    """
+    games  = fetch_mlb_schedule_today()
+    result = {
+        "live": [], "final": [], "probables": [],
+        "date_str": date.today().strftime("%a %b %-d"),
+    }
 
     for game in games:
-        state = game.get("status", {}).get("abstractGameState", "")
-        if state == "Live":
-            live_games.append(game)
-        elif state == "Final":
-            final_games.append(game)
-        else:
-            upcoming.append(game)
+        state   = game.get("status", {}).get("abstractGameState", "")
+        teams   = game.get("teams", {})
+        away_t  = teams.get("away", {}).get("team", {})
+        home_t  = teams.get("home", {}).get("team", {})
+        a_abbr  = _team_abbrev(away_t)
+        h_abbr  = _team_abbrev(home_t)
+        a_score = teams.get("away", {}).get("score", "")
+        h_score = teams.get("home", {}).get("score", "")
+        status  = _game_status_label(game)
 
-    def _score_line(game: dict) -> str:
-        away = game.get("teams", {}).get("away", {})
-        home = game.get("teams", {}).get("home", {})
-        a_name  = away.get("team", {}).get("abbreviation", "???")
-        h_name  = home.get("team", {}).get("abbreviation", "???")
-        a_score = away.get("score", "-")
-        h_score = home.get("score", "-")
-        return f"{a_name} {a_score}  {h_name} {h_score}"
-
-    def _rostered_in_boxscore(game_pk: int) -> list[str]:
-        """Pull boxscore and return lines for any rostered players."""
-        feed  = fetch_mlb_boxscore(game_pk)
-        found = []
-        if not feed:
-            return found
-        box = feed.get("liveData", {}).get("boxscore", {})
-        for side in ("away", "home"):
-            players = box.get("teams", {}).get(side, {}).get("players", {})
-            for _, pdata in players.items():
-                mlb_name = pdata.get("person", {}).get("fullName", "")
-                fantasy  = _match_player(mlb_name, roster_map)
-                if not fantasy:
-                    continue
-                pos = pdata.get("position", {}).get("abbreviation", "?")
-                s   = pdata.get("stats", {})
-                # Hitter stats
-                bat = s.get("batting", {})
-                pit = s.get("pitching", {})
-                if bat.get("atBats", 0) > 0 or bat.get("plateAppearances", 0) > 0:
-                    ab  = bat.get("atBats", 0)
-                    h   = bat.get("hits", 0)
-                    hr  = bat.get("homeRuns", 0)
-                    rbi = bat.get("rbi", 0)
-                    r   = bat.get("runs", 0)
-                    sb  = bat.get("stolenBases", 0)
-                    line = (f"    {mlb_name} ({fantasy['owner']}, {pos}): "
-                            f"{h}/{ab}")
-                    extras = []
-                    if hr:  extras.append(f"{hr} HR")
-                    if rbi: extras.append(f"{rbi} RBI")
-                    if r:   extras.append(f"{r} R")
-                    if sb:  extras.append(f"{sb} SB")
-                    if extras:
-                        line += ", " + ", ".join(extras)
-                    found.append(line)
-                elif pit.get("inningsPitched"):
-                    ip  = pit.get("inningsPitched", "0.0")
-                    k   = pit.get("strikeOuts", 0)
-                    er  = pit.get("earnedRuns", 0)
-                    qs  = 1 if (
-                        pit.get("inningsPitched", "0") >= "6.0"
-                        and pit.get("earnedRuns", 99) <= 3
-                    ) else 0
-                    svhd = pit.get("saves", 0) + pit.get("holds", 0)
-                    line = (f"    {mlb_name} ({fantasy['owner']}, P): "
-                            f"{ip} IP, {k} K, {er} ER")
-                    if qs:   line += " ✓QS"
-                    if svhd: line += f", {svhd} SV+H"
-                    found.append(line)
-        return found
-
-    # --- Live games ---
-    if live_games:
-        lines.append("\n🔴 IN PROGRESS:")
-        for game in live_games:
-            status = _game_status_label(game)
-            lines.append(f"  {_score_line(game)} ({status})")
-            rostered = _rostered_in_boxscore(game["gamePk"])
-            if rostered:
-                lines.extend(rostered)
+        if state in ("Live", "Final"):
+            players = _rostered_players_in_game(game["gamePk"], roster_map)
+            if not players["hitters"] and not players["pitchers"]:
+                continue  # skip games with no rostered players
+            if state == "Live":
+                header = f"🔴 {a_abbr} {a_score} · {h_abbr} {h_score} — {status}"
+                result["live"].append({"header": header, **players})
             else:
-                lines.append("    (no rostered players in this game)")
-
-    # --- Final games ---
-    if final_games:
-        lines.append("\n✅ FINAL:")
-        for game in final_games:
-            lines.append(f"  {_score_line(game)} (FINAL)")
-            rostered = _rostered_in_boxscore(game["gamePk"])
-            if rostered:
-                lines.extend(rostered)
-
-    # --- Upcoming + probable pitchers ---
-    if upcoming:
-        lines.append("\n🕐 UPCOMING:")
-        rostered_probables = []
-        for game in upcoming:
-            status = _game_status_label(game)
-            away   = game.get("teams", {}).get("away", {})
-            home   = game.get("teams", {}).get("home", {})
-            a_abbr = away.get("team", {}).get("abbreviation", "???")
-            h_abbr = home.get("team", {}).get("abbreviation", "???")
-            lines.append(f"  {a_abbr} @ {h_abbr} ({status})")
-            for side_data in (away, home):
-                prob = side_data.get("probablePitcher", {})
+                header = f"✅ {a_abbr} {a_score} · {h_abbr} {h_score} — FINAL"
+                result["final"].append({"header": header, **players})
+        else:
+            # Upcoming — only include if a rostered player is a probable
+            for side_key in ("away", "home"):
+                prob = teams.get(side_key, {}).get("probablePitcher", {})
                 if prob:
                     pname   = prob.get("fullName", "")
                     fantasy = _match_player(pname, roster_map)
                     if fantasy:
-                        rostered_probables.append(
-                            f"    {pname} ({fantasy['owner']})"
+                        result["probables"].append(
+                            f"{pname} ({fantasy['owner']}) — {a_abbr} @ {h_abbr} {status}"
                         )
-        if rostered_probables:
-            lines.append("\n📋 ROSTERED PROBABLE STARTERS TODAY:")
-            lines.extend(rostered_probables)
 
+    return result
+
+
+def _game_field_value(game_entry: dict) -> str:
+    """Format a game's rostered player lines into an embed field value."""
+    lines = list(game_entry.get("hitters", [])) + list(game_entry.get("pitchers", []))
+    return "\n".join(lines) if lines else "*(no rostered starters yet)*"
+
+
+def build_mlb_live_embed_fields(live_data: dict) -> list[dict]:
+    """
+    Convert structured live data to Discord embed field dicts.
+    Each game gets its own field; probables share one field.
+    """
+    fields = []
+    for entry in live_data["live"]:
+        fields.append({"name": entry["header"], "value": _game_field_value(entry)[:1024], "inline": False})
+    for entry in live_data["final"]:
+        fields.append({"name": entry["header"], "value": _game_field_value(entry)[:1024], "inline": False})
+    if live_data["probables"]:
+        fields.append({
+            "name":   "🕐 Probable Starters (rostered)",
+            "value":  "\n".join(live_data["probables"])[:1024],
+            "inline": False,
+        })
+    return fields
+
+
+def build_mlb_live_context(roster_map: dict) -> str:
+    """Compact text version of live data for use in /ask Gemini context."""
+    live_data = build_mlb_live_data(roster_map)
+    if not live_data["live"] and not live_data["final"] and not live_data["probables"]:
+        return f"MLB LIVE DATA ({live_data['date_str']}): No rostered players found in today's games."
+
+    lines = [f"MLB LIVE DATA — {live_data['date_str']}:"]
+    for entry in live_data["live"]:
+        lines.append(entry["header"])
+        lines.extend(f"  {h}" for h in entry["hitters"])
+        lines.extend(f"  {p}" for p in entry["pitchers"])
+    for entry in live_data["final"]:
+        lines.append(entry["header"])
+        lines.extend(f"  {h}" for h in entry["hitters"])
+        lines.extend(f"  {p}" for p in entry["pitchers"])
+    if live_data["probables"]:
+        lines.append("Probable starters (rostered):")
+        lines.extend(f"  {p}" for p in live_data["probables"])
     return "\n".join(lines)
+
+
+def fetch_current_roster_records() -> list[dict]:
+    """
+    Fetch the most recent scoring period's active records for roster identification.
+    Falls back to yesterday's period if today's hasn't been scraped yet
+    (the scraper runs at 10 AM UTC, so data for 'today' often doesn't exist until then).
+    """
+    period  = current_scoring_period()
+    records = fetch_stats_for_periods([period])
+    if not records:
+        records = fetch_stats_for_periods([max(1, period - 1)])
+    return filter_active(records)
 
 
 # ---------------------------------------------------------------------------
@@ -906,8 +997,10 @@ def build_context(question: str, current_period: int, asking_owner: str | None =
     if any(kw in q for kw in LIVE_KEYWORDS):
         print("  Fetching MLB live data...")
         try:
-            roster_map = build_roster_name_map(active_cumulative)
-            live_block = build_mlb_live_context(roster_map)
+            # Use current period records for roster (not full season) so trades/adds are reflected
+            roster_records = fetch_current_roster_records()
+            roster_map     = build_roster_name_map(roster_records)
+            live_block     = build_mlb_live_context(roster_map)
             if live_block:
                 parts.append(live_block)
         except Exception as e:
@@ -1012,21 +1105,25 @@ async def live_command(interaction: discord.Interaction):
     await interaction.response.defer(thinking=True)
     print(f"[{datetime.now().strftime('%H:%M:%S')}] /live from {interaction.user}")
     try:
-        period            = current_scoring_period()
-        cumulative        = await asyncio.to_thread(fetch_stats_up_to_period, period)
-        active_cumulative = filter_active(cumulative)
-        roster_map        = build_roster_name_map(active_cumulative)
-        live_block        = await asyncio.to_thread(build_mlb_live_context, roster_map)
+        # Use current period's records so roster reflects today's lineup, not all season
+        roster_records = await asyncio.to_thread(fetch_current_roster_records)
+        roster_map     = build_roster_name_map(roster_records)
+        live_data      = await asyncio.to_thread(build_mlb_live_data, roster_map)
+        fields         = build_mlb_live_embed_fields(live_data)
 
-        if len(live_block) > 1900:
-            live_block = live_block[:1897] + "..."
+        if not fields:
+            await interaction.followup.send(
+                f"⚾ No rostered players found in today's MLB games ({live_data['date_str']})."
+            )
+            return
 
         embed = discord.Embed(
-            title       = f"⚾ Live MLB — {date.today().strftime('%A, %b %d')}",
-            description = f"```\n{live_block}\n```",
-            color       = 0xFF4500,
+            title = f"⚾ HEFTYSTRONG Live — {live_data['date_str']}",
+            color = 0xFF4500,
         )
-        embed.set_footer(text=f"HEFTYSTRONG • updated {datetime.now().strftime('%H:%M ET')}")
+        for field in fields:
+            embed.add_field(name=field["name"], value=field["value"], inline=field["inline"])
+        embed.set_footer(text=f"HEFTYSTRONG • updated {datetime.now().strftime('%H:%M ET')} • starters only")
         await interaction.followup.send(embed=embed)
     except Exception as e:
         print(f"Error handling /live: {e}")
