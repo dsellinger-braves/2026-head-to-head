@@ -30,6 +30,14 @@ SUPABASE_URL      = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY      = os.environ.get("SUPABASE_KEY")
 GEMINI_API_KEY    = os.environ.get("GEMINI_API_KEY")
 
+# ESPN Fantasy API — used for real-time roster lookups in /live
+# Add ESPN_S2 and ESPN_SWID to Railway env vars (same values as GitHub Actions secrets).
+# If the league is public these can be empty strings; if private they are required.
+LEAGUE_ID  = 130215
+YEAR       = 2026
+ESPN_S2    = os.environ.get("ESPN_S2",   "")
+ESPN_SWID  = os.environ.get("ESPN_SWID", "")
+
 TEAM_NAMES = {
     1:  "Tim",
     2:  "Adrian",
@@ -289,6 +297,7 @@ def _rostered_players_in_game(game_pk: int, roster_map: dict) -> dict:
             is_starter = (
                 batting_order != ""
                 and str(batting_order).isdigit()
+                and int(batting_order) % 100 == 0
             )
             ab = bat.get("atBats", 0)
             pa = bat.get("plateAppearances", 0)
@@ -430,14 +439,67 @@ def build_mlb_live_context(roster_map: dict) -> str:
 def fetch_current_roster_records() -> list[dict]:
     """
     Fetch the most recent scoring period's active records for roster identification.
-    Falls back to yesterday's period if today's hasn't been scraped yet
-    (the scraper runs at 10 AM UTC, so data for 'today' often doesn't exist until then).
+    Falls back to yesterday's period if today's hasn't been scraped yet.
     """
     period  = current_scoring_period()
     records = fetch_stats_for_periods([period])
     if not records:
         records = fetch_stats_for_periods([max(1, period - 1)])
     return filter_active(records)
+
+
+def fetch_espn_live_rosters() -> dict[str, dict]:
+    """
+    Query ESPN Fantasy API directly for current roster assignments.
+    Used by /live so the roster reflects adds/drops made today right up
+    until game time — regardless of when the scraper last ran.
+
+    Returns {normalized_name: {full_name, owner, team_id}}, same shape
+    as build_roster_name_map(). Falls back to empty dict on any error.
+    """
+    url = (
+        f"https://lm-api-reads.fantasy.espn.com/apis/v3/games/flb"
+        f"/seasons/{YEAR}/segments/0/leagues/{LEAGUE_ID}?view=mRoster"
+    )
+    cookies = {}
+    if ESPN_S2:   cookies["espn_s2"] = ESPN_S2
+    if ESPN_SWID: cookies["SWID"]    = ESPN_SWID
+
+    try:
+        resp = requests.get(url, cookies=cookies, timeout=10)
+        resp.raise_for_status()
+        data = resp.json()
+    except Exception as e:
+        print(f"  ESPN roster fetch failed: {e}")
+        return {}
+
+    roster_map: dict[str, dict] = {}
+    for team in data.get("teams", []):
+        team_id = team.get("id")
+        owner   = TEAM_NAMES.get(team_id, f"T{team_id}")
+        for entry in team.get("roster", {}).get("entries", []):
+            player = entry.get("playerPoolEntry", {}).get("player", {})
+            name   = player.get("fullName", "")
+            if not name:
+                continue
+            key = normalize_name(name)
+            roster_map[key] = {"full_name": name, "owner": owner, "team_id": team_id}
+
+    print(f"  ESPN live roster: {len(roster_map)} players across {len(data.get('teams', []))} teams")
+    return roster_map
+
+
+def build_live_roster_map() -> dict[str, dict]:
+    """
+    Best-available roster map for /live.
+    Tries ESPN directly first (real-time), falls back to Supabase.
+    """
+    roster_map = fetch_espn_live_rosters()
+    if roster_map:
+        return roster_map
+    print("  ESPN unavailable — falling back to Supabase roster records...")
+    records = fetch_current_roster_records()
+    return build_roster_name_map(records)
 
 
 # ---------------------------------------------------------------------------
@@ -568,33 +630,17 @@ def filter_active(records: list[dict]) -> list[dict]:
     return [r for r in records if r.get("lineup_slot_id") not in BENCH_IL_SLOTS]
 
 
-HITTING_SLOT_IDS  = {0, 1, 2, 3, 4, 5, 6, 7, 11, 12, 19}
-PITCHING_SLOT_IDS = {13, 14, 15}
-
-HITTING_STATS  = {'R','HR','RBI','SB','H','BB','HBP','PA','AB','SF'}
-PITCHING_STATS = {'K','QS','IP','ER','H_Allowed','BB_Allowed','SV','HD'}
-
 def aggregate_by_team(records: list[dict]) -> dict:
     totals: dict[int, dict] = {}
     for row in records:
-        tid  = row["team_id"]
-        slot = row.get("lineup_slot_id")
+        tid   = row["team_id"]
         stats = row.get("stats", {})
         if isinstance(stats, str):
             stats = json.loads(stats)
-
-        # Only count stats that belong to this slot type
-        if slot in HITTING_SLOT_IDS:
-            allowed = HITTING_STATS
-        elif slot in PITCHING_SLOT_IDS:
-            allowed = PITCHING_STATS
-        else:
-            continue  # bench/IL/unknown — skip entirely
-
         if tid not in totals:
             totals[tid] = {}
         for stat, val in stats.items():
-            if stat in allowed and isinstance(val, (int, float)):
+            if isinstance(val, (int, float)):
                 totals[tid][stat] = totals[tid].get(stat, 0) + val
     return totals
 
@@ -1013,9 +1059,8 @@ def build_context(question: str, current_period: int, asking_owner: str | None =
     if any(kw in q for kw in LIVE_KEYWORDS):
         print("  Fetching MLB live data...")
         try:
-            # Use current period records for roster (not full season) so trades/adds are reflected
-            roster_records = fetch_current_roster_records()
-            roster_map     = build_roster_name_map(roster_records)
+            # Use ESPN directly for real-time roster; falls back to Supabase
+            roster_map = build_live_roster_map()
             live_block     = build_mlb_live_context(roster_map)
             if live_block:
                 parts.append(live_block)
@@ -1121,9 +1166,9 @@ async def live_command(interaction: discord.Interaction):
     await interaction.response.defer(thinking=True)
     print(f"[{datetime.now().strftime('%H:%M:%S')}] /live from {interaction.user}")
     try:
-        # Use current period's records so roster reflects today's lineup, not all season
-        roster_records = await asyncio.to_thread(fetch_current_roster_records)
-        roster_map     = build_roster_name_map(roster_records)
+        # Use ESPN directly for real-time roster (reflects today's adds/drops up to game time).
+        # Falls back to Supabase if ESPN is unreachable.
+        roster_map = await asyncio.to_thread(build_live_roster_map)
         live_data      = await asyncio.to_thread(build_mlb_live_data, roster_map)
         fields         = build_mlb_live_embed_fields(live_data)
 
