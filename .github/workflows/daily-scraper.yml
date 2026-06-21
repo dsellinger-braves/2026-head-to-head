@@ -2,7 +2,10 @@ name: Daily ESPN Scraper
 
 on:
   schedule:
-    # Runs at 10:00 UTC every day (Adjust to be after games finish)
+    # Runs at 10:00 AM UTC (6:00 AM ET) every day.
+    # MLB west coast games end by ~5:00-5:30 AM UTC on normal nights,
+    # so this gives a 30-60 minute buffer for final scores to be posted.
+    # If late extra-inning west coast games are missing, consider pushing to 10:30 UTC.
     - cron: '0 10 * * *'
   workflow_dispatch: # Allows you to click "Run Now" manually
 
@@ -11,12 +14,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: '3.11'
 
       - name: Install dependencies
         run: |
