@@ -568,17 +568,33 @@ def filter_active(records: list[dict]) -> list[dict]:
     return [r for r in records if r.get("lineup_slot_id") not in BENCH_IL_SLOTS]
 
 
+HITTING_SLOT_IDS  = {0, 1, 2, 3, 4, 5, 6, 7, 11, 12, 19}
+PITCHING_SLOT_IDS = {13, 14, 15}
+
+HITTING_STATS  = {'R','HR','RBI','SB','H','BB','HBP','PA','AB','SF'}
+PITCHING_STATS = {'K','QS','IP','ER','H_Allowed','BB_Allowed','SV','HD'}
+
 def aggregate_by_team(records: list[dict]) -> dict:
     totals: dict[int, dict] = {}
     for row in records:
-        tid   = row["team_id"]
+        tid  = row["team_id"]
+        slot = row.get("lineup_slot_id")
         stats = row.get("stats", {})
         if isinstance(stats, str):
             stats = json.loads(stats)
+
+        # Only count stats that belong to this slot type
+        if slot in HITTING_SLOT_IDS:
+            allowed = HITTING_STATS
+        elif slot in PITCHING_SLOT_IDS:
+            allowed = PITCHING_STATS
+        else:
+            continue  # bench/IL/unknown — skip entirely
+
         if tid not in totals:
             totals[tid] = {}
         for stat, val in stats.items():
-            if isinstance(val, (int, float)):
+            if stat in allowed and isinstance(val, (int, float)):
                 totals[tid][stat] = totals[tid].get(stat, 0) + val
     return totals
 
