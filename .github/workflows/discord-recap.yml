@@ -2,9 +2,14 @@ name: Discord Fantasy Recap
 
 on:
   schedule:
-    # Daily recap: runs at 11:30 PM ET (03:30 UTC next day)
-    - cron: "30 8 * * *"
-    # Weekly recap: runs Monday at 8:00 AM ET (12:00 UTC) — recaps the previous week
+    # Daily recap: runs at 11:30 AM UTC (7:30 AM ET)
+    # This is 90 minutes after the scraper (10:00 UTC) to ensure data is in Supabase.
+    # Note: west coast games that go late may not be fully scraped until ~10:30 UTC,
+    # so this gives a comfortable buffer for normal game endings.
+    - cron: "30 11 * * *"
+
+    # Weekly recap: runs Monday at 12:00 PM UTC (8:00 AM ET)
+    # Fires 30 minutes after the daily recap on Mondays, recaps the previous week.
     - cron: "0 12 * * 1"
 
   # Allow manual triggers from the Actions tab (useful for testing)
@@ -41,18 +46,14 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "mode=${{ inputs.mode }}" >> $GITHUB_OUTPUT
-          elif [ "$(date +%u)" = "1" ]; then
-            # It's Monday — but the 8 AM schedule only runs on Mon anyway.
-            # The 11:30 PM schedule also runs Monday; skip weekly on that run
-            # by checking which cron fired via the hour.
-            HOUR=$(date +%H)
+          else
+            # Daily fires at 11:30 UTC (hour 11), weekly fires at 12:00 UTC (hour 12) on Monday.
+            HOUR=$(date -u +%H)
             if [ "$HOUR" = "12" ]; then
               echo "mode=weekly" >> $GITHUB_OUTPUT
             else
               echo "mode=daily" >> $GITHUB_OUTPUT
             fi
-          else
-            echo "mode=daily" >> $GITHUB_OUTPUT
           fi
 
       - name: Run Discord recap
