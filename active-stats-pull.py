@@ -170,12 +170,12 @@ if __name__ == "__main__":
     days_since_start = (date.today() - SEASON_START).days
     current_period = max(1, days_since_start)
     
-    # Target the current day and the previous 2 days (3 days total)
+    # Target the current day and the previous 2 days (5 days total)
     start_period = max(1, current_period - 2)
-    PERIODS = range(start_period, current_period + 1)
+    PERIODS = range(start_period, current_period + 3)
     
     print(f"Calculated current season day as Period {current_period}")
-    print(f"Targeting 3-day window: Periods {list(PERIODS)}")
+    print(f"Targeting 5-day window: Periods {list(PERIODS)}")
     
     TEAMS = [1, 2, 3, 5, 6, 8, 12, 13, 14]
     
