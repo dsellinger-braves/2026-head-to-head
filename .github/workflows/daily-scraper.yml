@@ -1,31 +1,18 @@
-name: Daily ESPN Scraper
+name: Hourly ESPN Scraper
 
 on:
   schedule:
-    # Runs at multiple times overnight to catch games as they finish.
-    # The scraper script itself checks MLB game status and decides whether
-    # to run a full scrape, partial scrape, or skip entirely.
-    #
-    # MLB game windows (ET → UTC):
-    #   East coast games end ~10-11 PM ET  = 2-3 AM UTC
-    #   West coast games end ~12-1 AM ET   = 4-5 AM UTC
-    #   Latest possible finish              = ~2 AM ET = 6 AM UTC
-    #
-    - cron: '0 2 * * *'    # 10:00 PM ET — east coast games wrapping up
-    - cron: '0 4 * * *'    # 12:00 AM ET — most games done
-    - cron: '0 5 * * *'    #  1:00 AM ET — late west coast finishers
-    - cron: '0 7 * * *'    #  3:00 AM ET — final safety net
-    - cron: '0 10 * * *'   #  6:00 AM ET — morning cleanup / verify complete
+    # Runs at the top of every hour (e.g., 1:00, 2:00, 3:00)
+    - cron: '0 * * * *'
 
   workflow_dispatch:
     inputs:
       mode:
-        description: "Scraper mode: 'auto' (MLB schedule check) or 'force' (always run)"
+        description: "Scraper mode: 'force' (always run)"
         required: true
-        default: "auto"
+        default: "force"
         type: choice
         options:
-          - auto
           - force
 
 jobs:
@@ -52,6 +39,4 @@ jobs:
           GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
           ESPN_S2: ${{ secrets.ESPN_S2 }}
           ESPN_SWID: ${{ secrets.ESPN_SWID }}
-          # Pass the dispatch mode, or 'auto' for scheduled runs
-          SCRAPER_MODE: ${{ github.event.inputs.mode || 'auto' }}
-        run: python active-stats-pull.py $SCRAPER_MODE
+        run: python active-stats-pull.py
