@@ -71,13 +71,19 @@ def get_espn_data(league_id, team_ids, scoring_period_ids):
                     full_name = player_data.get('fullName', 'Unknown')
                     
                     # Extract stats for this specific scoring period
+                    # Initialize an empty dictionary to hold the day's aggregated stats
                     raw_stats = {}
-                    stats_list = player_data.get('stats', [])
+                    
                     for stat_obj in stats_list:
-                        # 5 = Actual Daily Stats (ignores projections and cumulative season totals)
-                        if stat_obj.get('scoringPeriodId') == scoring_period_id and (stat_obj.get('statSplitTypeId') == 5 or stat_obj.get('statSplitTypeId') == 6):
-                             raw_stats = stat_obj.get('stats', {})
-                             break
+                        # Look for actual daily stats for the targeted period
+                        if stat_obj.get('scoringPeriodId') == scoring_period_id and stat_obj.get('statSplitTypeId') == 5:
+                             game_stats = stat_obj.get('stats', {})
+                             
+                             # Instead of breaking, add this game's stats to the daily total
+                             for stat_id, value in game_stats.items():
+                                 raw_stats[stat_id] = raw_stats.get(stat_id, 0) + value
+                    
+                    # No 'break' statement, so it will loop through the whole array and catch Game 2!
 
                     # --- APPLY MAPPING HERE ---
                     mapped_stats = {}
@@ -169,7 +175,9 @@ if __name__ == "__main__":
     
     # Target the current day and the previous 2 days (5 days total)
     start_period = max(1, current_period - 2)
-    PERIODS = range(start_period, current_period + 3)
+    PERIODS = range(0, current_period + 3) 
+    # start_period
+    
     
     print(f"Calculated current season day as Period {current_period}")
     print(f"Targeting 5-day window: Periods {list(PERIODS)}")
