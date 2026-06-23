@@ -74,11 +74,8 @@ def get_espn_data(league_id, team_ids, scoring_period_ids):
                     raw_stats = {}
                     stats_list = player_data.get('stats', [])
                     for stat_obj in stats_list:
-                        # filtered by Scoring Period and StatSplitType (3=Season, 5=Daily usually, check your needs)
-                        if stat_obj.get('scoringPeriodId') == scoring_period_id:
-                             # We prioritize actual stats (0) or projected (1) if needed, 
-                             # but usually for active scoring we want type 5 or 0 depending on view.
-                             # Based on your previous script, we look for the one matching the period.
+                        # 5 = Actual Daily Stats (ignores projections and cumulative season totals)
+                        if stat_obj.get('scoringPeriodId') == scoring_period_id and stat_obj.get('statSplitTypeId') == 5:
                              raw_stats = stat_obj.get('stats', {})
                              break
 
@@ -172,7 +169,7 @@ if __name__ == "__main__":
     
     # Target the current day and the previous 2 days (5 days total)
     start_period = max(1, current_period - 2)
-    PERIODS = range(start_period, current_period + 3)
+    PERIODS = range(0, current_period + 3)
     
     print(f"Calculated current season day as Period {current_period}")
     print(f"Targeting 5-day window: Periods {list(PERIODS)}")
