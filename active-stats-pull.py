@@ -105,26 +105,34 @@ def get_espn_data(league_id, team_ids, scoring_period_ids):
 
     return all_data
 
-def upload_to_supabase(records):
+def upload_to_supabase(records, active_periods: list):
     if not SUPABASE_URL or not SUPABASE_KEY:
         print("Skipping Supabase: Credentials not found.")
         return
 
-    print(f"Upserting {len(records)} records to Supabase...")
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
     
-    # Batch upsert to prevent timeouts
+    # 1. Clear the deck ONLY for the 3 days we are about to insert
+    # This prevents unique constraint errors without affecting the rest of the season
+    print(f"Clearing existing database rows for periods: {list(active_periods)}...")
+    try:
+        supabase.table('player_daily_stats').delete().in_('scoring_period_id', list(active_periods)).execute()
+    except Exception as e:
+        print(f"Error clearing old data for active periods: {e}")
+        print("Aborting insert to prevent duplicate key constraint failures.")
+        return
+
+    # 2. Perform clean bulk inserts in batches
+    print(f"Inserting {len(records)} fresh records to Supabase...")
     batch_size = 500
     for i in range(0, len(records), batch_size):
         batch = records[i:i + batch_size]
         try:
-            data, count = supabase.table('player_daily_stats').upsert(
-                batch, on_conflict='player_id, scoring_period_id'
-            ).execute()
+            supabase.table('player_daily_stats').insert(batch).execute()
         except Exception as e:
-            print(f"Supabase Error on batch {i}: {e}")
+            print(f"Supabase Error on insert batch starting at index {i}: {e}")
             
-    print("Supabase upload complete.")
+    print("Supabase database insert complete.")
 
 def upload_to_gcs(records, filename):
     if not GCS_BUCKET_NAME:
@@ -156,16 +164,27 @@ def upload_to_gcs(records, filename):
         print(f"GCS Upload Error: {e}")
 
 if __name__ == "__main__":
+    # Calculate current scoring period dynamically based on your bot's exact calendar rules
+    from datetime import date
+    SEASON_START = date(2026, 3, 25)
+    days_since_start = (date.today() - SEASON_START).days
+    current_period = max(1, days_since_start)
+    
+    # Target the current day and the previous 2 days (3 days total)
+    start_period = max(1, current_period - 2)
+    PERIODS = range(start_period, current_period + 1)
+    
+    print(f"Calculated current season day as Period {current_period}")
+    print(f"Targeting 3-day window: Periods {list(PERIODS)}")
+    
     TEAMS = [1, 2, 3, 5, 6, 8, 12, 13, 14]
     
-    # Define the period to scrape. 
-    PERIODS = range(1, 196) 
-
+    # Scrape the data from ESPN
     data = get_espn_data(LEAGUE_ID, TEAMS, PERIODS)
 
     if data:
-        # 1. Upload to Supabase (Powering the Website)
-        upload_to_supabase(data)
+        # 1. Upload to Supabase using the new delete-and-insert method
+        upload_to_supabase(data, PERIODS)
 
         # 2. Upload to GCS (Data Lake / Backup)
         filename = f"stats_period_{PERIODS[0]}_to_{PERIODS[-1]}.csv"
