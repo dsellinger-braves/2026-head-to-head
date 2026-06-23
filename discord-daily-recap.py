@@ -48,8 +48,11 @@ TEAM_NAMES = {
 # ---------------------------------------------------------------------------
 
 BENCH_IL_SLOTS  = {16, 17, 20, 21, 22}
-HITTING_SLOTS   = {0, 1, 2, 3, 4, 5, 6, 7, 8}
-PITCHING_SLOTS  = {9, 10, 11, 12, 13, 14, 15}
+
+# These must stay in sync with HITTING_SLOT_IDS / PITCHING_SLOT_IDS below
+# and with the slot filtering in active-stats-pull.py.
+HITTING_SLOTS   = {0, 1, 2, 3, 4, 5, 6, 7, 11, 12, 19}
+PITCHING_SLOTS  = {13, 14, 15}
 
 ROTO_CATS = ["R", "HR", "RBI", "OBP", "SB", "QS", "ERA", "WHIP", "K", "SV_HD"]
 CAT_HIGHER_IS_BETTER = {
@@ -149,11 +152,12 @@ def filter_active(records: list[dict]) -> list[dict]:
     return [r for r in records if r.get("lineup_slot_id") not in BENCH_IL_SLOTS]
 
 
+# Must match HITTING_SLOTS / PITCHING_SLOTS above and active-stats-pull.py
 HITTING_SLOT_IDS  = {0, 1, 2, 3, 4, 5, 6, 7, 11, 12, 19}
 PITCHING_SLOT_IDS = {13, 14, 15}
 
-HITTING_STATS  = {'R','HR','RBI','SB','H','BB','HBP','PA','AB','SF'}
-PITCHING_STATS = {'K','QS','IP','ER','H_Allowed','BB_Allowed','SV','HD'}
+HITTING_STATS  = {'R', 'HR', 'RBI', 'SB', 'H', 'BB', 'HBP', 'PA', 'AB', 'SF'}
+PITCHING_STATS = {'K', 'QS', 'IP', 'ER', 'H_Allowed', 'BB_Allowed', 'SV', 'HD'}
 
 def aggregate_by_team(records: list[dict]) -> dict:
     totals: dict[int, dict] = {}
