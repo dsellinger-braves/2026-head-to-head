@@ -103,8 +103,15 @@ CAT_DISPLAY = {
     "QS": "QS", "ERA": "ERA", "WHIP": "WHIP", "K": "K", "SV_HD": "SV+H",
 }
 
-BENCH_IL_SLOTS = {16, 17, 20, 21, 22}
-SEASON_START   = date(2026, 3, 25)
+BENCH_IL_SLOTS    = {16, 17, 20, 21, 22}
+
+# Slot ID sets used for stat whitelisting — must match active-stats-pull.py
+HITTING_SLOT_IDS  = {0, 1, 2, 3, 4, 5, 6, 7, 11, 12, 19}
+PITCHING_SLOT_IDS = {13, 14, 15}
+HITTING_STATS     = {'R', 'HR', 'RBI', 'SB', 'H', 'BB', 'HBP', 'PA', 'AB', 'SF'}
+PITCHING_STATS    = {'K', 'QS', 'IP', 'ER', 'H_Allowed', 'BB_Allowed', 'SV', 'HD'}
+
+SEASON_START = date(2026, 3, 25)
 
 # ---------------------------------------------------------------------------
 # MLB STATS API  (free, no key required)
@@ -532,46 +539,47 @@ def get_supabase() -> Client:
 
 
 def fetch_stats_up_to_period(max_period: int) -> list[dict]:
-    all_records = []
-    offset, page_size = 0, 1000
+    # Cursor-based pagination avoids PGRST125 errors on large tables.
+    all_records, last_id, page_size = [], 0, 1000
     while True:
         batch = (
             get_supabase()
             .table("player_daily_stats")
             .select("*")
             .lte("scoring_period_id", max_period)
-            .order("scoring_period_id", desc=False)
-            .range(offset, offset + page_size - 1)
+            .gt("id", last_id)
+            .order("id", desc=False)
+            .limit(page_size)
             .execute()
             .data or []
         )
         all_records.extend(batch)
         if len(batch) < page_size:
             break
-        offset += page_size
+        last_id = batch[-1]["id"]
     return all_records
 
 
 def fetch_stats_for_periods(periods: list[int]) -> list[dict]:
     if not periods:
         return []
-    all_records = []
-    offset, page_size = 0, 1000
+    all_records, last_id, page_size = [], 0, 1000
     while True:
         batch = (
             get_supabase()
             .table("player_daily_stats")
             .select("*")
             .in_("scoring_period_id", periods)
-            .order("scoring_period_id", desc=False)
-            .range(offset, offset + page_size - 1)
+            .gt("id", last_id)
+            .order("id", desc=False)
+            .limit(page_size)
             .execute()
             .data or []
         )
         all_records.extend(batch)
         if len(batch) < page_size:
             break
-        offset += page_size
+        last_id = batch[-1]["id"]
     return all_records
 
 
@@ -636,16 +644,31 @@ def filter_active(records: list[dict]) -> list[dict]:
 
 
 def aggregate_by_team(records: list[dict]) -> dict:
+    """
+    Slot-aware team aggregation.  Only hitting stats count from hitting slots
+    and only pitching stats count from pitching slots, matching the logic
+    enforced at scrape time in active-stats-pull.py.  This also handles any
+    legacy rows in the DB that were scraped before that fix was deployed.
+    """
     totals: dict[int, dict] = {}
     for row in records:
-        tid   = row["team_id"]
+        tid  = row["team_id"]
+        slot = row.get("lineup_slot_id")
         stats = row.get("stats", {})
         if isinstance(stats, str):
             stats = json.loads(stats)
+
+        if slot in HITTING_SLOT_IDS:
+            allowed = HITTING_STATS
+        elif slot in PITCHING_SLOT_IDS:
+            allowed = PITCHING_STATS
+        else:
+            continue  # bench / IL / unknown — skip entirely
+
         if tid not in totals:
             totals[tid] = {}
         for stat, val in stats.items():
-            if isinstance(val, (int, float)):
+            if stat in allowed and isinstance(val, (int, float)):
                 totals[tid][stat] = totals[tid].get(stat, 0) + val
     return totals
 
@@ -727,16 +750,32 @@ def compute_standings_delta(prev: dict, curr: dict) -> dict:
 # ---------------------------------------------------------------------------
 
 def aggregate_by_player(records: list[dict]) -> dict:
+    """
+    Slot-aware player-level aggregation.
+    Hitting stats only accumulate from hitting slots; pitching stats only from
+    pitching slots.  This correctly handles legacy DB rows and two-way players
+    (e.g. Ohtani has separate ESPN IDs for hitting/pitching, so they aggregate
+    into two distinct entries naturally).
+    """
     players: dict[int, dict] = {}
     for row in records:
-        pid   = row["player_id"]
+        pid  = row["player_id"]
+        slot = row.get("lineup_slot_id")
         stats = row.get("stats", {})
         if isinstance(stats, str):
             stats = json.loads(stats)
+
+        if slot in HITTING_SLOT_IDS:
+            allowed = HITTING_STATS
+        elif slot in PITCHING_SLOT_IDS:
+            allowed = PITCHING_STATS
+        else:
+            continue  # bench / IL / unknown
+
         if pid not in players:
             players[pid] = {"full_name": row["full_name"], "team_id": row["team_id"]}
         for stat, val in stats.items():
-            if isinstance(val, (int, float)):
+            if stat in allowed and isinstance(val, (int, float)):
                 players[pid][stat] = players[pid].get(stat, 0) + val
     return players
 
