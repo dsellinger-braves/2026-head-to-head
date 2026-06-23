@@ -175,7 +175,7 @@ if __name__ == "__main__":
     
     # Target the current day and the previous 2 days (5 days total)
     start_period = max(1, current_period - 2)
-    PERIODS = range(0, current_period + 3) 
+    PERIODS = range(start_period, current_period + 3) 
     # start_period
     
     
