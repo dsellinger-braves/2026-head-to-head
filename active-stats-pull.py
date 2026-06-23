@@ -173,7 +173,8 @@ if __name__ == "__main__":
     # Target the current day, previous 2 days, and next 2 days (5 days total)
     start_period = max(1, current_period - 2)
     end_period = current_period + 2
-    PERIODS = range(0, end_period + 1)
+    PERIODS = range(59, 61)
+    #PERIODS = range(start_period, end_period + 1)
     
     print(f"Calculated current season day as Period {current_period}")
     print(f"Targeting 5-day window: Periods {list(PERIODS)}")
