@@ -155,27 +155,10 @@ def upload_to_gcs(records, filename):
     except Exception as e:
         print(f"GCS Upload Error: {e}")
 
-from mlb_schedule_check import check_game_status, should_scrape, log_status, get_periods_to_focus
-
 if __name__ == "__main__":
-    import sys
-    mode   = sys.argv[1] if len(sys.argv) > 1 else "auto"
-    status = check_game_status()
-    log_status(status)
-
-    if not should_scrape(status, mode):
-        sys.exit(0)
-
-    # Optionally focus only on recent periods for mid-night runs
-    # (swap your existing "scrape all periods" loop to use these)
-    focus_periods = get_periods_to_focus(status, current_period)
-    print(f"Focusing on periods: {focus_periods}")
-    # Define the teams in your league
     TEAMS = [1, 2, 3, 5, 6, 8, 12, 13, 14]
     
     # Define the period to scrape. 
-    # For automation, you might want: current_period = get_current_espn_period()
-    # For now, we use a range or a specific set.
     PERIODS = range(1, 196) 
 
     data = get_espn_data(LEAGUE_ID, TEAMS, PERIODS)
