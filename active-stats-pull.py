@@ -11,7 +11,7 @@ from datetime import datetime
 LEAGUE_ID = 130215
 YEAR = 2026
 
-# Load secrets from Environment Variables (Best for GitHub Actions/Cloud Run)
+# Load secrets from Environment Variables
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 GCS_BUCKET_NAME = os.environ.get("GCS_BUCKET_NAME")
@@ -42,6 +42,10 @@ STAT_MAPPING = {
     '48': 'K'
 }
 
+# Explicitly isolate batting vs pitching numeric IDs from ESPN
+HITTING_STAT_IDS  = {'0', '1', '2', '3', '4', '5', '10', '12', '16', '17', '20', '21', '23'}
+PITCHING_STAT_IDS = {'34', '45', '37', '39', '63', '48', '57', '60'}
+
 def get_espn_data(league_id, team_ids, scoring_period_ids):
     all_data = []
     print(f"--- Starting Scrape for League {league_id} ---")
@@ -63,14 +67,12 @@ def get_espn_data(league_id, team_ids, scoring_period_ids):
                 roster_entries = team_data.get('roster', {}).get('entries', [])
 
                 for entry in roster_entries:
+                    lineup_slot_id = entry.get('lineupSlotId', -1)
                     player_data = entry.get('playerPoolEntry', {}).get('player', {})
                     player_id = player_data.get('id')
                     full_name = player_data.get('fullName', 'Unknown')
                     
-                    # Extract stats list for this specific player
                     stats_list = player_data.get('stats', [])
-                    
-                    # Initialize an empty dictionary to hold the day's aggregated stats
                     raw_stats = {}
                     
                     for stat_obj in stats_list:
@@ -78,16 +80,20 @@ def get_espn_data(league_id, team_ids, scoring_period_ids):
                         if stat_obj.get('scoringPeriodId') == scoring_period_id and stat_obj.get('statSplitTypeId') == 5:
                              game_stats = stat_obj.get('stats', {})
                              
-                             # Instead of breaking, add this game's stats to the daily total
                              for stat_id, value in game_stats.items():
+                                 # --- ENFORCE SLOT RESTRICTIONS ---
+                                 # 1. If in a hitting slot (0-12), discard pitching stats
+                                 if lineup_slot_id in set(range(13)) and str(stat_id) in PITCHING_STAT_IDS:
+                                     continue
+                                 # 2. If in a pitching slot (13-15), discard batting stats
+                                 if lineup_slot_id in {13, 14, 15} and str(stat_id) in HITTING_STAT_IDS:
+                                     continue
+                                 
                                  raw_stats[stat_id] = raw_stats.get(stat_id, 0) + value
-                    
-                    # No 'break' statement, so it will loop through the whole array and catch Game 2!
 
                     # --- APPLY MAPPING HERE ---
                     mapped_stats = {}
                     for stat_id, value in raw_stats.items():
-                        # If we have a name for it in the mapping, use it. Otherwise use the ID.
                         key_name = STAT_MAPPING.get(str(stat_id), str(stat_id))
                         mapped_stats[key_name] = value
 
@@ -96,7 +102,7 @@ def get_espn_data(league_id, team_ids, scoring_period_ids):
                         "scoring_period_id": scoring_period_id,
                         "player_id": player_id,
                         "full_name": full_name,
-                        "lineup_slot_id": entry.get('lineupSlotId'),
+                        "lineup_slot_id": lineup_slot_id,
                         "stats": mapped_stats,
                         "updated_at": datetime.now().isoformat()
                     }
@@ -114,7 +120,6 @@ def upload_to_supabase(records, active_periods: list):
 
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
     
-    # 1. Clear the deck ONLY for the periods we are about to insert
     print(f"Clearing existing database rows for periods: {list(active_periods)}...")
     try:
         supabase.table('player_daily_stats').delete().in_('scoring_period_id', list(active_periods)).execute()
@@ -123,7 +128,6 @@ def upload_to_supabase(records, active_periods: list):
         print("Aborting insert to prevent duplicate key constraint failures.")
         return
 
-    # 2. Perform clean bulk inserts in batches
     print(f"Inserting {len(records)} fresh records to Supabase...")
     batch_size = 500
     for i in range(0, len(records), batch_size):
@@ -142,12 +146,10 @@ def upload_to_gcs(records, filename):
 
     print(f"Uploading {filename} to GCS...")
     
-    # Convert list of dicts to CSV string
     df = pd.json_normalize(records) 
     csv_buffer = StringIO()
     df.to_csv(csv_buffer, index=False)
     
-    # Authenticate and Upload
     try:
         if GCS_CREDENTIALS_JSON:
             with open("gcs_key.json", "w") as f:
@@ -170,24 +172,20 @@ if __name__ == "__main__":
     days_since_start = (date.today() - SEASON_START).days
     current_period = max(1, days_since_start)
     
-    # Target the current day, previous 2 days, and next 2 days (5 days total)
     start_period = max(1, current_period - 2)
     end_period = current_period + 2
-    PERIODS = range(start_period, end_period + 1)
+    PERIODS = range(0, end_period + 1)
+    #PERIODS = range(start_period, end_period + 1)
     
     print(f"Calculated current season day as Period {current_period}")
     print(f"Targeting 5-day window: Periods {list(PERIODS)}")
     
     TEAMS = [1, 2, 3, 5, 6, 8, 12, 13, 14]
     
-    # Scrape the data from ESPN
     data = get_espn_data(LEAGUE_ID, TEAMS, PERIODS)
 
     if data:
-        # 1. Upload to Supabase using the clean delete-and-insert method
         upload_to_supabase(data, PERIODS)
-
-        # 2. Upload to GCS (Data Lake / Backup)
         filename = f"stats_period_{PERIODS[0]}_to_{PERIODS[-1]}.csv"
         upload_to_gcs(data, filename)
     else:
