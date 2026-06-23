@@ -18,8 +18,6 @@ GCS_BUCKET_NAME = os.environ.get("GCS_BUCKET_NAME")
 GCS_CREDENTIALS_JSON = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_JSON") 
 
 # --- STAT MAPPING ---
-# REPLACE THIS with your actual mapping. 
-# Example format: { 'ESPN_ID': 'READABLE_NAME' }
 STAT_MAPPING = {
     '0': 'AB',
     '1': 'H',
@@ -42,7 +40,6 @@ STAT_MAPPING = {
     '39': 'BB_Allowed',
     '63': 'QS',
     '48': 'K'
-    # Add the rest of your mapping here...
 }
 
 def get_espn_data(league_id, team_ids, scoring_period_ids):
@@ -70,7 +67,9 @@ def get_espn_data(league_id, team_ids, scoring_period_ids):
                     player_id = player_data.get('id')
                     full_name = player_data.get('fullName', 'Unknown')
                     
-                    # Extract stats for this specific scoring period
+                    # Extract stats list for this specific player
+                    stats_list = player_data.get('stats', [])
+                    
                     # Initialize an empty dictionary to hold the day's aggregated stats
                     raw_stats = {}
                     
@@ -98,7 +97,7 @@ def get_espn_data(league_id, team_ids, scoring_period_ids):
                         "player_id": player_id,
                         "full_name": full_name,
                         "lineup_slot_id": entry.get('lineupSlotId'),
-                        "stats": mapped_stats, # Saves: {"HR": 1, "RBI": 2} instead of {"5": 1, "21": 2}
+                        "stats": mapped_stats,
                         "updated_at": datetime.now().isoformat()
                     }
                     all_data.append(record)
@@ -115,8 +114,7 @@ def upload_to_supabase(records, active_periods: list):
 
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
     
-    # 1. Clear the deck ONLY for the 3 days we are about to insert
-    # This prevents unique constraint errors without affecting the rest of the season
+    # 1. Clear the deck ONLY for the periods we are about to insert
     print(f"Clearing existing database rows for periods: {list(active_periods)}...")
     try:
         supabase.table('player_daily_stats').delete().in_('scoring_period_id', list(active_periods)).execute()
@@ -145,7 +143,7 @@ def upload_to_gcs(records, filename):
     print(f"Uploading {filename} to GCS...")
     
     # Convert list of dicts to CSV string
-    df = pd.json_normalize(records) # Flattens the nested 'stats' JSON for CSV columns
+    df = pd.json_normalize(records) 
     csv_buffer = StringIO()
     df.to_csv(csv_buffer, index=False)
     
@@ -167,17 +165,15 @@ def upload_to_gcs(records, filename):
         print(f"GCS Upload Error: {e}")
 
 if __name__ == "__main__":
-    # Calculate current scoring period dynamically based on your bot's exact calendar rules
     from datetime import date
     SEASON_START = date(2026, 3, 25)
     days_since_start = (date.today() - SEASON_START).days
     current_period = max(1, days_since_start)
     
-    # Target the current day and the previous 2 days (5 days total)
+    # Target the current day, previous 2 days, and next 2 days (5 days total)
     start_period = max(1, current_period - 2)
-    PERIODS = range(start_period, current_period + 3) 
-    # start_period
-    
+    end_period = current_period + 2
+    PERIODS = range(0, end_period + 1)
     
     print(f"Calculated current season day as Period {current_period}")
     print(f"Targeting 5-day window: Periods {list(PERIODS)}")
@@ -188,7 +184,7 @@ if __name__ == "__main__":
     data = get_espn_data(LEAGUE_ID, TEAMS, PERIODS)
 
     if data:
-        # 1. Upload to Supabase using the new delete-and-insert method
+        # 1. Upload to Supabase using the clean delete-and-insert method
         upload_to_supabase(data, PERIODS)
 
         # 2. Upload to GCS (Data Lake / Backup)
