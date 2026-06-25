@@ -378,8 +378,9 @@ def format_performance_embed_body(best_h, worst_h, best_p, worst_p) -> str:
         _pitcher_table(best_p,  "🟢 BEST PITCHERS"),
         _pitcher_table(worst_p, "🔴 WORST PITCHERS"),
     ]
-    return "```\n" + "\n\n".join(sections) + "\n
-```"
+    
+    # Ensure this return statement is entirely on one line!
+    return "```text\n" + "\n\n".join(sections) + "\n```"
 
 # ---------------------------------------------------------------------------
 # STANDINGS CHANGES EMBED
