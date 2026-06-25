@@ -75,10 +75,6 @@ def scoring_period_for_date(target_date: date) -> int:
 # SUPABASE
 # ---------------------------------------------------------------------------
 
-def get_supabase() -> Client:
-    return create_client(SUPABASE_URL, SUPABASE_KEY)
-
-
 def fetch_stats_up_to_period(max_period: int) -> list[dict]:
     all_records = []
     offset, page_size = 0, 1000
@@ -98,7 +94,6 @@ def fetch_stats_up_to_period(max_period: int) -> list[dict]:
             break
         offset += page_size
     return all_records
-
 
 def fetch_stats_for_periods(periods: list[int]) -> list[dict]:
     if not periods:
@@ -164,6 +159,10 @@ PITCHING_STATS = {'K', 'QS', 'IP', 'ER', 'H_Allowed', 'BB_Allowed', 'SV', 'HD'}
 def aggregate_by_team(records: list[dict]) -> dict:
     totals: dict[int, dict] = {}
     for row in records:
+        # EXPLICIT GUARDRAIL: Never aggregate Period 0 (Cumulative Season Stats)
+        if row.get("scoring_period_id") == 0:
+            continue
+            
         tid  = row["team_id"]
         slot = row.get("lineup_slot_id")
         stats = row.get("stats", {})
@@ -184,8 +183,6 @@ def aggregate_by_team(records: list[dict]) -> dict:
             if stat in allowed and isinstance(val, (int, float)):
                 totals[tid][stat] = totals[tid].get(stat, 0) + val
     return totals
-
-
 def compute_averages(totals: dict) -> dict:
     for tid, stats in totals.items():
         if stats.get("AB", 0) > 0:
