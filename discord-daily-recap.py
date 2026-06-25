@@ -80,44 +80,46 @@ def get_supabase() -> Client:
 
 
 def fetch_stats_up_to_period(max_period: int) -> list[dict]:
-    all_records, last_id, page_size = [], 0, 1000
+    all_records = []
+    offset, page_size = 0, 1000
     while True:
         batch = (
             get_supabase()
             .table("player_daily_stats")
             .select("*")
             .lte("scoring_period_id", max_period)
-            .gt("id", last_id)
-            .order("id", desc=False)
-            .limit(page_size)
+            .order("scoring_period_id", desc=False)
+            .range(offset, offset + page_size - 1)
             .execute()
             .data or []
         )
         all_records.extend(batch)
         if len(batch) < page_size:
             break
-        last_id = batch[-1]["id"]
+        offset += page_size
     return all_records
 
 
 def fetch_stats_for_periods(periods: list[int]) -> list[dict]:
-    all_records, last_id, page_size = [], 0, 1000
+    if not periods:
+        return []
+    all_records = []
+    offset, page_size = 0, 1000
     while True:
         batch = (
             get_supabase()
             .table("player_daily_stats")
             .select("*")
             .in_("scoring_period_id", periods)
-            .gt("id", last_id)
-            .order("id", desc=False)
-            .limit(page_size)
+            .order("scoring_period_id", desc=False)
+            .range(offset, offset + page_size - 1)
             .execute()
             .data or []
         )
         all_records.extend(batch)
         if len(batch) < page_size:
             break
-        last_id = batch[-1]["id"]
+        offset += page_size
     return all_records
 
 
