@@ -51,8 +51,8 @@ BENCH_IL_SLOTS  = {16, 17, 20, 21, 22}
 
 # These must stay in sync with HITTING_SLOT_IDS / PITCHING_SLOT_IDS below
 # and with the slot filtering in active-stats-pull.py.
-HITTING_SLOTS   = {0, 1, 2, 3, 4, 5, 6, 7, 11, 12, 19}
-PITCHING_SLOTS  = {13, 14, 15}
+HITTING_SLOT_IDS  = {0, 1, 2, 3, 4, 5, 6, 7, 11, 12, 19}
+PITCHING_SLOT_IDS = {13, 14, 15}
 
 ROTO_CATS = ["R", "HR", "RBI", "OBP", "SB", "QS", "ERA", "WHIP", "K", "SV_HD"]
 CAT_HIGHER_IS_BETTER = {
@@ -66,14 +66,15 @@ CAT_DISPLAY = {
 
 SEASON_START = date(2026, 3, 25)
 
-
 def scoring_period_for_date(target_date: date) -> int:
     return max(1, (target_date - SEASON_START).days + 1)
-
 
 # ---------------------------------------------------------------------------
 # SUPABASE
 # ---------------------------------------------------------------------------
+
+def get_supabase() -> Client:
+    return create_client(SUPABASE_URL, SUPABASE_KEY)
 
 def fetch_stats_up_to_period(max_period: int) -> list[dict]:
     all_records = []
@@ -84,7 +85,7 @@ def fetch_stats_up_to_period(max_period: int) -> list[dict]:
             .table("player_daily_stats")
             .select("*")
             .lte("scoring_period_id", max_period)
-            .order("scoring_period_id", desc=False)
+            .order("id", desc=False)
             .range(offset, offset + page_size - 1)
             .execute()
             .data or []
@@ -106,7 +107,7 @@ def fetch_stats_for_periods(periods: list[int]) -> list[dict]:
             .table("player_daily_stats")
             .select("*")
             .in_("scoring_period_id", periods)
-            .order("scoring_period_id", desc=False)
+            .order("id", desc=False)
             .range(offset, offset + page_size - 1)
             .execute()
             .data or []
@@ -117,28 +118,26 @@ def fetch_stats_for_periods(periods: list[int]) -> list[dict]:
         offset += page_size
     return all_records
 
-
 def fetch_all_trades() -> list[dict]:
     """Fetch all TRADE transactions for the season."""
-    all_records, last_id, page_size = [], 0, 500
+    all_records = []
+    offset, page_size = 0, 500
     while True:
         batch = (
             get_supabase()
             .table("transactions")
             .select("*")
             .eq("transaction_type", "TRADE")
-            .gt("id", last_id)
             .order("id", desc=False)
-            .limit(page_size)
+            .range(offset, offset + page_size - 1)
             .execute()
             .data or []
         )
         all_records.extend(batch)
         if len(batch) < page_size:
             break
-        last_id = batch[-1]["id"]
+        offset += page_size
     return all_records
-
 
 # ---------------------------------------------------------------------------
 # AGGREGATION HELPERS
@@ -148,21 +147,16 @@ def filter_active(records: list[dict]) -> list[dict]:
     """Remove bench and IL player records — their stats don't count in roto."""
     return [r for r in records if r.get("lineup_slot_id") not in BENCH_IL_SLOTS]
 
-
-# Must match HITTING_SLOTS / PITCHING_SLOTS above and active-stats-pull.py
-HITTING_SLOT_IDS  = {0, 1, 2, 3, 4, 5, 6, 7, 11, 12, 19}
-PITCHING_SLOT_IDS = {13, 14, 15}
-
 HITTING_STATS  = {'R', 'HR', 'RBI', 'SB', 'H', 'BB', 'HBP', 'PA', 'AB', 'SF'}
 PITCHING_STATS = {'K', 'QS', 'IP', 'ER', 'H_Allowed', 'BB_Allowed', 'SV', 'HD'}
 
 def aggregate_by_team(records: list[dict]) -> dict:
     totals: dict[int, dict] = {}
     for row in records:
-        # EXPLICIT GUARDRAIL: Never aggregate Period 0 (Cumulative Season Stats)
+        # EXPLICIT GUARDRAIL: Skip Cumulative Season Stats
         if row.get("scoring_period_id") == 0:
             continue
-            
+
         tid  = row["team_id"]
         slot = row.get("lineup_slot_id")
         stats = row.get("stats", {})
@@ -183,6 +177,7 @@ def aggregate_by_team(records: list[dict]) -> dict:
             if stat in allowed and isinstance(val, (int, float)):
                 totals[tid][stat] = totals[tid].get(stat, 0) + val
     return totals
+
 def compute_averages(totals: dict) -> dict:
     for tid, stats in totals.items():
         if stats.get("AB", 0) > 0:
@@ -193,11 +188,9 @@ def compute_averages(totals: dict) -> dict:
             )
     return totals
 
-
 def espn_ip_to_innings(ip_val: float) -> float:
     """ESPN stores IP as total outs. Divide by 3 for decimal innings."""
     return ip_val / 3.0
-
 
 # ---------------------------------------------------------------------------
 # ROTO STANDINGS ENGINE
@@ -253,7 +246,6 @@ def compute_roto_standings(records: list[dict]) -> dict:
 
     return team_cats
 
-
 def compute_standings_delta(prev: dict, curr: dict) -> dict:
     delta = {}
     for tid, curr_d in curr.items():
@@ -272,7 +264,6 @@ def compute_standings_delta(prev: dict, curr: dict) -> dict:
         }
     return delta
 
-
 # ---------------------------------------------------------------------------
 # TRANSACTION HELPERS
 # ---------------------------------------------------------------------------
@@ -280,7 +271,6 @@ def compute_standings_delta(prev: dict, curr: dict) -> dict:
 def filter_trades_by_days(all_trades: list[dict], days: int) -> list[dict]:
     cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
     return [t for t in all_trades if t.get("transaction_date", "") >= cutoff]
-
 
 def format_trades_block(trades: list[dict], label: str = "RECENT TRADES") -> str:
     if not trades:
@@ -302,7 +292,6 @@ def format_trades_block(trades: list[dict], label: str = "RECENT TRADES") -> str
         lines.append(f"  {date_str}: " + " | ".join(sides))
     return "\n".join(lines)
 
-
 # ---------------------------------------------------------------------------
 # DAILY PERFORMANCE TABLES  (active players only)
 # ---------------------------------------------------------------------------
@@ -312,18 +301,20 @@ def _hitter_score(stats: dict) -> float:
             stats.get("R",  0) * 1 + stats.get("SB",  0) * 2 +
             stats.get("H",  0) * 0.5)
 
-
 def _pitcher_score(stats: dict) -> float:
     return (stats.get("K",  0) * 1 + stats.get("QS", 0) * 10 +
             (stats.get("SV", 0) + stats.get("HD", 0)) * 5 -
             stats.get("ER", 0) * 3)
-
 
 def get_best_worst_players(records: list[dict], n: int = 5):
     active   = filter_active(records)
     hitters, pitchers = [], []
 
     for row in active:
+        # EXPLICIT GUARDRAIL: Skip Cumulative Season Stats for Daily Tables
+        if row.get("scoring_period_id") == 0:
+            continue
+            
         slot  = row.get("lineup_slot_id")
         stats = row.get("stats", {})
         if isinstance(stats, str):
@@ -331,7 +322,7 @@ def get_best_worst_players(records: list[dict], n: int = 5):
         name = row["full_name"]
         team = TEAM_NAMES.get(row["team_id"], f"T{row['team_id']}")
 
-        if slot in HITTING_SLOTS:
+        if slot in HITTING_SLOT_IDS:
             ab = int(stats.get("AB", 0))
             pa = int(stats.get("PA", 0))
             if ab + pa < 1:
@@ -342,7 +333,7 @@ def get_best_worst_players(records: list[dict], n: int = 5):
                 "rbi": int(stats.get("RBI", 0)), "r": int(stats.get("R", 0)),
                 "sb": int(stats.get("SB", 0)),
             })
-        elif slot in PITCHING_SLOTS:
+        elif slot in PITCHING_SLOT_IDS:
             ip_raw = stats.get("IP", 0)
             if ip_raw <= 0:
                 continue
@@ -363,7 +354,6 @@ def get_best_worst_players(records: list[dict], n: int = 5):
     worst_pitchers = sorted(pitchers, key=lambda x:  x["score"])[:n]
     return best_hitters, worst_hitters, best_pitchers, worst_pitchers
 
-
 def _hitter_table(players: list[dict], title: str) -> str:
     hdr  = f"{'Player':<18} {'Team':<11} {'H':>2} {'HR':>2} {'RBI':>3} {'R':>2} {'SB':>2}"
     rows = [title, hdr, "─" * len(hdr)]
@@ -371,7 +361,6 @@ def _hitter_table(players: list[dict], title: str) -> str:
         rows.append(f"{p['name'][:17]:<18} {p['team'][:10]:<11} "
                     f"{p['h']:>2} {p['hr']:>2} {p['rbi']:>3} {p['r']:>2} {p['sb']:>2}")
     return "\n".join(rows)
-
 
 def _pitcher_table(players: list[dict], title: str) -> str:
     hdr  = f"{'Player':<18} {'Team':<11} {'IP':>4} {'K':>2} {'ER':>3} {'QS':>2} {'SV+H':>4}"
@@ -382,7 +371,6 @@ def _pitcher_table(players: list[dict], title: str) -> str:
                     f"{p['ip']:>4} {p['k']:>2} {p['er']:>3} {qs:>2} {p['svhd']:>4}")
     return "\n".join(rows)
 
-
 def format_performance_embed_body(best_h, worst_h, best_p, worst_p) -> str:
     sections = [
         _hitter_table(best_h,   "🟢 BEST HITTERS"),
@@ -390,8 +378,8 @@ def format_performance_embed_body(best_h, worst_h, best_p, worst_p) -> str:
         _pitcher_table(best_p,  "🟢 BEST PITCHERS"),
         _pitcher_table(worst_p, "🔴 WORST PITCHERS"),
     ]
-    return "```\n" + "\n\n".join(sections) + "\n```"
-
+    return "```\n" + "\n\n".join(sections) + "\n
+```"
 
 # ---------------------------------------------------------------------------
 # STANDINGS CHANGES EMBED
@@ -438,7 +426,6 @@ def format_standings_changes_body(standings: dict, delta: dict) -> str:
                  ["**Category roto point changes**\n*No category movement today*"])
     return "\n".join(lines)
 
-
 # ---------------------------------------------------------------------------
 # STANDINGS SUMMARY BLOCKS  (for AI prompt context)
 # ---------------------------------------------------------------------------
@@ -453,7 +440,6 @@ def format_standings_block(standings: dict) -> str:
         rows.append(f"{data['standing']:<3} {name:<14} {data['roto_points']:>5.1f}  {cats}")
     return "CURRENT ROTO STANDINGS:\n" + "\n".join(rows)
 
-
 def format_cat_values_block(standings: dict) -> str:
     fmt      = {"R":"d","HR":"d","RBI":"d","OBP":".3f","SB":"d","QS":"d","ERA":".2f","WHIP":".3f","K":"d","SV_HD":"d"}
     sorted_t = sorted(standings.items(), key=lambda x: x[1]["standing"])
@@ -464,7 +450,6 @@ def format_cat_values_block(standings: dict) -> str:
         vals = "  ".join(f"{data[c]:{fmt[c]}}".rjust(7) for c in ROTO_CATS)
         rows.append(f"{data['standing']:<3} {name:<14}  {vals}")
     return "ACTUAL CATEGORY VALUES:\n" + "\n".join(rows)
-
 
 def format_delta_block(standings: dict, delta: dict) -> str:
     sorted_t = sorted(standings.items(), key=lambda x: x[1]["standing"])
@@ -481,7 +466,6 @@ def format_delta_block(standings: dict, delta: dict) -> str:
         lines.append(f"  {name} ({arrow}, {pc_s} pts): {', '.join(notable) if notable else 'no movement'}")
     return "\n".join(lines)
 
-
 # ---------------------------------------------------------------------------
 # AI SUMMARY
 # ---------------------------------------------------------------------------
@@ -490,7 +474,6 @@ def generate_ai_summary(prompt: str) -> str:
     client   = genai.Client(api_key=GEMINI_API_KEY)
     response = client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
     return response.text
-
 
 def build_daily_prompt(
     period_date: date,
@@ -548,7 +531,6 @@ TOP INDIVIDUAL PERFORMANCES TODAY:
 {trades_section}
 Write the narrative recap now:"""
 
-
 # ---------------------------------------------------------------------------
 # DISCORD POSTING
 # ---------------------------------------------------------------------------
@@ -573,31 +555,36 @@ def post_to_discord(title: str, body: str, color: int = 0x1DB954):
         raise RuntimeError(f"Discord webhook failed: {resp.status_code} {resp.text}")
     print(f"Posted: {title}")
 
-
 # ---------------------------------------------------------------------------
 # MAIN ENTRYPOINTS
 # ---------------------------------------------------------------------------
 
 def run_daily_recap(target_date: date | None = None):
     if target_date is None:
+        # If running today (N), the target text describes yesterday (N-1)
         target_date = date.today() - timedelta(days=1)
 
-    period_id      = scoring_period_for_date(target_date)
-    prev_period_id = period_id - 1
-    print(f"Running daily recap for {target_date} (scoring period {period_id})")
+    period_id      = scoring_period_for_date(target_date) # Yesterday (N-1)
+    prev_period_id = period_id - 1                        # Day Before Yesterday (N-2)
+    print(f"Running daily recap for {target_date} (Scoring Period {period_id})")
+    print(f"Baseline comparison window: End of Period {prev_period_id} -> End of Period {period_id}")
 
     today_records = fetch_stats_for_periods([period_id])
     if not today_records:
-        print("No records found for this period. Skipping.")
+        print(f"No records found for target period {period_id}. Skipping.")
         return
 
-    print("Fetching cumulative standings data...")
+    print(f"Fetching cumulative standings data through period {period_id}...")
     all_curr = fetch_stats_up_to_period(period_id)
+    
+    print(f"Fetching baseline cumulative standings data through period {prev_period_id}...")
     all_prev = fetch_stats_up_to_period(prev_period_id) if prev_period_id >= 1 else []
 
-    # Apply active filter before computing standings
+    # Filter active spots and compute distinct, independent snapshots
     standings_curr = compute_roto_standings(filter_active(all_curr))
     standings_prev = compute_roto_standings(filter_active(all_prev)) if all_prev else standings_curr
+    
+    # Calculate the exact shifts in points and ranks from N-2 to N-1
     delta          = compute_standings_delta(standings_prev, standings_curr)
 
     totals = aggregate_by_team(filter_active(today_records))
@@ -631,7 +618,6 @@ def run_daily_recap(target_date: date | None = None):
                     format_standings_changes_body(standings_curr, delta), color=0xFFD700)
 
     print("Daily recap complete.")
-
 
 def run_weekly_recap(week_end_date: date | None = None):
     if week_end_date is None:
@@ -766,7 +752,6 @@ Write the weekly recap now:"""
     post_to_discord("📈  Weekly Standings Update",
                     format_standings_changes_body(standings_curr, weekly_delta), color=0xE67E22)
     print("Weekly recap complete.")
-
 
 if __name__ == "__main__":
     import sys
