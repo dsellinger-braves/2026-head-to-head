@@ -19,6 +19,11 @@ from historical import (
     format_league_champions, format_all_active_owner_summaries,
     HISTORICAL_OWNER_MAP,
 )
+from projections import (
+    fetch_projections, build_projection_map,
+    forecast_final_standings, get_player_projection,
+    format_projected_standings_block, format_player_projection_block,
+)
 import google.genai as genai
 
 # ---------------------------------------------------------------------------
@@ -91,6 +96,12 @@ LIVE_KEYWORDS = [
     "in progress", "playing now", "happening", "going on", "score",
     "game today", "games today", "pitching today", "starting today",
     "how is", "how's", "what is", "what's", "probable", "starter",
+]
+PROJECTION_KEYWORDS = [
+    "project", "projected", "projection", "projections",
+    "forecast", "rest of season", "ros", "end of season",
+    "final standings", "where will", "predicted", "predict",
+    "zips", "fangraphs",
 ]
 
 ROTO_CATS = ["R", "HR", "RBI", "OBP", "SB", "QS", "ERA", "WHIP", "K", "SV_HD"]
@@ -1111,6 +1122,53 @@ def build_context(question: str, current_period: int, asking_owner: str | None =
         except Exception as e:
             print(f"  MLB live fetch failed: {e}")
 
+    # --- ROS Projections ---
+    if any(kw in q for kw in PROJECTION_KEYWORDS):
+        print("  Fetching FanGraphs ROS projections...")
+        try:
+            raw_proj = fetch_projections()
+            proj_bat = build_projection_map(raw_proj["batting"], "batting")
+            proj_pit = build_projection_map(raw_proj["pitching"], "pitching")
+
+            # Projected final standings (YTD + ROS)
+            print("  Computing projected final standings...")
+            # Use ESPN rosters for most current roster picture
+            roster_records = fetch_current_roster_records()
+            projected = forecast_final_standings(
+                active_cumulative, roster_records, proj_bat, proj_pit, current_period
+            )
+            parts.append(format_projected_standings_block(projected, current=standings))
+
+            # Individual player projections (if a specific player is mentioned)
+            # Extract player names from the question for projection lookup
+            player_proj_added = False
+            for tid in mentioned_teams:
+                team_name = TEAM_NAMES.get(tid, "")
+                if team_name:
+                    results = get_player_projection(team_name, proj_bat, proj_pit, active_cumulative, current_period)
+                    # Don't add team-name false positives for player projections
+
+            # Check for any quoted or proper-noun player names in the question
+            # Simple heuristic: look for capitalized multi-word names in original question
+            words = question.split()
+            for i in range(len(words) - 1):
+                candidate = words[i] + " " + words[i + 1]
+                # Skip common non-name pairs
+                if candidate.lower() in ("rest of", "end of", "final standings",
+                                          "how will", "where will", "what is",
+                                          "who will", "the best", "the worst"):
+                    continue
+                results = get_player_projection(candidate, proj_bat, proj_pit, active_cumulative, current_period)
+                if results:
+                    block = format_player_projection_block(results)
+                    if block:
+                        parts.append(block)
+                        player_proj_added = True
+                        break  # Only match one player per question
+
+        except Exception as e:
+            print(f"  Projection fetch/compute failed: {e}")
+
     return "\n\n".join(parts)
 
 
@@ -1141,6 +1199,9 @@ ERA and WHIP: lower = better. All other categories: higher = better.
 Roto points: 1 (worst in category) to {n_teams} (best in category). Max possible score = {n_teams * 10}.
 All cumulative stats reflect ACTIVE lineup players only (bench/IL excluded).
 Live game stats are pulled directly from the MLB Stats API and reflect what has happened so far today.
+If projected/forecast standings are included, they combine actual YTD stats with FanGraphs ZiPS rest-of-season
+projections for each team's rostered players. QS projections are estimated from ERA and GS. Explain this
+methodology briefly if the user asks how projections work.
 
 ABOUT THE PERSON ASKING: {owner_context}
 
