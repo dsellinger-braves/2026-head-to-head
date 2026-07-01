@@ -469,14 +469,14 @@ def fetch_current_roster_records() -> list[dict]:
 
 def fetch_current_roster_records_with_bench() -> list[dict]:
     """
-    Fetch the most recent scoring period's records including bench players (excluding IL).
+    Fetch the most recent scoring period's records including bench and IL players.
     """
     period  = current_scoring_period()
     records = fetch_stats_for_periods([period])
     if not records:
         records = fetch_stats_for_periods([max(1, period - 1)])
-    # Exclude IL slots: 17, 20, 21, 22
-    return [r for r in records if r.get("lineup_slot_id") not in {17, 20, 21, 22}]
+    # Return all records including active, bench, and IL slots
+    return records
 
 
 def fetch_espn_live_rosters() -> dict[str, dict]:

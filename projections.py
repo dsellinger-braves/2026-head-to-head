@@ -219,22 +219,20 @@ def project_team_ros(
     current_period: int,
 ) -> dict:
     """
-    Sum ROS projections for all rostered players on a team (including bench, excluding IL).
+    Sum ROS projections for all rostered players on a team (including bench and IL).
 
-    roster_records: current roster from ESPN or Supabase (including BE slot 16)
+    roster_records: current roster from ESPN or Supabase (including BE and IL slots)
     ytd_records:    all active YTD stats records (for player-level QS/SV/HD calculations)
     current_period: current scoring period ID (day number)
     Returns a dict of projected ROS counting stats + rate stat components.
     """
     TOTAL_SCORING_PERIODS = 186
-    # Get unique player IDs on this team (active slots + BE slot 16)
+    # Get unique player IDs on this team (including active, BE, and IL slots)
     team_players: dict[int, int] = {}  # player_id -> lineup_slot_id
     for row in roster_records:
         if row["team_id"] != team_id:
             continue
         slot = row.get("lineup_slot_id")
-        if slot in {17, 20, 21, 22}:  # exclude IL slots
-            continue
         pid = row["player_id"]
         if pid not in team_players:
             team_players[pid] = slot
@@ -252,12 +250,14 @@ def project_team_ros(
 
     for pid, slot in team_players.items():
         is_bench = (slot == 16)
-        is_hitter_slot = (slot in HITTING_SLOT_IDS or is_bench)
-        is_pitcher_slot = (slot in PITCHING_SLOT_IDS or is_bench)
+        is_il = (slot in {17, 20, 21, 22})
+        is_inactive = is_bench or is_il
+        is_hitter_slot = (slot in HITTING_SLOT_IDS or is_inactive)
+        is_pitcher_slot = (slot in PITCHING_SLOT_IDS or is_inactive)
 
         if pid in proj_bat and is_hitter_slot:
             p = proj_bat[pid]
-            # Batters on the bench count for 50%
+            # Batters on the bench count for 50%, while batters on active/IL count for 100%
             factor = 0.5 if is_bench else 1.0
             for stat in ["R", "HR", "RBI", "SB", "H", "BB", "HBP", "PA", "AB", "SF"]:
                 totals[stat] += p.get(stat, 0) * factor
