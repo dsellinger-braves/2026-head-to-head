@@ -23,6 +23,7 @@ from projections import (
     fetch_projections, build_projection_map,
     forecast_final_standings, get_player_projection,
     format_projected_standings_block, format_player_projection_block,
+    forecast_ros_only_standings, format_ros_only_standings_block,
 )
 import google.genai as genai
 
@@ -1138,6 +1139,13 @@ def build_context(question: str, current_period: int, asking_owner: str | None =
                 active_cumulative, roster_records, proj_bat, proj_pit, current_period
             )
             parts.append(format_projected_standings_block(projected, current=standings))
+
+            # Pure ROS standings (ROS only)
+            print("  Computing pure ROS standings...")
+            ros_only = forecast_ros_only_standings(
+                roster_records, proj_bat, proj_pit, active_cumulative, current_period
+            )
+            parts.append(format_ros_only_standings_block(ros_only))
 
             # Individual player projections (if a specific player is mentioned)
             # Extract player names from the question for projection lookup

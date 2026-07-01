@@ -600,3 +600,86 @@ def format_player_projection_block(projections: list[dict]) -> str:
             )
 
     return "\n\n".join(lines)
+
+
+def forecast_ros_only_standings(
+    roster_records: list[dict],
+    proj_bat: dict[int, dict],
+    proj_pit: dict[int, dict],
+    ytd_records: list[dict],
+    current_period: int,
+) -> dict:
+    """
+    Compute standings and category values based PURELY on the rest-of-season (ROS) projections,
+    without including YTD actuals.
+    """
+    # 1. Project ROS totals for each team
+    ros_totals: dict[int, dict] = {}
+    match_info: dict[int, dict] = {}
+    for tid in TEAM_NAMES:
+        ros = project_team_ros(tid, roster_records, proj_bat, proj_pit, ytd_records, current_period)
+        match_info[tid] = {
+            "matched": ros.pop("_matched", 0),
+            "roster_size": ros.pop("_roster_size", 0),
+        }
+        ros_totals[tid] = ros
+
+    # 2. Compute category values for ROS portion
+    team_cats: dict[int, dict] = {}
+    for tid, stats in ros_totals.items():
+        pa     = stats.get("PA", 0)
+        obp    = round((stats.get("H", 0) + stats.get("BB", 0) + stats.get("HBP", 0)) / pa, 3) if pa > 0 else 0.0
+        ip_dec = _espn_ip_to_innings(stats.get("IP", 0))
+        era    = round((stats.get("ER", 0) / ip_dec) * 9, 2) if ip_dec > 0 else 0.0
+        whip   = round((stats.get("H_Allowed", 0) + stats.get("BB_Allowed", 0)) / ip_dec, 3) if ip_dec > 0 else 0.0
+
+        team_cats[tid] = {
+            "R":     int(stats.get("R", 0)),
+            "HR":    int(stats.get("HR", 0)),
+            "RBI":   int(stats.get("RBI", 0)),
+            "OBP":   obp,
+            "SB":    int(stats.get("SB", 0)),
+            "QS":    int(stats.get("QS", 0)),
+            "ERA":   era,
+            "WHIP":  whip,
+            "K":     int(stats.get("K", 0)),
+            "SV_HD": int(round(stats.get("SV", 0) + stats.get("HD", 0))),
+        }
+
+    # 3. Assign roto points and rankings
+    team_cats = _compute_roto_points(team_cats)
+
+    # Attach match info
+    for tid in team_cats:
+        team_cats[tid]["proj_matched"]    = match_info.get(tid, {}).get("matched", 0)
+        team_cats[tid]["proj_roster_size"] = match_info.get(tid, {}).get("roster_size", 0)
+
+    return team_cats
+
+
+def format_ros_only_standings_block(ros_projected: dict) -> str:
+    """Format pure rest-of-season projected standings as a text block."""
+    sorted_t = sorted(ros_projected.items(), key=lambda x: x[1]["standing"])
+
+    header = (
+        f"{'#':<3} {'Team':<14} {'Pts':>5}  "
+        + "  ".join(f"{CAT_DISPLAY[c]:>5}" for c in ROTO_CATS)
+    )
+    lines = ["PURE REST-OF-SEASON PROJECTED ROTO STANDINGS (ROS only, no YTD actuals):", header]
+
+    for tid, data in sorted_t:
+        name = TEAM_NAMES.get(tid, f"Team {tid}")
+        cats = "  ".join(f"{data['cat_points'].get(c, 0):>5.1f}" for c in ROTO_CATS)
+        proj_note = f"  ({data.get('proj_matched', '?')}/{data.get('proj_roster_size', '?')} matched)"
+        lines.append(f"{data['standing']:<3} {name:<14} {data['roto_points']:>5.1f}  {cats}{proj_note}")
+
+    # Show projected category values too
+    fmt = {"R":"d","HR":"d","RBI":"d","OBP":".3f","SB":"d","QS":"d","ERA":".2f","WHIP":".3f","K":"d","SV_HD":"d"}
+    val_header = f"\n{'#':<3} {'Team':<14}  " + "  ".join(f"{CAT_DISPLAY[c]:>7}" for c in ROTO_CATS)
+    lines.append("\nPURE REST-OF-SEASON PROJECTED CATEGORY VALUES:" + val_header)
+    for tid, data in sorted_t:
+        name = TEAM_NAMES.get(tid, f"Team {tid}")
+        vals = "  ".join(f"{data[c]:{fmt[c]}}".rjust(7) for c in ROTO_CATS)
+        lines.append(f"{data['standing']:<3} {name:<14}  {vals}")
+
+    return "\n".join(lines)
