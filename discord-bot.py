@@ -467,6 +467,18 @@ def fetch_current_roster_records() -> list[dict]:
     return filter_active(records)
 
 
+def fetch_current_roster_records_with_bench() -> list[dict]:
+    """
+    Fetch the most recent scoring period's records including bench players (excluding IL).
+    """
+    period  = current_scoring_period()
+    records = fetch_stats_for_periods([period])
+    if not records:
+        records = fetch_stats_for_periods([max(1, period - 1)])
+    # Exclude IL slots: 17, 20, 21, 22
+    return [r for r in records if r.get("lineup_slot_id") not in {17, 20, 21, 22}]
+
+
 def fetch_espn_live_rosters() -> dict[str, dict]:
     """
     Query ESPN Fantasy API directly for current roster assignments.
@@ -1133,8 +1145,8 @@ def build_context(question: str, current_period: int, asking_owner: str | None =
 
             # Projected final standings (YTD + ROS)
             print("  Computing projected final standings...")
-            # Use ESPN rosters for most current roster picture
-            roster_records = fetch_current_roster_records()
+            # Use ESPN rosters for most current roster picture (including bench, excluding IL)
+            roster_records = fetch_current_roster_records_with_bench()
             projected = forecast_final_standings(
                 active_cumulative, roster_records, proj_bat, proj_pit, current_period
             )

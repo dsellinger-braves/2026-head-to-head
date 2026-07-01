@@ -219,21 +219,21 @@ def project_team_ros(
     current_period: int,
 ) -> dict:
     """
-    Sum ROS projections for all rostered players on a team.
+    Sum ROS projections for all rostered players on a team (including bench, excluding IL).
 
-    roster_records: current active roster from ESPN or Supabase
+    roster_records: current roster from ESPN or Supabase (including BE slot 16)
     ytd_records:    all active YTD stats records (for player-level QS/SV/HD calculations)
     current_period: current scoring period ID (day number)
     Returns a dict of projected ROS counting stats + rate stat components.
     """
     TOTAL_SCORING_PERIODS = 186
-    # Get unique player IDs on this team (active slots only)
+    # Get unique player IDs on this team (active slots + BE slot 16)
     team_players: dict[int, int] = {}  # player_id -> lineup_slot_id
     for row in roster_records:
         if row["team_id"] != team_id:
             continue
         slot = row.get("lineup_slot_id")
-        if slot in BENCH_IL_SLOTS:
+        if slot in {17, 20, 21, 22}:  # exclude IL slots
             continue
         pid = row["player_id"]
         if pid not in team_players:
@@ -251,18 +251,28 @@ def project_team_ros(
     matched = 0
 
     for pid, slot in team_players.items():
-        if slot in HITTING_SLOT_IDS and pid in proj_bat:
+        is_bench = (slot == 16)
+        is_hitter_slot = (slot in HITTING_SLOT_IDS or is_bench)
+        is_pitcher_slot = (slot in PITCHING_SLOT_IDS or is_bench)
+
+        if pid in proj_bat and is_hitter_slot:
             p = proj_bat[pid]
+            # Batters on the bench count for 50%
+            factor = 0.5 if is_bench else 1.0
             for stat in ["R", "HR", "RBI", "SB", "H", "BB", "HBP", "PA", "AB", "SF"]:
-                totals[stat] += p.get(stat, 0)
+                totals[stat] += p.get(stat, 0) * factor
             matched += 1
-        elif slot in PITCHING_SLOT_IDS and pid in proj_pit:
+
+        # Note: If two-way player on the bench, they can match both blocks
+        if pid in proj_pit and is_pitcher_slot:
             p = proj_pit[pid]
+            # Pitchers on the bench count for 100%
+            factor = 1.0
             # Accumulate standard pitching stats (ignoring SV/HD since we project them via player YTD rates)
             for stat in ["K", "ER", "H_Allowed", "BB_Allowed"]:
-                totals[stat] += p.get(stat, 0)
+                totals[stat] += p.get(stat, 0) * factor
             # Convert FanGraphs decimal IP to ESPN outs format (×3)
-            totals["IP"] += p.get("IP", 0) * 3
+            totals["IP"] += p.get("IP", 0) * 3 * factor
             matched += 1
 
             # Quality Starts: Player YTD actual starts rate applied to remaining projected starts
@@ -285,14 +295,14 @@ def project_team_ros(
                     # Fallback to ERA-based estimation if no YTD starts yet
                     qs_rate = _estimate_qs(p) / gs_proj if gs_proj > 0 else 0
                 
-                totals["QS"] += gs_proj * qs_rate
+                totals["QS"] += gs_proj * qs_rate * factor
 
             # Save + Holds: player-level YTD actual SV+HD rate per period extrapolated to remaining periods
             ytd_sv = sum(_get_stat_val(r, "SV") for r in ytd_records if r["player_id"] == pid)
             ytd_hd = sum(_get_stat_val(r, "HD") for r in ytd_records if r["player_id"] == pid)
             extrap_ratio = (TOTAL_SCORING_PERIODS - current_period) / max(1, current_period)
-            totals["SV"] += ytd_sv * extrap_ratio
-            totals["HD"] += ytd_hd * extrap_ratio
+            totals["SV"] += ytd_sv * extrap_ratio * factor
+            totals["HD"] += ytd_hd * extrap_ratio * factor
 
     totals["_matched"] = matched
     totals["_roster_size"] = len(team_players)
