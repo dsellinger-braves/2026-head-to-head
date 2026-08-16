@@ -13,6 +13,7 @@ import TeamsView from './views/TeamsView';
 import PlayersView from './views/PlayersView';
 import ProgressionView from './views/ProgressionView';
 import HighlightsView from './views/HighlightsView';
+import OwnerDisparitiesView from './views/OwnerDisparitiesView';
 import OwnerDetailModal from './components/OwnerDetailModal';
 import PlayerHistoryModal from './components/PlayerHistoryModal';
 import LiveScoreboardView from './views/LiveScoreboardView';
@@ -420,6 +421,7 @@ function App() {
               <button onClick={() => setCurrentView('summary')} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'summary' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Standings</button>
               <button onClick={() => setCurrentView('teams')} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'teams' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Teams</button>
               <button onClick={() => setCurrentView('players')} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'players' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Players</button>
+              <button onClick={() => setCurrentView('disparities')} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'disparities' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Disparities</button>
               <button onClick={() => setCurrentView('progression')} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'progression' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Progression</button>
               <button onClick={() => setCurrentView('highlights')} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'highlights' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Highlights</button>
               <button onClick={() => setCurrentView('fantasycast')} className={`px-3 py-2 rounded text-sm font-bold flex items-center gap-2 ${currentView === 'fantasycast' ? 'bg-red-700' : 'hover:bg-blue-800'}`}>
@@ -473,6 +475,14 @@ function App() {
             allStats={rawData}
             selectedSeason={selectedSeason}
             onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
+          />
+        )}
+        {currentView === 'disparities' && (
+          <OwnerDisparitiesView
+            allStats={rawData}
+            selectedSeason={selectedSeason}
+            onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
+            onOwnerClick={(team) => setSelectedOwner(team)}
           />
         )}
         {currentView === 'progression' && (

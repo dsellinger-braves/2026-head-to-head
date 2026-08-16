@@ -197,3 +197,27 @@ export function calculateRotoPoints(teamStatsMap) {
 
   return rotoPoints;
 }
+
+// 5. Value Calculators for Disparity Analysis
+export function calculateBatterValue(stats) {
+  const pa = parseFloat(stats.PA) || 0;
+  if (pa === 0) return 0;
+  const r = parseFloat(stats.R) || 0;
+  const hr = parseFloat(stats.HR) || 0;
+  const rbi = parseFloat(stats.RBI) || 0;
+  const sb = parseFloat(stats.SB) || 0;
+  const obp = parseFloat(stats.OBP) || 0;
+  
+  return ((r + (hr * 3) + rbi + sb) / pa) + obp;
+}
+
+export function calculatePitcherValue(stats) {
+  const ip = parseFloat(stats.IP) || 0;
+  if (ip === 0) return 0;
+  const k = parseFloat(stats.K) || 0;
+  const qs = parseFloat(stats.QS) || 0;
+  const svhds = parseFloat(stats['SV+HDs']) || 0;
+  const er = parseFloat(stats.ER) || 0;
+  
+  return ((ip * 3) - (er * 2) + k + (qs * 3) + (svhds * 3)) / ip;
+}
