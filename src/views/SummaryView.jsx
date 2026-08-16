@@ -62,13 +62,14 @@ export default function SummaryView({ processedWeeks, onOwnerClick }) {
   // --- 2. GENERATE DATA SETS ---
   const phase1Standings = useMemo(() => getStandings(1), [processedWeeks]);
   const phase2Standings = useMemo(() => getStandings(2), [processedWeeks]);
+  const phase3Standings = useMemo(() => getStandings(3), [processedWeeks]);
 
   // Determine who is in which league based on Phase 1 results
   // Top 4 = Winners, Bottom 4 = Consolation
   const winnersLeagueIds = new Set(phase1Standings.slice(0, 4).map(t => t.id));
   
-  const winnersStandings = phase2Standings.filter(t => winnersLeagueIds.has(t.id));
-  const consolationStandings = phase2Standings.filter(t => !winnersLeagueIds.has(t.id));
+  const winnersStandings = phase3Standings.filter(t => winnersLeagueIds.has(t.id));
+  const consolationStandings = phase3Standings.filter(t => !winnersLeagueIds.has(t.id));
 
   // --- 3. HELPER: GET PLAYOFF MATCHUPS ---
   const getPlayoffMatchup = (id) => {
@@ -208,16 +209,25 @@ export default function SummaryView({ processedWeeks, onOwnerClick }) {
         </div>
       </div>
 
-      {/* --- SECTION 2: PHASE 2 STANDINGS (Weeks 15-23) --- */}
+      {/* --- SECTION 2: PHASE 3 STANDINGS (Weeks 15-23) --- */}
       <div className="space-y-6">
         <h2 className="text-2xl font-black text-gray-900 flex items-center gap-3">
-          <span className="bg-green-600 text-white text-sm px-3 py-1 rounded-full">Phase 2</span>
+          <span className="bg-green-600 text-white text-sm px-3 py-1 rounded-full">Phase 3</span>
           Split Leagues
         </h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <StandingsTable title="🏆 Winner's League (Top 4)" data={winnersStandings} />
           <StandingsTable title="🛡️ Consolation League" data={consolationStandings} />
         </div>
+      </div>
+
+      {/* --- SECTION 3: PHASE 2 STANDINGS (Weeks 13-14) --- */}
+      <div className="space-y-4 opacity-75 hover:opacity-100 transition-opacity">
+        <h2 className="text-2xl font-black text-gray-600 flex items-center gap-3">
+          <span className="bg-gray-500 text-white text-sm px-3 py-1 rounded-full">Phase 2</span>
+          Mid-Season Championship
+        </h2>
+        <StandingsTable title="Weeks 13-14 Mid-Season" data={phase2Standings} />
       </div>
 
       {/* --- SECTION 3: PHASE 1 STANDINGS (Weeks 1-14) --- */}

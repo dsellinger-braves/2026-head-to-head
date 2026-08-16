@@ -39,7 +39,11 @@ export default function ProgressionView({ allStats, selectedSeason = 2026, proce
   const progressionData = useMemo(() => {
     if (!allStats.length) return { allPeriods: [], cumulativeByTeam: {}, cumulativeRotoByTeam: {} };
 
-    const allPeriods = [...new Set(allStats.map(r => r.scoring_period_id))].sort((a, b) => a - b);
+    const allPeriodsRaw = [...new Set(allStats.map(r => r.scoring_period_id))].sort((a, b) => a - b);
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const allPeriods = selectedSeason === new Date().getFullYear()
+      ? allPeriodsRaw.filter(p => getDateFromPeriodId(p, selectedSeason) <= todayStr)
+      : allPeriodsRaw;
 
     const byTeam = {};
     teamIds.forEach(id => { byTeam[id] = []; });
@@ -225,6 +229,7 @@ export default function ProgressionView({ allStats, selectedSeason = 2026, proce
               tick={{ fontSize: 10, fill: '#9ca3af' }}
               tickFormatter={v => formatVal(v, selectedStat, viewMode)}
               width={55}
+              domain={viewMode === 'raw' && selectedStat === 'ERA' ? [2, 5] : ['auto', 'auto']}
             />
             <Tooltip
               formatter={(val, name) => [formatVal(val, selectedStat, viewMode), name]}

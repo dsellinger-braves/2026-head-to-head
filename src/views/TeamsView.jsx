@@ -3,7 +3,7 @@ import { TEAMS } from '../schedule';
 import { aggregateStats, SCORING_CATS, calculateRotoPoints } from '../utils/scoring';
 import TeamAvatar from '../components/TeamAvatar';
 
-const STAT_COLS = ['PA', 'R', 'HR', 'RBI', 'SB', 'OBP', 'IP', 'K', 'QS', 'SV+HDs', 'ERA', 'WHIP'];
+const STAT_COLS = ['PA', 'R', 'HR', 'RBI', 'SB', 'OBP', 'IP', 'K', 'QS', 'QS_PCT', 'SV+HDs', 'ERA', 'WHIP'];
 
 const formatStat = (val, cat) => {
   if (val === undefined || val === null) return '-';
@@ -19,12 +19,21 @@ const formatStat = (val, cat) => {
     const n = parseFloat(val);
     return isNaN(n) ? '-' : n.toFixed(4).replace(/^0/, '');
   }
+  if (cat === 'QS_PCT') {
+    const n = parseFloat(val);
+    return isNaN(n) ? '-' : n.toFixed(1) + '%';
+  }
   if (SCORING_CATS[cat]?.isRate) {
     const n = parseFloat(val);
     return isNaN(n) ? '-' : n.toFixed(3).replace(/^0/, '');
   }
   const n = parseFloat(val);
   return isNaN(n) ? '-' : Math.round(n);
+};
+
+const getLabel = (col) => {
+  if (col === 'QS_PCT') return 'QS%';
+  return SCORING_CATS[col]?.label || col;
 };
 
 export default function TeamsView({ allStats, onOwnerClick }) {

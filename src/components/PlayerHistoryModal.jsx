@@ -37,7 +37,7 @@ export default function PlayerHistoryModal({ playerId, playerName, allStats, onC
   
   // --- UPDATED COLUMNS HERE ---
   const batCats = ['PA', 'R', 'HR', 'RBI', 'SB', 'OBP'];
-  const pitchCats = ['IP', 'ER', 'K', 'QS', 'SV+HDs', 'ERA', 'WHIP']; // Added ER
+  const pitchCats = ['IP', 'ER', 'K', 'QS', 'QS_PCT', 'SV+HDs', 'ERA', 'WHIP'];
   
   const displayCats = displayMode === 'batting' ? batCats : pitchCats;
 
@@ -80,11 +80,20 @@ export default function PlayerHistoryModal({ playerId, playerName, allStats, onC
       const n = parseFloat(val);
       return isNaN(n) ? '-' : n.toFixed(4).replace(/^0/, '');
     }
+    if (catKey === 'QS_PCT') {
+      const n = parseFloat(val);
+      return isNaN(n) ? '-' : n.toFixed(1) + '%';
+    }
     if (SCORING_CATS[catKey]?.isRate) {
       const num = parseFloat(val);
       return isNaN(num) ? '-' : num.toFixed(3).replace(/^0+/, '');
     }
     return val;
+  };
+
+  const getLabel = (col) => {
+    if (col === 'QS_PCT') return 'QS%';
+    return SCORING_CATS[col]?.label || col;
   };
 
   // 6. Filter for Detail View
@@ -131,7 +140,7 @@ export default function PlayerHistoryModal({ playerId, playerName, allStats, onC
                   <th className="p-3 text-center border-b border-gray-200 w-16">Games</th>
                   {displayCats.map(c => (
                     <th key={c} className="p-3 text-center border-b border-gray-200 min-w-[50px]">
-                      {SCORING_CATS[c]?.label || c}
+                      {getLabel(c)}
                     </th>
                   ))}
                   <th className="p-3 border-b border-gray-200"></th>
@@ -178,7 +187,7 @@ export default function PlayerHistoryModal({ playerId, playerName, allStats, onC
                  <th className="p-3 text-center border-b border-gray-200">Pos</th>
                  {displayCats.map(c => (
                    <th key={c} className="p-3 text-center border-b border-gray-200 min-w-[50px]">
-                     {SCORING_CATS[c]?.label || c}
+                     {getLabel(c)}
                    </th>
                  ))}
                </tr>

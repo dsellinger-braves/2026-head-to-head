@@ -89,7 +89,7 @@ export function aggregateStats(dailyRecords) {
   const totals = {
     R: 0, HR: 0, RBI: 0, SB: 0, K: 0, QS: 0, 'SV+HDs': 0,
     ER: 0, IP: 0, BB_Allowed: 0, H_Allowed: 0,
-    OBP_num: 0, PA: 0,  // for PA-weighted OBP accumulation
+    OBP_num: 0, PA: 0, GS: 0
   };
 
   dailyRecords.forEach(record => {
@@ -103,7 +103,13 @@ export function aggregateStats(dailyRecords) {
 
     const pa  = parseFloat(s.PA)  || 0;
     const obp = parseFloat(s.OBP) || 0;
+    
+    // Determine Games Started (ID 32 is games started, or fallback to SP slot with IP)
+    const espnStats = record.stats || {};
+    const gs = parseFloat(espnStats['32']) > 0 ? parseFloat(espnStats['32']) : 
+               (record.lineup_slot_id === 14 && (parseFloat(s.IP_raw) > 0 || parseFloat(s.IP) > 0) ? 1 : 0);
 
+    totals.GS          += gs;
     totals.R           += parseFloat(s.R)  || 0;
     totals.HR          += parseFloat(s.HR) || 0;
     totals.RBI         += parseFloat(s.RBI) || 0;
@@ -126,6 +132,7 @@ export function aggregateStats(dailyRecords) {
   calculated.OBP  = totals.PA > 0 ? (totals.OBP_num / totals.PA).toFixed(3) : ".000";
   calculated.ERA  = totals.IP > 0 ? ((totals.ER * 9) / totals.IP).toFixed(2) : "0.00";
   calculated.WHIP = totals.IP > 0 ? ((totals.BB_Allowed + totals.H_Allowed) / totals.IP).toFixed(2) : "0.00";
+  calculated.QS_PCT = totals.GS > 0 ? ((totals.QS / totals.GS) * 100).toFixed(1) : "0.0";
 
   return calculated;
 }
