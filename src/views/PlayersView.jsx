@@ -3,7 +3,7 @@ import { TEAMS } from '../schedule';
 import { aggregateStats, SCORING_CATS } from '../utils/scoring';
 
 const BAT_COLS = ['PA', 'R', 'HR', 'RBI', 'SB', 'OBP'];
-const PITCH_COLS = ['IP', 'K', 'QS', 'QS_PCT', 'SV+HDs', 'ERA', 'WHIP'];
+const PITCH_COLS = ['IP', 'GS', 'K', 'QS', 'QS_PCT', 'SV+HDs', 'ERA', 'WHIP'];
 
 const formatStat = (val, cat) => {
   if (val === undefined || val === null) return '-';
@@ -33,6 +33,7 @@ const formatStat = (val, cat) => {
 
 const getLabel = (col) => {
   if (col === 'QS_PCT') return 'QS%';
+  if (col === 'GS') return 'GS';
   return SCORING_CATS[col]?.label || col;
 };
 
