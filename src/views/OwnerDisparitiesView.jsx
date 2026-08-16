@@ -6,6 +6,7 @@ import TeamAvatar from '../components/TeamAvatar';
 export default function OwnerDisparitiesView({ allStats, selectedSeason, onPlayerClick, onOwnerClick }) {
   const [tab, setTab] = useState('batters');
   const [minVolume, setMinVolume] = useState(15); // 15 PA for batters, 5 IP for pitchers
+  const [selectedOwnerId, setSelectedOwnerId] = useState('all');
 
   const handleTabChange = (newTab) => {
     setTab(newTab);
@@ -41,7 +42,7 @@ export default function OwnerDisparitiesView({ allStats, selectedSeason, onPlaye
     });
 
     const isBattersTab = tab === 'batters';
-    const results = [];
+    let results = [];
 
     // 2. Calculate values per team and find disparities
     Object.values(playerMap).forEach(p => {
@@ -84,10 +85,16 @@ export default function OwnerDisparitiesView({ allStats, selectedSeason, onPlaye
       }
     });
 
-    // 3. Sort by disparity descending
+    // 3. Filter by Owner if selected
+    if (selectedOwnerId !== 'all') {
+      const oid = parseInt(selectedOwnerId);
+      results = results.filter(r => r.bestStint.teamId === oid || r.worstStint.teamId === oid);
+    }
+
+    // 4. Sort by disparity descending
     return results.sort((a, b) => b.disparity - a.disparity);
 
-  }, [allStats, tab, minVolume]);
+  }, [allStats, tab, minVolume, selectedOwnerId]);
 
   return (
     <div className="space-y-6">
@@ -114,17 +121,35 @@ export default function OwnerDisparitiesView({ allStats, selectedSeason, onPlaye
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
           Filters
         </span>
-        <div className="flex items-center gap-2">
-          <label className="text-sm text-gray-700 font-semibold">
-            Min {tab === 'batters' ? 'Plate Apps (PA)' : 'Innings (IP)'} per Owner:
-          </label>
-          <input 
-            type="number" 
-            min="1" 
-            value={minVolume} 
-            onChange={e => setMinVolume(Number(e.target.value))} 
-            className="w-20 border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" 
-          />
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 mr-4">
+            <label className="text-sm text-gray-700 font-semibold">
+              Involved Owner:
+            </label>
+            <select
+              value={selectedOwnerId}
+              onChange={e => setSelectedOwnerId(e.target.value)}
+              className="border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 min-w-[120px]"
+            >
+              <option value="all">All Owners</option>
+              {Object.values(TEAMS).filter(t => t.id !== 99).map(t => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-gray-700 font-semibold">
+              Min {tab === 'batters' ? 'Plate Apps (PA)' : 'Innings (IP)'} per Owner:
+            </label>
+            <input 
+              type="number" 
+              min="1" 
+              value={minVolume} 
+              onChange={e => setMinVolume(Number(e.target.value))} 
+              className="w-20 border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" 
+            />
+          </div>
         </div>
       </div>
 
