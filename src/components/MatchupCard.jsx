@@ -1,10 +1,60 @@
-import { SCORING_CATS } from '../utils/scoring';
+import { CATEGORIES } from '../utils/scoring';
 import TeamAvatar from './TeamAvatar';
 
 // 1. ADD 'onViewBoxScore' to the props list here
-export default function MatchupCard({ matchup, homeStats, awayStats, result, onViewBoxScore }) {
+export default function MatchupCard({ matchup, homeStats, awayStats, result, onViewBoxScore, onOwnerClick }) {
   
   // Safety check: if data is missing, show loading
+ 
+ if (matchup.type === 'trio') {
+    const { teams, result, label } = matchup;
+
+    const sortedTeams = [...teams].sort((a, b) => {
+      const ptA = result[a.id]?.points ?? 0;
+      const ptB = result[b.id]?.points ?? 0;
+      return ptB - ptA;
+    });
+
+    return (
+      <div
+        onClick={onViewBoxScore}
+        className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:border-blue-400 hover:shadow-md transition-all cursor-pointer group"
+      >
+        {label && (
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-center text-xs font-bold uppercase tracking-wider py-1">
+            {label}
+          </div>
+        )}
+        <div className="flex divide-x divide-gray-100 p-2">
+          {sortedTeams.map((team) => {
+            const teamResult = result[team.id] || { points: 0, rank: 0 };
+            const isWinner = teamResult.rank === 1;
+            const displayPts = Number.isInteger(teamResult.points) ? teamResult.points : teamResult.points.toFixed(1);
+
+            return (
+              <div key={team.id} className={`flex-1 flex flex-col items-center justify-center p-3 transition-colors ${isWinner ? 'bg-green-50/30' : ''}`}>
+                <div onClick={(e) => { e.stopPropagation(); onOwnerClick(team); }} className="hover:scale-110 transition-transform">
+                  <TeamAvatar team={team} size="md" />
+                </div>
+                <div className="mt-2 text-sm font-bold text-gray-800 text-center leading-tight">
+                  {team.name}
+                </div>
+                <div className="text-[10px] text-gray-500 mb-1">{team.owner}</div>
+                <div className={`font-mono text-lg font-black mt-1 ${isWinner ? 'text-green-600' : 'text-gray-700'}`}>
+                  {displayPts} pts
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div className="bg-gray-50 py-2 text-center text-[10px] font-bold text-blue-500 uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">
+          View 3-Way Box Score
+        </div>
+      </div>
+    );
+  }
+ 
+ 
   if (!homeStats || !awayStats || !result) {
     return (
       <div className="bg-white rounded-xl shadow-sm p-6 text-center text-gray-400 animate-pulse">
@@ -36,7 +86,9 @@ export default function MatchupCard({ matchup, homeStats, awayStats, result, onV
         <div className="flex justify-between items-center relative z-10">
           
           {/* Home Team */}
-          <div className="flex flex-col items-center w-1/3">
+          <div 
+          onClick={() => onOwnerClick(matchup.homeTeam)}
+          className="flex flex-col items-center w-1/3 cursor-pointer">
             <TeamAvatar team={matchup.homeTeam} size="md" />
             <div className="mt-2 text-center">
               <div className="font-bold text-sm text-gray-900 leading-tight">{matchup.homeTeam.name}</div>
@@ -64,7 +116,9 @@ export default function MatchupCard({ matchup, homeStats, awayStats, result, onV
           </div>
 
           {/* Away Team */}
-          <div className="flex flex-col items-center w-1/3">
+          <div 
+          onClick={() => onOwnerClick(matchup.awayTeam)}
+          className="flex flex-col items-center w-1/3 cursor-pointer">
             <TeamAvatar team={matchup.awayTeam} size="md" />
             <div className="mt-2 text-center">
               <div className="font-bold text-sm text-gray-900 leading-tight">{matchup.awayTeam.name}</div>
@@ -80,7 +134,7 @@ export default function MatchupCard({ matchup, homeStats, awayStats, result, onV
         {/* Batting */}
         <div className="bg-gray-100 px-3 py-1 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-y border-gray-200">Batting</div>
         {batCats.map(cat => {
-            const config = SCORING_CATS[cat] || { label: cat }; 
+            const config = CATEGORIES[cat] || { label: cat }; 
             return (
               <div key={cat} className="grid grid-cols-3 border-b border-gray-100 last:border-0">
                 <div className={`py-2 text-center ${getStatStyle(cat, 'home')}`}>{homeStats[cat]}</div>
@@ -95,7 +149,7 @@ export default function MatchupCard({ matchup, homeStats, awayStats, result, onV
         {/* Pitching */}
         <div className="bg-gray-100 px-3 py-1 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-y border-gray-200">Pitching</div>
         {pitchCats.map(cat => {
-            const config = SCORING_CATS[cat] || { label: cat };
+            const config = CATEGORIES[cat] || { label: cat };
             return (
               <div key={cat} className="grid grid-cols-3 border-b border-gray-100 last:border-0">
                 <div className={`py-2 text-center ${getStatStyle(cat, 'home')}`}>{homeStats[cat]}</div>

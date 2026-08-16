@@ -24,40 +24,107 @@ export const SCORING_CATS = {
   WHIP: { label: 'WHIP', type: 'low', isRate: true }
 };
 
-// 2. Helper to aggregate stats
+export const CATEGORIES = Object.keys(SCORING_CATS).map(key => ({
+  id: key,
+  name: SCORING_CATS[key].label,
+  higherIsBetter: SCORING_CATS[key].type === 'high'
+}));
+
+// 2. ESPN numeric stat ID → named key used throughout aggregateStats
+const ESPN_STAT_IDS = {
+  // Batting
+  '16': 'PA',
+  '5':  'HR',
+  '20': 'R',
+  '21': 'RBI',
+  '23': 'SB',
+  '17': 'OBP',   // direct daily OBP from ESPN
+  // Pitching
+  '34': 'IP_raw', // ESPN stores IP as outs (thirds); divide by 3 for real IP
+  '63': 'QS',
+  '45': 'ER',
+  '37': 'BB_Allowed',
+  '39': 'H_Allowed',
+  '48': 'K',
+  '57': 'SV',
+  '60': 'HD',
+};
+
+// 3. Helper to aggregate stats
+
+export const calculateTrioMatchupResult = (teamStats, teamIds) => {
+  const points = {};
+  teamIds.forEach(id => { points[id] = 0; });
+
+  // Award 2/1/0 pts per category; tied positions share their points equally
+  CATEGORIES.forEach(cat => {
+    const vals = teamIds.map(id => ({
+      id,
+      val: parseFloat(teamStats[id]?.[cat.id] || 0)
+    }));
+    vals.sort((a, b) => cat.higherIsBetter ? b.val - a.val : a.val - b.val);
+
+    const ptMap = [2, 1, 0];
+    let i = 0;
+    while (i < vals.length) {
+      let j = i;
+      while (j < vals.length && Math.abs(vals[j].val - vals[i].val) < 0.0001) j++;
+      const avgPts = ptMap.slice(i, j).reduce((s, p) => s + p, 0) / (j - i);
+      for (let k = i; k < j; k++) points[vals[k].id] += avgPts;
+      i = j;
+    }
+  });
+
+  // Rank: count how many teams have strictly more points (handles tied ranks)
+  const results = {};
+  teamIds.forEach(id => {
+    const rank = teamIds.filter(other => points[other] > points[id] + 0.0001).length + 1;
+    results[id] = { points: points[id], rank };
+  });
+
+  return results;
+};
+
 export function aggregateStats(dailyRecords) {
-  const totals = { 
-    R: 0, HR: 0, RBI: 0, SB: 0, K: 0, QS: 0, 'SV+HDs': 0, 
-    // Intermediate vars for rate stats
-    H: 0, AB: 0, ER: 0, IP: 0, BB_Allowed: 0, H_Allowed: 0 
+  const totals = {
+    R: 0, HR: 0, RBI: 0, SB: 0, K: 0, QS: 0, 'SV+HDs': 0,
+    ER: 0, IP: 0, BB_Allowed: 0, H_Allowed: 0,
+    OBP_num: 0, PA: 0,  // for PA-weighted OBP accumulation
   };
 
   dailyRecords.forEach(record => {
-   if (record.lineup_slot_id === 16 || record.lineup_slot_id === 17) return;
+    if (record.lineup_slot_id === 16 || record.lineup_slot_id === 17) return;
 
-    const s = record.stats || {};
-    // Sum up counting stats
-    totals.R += (s.R || 0);
-    totals.HR += (s.HR || 0);
-    totals.RBI += (s.RBI || 0);
-    totals.SB += (s.SB || 0);
-    totals.K += (s.K || 0);
-    totals.QS += (s.QS || 0);
-    totals['SV+HDs'] += (s['SV'] || 0) + (s['HD'] || 0);
-    
-    // Sum up components for rate stats
-    totals.H += (s.H || 0);
-    totals.AB += (s.AB || 0);
-    totals.ER += (s.ER || 0);
-    totals.IP += (s.IP || 0)/3; // Note: Ensure IP is decimal (3.1 -> 3.33) in your Python or handle here
-    totals.BB_Allowed += (s.BB_Allowed || 0);
-    totals.H_Allowed += (s.H_Allowed || 0);
+    // Normalize ESPN numeric stat IDs → named keys
+    const s = {};
+    for (const [key, val] of Object.entries(record.stats || {})) {
+      s[ESPN_STAT_IDS[key] ?? key] = val;
+    }
+
+    const pa  = parseFloat(s.PA)  || 0;
+    const obp = parseFloat(s.OBP) || 0;
+
+    totals.R           += parseFloat(s.R)  || 0;
+    totals.HR          += parseFloat(s.HR) || 0;
+    totals.RBI         += parseFloat(s.RBI) || 0;
+    totals.SB          += parseFloat(s.SB)  || 0;
+    totals.K           += parseFloat(s.K)   || 0;
+    totals.QS          += parseFloat(s.QS)  || 0;
+    totals['SV+HDs']   += (parseFloat(s.SV) || 0) + (parseFloat(s.HD) || 0);
+
+    // OBP: accumulate PA-weighted so we can average correctly across days
+    totals.OBP_num += obp * pa;
+    totals.PA      += pa;
+
+    totals.ER         += parseFloat(s.ER)         || 0;
+    totals.IP         += (parseFloat(s.IP_raw ?? s.IP) || 0) / 3;
+    totals.BB_Allowed += parseFloat(s.BB_Allowed)  || 0;
+    totals.H_Allowed  += parseFloat(s.H_Allowed)   || 0;
   });
 
-  // Calculate Rate Stats
   const calculated = { ...totals };
-  calculated.OBP = totals.AB > 0 ? (totals.H / totals.AB).toFixed(3) : ".000";
-  calculated.ERA = totals.IP > 0 ? ((totals.ER * 9) / totals.IP).toFixed(2) : "0.00";
+  calculated.OBP  = totals.PA > 0 ? (totals.OBP_num / totals.PA).toFixed(3) : ".000";
+  calculated.ERA  = totals.IP > 0 ? ((totals.ER * 9) / totals.IP).toFixed(2) : "0.00";
   calculated.WHIP = totals.IP > 0 ? ((totals.BB_Allowed + totals.H_Allowed) / totals.IP).toFixed(2) : "0.00";
 
   return calculated;

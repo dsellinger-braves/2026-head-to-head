@@ -1,0 +1,200 @@
+import { useMemo, useState } from 'react';
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid,
+  Tooltip, Legend, ResponsiveContainer
+} from 'recharts';
+import { TEAMS, getDateFromPeriodId } from '../schedule';
+import { aggregateStats, SCORING_CATS } from '../utils/scoring';
+
+const STAT_OPTIONS = ['R', 'HR', 'RBI', 'SB', 'OBP', 'K', 'QS', 'SV+HDs', 'ERA', 'WHIP', 'Roto Pts'];
+
+const TEAM_COLORS = [
+  '#3b82f6', '#ef4444', '#10b981', '#f59e0b',
+  '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16', '#f97316'
+];
+
+function formatVal(val, cat) {
+  const n = parseFloat(val);
+  if (isNaN(n)) return '-';
+  if (cat === 'ERA') return n.toFixed(2);
+  if (cat === 'OBP') return n.toFixed(4).replace(/^0/, '');
+  if (SCORING_CATS[cat]?.isRate) return n.toFixed(3).replace(/^0/, '');
+  if (cat === 'IP') return `${Math.floor(n)}.${Math.round((n % 1) * 3)}`;
+  if (cat === 'Roto Pts') return n % 1 === 0 ? n : n.toFixed(1);
+  return Math.round(n);
+}
+
+export default function ProgressionView({ allStats, selectedSeason = 2026, processedWeeks = [] }) {
+  const [selectedStat, setSelectedStat] = useState('HR');
+  const [selectedTeamId, setSelectedTeamId] = useState('all');
+
+  const teamIds = useMemo(
+    () => Object.keys(TEAMS).filter(id => parseInt(id) !== 99),
+    []
+  );
+
+  // Precompute cumulative stats per team per scoring period
+  const progressionData = useMemo(() => {
+    if (!allStats.length) return { allPeriods: [], cumulativeByTeam: {} };
+
+    const allPeriods = [...new Set(allStats.map(r => r.scoring_period_id))].sort((a, b) => a - b);
+
+    const byTeam = {};
+    teamIds.forEach(id => { byTeam[id] = []; });
+    allStats.forEach(r => {
+      if (byTeam[r.team_id] !== undefined) byTeam[r.team_id].push(r);
+    });
+
+    const cumulativeByTeam = {};
+    teamIds.forEach(teamId => {
+      const records = [...byTeam[teamId]].sort((a, b) => a.scoring_period_id - b.scoring_period_id);
+      cumulativeByTeam[teamId] = {};
+      const accumulated = [];
+      let idx = 0;
+
+      allPeriods.forEach(period => {
+        while (idx < records.length && records[idx].scoring_period_id <= period) {
+          accumulated.push(records[idx]);
+          idx++;
+        }
+        if (accumulated.length > 0) {
+          cumulativeByTeam[teamId][period] = aggregateStats(accumulated);
+        }
+      });
+    });
+
+    return { allPeriods, cumulativeByTeam };
+  }, [allStats, teamIds]);
+
+  const visibleTeamIds = selectedTeamId === 'all' ? teamIds : [String(selectedTeamId)];
+
+  const chartData = useMemo(() => {
+    return progressionData.allPeriods.map(period => {
+      const point = { period, date: getDateFromPeriodId(period, selectedSeason) };
+      visibleTeamIds.forEach(teamId => {
+        const stats = progressionData.cumulativeByTeam[teamId]?.[period];
+        if (stats) point[TEAMS[teamId].name] = parseFloat(stats[selectedStat]) || 0;
+      });
+      return point;
+    });
+  }, [progressionData, selectedStat, visibleTeamIds, selectedSeason]);
+
+  // Cumulative roto points per week from processedWeeks
+  const rotoChartData = useMemo(() => {
+    if (!processedWeeks.length) return [];
+
+    const cumPts = {};
+    teamIds.forEach(id => { cumPts[id] = 0; });
+
+    return processedWeeks.map(week => {
+      week.matchups.forEach(m => {
+        if (m.isPlaceholder) return;
+
+        if (m.type === 'trio') {
+          m.teams.forEach(team => {
+            if (team.id !== null && cumPts[String(team.id)] !== undefined) {
+              cumPts[String(team.id)] += m.result[team.id]?.points ?? 0;
+            }
+          });
+        } else if (m.type === 'h2h') {
+          const hId = String(m.homeTeam?.id);
+          const aId = String(m.awayTeam?.id);
+          if (cumPts[hId] !== undefined) {
+            cumPts[hId] += (m.result?.homeScore ?? 0) + (m.result?.ties ?? 0) * 0.5;
+          }
+          if (cumPts[aId] !== undefined) {
+            cumPts[aId] += (m.result?.awayScore ?? 0) + (m.result?.ties ?? 0) * 0.5;
+          }
+        }
+      });
+
+      const point = { date: week.endDate };
+      visibleTeamIds.forEach(teamId => {
+        const v = cumPts[teamId] ?? 0;
+        point[TEAMS[teamId]?.name] = v % 1 === 0 ? v : parseFloat(v.toFixed(1));
+      });
+      return point;
+    });
+  }, [processedWeeks, visibleTeamIds, teamIds]);
+
+  const isRotoPts = selectedStat === 'Roto Pts';
+  const activeData = isRotoPts ? rotoChartData : chartData;
+  const isLowBetter = !isRotoPts && SCORING_CATS[selectedStat]?.type === 'low';
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <h2 className="text-2xl font-black text-gray-900">Stat Progression — {selectedSeason} Season</h2>
+        <div className="flex gap-3 flex-wrap">
+          <select
+            value={selectedStat}
+            onChange={e => setSelectedStat(e.target.value)}
+            className="border border-gray-200 rounded-lg px-3 py-2 text-sm font-semibold bg-white text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+          >
+            {STAT_OPTIONS.map(s => (
+              <option key={s} value={s}>{s === 'Roto Pts' ? 'Roto Points' : (SCORING_CATS[s]?.label || s)}</option>
+            ))}
+          </select>
+          <select
+            value={selectedTeamId}
+            onChange={e => setSelectedTeamId(e.target.value)}
+            className="border border-gray-200 rounded-lg px-3 py-2 text-sm font-semibold bg-white text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+          >
+            <option value="all">All Teams</option>
+            {teamIds.map(id => (
+              <option key={id} value={id}>{TEAMS[id].name}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        {isLowBetter && (
+          <p className="text-xs text-gray-400 italic mb-4">
+            Lower is better for {SCORING_CATS[selectedStat]?.label || selectedStat} — leaders appear at the bottom.
+          </p>
+        )}
+        {isRotoPts && (
+          <p className="text-xs text-gray-400 italic mb-4">
+            Cumulative roto scoring points earned per week (trio: 0–20 pts, H2H: 0–10 pts).
+          </p>
+        )}
+        <ResponsiveContainer width="100%" height={420}>
+          <LineChart data={activeData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f0f4f8" />
+            <XAxis
+              dataKey="date"
+              tick={{ fontSize: 10, fill: '#9ca3af', angle: -40, textAnchor: 'end' }}
+              tickFormatter={v => v?.slice(5) || ''}
+              interval={isRotoPts ? 1 : 6}
+              height={45}
+            />
+            <YAxis
+              tick={{ fontSize: 10, fill: '#9ca3af' }}
+              tickFormatter={v => formatVal(v, selectedStat)}
+              width={55}
+            />
+            <Tooltip
+              formatter={(val, name) => [formatVal(val, selectedStat), name]}
+              labelFormatter={label => `Date: ${label}`}
+              contentStyle={{ fontSize: 12, borderRadius: '8px', border: '1px solid #e5e7eb' }}
+            />
+            <Legend wrapperStyle={{ fontSize: 12 }} />
+            {visibleTeamIds.map((teamId, idx) => (
+              <Line
+                key={teamId}
+                type="monotone"
+                dataKey={TEAMS[teamId]?.name}
+                stroke={TEAM_COLORS[idx % TEAM_COLORS.length]}
+                strokeWidth={2}
+                dot={isRotoPts ? { r: 3 } : false}
+                activeDot={{ r: 4 }}
+                connectNulls
+              />
+            ))}
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}

@@ -7,14 +7,10 @@ export default function PlayerHistoryModal({ playerId, playerName, allStats, onC
   const [selectedTeamId, setSelectedTeamId] = useState(null);
 
   // 1. Helper: Determine if a record is an "Active Appearance"
+  // Uses raw ESPN stat IDs: '16' = PA, '34' = IP (in outs)
   const isActiveAppearance = (record) => {
     const s = record.stats || {};
-    // Check Pitching (IP or IP_OUTS)
-    const hasPitching = (s.IP && parseFloat(s.IP) > 0) || (s.IP_OUTS && s.IP_OUTS > 0);
-    // Check Batting (PA, AB, H, or BB)
-    const hasBatting = (s.PA && s.PA > 0) || (s.AB && s.AB > 0) || (s.H && s.H > 0) || (s.BB && s.BB > 0);
-
-    return hasPitching || hasBatting;
+    return parseFloat(s['16']) > 0 || parseFloat(s['34']) > 0;
   };
 
   // 2. Get records, filter, and sort
@@ -36,7 +32,7 @@ export default function PlayerHistoryModal({ playerId, playerName, allStats, onC
   const displayMode = isPitcher ? 'pitching' : 'batting';
   
   // --- UPDATED COLUMNS HERE ---
-  const batCats = ['AB', 'R', 'HR', 'RBI', 'SB', 'OBP'];        // Added AB
+  const batCats = ['PA', 'R', 'HR', 'RBI', 'SB', 'OBP'];
   const pitchCats = ['IP', 'ER', 'K', 'QS', 'SV+HDs', 'ERA', 'WHIP']; // Added ER
   
   const displayCats = displayMode === 'batting' ? batCats : pitchCats;
@@ -68,7 +64,18 @@ export default function PlayerHistoryModal({ playerId, playerName, allStats, onC
   // 5. Helper for formatting
   const formatStat = (val, catKey) => {
     if (val === undefined || val === null) return '-';
-    // Rate stats formatting
+    if (catKey === 'IP') {
+      const ip = parseFloat(val) || 0;
+      return `${Math.floor(ip)}.${Math.round((ip % 1) * 3)}`;
+    }
+    if (catKey === 'ERA') {
+      const n = parseFloat(val);
+      return isNaN(n) ? '-' : n.toFixed(2);
+    }
+    if (catKey === 'OBP') {
+      const n = parseFloat(val);
+      return isNaN(n) ? '-' : n.toFixed(4).replace(/^0/, '');
+    }
     if (SCORING_CATS[catKey]?.isRate) {
       const num = parseFloat(val);
       return isNaN(num) ? '-' : num.toFixed(3).replace(/^0+/, '');
@@ -174,7 +181,7 @@ export default function PlayerHistoryModal({ playerId, playerName, allStats, onC
              </thead>
              <tbody className="divide-y divide-gray-100 bg-white">
                {activeRecords.map(record => {
-                  const dateStr = getDateFromPeriodId(record.scoring_period_id);
+                  const dateStr = getDateFromPeriodId(record.scoring_period_id, record.season_year);
                   const pos = LINEUP_SLOTS[record.lineup_slot_id] || 'BN';
                   
                   // Calculate single-game stats

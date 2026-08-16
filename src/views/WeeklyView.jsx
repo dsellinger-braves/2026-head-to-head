@@ -1,16 +1,22 @@
-// src/views/WeeklyView.jsx
 import { useState } from 'react';
 import MatchupCard from '../components/MatchupCard';
 import BoxScoreModal from '../components/BoxScoreModal';
 import PlayerHistoryModal from '../components/PlayerHistoryModal';
 import { TEAMS } from '../schedule';
 
-export default function WeeklyView({ processedWeeks, allStats }) {
+export default function WeeklyView({ processedWeeks, allStats, onOwnerClick }) {
   const [viewMode, setViewMode] = useState('byWeek');
   const [selectedWeekId, setSelectedWeekId] = useState(1);
   const [selectedTeamId, setSelectedTeamId] = useState(1);
-  const [selectedMatchup, setSelectedMatchup] = useState(null); // For Modal
-  const [selectedPlayer, setSelectedPlayer] = useState(null); // For Player History Modal
+  const [selectedMatchup, setSelectedMatchup] = useState(null); 
+  const [selectedPlayer, setSelectedPlayer] = useState(null); 
+
+  // --- HELPER: Format Date ---
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    const [year, month, day] = dateStr.split('-');
+    return `${parseInt(month)}/${parseInt(day)}`;
+  };
 
   // --- NAVIGATION HELPERS ---
   const handlePrevWeek = () => {
@@ -27,10 +33,24 @@ export default function WeeklyView({ processedWeeks, allStats }) {
     
     const teamMatchups = week.matchups.filter(m => {
       if (viewMode === 'byWeek') return true;
-      return m.homeTeam.id == selectedTeamId || m.awayTeam.id == selectedTeamId;
+      
+      // Handle Trio filtering
+      if (m.type === 'trio') {
+         if (m.teams) return m.teams.some(t => t.id == selectedTeamId);
+         if (m.teamIds) return m.teamIds.includes(parseInt(selectedTeamId));
+         return false;
+      }
+      
+      // Handle H2H filtering
+      return m.homeTeam?.id == selectedTeamId || m.awayTeam?.id == selectedTeamId;
     });
 
-    return teamMatchups.map(m => ({ ...m, weekName: week.name }));
+    return teamMatchups.map(m => ({ 
+      ...m, 
+      weekName: week.name,
+      startDate: week.startDate,
+      endDate: week.endDate
+    }));
   });
 
   return (
@@ -67,13 +87,18 @@ export default function WeeklyView({ processedWeeks, allStats }) {
                   <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
                 </button>
                 
-                <select 
-                  value={selectedWeekId} 
-                  onChange={(e) => setSelectedWeekId(e.target.value)}
-                  className="block w-48 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm font-medium py-2.5 bg-gray-50"
-                >
-                  {processedWeeks.map(w => <option key={w.weekId} value={w.weekId}>{w.name}</option>)}
-                </select>
+                <div className="flex flex-col items-center">
+                   <select 
+                    value={selectedWeekId} 
+                    onChange={(e) => setSelectedWeekId(e.target.value)}
+                    className="block w-48 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm font-medium py-2 bg-gray-50 text-center"
+                  >
+                    {processedWeeks.map(w => <option key={w.weekId} value={w.weekId}>{w.name}</option>)}
+                  </select>
+                  <span className="text-[10px] text-gray-400 font-mono mt-1">
+                    {formatDate(processedWeeks[selectedWeekId-1]?.startDate)} - {formatDate(processedWeeks[selectedWeekId-1]?.endDate)}
+                  </span>
+                </div>
 
                 <button 
                   onClick={handleNextWeek}
@@ -103,14 +128,19 @@ export default function WeeklyView({ processedWeeks, allStats }) {
             displayedMatchups.map((m, i) => (
               <div key={i} className="flex flex-col gap-2">
                 {viewMode === 'byTeam' && (
-                  <div className="text-center text-xs font-bold text-gray-400 uppercase tracking-wider">{m.weekName}</div>
+                  <div className="text-center mb-1">
+                    <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">{m.weekName}</div>
+                    <div className="text-[10px] text-gray-400 font-mono">
+                      {formatDate(m.startDate)} - {formatDate(m.endDate)}
+                    </div>
+                  </div>
                 )}
+                
+                {/* FIX: Passing the entire 'm' object intact! */}
                 <MatchupCard 
-                  matchup={{ homeTeam: m.homeTeam, awayTeam: m.awayTeam }}
-                  homeStats={m.homeStats}
-                  awayStats={m.awayStats}
-                  result={m.result}
-                  onViewBoxScore={() => setSelectedMatchup(m)} // <--- CLICK HANDLER
+                  matchup={m}
+                  onViewBoxScore={() => setSelectedMatchup(m)}
+                  onOwnerClick={onOwnerClick}
                 />
               </div>
             ))
@@ -118,7 +148,7 @@ export default function WeeklyView({ processedWeeks, allStats }) {
         </div>
       </div>
 
-      {/* --- MODAL --- */}
+      {/* --- MODALS --- */}
       {selectedMatchup && (
         <BoxScoreModal 
           matchup={selectedMatchup} 
@@ -127,12 +157,11 @@ export default function WeeklyView({ processedWeeks, allStats }) {
         />
       )}
 
-      {/* 2. PLAYER HISTORY MODAL (Stacked on top) */}
       {selectedPlayer && (
         <PlayerHistoryModal 
           playerId={selectedPlayer.id}
           playerName={selectedPlayer.name}
-          allStats={allStats} // Pass the raw data
+          allStats={allStats} 
           onClose={() => setSelectedPlayer(null)}
         />
       )}
