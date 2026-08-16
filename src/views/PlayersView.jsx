@@ -3,7 +3,7 @@ import { TEAMS } from '../schedule';
 import { aggregateStats, SCORING_CATS } from '../utils/scoring';
 
 const BAT_COLS = ['PA', 'R', 'HR', 'RBI', 'SB', 'OBP'];
-const PITCH_COLS = ['IP', 'K', 'QS', 'SV+HDs', 'ERA', 'WHIP'];
+const PITCH_COLS = ['IP', 'K', 'QS', 'QS_PCT', 'SV+HDs', 'ERA', 'WHIP'];
 
 const formatStat = (val, cat) => {
   if (val === undefined || val === null) return '-';
@@ -19,12 +19,21 @@ const formatStat = (val, cat) => {
     const n = parseFloat(val);
     return isNaN(n) ? '-' : n.toFixed(3).replace(/^0/, '');
   }
+  if (cat === 'QS_PCT') {
+    const n = parseFloat(val);
+    return isNaN(n) ? '-' : n.toFixed(1) + '%';
+  }
   if (SCORING_CATS[cat]?.isRate) {
     const n = parseFloat(val);
     return isNaN(n) ? '-' : n.toFixed(3).replace(/^0/, '');
   }
   const n = parseFloat(val);
   return isNaN(n) ? '-' : Math.round(n);
+};
+
+const getLabel = (col) => {
+  if (col === 'QS_PCT') return 'QS%';
+  return SCORING_CATS[col]?.label || col;
 };
 
 export default function PlayersView({ allStats, selectedSeason, onPlayerClick }) {
@@ -125,7 +134,7 @@ export default function PlayersView({ allStats, selectedSeason, onPlayerClick })
                   className={`px-3 py-3 text-center text-xs font-bold uppercase tracking-wider cursor-pointer select-none hover:bg-blue-50 transition-colors whitespace-nowrap
                     ${sortKey === col ? 'text-blue-600 bg-blue-50' : 'text-gray-500'}`}
                 >
-                  {SCORING_CATS[col]?.label || col}
+                  {getLabel(col)}
                   <SortIcon col={col} />
                 </th>
               ))}
