@@ -104,10 +104,9 @@ export function aggregateStats(dailyRecords) {
     const pa  = parseFloat(s.PA)  || 0;
     const obp = parseFloat(s.OBP) || 0;
     
-    // Determine Games Started (ID 33 is games started, or fallback to SP slot with IP)
+    // Determine Games Started strictly by ESPN Stat 33
     const espnStats = record.stats || {};
-    const gs = parseFloat(espnStats['33']) > 0 ? parseFloat(espnStats['33']) : 
-               (record.lineup_slot_id === 14 && (parseFloat(s.IP_raw) > 0 || parseFloat(s.IP) > 0) ? 1 : 0);
+    const gs = parseFloat(espnStats['33']) > 0 ? parseFloat(espnStats['33']) : 0;
 
     totals.GS          += gs;
     totals.R           += parseFloat(s.R)  || 0;
