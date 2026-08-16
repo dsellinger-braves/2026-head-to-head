@@ -163,7 +163,7 @@ export default function TeamsView({ allStats, onOwnerClick }) {
                       className={`px-3 py-3 text-center font-mono text-sm
                         ${sortKey === col ? 'text-blue-700 font-bold bg-blue-50/50' : 'text-gray-700'}`}
                     >
-                      {viewMode === 'roto' ? (rowData[col] % 1 === 0 ? rowData[col] : rowData[col].toFixed(1)) : formatStat(rowData[col], col)}
+                      {viewMode === 'roto' ? (rowData[col] === undefined ? '-' : (rowData[col] % 1 === 0 ? rowData[col] : rowData[col].toFixed(1))) : formatStat(rowData[col], col)}
                     </td>
                   ))}
                   {viewMode === 'roto' && (
