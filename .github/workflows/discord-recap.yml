@@ -1,0 +1,66 @@
+name: Discord Fantasy Recap
+
+on:
+  schedule:
+    # Daily recap: runs at 11:30 AM UTC (7:30 AM ET)
+    # This is 90 minutes after the scraper (10:00 UTC) to ensure data is in Supabase.
+    # Note: west coast games that go late may not be fully scraped until ~10:30 UTC,
+    # so this gives a comfortable buffer for normal game endings.
+    - cron: "30 11 * * *"
+
+    # Weekly recap: runs Monday at 12:00 PM UTC (8:00 AM ET)
+    # Fires 30 minutes after the daily recap on Mondays, recaps the previous week.
+    - cron: "0 12 * * 1"
+
+  # Allow manual triggers from the Actions tab (useful for testing)
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Recap mode: 'daily' or 'weekly'"
+        required: true
+        default: "daily"
+        type: choice
+        options:
+          - daily
+          - weekly
+
+jobs:
+  discord-recap:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install supabase google-genai requests
+
+      - name: Determine recap mode
+        id: mode
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "mode=${{ inputs.mode }}" >> $GITHUB_OUTPUT
+          else
+            # Daily fires at 11:30 UTC (hour 11), weekly fires at 12:00 UTC (hour 12) on Monday.
+            HOUR=$(date -u +%H)
+            if [ "$HOUR" = "12" ]; then
+              echo "mode=weekly" >> $GITHUB_OUTPUT
+            else
+              echo "mode=daily" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      - name: Run Discord recap
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          python discord-daily-recap.py ${{ steps.mode.outputs.mode }}

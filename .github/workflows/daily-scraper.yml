@@ -1,0 +1,42 @@
+name: Hourly ESPN Scraper
+
+on:
+  schedule:
+    # Runs at the top of every hour (e.g., 1:00, 2:00, 3:00)
+    - cron: '0 * * * *'
+
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Scraper mode: 'force' (always run)"
+        required: true
+        default: "force"
+        type: choice
+        options:
+          - force
+
+jobs:
+  scrape-and-upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install requests pandas supabase google-cloud-storage
+
+      - name: Run Scraper
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          GCS_BUCKET_NAME: ${{ secrets.GCS_BUCKET_NAME }}
+          GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
+          ESPN_S2: ${{ secrets.ESPN_S2 }}
+          ESPN_SWID: ${{ secrets.ESPN_SWID }}
+        run: python active-stats-pull.py
