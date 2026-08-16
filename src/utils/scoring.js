@@ -153,3 +153,41 @@ export function calculateMatchupResult(homeStats, awayStats) {
 
   return { homeScore, awayScore, ties };
 }
+
+// 4. Calculate Roto Points across a league
+export function calculateRotoPoints(teamStatsMap) {
+  const teamIds = Object.keys(teamStatsMap);
+  const rotoPoints = {};
+  teamIds.forEach(id => { rotoPoints[id] = { total: 0 }; });
+
+  const cats = Object.keys(SCORING_CATS);
+  cats.forEach(cat => {
+    const config = SCORING_CATS[cat];
+    const vals = teamIds.map(id => ({
+      id,
+      val: parseFloat(teamStatsMap[id]?.[cat] || 0)
+    }));
+    
+    // Sort: 1 pt for worst, N pts for best
+    vals.sort((a, b) => config.type === 'high' ? a.val - b.val : b.val - a.val);
+
+    // Assign points and handle ties
+    let i = 0;
+    while (i < vals.length) {
+      let j = i;
+      while (j < vals.length && Math.abs(vals[j].val - vals[i].val) < 0.0001) j++;
+      
+      let sum = 0;
+      for (let k = i; k < j; k++) sum += (k + 1);
+      const avgPts = sum / (j - i);
+      
+      for (let k = i; k < j; k++) {
+        rotoPoints[vals[k].id][cat] = avgPts;
+        rotoPoints[vals[k].id].total += avgPts;
+      }
+      i = j;
+    }
+  });
+
+  return rotoPoints;
+}

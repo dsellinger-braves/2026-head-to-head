@@ -4,29 +4,31 @@ import {
   Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 import { TEAMS, getDateFromPeriodId } from '../schedule';
-import { aggregateStats, SCORING_CATS } from '../utils/scoring';
+import { aggregateStats, SCORING_CATS, calculateRotoPoints } from '../utils/scoring';
 
-const STAT_OPTIONS = ['R', 'HR', 'RBI', 'SB', 'OBP', 'K', 'QS', 'SV+HDs', 'ERA', 'WHIP', 'Roto Pts'];
+const STAT_OPTIONS = ['R', 'HR', 'RBI', 'SB', 'OBP', 'K', 'QS', 'SV+HDs', 'ERA', 'WHIP'];
 
 const TEAM_COLORS = [
   '#3b82f6', '#ef4444', '#10b981', '#f59e0b',
   '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16', '#f97316'
 ];
 
-function formatVal(val, cat) {
+function formatVal(val, cat, viewMode) {
   const n = parseFloat(val);
   if (isNaN(n)) return '-';
+  if (viewMode === 'roto') return n % 1 === 0 ? n : n.toFixed(1);
   if (cat === 'ERA') return n.toFixed(2);
   if (cat === 'OBP') return n.toFixed(4).replace(/^0/, '');
   if (SCORING_CATS[cat]?.isRate) return n.toFixed(3).replace(/^0/, '');
   if (cat === 'IP') return `${Math.floor(n)}.${Math.round((n % 1) * 3)}`;
-  if (cat === 'Roto Pts') return n % 1 === 0 ? n : n.toFixed(1);
+  if (cat === 'Matchup Points') return n % 1 === 0 ? n : n.toFixed(1);
   return Math.round(n);
 }
 
 export default function ProgressionView({ allStats, selectedSeason = 2026, processedWeeks = [] }) {
   const [selectedStat, setSelectedStat] = useState('HR');
   const [selectedTeamId, setSelectedTeamId] = useState('all');
+  const [viewMode, setViewMode] = useState('raw'); // 'raw' or 'roto'
 
   const teamIds = useMemo(
     () => Object.keys(TEAMS).filter(id => parseInt(id) !== 99),
@@ -35,7 +37,7 @@ export default function ProgressionView({ allStats, selectedSeason = 2026, proce
 
   // Precompute cumulative stats per team per scoring period
   const progressionData = useMemo(() => {
-    if (!allStats.length) return { allPeriods: [], cumulativeByTeam: {} };
+    if (!allStats.length) return { allPeriods: [], cumulativeByTeam: {}, cumulativeRotoByTeam: {} };
 
     const allPeriods = [...new Set(allStats.map(r => r.scoring_period_id))].sort((a, b) => a - b);
 
@@ -63,7 +65,21 @@ export default function ProgressionView({ allStats, selectedSeason = 2026, proce
       });
     });
 
-    return { allPeriods, cumulativeByTeam };
+    // Calculate roto points at each period
+    const cumulativeRotoByTeam = {};
+    teamIds.forEach(id => { cumulativeRotoByTeam[id] = {}; });
+    allPeriods.forEach(period => {
+      const statsForPeriod = {};
+      teamIds.forEach(id => {
+        if (cumulativeByTeam[id][period]) statsForPeriod[id] = cumulativeByTeam[id][period];
+      });
+      const rotoForPeriod = calculateRotoPoints(statsForPeriod);
+      teamIds.forEach(id => {
+        if (rotoForPeriod[id]) cumulativeRotoByTeam[id][period] = rotoForPeriod[id];
+      });
+    });
+
+    return { allPeriods, cumulativeByTeam, cumulativeRotoByTeam };
   }, [allStats, teamIds]);
 
   const visibleTeamIds = selectedTeamId === 'all' ? teamIds : [String(selectedTeamId)];
@@ -72,21 +88,33 @@ export default function ProgressionView({ allStats, selectedSeason = 2026, proce
     return progressionData.allPeriods.map(period => {
       const point = { period, date: getDateFromPeriodId(period, selectedSeason) };
       visibleTeamIds.forEach(teamId => {
-        const stats = progressionData.cumulativeByTeam[teamId]?.[period];
-        if (stats) point[TEAMS[teamId].name] = parseFloat(stats[selectedStat]) || 0;
+        if (viewMode === 'raw') {
+          const stats = progressionData.cumulativeByTeam[teamId]?.[period];
+          if (stats) point[TEAMS[teamId].name] = parseFloat(stats[selectedStat]) || 0;
+        } else {
+          const roto = progressionData.cumulativeRotoByTeam[teamId]?.[period];
+          if (roto) {
+            point[TEAMS[teamId].name] = parseFloat(selectedStat === 'Total Roto' ? roto.total : roto[selectedStat]) || 0;
+          }
+        }
       });
       return point;
     });
-  }, [progressionData, selectedStat, visibleTeamIds, selectedSeason]);
+  }, [progressionData, selectedStat, visibleTeamIds, selectedSeason, viewMode]);
 
   // Cumulative roto points per week from processedWeeks
-  const rotoChartData = useMemo(() => {
+  const matchupPtsChartData = useMemo(() => {
     if (!processedWeeks.length) return [];
+
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const validWeeks = selectedSeason === new Date().getFullYear() 
+      ? processedWeeks.filter(w => w.startDate <= todayStr) 
+      : processedWeeks;
 
     const cumPts = {};
     teamIds.forEach(id => { cumPts[id] = 0; });
 
-    return processedWeeks.map(week => {
+    return validWeeks.map(week => {
       week.matchups.forEach(m => {
         if (m.isPlaceholder) return;
 
@@ -115,24 +143,43 @@ export default function ProgressionView({ allStats, selectedSeason = 2026, proce
       });
       return point;
     });
-  }, [processedWeeks, visibleTeamIds, teamIds]);
+  }, [processedWeeks, visibleTeamIds, teamIds, selectedSeason]);
 
-  const isRotoPts = selectedStat === 'Roto Pts';
-  const activeData = isRotoPts ? rotoChartData : chartData;
-  const isLowBetter = !isRotoPts && SCORING_CATS[selectedStat]?.type === 'low';
+  const isMatchupPts = selectedStat === 'Matchup Points';
+  const activeData = isMatchupPts ? matchupPtsChartData : chartData;
+  const isLowBetter = viewMode === 'raw' && !isMatchupPts && SCORING_CATS[selectedStat]?.type === 'low';
+
+  const currentOptions = viewMode === 'raw' 
+    ? [...STAT_OPTIONS, 'Matchup Points'] 
+    : [...STAT_OPTIONS, 'Total Roto'];
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h2 className="text-2xl font-black text-gray-900">Stat Progression — {selectedSeason} Season</h2>
-        <div className="flex gap-3 flex-wrap">
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center bg-gray-200 rounded-lg p-1 mr-2">
+            <button
+              onClick={() => { setViewMode('raw'); setSelectedStat('HR'); }}
+              className={`px-3 py-1.5 text-sm font-bold rounded-md transition-all ${viewMode === 'raw' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+            >
+              Raw Stats
+            </button>
+            <button
+              onClick={() => { setViewMode('roto'); setSelectedStat('Total Roto'); }}
+              className={`px-3 py-1.5 text-sm font-bold rounded-md transition-all ${viewMode === 'roto' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+            >
+              Roto Points
+            </button>
+          </div>
+          
           <select
             value={selectedStat}
             onChange={e => setSelectedStat(e.target.value)}
             className="border border-gray-200 rounded-lg px-3 py-2 text-sm font-semibold bg-white text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
           >
-            {STAT_OPTIONS.map(s => (
-              <option key={s} value={s}>{s === 'Roto Pts' ? 'Roto Points' : (SCORING_CATS[s]?.label || s)}</option>
+            {currentOptions.map(s => (
+              <option key={s} value={s}>{SCORING_CATS[s]?.label || s}</option>
             ))}
           </select>
           <select
@@ -154,9 +201,14 @@ export default function ProgressionView({ allStats, selectedSeason = 2026, proce
             Lower is better for {SCORING_CATS[selectedStat]?.label || selectedStat} — leaders appear at the bottom.
           </p>
         )}
-        {isRotoPts && (
+        {isMatchupPts && (
           <p className="text-xs text-gray-400 italic mb-4">
-            Cumulative roto scoring points earned per week (trio: 0–20 pts, H2H: 0–10 pts).
+            Cumulative points earned in H2H & Trio matchups per week (ends on current week).
+          </p>
+        )}
+        {viewMode === 'roto' && (
+          <p className="text-xs text-gray-400 italic mb-4">
+            Rotisserie points progression relative to the league (1-9 pts per category). Higher is better.
           </p>
         )}
         <ResponsiveContainer width="100%" height={420}>
@@ -166,16 +218,16 @@ export default function ProgressionView({ allStats, selectedSeason = 2026, proce
               dataKey="date"
               tick={{ fontSize: 10, fill: '#9ca3af', angle: -40, textAnchor: 'end' }}
               tickFormatter={v => v?.slice(5) || ''}
-              interval={isRotoPts ? 1 : 6}
+              interval={isMatchupPts ? 0 : 6}
               height={45}
             />
             <YAxis
               tick={{ fontSize: 10, fill: '#9ca3af' }}
-              tickFormatter={v => formatVal(v, selectedStat)}
+              tickFormatter={v => formatVal(v, selectedStat, viewMode)}
               width={55}
             />
             <Tooltip
-              formatter={(val, name) => [formatVal(val, selectedStat), name]}
+              formatter={(val, name) => [formatVal(val, selectedStat, viewMode), name]}
               labelFormatter={label => `Date: ${label}`}
               contentStyle={{ fontSize: 12, borderRadius: '8px', border: '1px solid #e5e7eb' }}
             />
@@ -187,7 +239,7 @@ export default function ProgressionView({ allStats, selectedSeason = 2026, proce
                 dataKey={TEAMS[teamId]?.name}
                 stroke={TEAM_COLORS[idx % TEAM_COLORS.length]}
                 strokeWidth={2}
-                dot={isRotoPts ? { r: 3 } : false}
+                dot={isMatchupPts ? { r: 3 } : false}
                 activeDot={{ r: 4 }}
                 connectNulls
               />

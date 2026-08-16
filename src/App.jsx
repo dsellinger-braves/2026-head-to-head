@@ -250,16 +250,38 @@ function App() {
       const { startId, endId } = getPeriodRangeForWeek(week);
       const homeRecords = [];
       const awayRecords = [];
+      const allHumanRecords = [];
       
       for (const r of rawData) {
         if (r.scoring_period_id >= startId && r.scoring_period_id <= endId) {
           if (r.team_id == matchup.homeTeamId) homeRecords.push(r);
           else if (r.team_id == matchup.awayTeamId) awayRecords.push(r);
+
+          if (r.team_id != 99) allHumanRecords.push(r);
         }
       }
 
-      const homeStats = aggregateStats(homeRecords);
-      const awayStats = aggregateStats(awayRecords);
+      const computeAverageTeamStats = (records) => {
+        const totalStats = aggregateStats(records);
+        const avgStats = { ...totalStats };
+        const numTeams = 9; // 9 human teams in the league
+        
+        // Divide counting components by 9 to get the average
+        const fieldsToDivide = ['R', 'HR', 'RBI', 'SB', 'K', 'QS', 'SV+HDs', 'ER', 'IP', 'BB_Allowed', 'H_Allowed', 'OBP_num', 'PA'];
+        fieldsToDivide.forEach(key => {
+          if (avgStats[key]) avgStats[key] = avgStats[key] / numTeams;
+        });
+
+        // Recalculate rate stats from the divided components
+        avgStats.OBP = avgStats.PA > 0 ? (avgStats.OBP_num / avgStats.PA).toFixed(3) : ".000";
+        avgStats.ERA = avgStats.IP > 0 ? ((avgStats.ER * 9) / avgStats.IP).toFixed(2) : "0.00";
+        avgStats.WHIP = avgStats.IP > 0 ? ((avgStats.BB_Allowed + avgStats.H_Allowed) / avgStats.IP).toFixed(2) : "0.00";
+        
+        return avgStats;
+      };
+
+      const homeStats = matchup.homeTeamId == 99 ? computeAverageTeamStats(allHumanRecords) : aggregateStats(homeRecords);
+      const awayStats = matchup.awayTeamId == 99 ? computeAverageTeamStats(allHumanRecords) : aggregateStats(awayRecords);
       const result = calculateMatchupResult(homeStats, awayStats);
       
       const homeTeamInfo = TEAMS[matchup.homeTeamId] || { name: 'Unknown', owner: '' };

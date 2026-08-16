@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { TEAMS } from '../schedule';
-import { aggregateStats, SCORING_CATS } from '../utils/scoring';
+import { aggregateStats, SCORING_CATS, calculateRotoPoints } from '../utils/scoring';
 import TeamAvatar from '../components/TeamAvatar';
 
 const STAT_COLS = ['PA', 'R', 'HR', 'RBI', 'SB', 'OBP', 'IP', 'K', 'QS', 'SV+HDs', 'ERA', 'WHIP'];
@@ -30,6 +30,7 @@ const formatStat = (val, cat) => {
 export default function TeamsView({ allStats, onOwnerClick }) {
   const [sortKey, setSortKey] = useState('R');
   const [sortDir, setSortDir] = useState('desc');
+  const [viewMode, setViewMode] = useState('raw'); // 'raw' or 'roto'
 
   const teamRows = useMemo(() => {
     const groups = {};
@@ -40,21 +41,33 @@ export default function TeamsView({ allStats, onOwnerClick }) {
     allStats.forEach(r => {
       if (groups[r.team_id] !== undefined) groups[r.team_id].push(r);
     });
-    return Object.entries(groups).map(([id, records]) => ({
+    
+    const teamStatsMap = {};
+    Object.entries(groups).forEach(([id, records]) => {
+      teamStatsMap[id] = aggregateStats(records);
+    });
+    
+    const rotoPointsMap = calculateRotoPoints(teamStatsMap);
+
+    return Object.entries(teamStatsMap).map(([id, stats]) => ({
       ...TEAMS[id],
-      stats: aggregateStats(records),
+      stats,
+      rotoPoints: rotoPointsMap[id]
     }));
   }, [allStats]);
 
   const sorted = useMemo(() => {
     return [...teamRows].sort((a, b) => {
-      const va = parseFloat(a.stats[sortKey]) || 0;
-      const vb = parseFloat(b.stats[sortKey]) || 0;
-      const isLow = SCORING_CATS[sortKey]?.type === 'low';
+      const dataA = viewMode === 'roto' && SCORING_CATS[sortKey] ? a.rotoPoints : a.stats;
+      const dataB = viewMode === 'roto' && SCORING_CATS[sortKey] ? b.rotoPoints : b.stats;
+      const va = parseFloat(dataA[sortKey]) || 0;
+      const vb = parseFloat(dataB[sortKey]) || 0;
+      
+      const isLow = viewMode === 'raw' && SCORING_CATS[sortKey]?.type === 'low';
       const cmp = isLow ? va - vb : vb - va;
       return sortDir === 'desc' ? cmp : -cmp;
     });
-  }, [teamRows, sortKey, sortDir]);
+  }, [teamRows, sortKey, sortDir, viewMode]);
 
   const handleSort = (col) => {
     if (sortKey === col) setSortDir(d => d === 'desc' ? 'asc' : 'desc');
@@ -69,9 +82,25 @@ export default function TeamsView({ allStats, onOwnerClick }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-black text-gray-900">Team Stats — 2026 Season</h2>
-        <p className="text-xs text-gray-400">Active roster only · click column header to sort · click row to drill in</p>
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <h2 className="text-2xl font-black text-gray-900">Team Stats — 2026 Season</h2>
+          <p className="text-xs text-gray-400">Active roster only · click column header to sort · click row to drill in</p>
+        </div>
+        <div className="flex items-center bg-gray-200 rounded-lg p-1">
+          <button
+            onClick={() => setViewMode('raw')}
+            className={`px-4 py-1.5 text-sm font-bold rounded-md transition-all ${viewMode === 'raw' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            Raw Stats
+          </button>
+          <button
+            onClick={() => setViewMode('roto')}
+            className={`px-4 py-1.5 text-sm font-bold rounded-md transition-all ${viewMode === 'roto' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            Roto Points
+          </button>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
@@ -90,34 +119,52 @@ export default function TeamsView({ allStats, onOwnerClick }) {
                   <SortIcon col={col} />
                 </th>
               ))}
+              {viewMode === 'roto' && (
+                <th 
+                  onClick={() => handleSort('total')}
+                  className={`px-3 py-3 text-center text-xs font-bold uppercase tracking-wider cursor-pointer select-none hover:bg-blue-50 transition-colors whitespace-nowrap
+                    ${sortKey === 'total' ? 'text-blue-600 bg-blue-50' : 'text-gray-500'}`}
+                >
+                  Total Roto
+                  <SortIcon col="total" />
+                </th>
+              )}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {sorted.map(team => (
-              <tr
-                key={team.id}
-                onClick={() => onOwnerClick(team)}
-                className="hover:bg-blue-50 cursor-pointer transition-colors group"
-              >
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <div className="group-hover:scale-110 transition-transform">
-                      <TeamAvatar team={team} size="sm" />
+            {sorted.map(team => {
+              const rowData = viewMode === 'roto' ? team.rotoPoints : team.stats;
+              return (
+                <tr
+                  key={team.id}
+                  onClick={() => onOwnerClick(team)}
+                  className="hover:bg-blue-50 cursor-pointer transition-colors group"
+                >
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="group-hover:scale-110 transition-transform">
+                        <TeamAvatar team={team} size="sm" />
+                      </div>
+                      <span className="font-bold text-gray-900 group-hover:text-blue-700">{team.name}</span>
                     </div>
-                    <span className="font-bold text-gray-900 group-hover:text-blue-700">{team.name}</span>
-                  </div>
-                </td>
-                {STAT_COLS.map(col => (
-                  <td
-                    key={col}
-                    className={`px-3 py-3 text-center font-mono text-sm
-                      ${sortKey === col ? 'text-blue-700 font-bold bg-blue-50/50' : 'text-gray-700'}`}
-                  >
-                    {formatStat(team.stats[col], col)}
                   </td>
-                ))}
-              </tr>
-            ))}
+                  {STAT_COLS.map(col => (
+                    <td
+                      key={col}
+                      className={`px-3 py-3 text-center font-mono text-sm
+                        ${sortKey === col ? 'text-blue-700 font-bold bg-blue-50/50' : 'text-gray-700'}`}
+                    >
+                      {viewMode === 'roto' ? (rowData[col] % 1 === 0 ? rowData[col] : rowData[col].toFixed(1)) : formatStat(rowData[col], col)}
+                    </td>
+                  ))}
+                  {viewMode === 'roto' && (
+                    <td className={`px-3 py-3 text-center font-mono text-sm font-black ${sortKey === 'total' ? 'text-blue-700 bg-blue-50/50' : 'text-blue-900'}`}>
+                      {rowData.total % 1 === 0 ? rowData.total : rowData.total.toFixed(1)}
+                    </td>
+                  )}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

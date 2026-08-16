@@ -10,7 +10,11 @@ export default function PlayerHistoryModal({ playerId, playerName, allStats, onC
   // Uses raw ESPN stat IDs: '16' = PA, '34' = IP (in outs)
   const isActiveAppearance = (record) => {
     const s = record.stats || {};
-    return parseFloat(s['16']) > 0 || parseFloat(s['34']) > 0;
+    return (
+      parseFloat(s['16']) > 0 || parseFloat(s.PA) > 0 ||
+      parseFloat(s['2']) > 0 || parseFloat(s.AB) > 0 ||
+      parseFloat(s['34']) > 0 || parseFloat(s.IP) > 0 || parseFloat(s.IP_OUTS) > 0
+    );
   };
 
   // 2. Get records, filter, and sort
