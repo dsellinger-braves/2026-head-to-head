@@ -40,6 +40,9 @@ export default function PlayersView({ allStats, selectedSeason, onPlayerClick })
   const [tab, setTab] = useState('batters');
   const [sortKey, setSortKey] = useState('PA');
   const [sortDir, setSortDir] = useState('desc');
+  const [minPA, setMinPA] = useState(0);
+  const [minIP, setMinIP] = useState(0);
+  const [minGS, setMinGS] = useState(0);
 
   const { batters, pitchers } = useMemo(() => {
     const map = {};
@@ -73,7 +76,15 @@ export default function PlayersView({ allStats, selectedSeason, onPlayerClick })
   const displayCols = tab === 'batters' ? BAT_COLS : PITCH_COLS;
 
   const sorted = useMemo(() => {
-    const list = tab === 'batters' ? batters : pitchers;
+    let list = tab === 'batters' ? batters : pitchers;
+    
+    if (tab === 'batters' && minPA > 0) {
+      list = list.filter(p => (parseFloat(p.stats.PA) || 0) >= minPA);
+    } else if (tab === 'pitchers') {
+      if (minIP > 0) list = list.filter(p => (parseFloat(p.stats.IP) || 0) >= minIP);
+      if (minGS > 0) list = list.filter(p => (parseFloat(p.stats.GS) || 0) >= minGS);
+    }
+
     return [...list].sort((a, b) => {
       const va = parseFloat(a.stats[sortKey]) || 0;
       const vb = parseFloat(b.stats[sortKey]) || 0;
@@ -81,7 +92,7 @@ export default function PlayersView({ allStats, selectedSeason, onPlayerClick })
       const cmp = isLow ? va - vb : vb - va;
       return sortDir === 'desc' ? cmp : -cmp;
     });
-  }, [tab, batters, pitchers, sortKey, sortDir]);
+  }, [tab, batters, pitchers, sortKey, sortDir, minPA, minIP, minGS]);
 
   const handleSort = (col) => {
     if (sortKey === col) setSortDir(d => d === 'desc' ? 'asc' : 'desc');
@@ -118,6 +129,31 @@ export default function PlayersView({ allStats, selectedSeason, onPlayerClick })
             Pitchers ({pitchers.length})
           </button>
         </div>
+      </div>
+
+      <div className="flex gap-4 items-center bg-gray-50 px-4 py-3 rounded-lg border border-gray-200">
+        <span className="text-sm font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+          Filters
+        </span>
+        {tab === 'batters' && (
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-gray-700 font-semibold">Min Plate Apps (PA):</label>
+            <input type="number" min="0" value={minPA} onChange={e => setMinPA(Number(e.target.value))} className="w-20 border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+          </div>
+        )}
+        {tab === 'pitchers' && (
+          <>
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-gray-700 font-semibold">Min Innings (IP):</label>
+              <input type="number" min="0" step="10" value={minIP} onChange={e => setMinIP(Number(e.target.value))} className="w-20 border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+            </div>
+            <div className="flex items-center gap-2 ml-4">
+              <label className="text-sm text-gray-700 font-semibold">Min Games Started (GS):</label>
+              <input type="number" min="0" value={minGS} onChange={e => setMinGS(Number(e.target.value))} className="w-20 border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+            </div>
+          </>
+        )}
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
