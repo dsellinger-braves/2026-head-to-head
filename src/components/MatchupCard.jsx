@@ -144,12 +144,12 @@ export default function MatchupCard({ matchup, onViewBoxScore, onOwnerClick }) {
         {/* Batting */}
         <div className="bg-gray-100 px-3 py-1 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-y border-gray-200">Batting</div>
         {batCats.map(cat => {
-            const config = CATEGORIES.find(c => c.id === cat) || { label: cat }; 
+            const config = CATEGORIES.find(c => c.id === cat) || { name: cat }; 
             return (
               <div key={cat} className="grid grid-cols-3 border-b border-gray-100 last:border-0">
                 <div className={`py-2 text-center ${getStatStyle(cat, 'home')}`}>{formatStat(homeStats[cat], matchup.homeTeam, cat)}</div>
                 <div className="py-2 text-center text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center justify-center bg-white border-x border-gray-50">
-                  {config.label}
+                  {config.name}
                 </div>
                 <div className={`py-2 text-center ${getStatStyle(cat, 'away')}`}>{formatStat(awayStats[cat], matchup.awayTeam, cat)}</div>
               </div>
@@ -159,12 +159,12 @@ export default function MatchupCard({ matchup, onViewBoxScore, onOwnerClick }) {
         {/* Pitching */}
         <div className="bg-gray-100 px-3 py-1 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-y border-gray-200">Pitching</div>
         {pitchCats.map(cat => {
-            const config = CATEGORIES.find(c => c.id === cat) || { label: cat };
+            const config = CATEGORIES.find(c => c.id === cat) || { name: cat };
             return (
               <div key={cat} className="grid grid-cols-3 border-b border-gray-100 last:border-0">
                 <div className={`py-2 text-center ${getStatStyle(cat, 'home')}`}>{formatStat(homeStats[cat], matchup.homeTeam, cat)}</div>
                 <div className="py-2 text-center text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center justify-center bg-white border-x border-gray-50">
-                  {config.label}
+                  {config.name}
                 </div>
                 <div className={`py-2 text-center ${getStatStyle(cat, 'away')}`}>{formatStat(awayStats[cat], matchup.awayTeam, cat)}</div>
               </div>
