@@ -2,7 +2,7 @@ import { CATEGORIES } from '../utils/scoring';
 import TeamAvatar from './TeamAvatar';
 
 // 1. ADD 'onViewBoxScore' to the props list here
-export default function MatchupCard({ matchup, homeStats, awayStats, result, onViewBoxScore, onOwnerClick }) {
+export default function MatchupCard({ matchup, onViewBoxScore, onOwnerClick }) {
   
   // Safety check: if data is missing, show loading
  
@@ -54,6 +54,7 @@ export default function MatchupCard({ matchup, homeStats, awayStats, result, onV
     );
   }
  
+  const { homeStats, awayStats, result } = matchup;
  
   if (!homeStats || !awayStats || !result) {
     return (
