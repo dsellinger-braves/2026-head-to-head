@@ -3,7 +3,7 @@ import { supabase } from './supabaseClient';
 import { get, set, del } from 'idb-keyval';
 
 import { generateSchedule, TEAMS, getPeriodRangeForWeek } from './schedule';
-import { calculateStandings } from './utils/standings'; 
+import { calculateStandings } from './utils/standings';
 // NOTE: Make sure to export calculateTrioMatchupResult from scoring.js!
 import { aggregateStats, calculateMatchupResult, calculateTrioMatchupResult } from './utils/scoring';
 
@@ -47,12 +47,12 @@ function App() {
       }
     }
     return {
-      season_year:       row.season_year,
-      team_id:           row.team_id,
+      season_year: row.season_year,
+      team_id: row.team_id,
       scoring_period_id: row.scoring_period_id,
-      player_id:         row.id,
-      full_name:         row.fullName,
-      lineup_slot_id:    row.lineupSlotID != null ? parseInt(row.lineupSlotID) : null,
+      player_id: row.id,
+      full_name: row.fullName,
+      lineup_slot_id: row.lineupSlotID != null ? parseInt(row.lineupSlotID) : null,
       stats,
     };
   };
@@ -64,7 +64,7 @@ function App() {
     if (cached?.length > 0) return cached;
 
     const isHistorical = season < 2026;
-    const tableName    = isHistorical ? 'historical_data' : 'player_daily_stats';
+    const tableName = isHistorical ? 'historical_data' : 'player_daily_stats';
     let allRecords = [];
     let page = 0;
     const pageSize = 1000;
@@ -74,9 +74,8 @@ function App() {
       let query = supabase
         .from(tableName)
         .select('*')
-        .eq('season_year', season)
         .range(page * pageSize, (page + 1) * pageSize - 1);
-      
+
       if (!isHistorical) {
         query = query.eq('league_id', 130215).order('id', { ascending: true });
       }
@@ -180,7 +179,7 @@ function App() {
     if (!rawData.length) return [];
 
     const resolveMatchupStats = (matchup, week) => {
-      
+
       // ---------------------------------------------------
       // 1. TRIO MATCHUPS (Phases 1 & 2)
       // ---------------------------------------------------
@@ -255,7 +254,7 @@ function App() {
       const homeRecords = [];
       const awayRecords = [];
       const allHumanRecords = [];
-      
+
       for (const r of rawData) {
         if (r.scoring_period_id >= startId && r.scoring_period_id <= endId) {
           if (r.team_id == matchup.homeTeamId) homeRecords.push(r);
@@ -269,7 +268,7 @@ function App() {
         const totalStats = aggregateStats(records);
         const avgStats = { ...totalStats };
         const numTeams = 9; // 9 human teams in the league
-        
+
         // Divide counting components by 9 to get the average
         const fieldsToDivide = ['R', 'HR', 'RBI', 'SB', 'K', 'QS', 'SV+HDs', 'ER', 'IP', 'BB_Allowed', 'H_Allowed', 'OBP_num', 'PA'];
         fieldsToDivide.forEach(key => {
@@ -280,14 +279,14 @@ function App() {
         avgStats.OBP = avgStats.PA > 0 ? (avgStats.OBP_num / avgStats.PA).toFixed(3) : ".000";
         avgStats.ERA = avgStats.IP > 0 ? ((avgStats.ER * 9) / avgStats.IP).toFixed(2) : "0.00";
         avgStats.WHIP = avgStats.IP > 0 ? ((avgStats.BB_Allowed + avgStats.H_Allowed) / avgStats.IP).toFixed(2) : "0.00";
-        
+
         return avgStats;
       };
 
       const homeStats = matchup.homeTeamId == 99 ? computeAverageTeamStats(allHumanRecords) : aggregateStats(homeRecords);
       const awayStats = matchup.awayTeamId == 99 ? computeAverageTeamStats(allHumanRecords) : aggregateStats(awayRecords);
       const result = calculateMatchupResult(homeStats, awayStats);
-      
+
       const homeTeamInfo = TEAMS[matchup.homeTeamId] || { name: 'Unknown', owner: '' };
       const awayTeamInfo = TEAMS[matchup.awayTeamId] || { name: 'Unknown', owner: '' };
 
@@ -358,10 +357,10 @@ function App() {
 
     // --- STEP D: PROCESS PHASE 4 (Weeks 24-25) PLAYOFFS ---
     const standingsAfter23 = calculateStandings(resolvedSchedule, 23);
-    const playoffSeeds = standingsAfter23.slice(0, 8); 
+    const playoffSeeds = standingsAfter23.slice(0, 8);
 
     if (baseSchedule[23]) {
-      const week24 = baseSchedule[23]; 
+      const week24 = baseSchedule[23];
       const sfMatchups = [
         { id: 'sf1', homeTeamId: playoffSeeds[0]?.id, awayTeamId: playoffSeeds[3]?.id, label: "Semi-Final A" },
         { id: 'sf2', homeTeamId: playoffSeeds[1]?.id, awayTeamId: playoffSeeds[2]?.id, label: "Semi-Final B" },
@@ -375,8 +374,8 @@ function App() {
 
     if (baseSchedule[24]) {
       const week25 = baseSchedule[24];
-      const prevWeek = resolvedSchedule[23]; 
-      
+      const prevWeek = resolvedSchedule[23];
+
       const getWinner = (matchId) => {
         const m = prevWeek?.matchups.find(pm => pm.id === matchId || pm.matchupId === matchId);
         if (!m || !m.result) return "TBD";
@@ -434,7 +433,7 @@ function App() {
                 </span>
                 FantasyCast
               </button>
-             
+
               <select
                 value={selectedSeason}
                 onChange={e => handleSeasonChange(parseInt(e.target.value))}
@@ -454,15 +453,15 @@ function App() {
 
       <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         {currentView === 'weekly' && (
-          <WeeklyView 
-            processedWeeks={processedWeeks} 
+          <WeeklyView
+            processedWeeks={processedWeeks}
             allStats={rawData}
             onOwnerClick={(team) => setSelectedOwner(team)}
           />
         )}
         {currentView === 'summary' && (
-          <SummaryView 
-            processedWeeks={processedWeeks} 
+          <SummaryView
+            processedWeeks={processedWeeks}
             allStats={rawData}
             onOwnerClick={(team) => setSelectedOwner(team)}
           />
@@ -509,23 +508,23 @@ function App() {
 
       {/* --- MODAL LAYER --- */}
       {selectedOwner && (
-        <OwnerDetailModal 
-           team={selectedOwner}
-           allStats={rawData}
-           onClose={() => setSelectedOwner(null)}
-           onPlayerClick={(id, name) => setSelectedPlayer({ id, name })} 
+        <OwnerDetailModal
+          team={selectedOwner}
+          allStats={rawData}
+          onClose={() => setSelectedOwner(null)}
+          onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
         />
       )}
 
       {selectedPlayer && (
-         <div style={{ zIndex: 90, position: 'relative' }}> 
-           <PlayerHistoryModal 
-             playerId={selectedPlayer.id}
-             playerName={selectedPlayer.name}
-             allStats={rawData}
-             onClose={() => setSelectedPlayer(null)}
-           />
-         </div>
+        <div style={{ zIndex: 90, position: 'relative' }}>
+          <PlayerHistoryModal
+            playerId={selectedPlayer.id}
+            playerName={selectedPlayer.name}
+            allStats={rawData}
+            onClose={() => setSelectedPlayer(null)}
+          />
+        </div>
       )}
     </div>
   );
