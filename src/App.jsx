@@ -76,7 +76,10 @@ function App() {
         .select('*')
         .eq('season_year', season)
         .range(page * pageSize, (page + 1) * pageSize - 1);
-      if (!isHistorical) query = query.order('id', { ascending: true });
+      
+      if (!isHistorical) {
+        query = query.eq('league_id', 130215).order('id', { ascending: true });
+      }
 
       const { data, error } = await query;
       if (error) throw error;

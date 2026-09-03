@@ -1,4 +1,4 @@
-project_id = "yxybtxekgishfxxkzuie"
+project_id = "wczdkcdqgtzlsbssogoz"
 
 [functions.fetch-espn-stats]
 verify_jwt = false
