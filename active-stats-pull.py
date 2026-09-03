@@ -98,6 +98,7 @@ def get_espn_data(league_id, team_ids, scoring_period_ids):
                         mapped_stats[key_name] = value
 
                     record = {
+                        "league_id": league_id,
                         "team_id": team_id,
                         "scoring_period_id": scoring_period_id,
                         "player_id": player_id,
@@ -122,7 +123,7 @@ def upload_to_supabase(records, active_periods: list):
     
     print(f"Clearing existing database rows for periods: {list(active_periods)}...")
     try:
-        supabase.table('player_daily_stats').delete().in_('scoring_period_id', list(active_periods)).execute()
+        supabase.table('player_daily_stats').delete().eq('league_id', LEAGUE_ID).in_('scoring_period_id', list(active_periods)).execute()
     except Exception as e:
         print(f"Error clearing old data for active periods: {e}")
         print("Aborting insert to prevent duplicate key constraint failures.")

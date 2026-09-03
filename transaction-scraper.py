@@ -109,6 +109,7 @@ def parse_transactions(raw: List[Dict]) -> List[Dict]:
 
             rows.append({
                 "espn_transaction_id": f"{txn_id}_{player_id}_{to_team_id}",
+                "league_id":           LEAGUE_ID,
                 "transaction_type":    txn_type,
                 "transaction_date":    txn_date.isoformat(),
                 "scoring_period_id":   period_id,
@@ -212,6 +213,7 @@ def parse_activity_trades(topics: List[Dict]) -> List[Dict]:
             
             rows.append({
                 "espn_transaction_id": f"{topic_id}_{player_id}_{to_team_id}",
+                "league_id":           LEAGUE_ID,
                 "transaction_type":    "TRADE",
                 "transaction_date":    txn_date.isoformat(),
                 "scoring_period_id":   0, # Activity feed doesn't attach scoring periods
