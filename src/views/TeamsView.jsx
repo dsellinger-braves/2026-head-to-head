@@ -74,8 +74,11 @@ export default function TeamsView({ allStats, onOwnerClick }) {
     return [...teamRows].sort((a, b) => {
       const dataA = viewMode === 'roto' && SCORING_CATS[sortKey] ? a.rotoPoints : a.stats;
       const dataB = viewMode === 'roto' && SCORING_CATS[sortKey] ? b.rotoPoints : b.stats;
-      const va = parseFloat(dataA[sortKey]) || 0;
-      const vb = parseFloat(dataB[sortKey]) || 0;
+      const valA = dataA[`${sortKey}_raw`] !== undefined ? dataA[`${sortKey}_raw`] : dataA[sortKey];
+      const valB = dataB[`${sortKey}_raw`] !== undefined ? dataB[`${sortKey}_raw`] : dataB[sortKey];
+      
+      const va = parseFloat(valA) || 0;
+      const vb = parseFloat(valB) || 0;
       
       const isLow = viewMode === 'raw' && SCORING_CATS[sortKey]?.type === 'low';
       const cmp = isLow ? va - vb : vb - va;
