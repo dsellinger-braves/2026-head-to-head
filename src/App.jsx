@@ -78,6 +78,8 @@ function App() {
 
       if (!isHistorical) {
         query = query.eq('league_id', 130215).order('id', { ascending: true });
+      } else {
+        query = query.eq('league_id', 130215).eq('season_year', season);
       }
 
       const { data, error } = await query;
