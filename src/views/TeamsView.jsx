@@ -5,17 +5,22 @@ import TeamAvatar from '../components/TeamAvatar';
 
 const STAT_COLS = ['PA', 'R', 'HR', 'RBI', 'SB', 'OBP', 'IP', 'K', 'QS', 'QS_PCT', 'SV+HDs', 'ERA', 'WHIP'];
 
-const formatStat = (val, cat) => {
+const formatStat = (row, cat) => {
+  const val = row[cat];
   if (val === undefined || val === null) return '-';
   if (cat === 'IP') {
     const ip = parseFloat(val) || 0;
     return `${Math.floor(ip)}.${Math.round((ip % 1) * 3)}`;
   }
-  if (cat === 'ERA') {
+  if (cat === 'ERA' || cat === 'WHIP') {
+    const raw = row[`${cat}_raw`];
+    if (raw !== undefined) return isNaN(raw) ? '-' : raw.toFixed(4);
     const n = parseFloat(val);
     return isNaN(n) ? '-' : n.toFixed(2);
   }
   if (cat === 'OBP') {
+    const raw = row[`${cat}_raw`];
+    if (raw !== undefined) return isNaN(raw) ? '-' : raw.toFixed(4).replace(/^0/, '');
     const n = parseFloat(val);
     return isNaN(n) ? '-' : n.toFixed(4).replace(/^0/, '');
   }
@@ -160,10 +165,11 @@ export default function TeamsView({ allStats, onOwnerClick }) {
                   {STAT_COLS.map(col => (
                     <td
                       key={col}
+                      title={rowData[`${col}_raw`] !== undefined ? rowData[`${col}_raw`] : ''}
                       className={`px-3 py-3 text-center font-mono text-sm
                         ${sortKey === col ? 'text-blue-700 font-bold bg-blue-50/50' : 'text-gray-700'}`}
                     >
-                      {viewMode === 'roto' ? (rowData[col] === undefined ? '-' : (rowData[col] % 1 === 0 ? rowData[col] : rowData[col].toFixed(1))) : formatStat(rowData[col], col)}
+                      {viewMode === 'roto' ? (rowData[col] === undefined ? '-' : (rowData[col] % 1 === 0 ? rowData[col] : rowData[col].toFixed(1))) : formatStat(rowData, col)}
                     </td>
                   ))}
                   {viewMode === 'roto' && (

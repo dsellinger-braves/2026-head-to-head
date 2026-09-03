@@ -132,6 +132,11 @@ export function aggregateStats(dailyRecords) {
   calculated.ERA  = totals.IP > 0 ? ((totals.ER * 9) / totals.IP).toFixed(2) : "0.00";
   calculated.WHIP = totals.IP > 0 ? ((totals.BB_Allowed + totals.H_Allowed) / totals.IP).toFixed(2) : "0.00";
   calculated.QS_PCT = totals.GS > 0 ? ((totals.QS / totals.GS) * 100).toFixed(1) : "0.0";
+  
+  // Unrounded values for tooltips and precise display
+  calculated.OBP_raw  = totals.PA > 0 ? totals.OBP_num / totals.PA : 0;
+  calculated.ERA_raw  = totals.IP > 0 ? (totals.ER * 9) / totals.IP : 0;
+  calculated.WHIP_raw = totals.IP > 0 ? (totals.BB_Allowed + totals.H_Allowed) / totals.IP : 0;
 
   return calculated;
 }
