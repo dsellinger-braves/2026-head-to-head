@@ -1555,6 +1555,12 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
   // Audio state
   const [audioEnabled, setAudioEnabled] = useState(false);
   const lastAnnouncedPickRef = useRef(null);
+  const playersRef = useRef(players);
+  useEffect(() => {
+    playersRef.current = players;
+  }, [players]);
+
+  const syncSupabase = import.meta.env.VITE_SYNC_SUPABASE_DRAFT === 'true';
 
   const displayPicks = useMemo(() => {
     return draftMode === 'test' && testModePicks.length > 0 ? testModePicks : picks;
@@ -1577,9 +1583,9 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
     }
   }, [currentPickId, currentPickOwner, audioEnabled]);
 
-  // Commentary callback
+  // Commentary callback - stable reference using playersRef
   const handleNewPick = useCallback(async (pick) => {
-    const player = players.find(p => String(p['ESPN PlayerID']) === String(pick['ESPN PlayerID']));
+    const player = playersRef.current.find(p => String(p['ESPN PlayerID']) === String(pick['ESPN PlayerID']));
     if (!player) return;
     
     setGeneratingCommentary(true);
@@ -1606,7 +1612,7 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
       timestamp: new Date().toLocaleTimeString()
     };
     setAnalysisHistory(prev => [...prev, historyEntry]);
-  }, [players]);
+  }, []);
 
   useEffect(() => {
     if (!draftMode) return;
@@ -1616,13 +1622,16 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
       let pData = null;
       let dData = null;
 
-      try {
-        const pRes = await supabase.from('player-pool').select('*');
-        pData = pRes?.data;
-        const dRes = await supabase.from('draft-order').select('*').order('Overall Pick', { ascending: true });
-        dData = dRes?.data;
-      } catch (err) {
-        console.warn('Supabase fetch failed or unavailable, using fallback:', err);
+      // Only attempt Supabase in Live Mode if sync is explicitly enabled (Supabase endpoint is currently paused)
+      if (draftMode === 'live' && syncSupabase) {
+        try {
+          const pRes = await supabase.from('player-pool').select('*');
+          pData = pRes?.data;
+          const dRes = await supabase.from('draft-order').select('*').order('Overall Pick', { ascending: true });
+          dData = dRes?.data;
+        } catch (err) {
+          console.warn('Supabase fetch failed or unavailable, using fallback:', err);
+        }
       }
 
       if (!pData || pData.length === 0) {
@@ -1644,7 +1653,7 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
 
     loadData();
 
-    if (draftMode === 'live') {
+    if (draftMode === 'live' && syncSupabase) {
       const channel = supabase
         .channel('draft_updates')
         .on('postgres_changes', { 
@@ -1676,7 +1685,7 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
     return () => {
       isCancelled = true;
     };
-  }, [draftMode, handleNewPick]);
+  }, [draftMode, syncSupabase, handleNewPick]);
 
   const handleModeSelect = (mode) => {
     localStorage.setItem('draftMode', mode);
@@ -1717,7 +1726,7 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
     setQueue(newQueue);
     localStorage.setItem('draft_queue', JSON.stringify(newQueue));
 
-    if (draftMode === 'test') {
+    if (draftMode === 'test' || !syncSupabase) {
       setPickStartTime(Date.now());
       const basePicks = testModePicks.length > 0 ? testModePicks : picks;
       
