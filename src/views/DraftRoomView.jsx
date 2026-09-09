@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
-import { supabase } from '../supabaseClient';
+import { supabase, DEFAULT_SUPABASE_URL, DEFAULT_SUPABASE_ANON_KEY } from '../supabaseClient';
 
 // --- CONFIGURATION ---
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyDQ0eRBz6jSsORZrnG19jR5mzmd0QE0DWg';
@@ -7,37 +7,386 @@ const GEMINI_MODEL = 'gemini-2.5-flash';
 
 // Google Cloud Storage for static player data
 const GCS_BUCKET = "https://storage.googleapis.com/fantasy-draft-2026";
-const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
-// Cached fetch function for GCS data
-async function fetchFromGCS(filename, cacheKey) {
-  const cachedData = localStorage.getItem(cacheKey);
-  const cacheTime = localStorage.getItem(`${cacheKey}_time`);
-  
-  const isCacheValid = cachedData && cacheTime && 
-    (Date.now() - parseInt(cacheTime, 10)) < CACHE_DURATION;
-  
-  if (isCacheValid) {
-    try {
-      return JSON.parse(cachedData);
-    } catch {
-      // ignore parse error and re-fetch
-    }
-  }
-  
+// IndexedDB cache for draft assets (matching fantasy-draft cache)
+const DRAFT_DB_NAME = 'fantasy-draft-cache';
+const DRAFT_DB_VERSION = 1;
+const DRAFT_STORE_NAME = 'data';
+let draftDbInstance = null;
+
+async function getDraftDb() {
+  if (draftDbInstance) return draftDbInstance;
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DRAFT_DB_NAME, DRAFT_DB_VERSION);
+    req.onerror = () => reject(req.error);
+    req.onsuccess = () => {
+      draftDbInstance = req.result;
+      resolve(draftDbInstance);
+    };
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(DRAFT_STORE_NAME)) {
+        db.createObjectStore(DRAFT_STORE_NAME);
+      }
+    };
+  });
+}
+
+async function draftDbGet(key) {
   try {
-    const response = await fetch(`${GCS_BUCKET}/${filename}`);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const data = await response.json();
-    
-    localStorage.setItem(cacheKey, JSON.stringify(data));
-    localStorage.setItem(`${cacheKey}_time`, Date.now().toString());
-    
-    return data;
-  } catch (error) {
-    console.warn(`Error fetching ${filename} from GCS:`, error);
-    return cachedData ? JSON.parse(cachedData) : [];
+    const db = await getDraftDb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(DRAFT_STORE_NAME, 'readonly');
+      const store = tx.objectStore(DRAFT_STORE_NAME);
+      const req = store.get(key);
+      req.onerror = () => reject(req.error);
+      req.onsuccess = () => resolve(req.result || null);
+    });
+  } catch (err) {
+    console.error('draftDbGet error:', err);
+    return null;
   }
+}
+
+async function draftDbSet(key, value) {
+  try {
+    const db = await getDraftDb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(DRAFT_STORE_NAME, 'readwrite');
+      const store = tx.objectStore(DRAFT_STORE_NAME);
+      const req = store.put(value, key);
+      req.onerror = () => reject(req.error);
+      req.onsuccess = () => resolve();
+    });
+  } catch (err) {
+    console.error('draftDbSet error:', err);
+  }
+}
+
+// Cached fetch function for GCS data with 1-hour TTL
+async function fetchFromGCS(filename, cacheKey) {
+  try {
+    const cached = await draftDbGet(cacheKey);
+    if (cached) {
+      const { data, timestamp } = cached;
+      if (Date.now() - timestamp < 3600000) {
+        console.log(`📦 Using cached ${filename} (IndexedDB)`);
+        return data;
+      }
+    }
+    console.log(`🌐 Fetching ${filename} from GCS...`);
+    const res = await fetch(`${GCS_BUCKET}/${filename}`);
+    if (res.status === 404) {
+      console.warn(`⚠️ File not found: ${filename} (this may be expected if file hasn't been created yet)`);
+      return [];
+    }
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    await draftDbSet(cacheKey, { data, timestamp: Date.now() });
+    console.log(`✅ Cached ${filename} (${data?.length || 'N/A'} records)`);
+    return data;
+  } catch (err) {
+    console.error(`❌ Error fetching ${filename}:`, err);
+    try {
+      const stale = await draftDbGet(cacheKey);
+      if (stale && stale.data) {
+        console.log(`📦 Using stale cache for ${filename}`);
+        return stale.data;
+      }
+    } catch {
+      /* ignore cache lookup error on network failure */
+    }
+    return [];
+  }
+}
+
+// Edge function caller for FanGraphs projections
+async function fetchFanGraphs(mode) {
+  try {
+    console.log(`⚾ Fetching fresh ${mode} stats from FanGraphs...`);
+    const { data, error } = await supabase.functions.invoke('fangraphs', {
+      body: { mode }
+    });
+    if (error) throw error;
+    return data?.players || [];
+  } catch (err) {
+    console.error(`FanGraphs Fetch Error (${mode}):`, err);
+    return [];
+  }
+}
+
+// Edge function caller for live ESPN player profiles & rankings
+async function callESPNProxy(body) {
+  try {
+    const res = await fetch(`${DEFAULT_SUPABASE_URL}/functions/v1/espn-proxy`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${DEFAULT_SUPABASE_ANON_KEY}`
+      },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) {
+      console.error(`ESPN Proxy HTTP Error: ${res.status}`);
+      const errText = await res.text();
+      console.error('Response:', errText);
+      throw new Error(`ESPN Proxy error: ${res.status}`);
+    }
+    return await res.json();
+  } catch (err) {
+    console.error('callESPNProxy Error:', err);
+    throw err;
+  }
+}
+
+async function fetchAllEspnPlayers() {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 120000);
+  try {
+    console.log('📡 Fetching all players from ESPN...');
+    const res = await callESPNProxy({ mode: 'player_info' });
+    clearTimeout(timer);
+    if (res?.players) {
+      console.log(`✅ Fetched ${res.players.length} players from ESPN`);
+      return res.players;
+    } else {
+      console.warn('⚠️ No players returned from ESPN');
+      return [];
+    }
+  } catch (err) {
+    clearTimeout(timer);
+    if (err.name === 'AbortError') {
+      console.warn('⚠️ ESPN Proxy request timed out after 2 minutes.');
+    } else {
+      console.error('❌ ESPN Proxy Error:', err.message);
+    }
+    return [];
+  }
+}
+
+function normalizeName(str) {
+  return str
+    ? str
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[.,'-]/g, '')
+        .replace(/\s+(jr|sr|ii|iii|iv)$/i, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+    : '';
+}
+
+function roundNumber(val, decimals = 3) {
+  if (val == null) return null;
+  const n = parseFloat(val);
+  return isNaN(n) ? null : parseFloat(n.toFixed(decimals));
+}
+
+function mergeEspnData(playerPool, espnData) {
+  if (!playerPool || !espnData || espnData.length === 0) return playerPool;
+  const espnMap = new Map();
+  espnData.forEach(p => {
+    const pid = p.player_id || p['ESPN PlayerID'];
+    if (pid) espnMap.set(String(pid), p);
+  });
+  console.log(`📺 ESPN merge: ${espnMap.size} records available`);
+  let matched = 0;
+  const merged = playerPool.map(p => {
+    const pid = String(p['ESPN PlayerID']);
+    const e = espnMap.get(pid);
+    if (e) {
+      matched++;
+      return {
+        ...p,
+        Position: e.eligiblePositions || p.Position,
+        ADP: e.averageDraftPosition ?? p.ADP,
+        averageDraftPosition: e.averageDraftPosition,
+        ADPChange: e.averageDraftPositionPercentChange,
+        averageDraftPositionPercentChange: e.averageDraftPositionPercentChange,
+        'Percent Owned': e.percentOwned ?? p['Percent Owned'],
+        percentOwned: e.percentOwned,
+        OwnershipChange: e.percentChange,
+        percentChange: e.percentChange,
+        'ESPN ROTO Rank': e.rotoRank,
+        rotoRank: e.rotoRank,
+        'ESPN Single Season Ranking': e.rotoRank,
+        injuryStatus: e.injuryStatus || e.injured_status,
+        injured: e.injured,
+        seasonOutlook: e.seasonOutlook,
+        ESPNPA: e.ESPN_PA ?? p.ESPNPA,
+        ESPNHR: e.ESPN_HR ?? p.ESPNHR,
+        ESPNR: e.ESPN_R ?? p.ESPNR,
+        ESPNRBI: e.ESPN_RBI ?? p.ESPNRBI,
+        ESPNSB: e.ESPN_SB ?? p.ESPNSB,
+        ESPNOBP: e.ESPN_OBP ?? p.ESPNOBP,
+        ESPNIP: e.ESPN_IP ?? p.ESPNIP,
+        ESPNK: e.ESPN_K ?? p.ESPNK,
+        ESPNERA: e.ESPN_ERA ?? p.ESPNERA,
+        ESPNWHIP: e.ESPN_WHIP ?? p.ESPNWHIP,
+        ESPNQS: e.ESPN_QS ?? p.ESPNQS,
+        'ESPNSV+HDs': (e.ESPN_SV ?? 0) + (e.ESPN_HD ?? 0) || p['ESPNSV+HDs'],
+        stats2025: e.stats2025
+      };
+    }
+    return p;
+  });
+  console.log(`📺 ESPN merge complete: ${matched} players matched`);
+  return merged;
+}
+
+function mergeZipsData(playerPool, battersZips = [], pitchersZips = []) {
+  if (!playerPool || playerPool.length === 0) {
+    console.warn('No players to merge ZiPS data into');
+    return playerPool;
+  }
+
+  const getName = p => p.Name || p.PlayerName || p.name || p.playername || '';
+  const getMlbamId = p => p.xMLBAMID || p.XMLBAMID || p.mlbamid || p.MLBAMID || p.mlbam_id || '';
+
+  const batterIdMap = new Map();
+  const pitcherIdMap = new Map();
+  const batterNameMap = new Map();
+  const pitcherNameMap = new Map();
+  const ambiguousBatters = new Set();
+  const ambiguousPitchers = new Set();
+
+  battersZips.forEach(p => {
+    const mid = getMlbamId(p);
+    if (mid) batterIdMap.set(String(mid), p);
+    const name = getName(p);
+    if (name) {
+      const clean = normalizeName(name);
+      if (batterNameMap.has(clean)) {
+        ambiguousBatters.add(clean);
+        batterNameMap.delete(clean);
+      } else if (!ambiguousBatters.has(clean)) {
+        batterNameMap.set(clean, p);
+      }
+    }
+  });
+
+  pitchersZips.forEach(p => {
+    const mid = getMlbamId(p);
+    if (mid) pitcherIdMap.set(String(mid), p);
+    const name = getName(p);
+    if (name) {
+      const clean = normalizeName(name);
+      if (pitcherNameMap.has(clean)) {
+        ambiguousPitchers.add(clean);
+        pitcherNameMap.delete(clean);
+      } else if (!ambiguousPitchers.has(clean)) {
+        pitcherNameMap.set(clean, p);
+      }
+    }
+  });
+
+  console.log(`📊 ZiPS merge maps: ${batterIdMap.size} batters by ID, ${batterNameMap.size} by name (${ambiguousBatters.size} ambiguous names skipped: ${[...ambiguousBatters].join(', ') || 'none'})`);
+  console.log(`📊 ZiPS merge maps: ${pitcherIdMap.size} pitchers by ID, ${pitcherNameMap.size} by name (${ambiguousPitchers.size} ambiguous names skipped: ${[...ambiguousPitchers].join(', ') || 'none'})`);
+
+  if (batterIdMap.size > 0) {
+    const sampleIds = Array.from(batterIdMap.keys()).slice(0, 3);
+    console.log(`📊 Sample ZiPS batting IDs: ${sampleIds.join(', ')}`);
+  }
+  if (playerPool.length > 0) {
+    const samplePoolIds = playerPool.slice(0, 3).map(p => p.MLBAMID || p.mlbamid || 'N/A');
+    console.log(`📊 Sample player pool IDs: ${samplePoolIds.join(', ')}`);
+  }
+
+  const poolNameCounts = new Map();
+  playerPool.forEach(p => {
+    const clean = normalizeName(p.Player || p.Name || '');
+    if (clean) poolNameCounts.set(clean, (poolNameCounts.get(clean) || 0) + 1);
+  });
+  const poolAmbiguous = new Set([...poolNameCounts.entries()].filter(([, count]) => count > 1).map(([name]) => name));
+  if (poolAmbiguous.size > 0) {
+    console.log(`📊 Pool-ambiguous names (name fallback disabled for these): ${[...poolAmbiguous].join(', ')}`);
+  }
+
+  let bMatched = 0;
+  let pMatched = 0;
+  let nameFallbackCount = 0;
+
+  const merged = playerPool.map(player => {
+    const mlbRaw = String(player.MLBAMID || player.mlbamid || '').trim();
+    const mlbamId = mlbRaw === '' || mlbRaw === '0' ? null : mlbRaw;
+    const cleanName = normalizeName(player.Player || player.Name || '');
+    const canFallback = !poolAmbiguous.has(cleanName) && !ambiguousBatters.has(cleanName) && !ambiguousPitchers.has(cleanName);
+
+    let bData = null;
+    if (mlbamId) bData = batterIdMap.get(mlbamId);
+    if (!bData && cleanName && canFallback) {
+      bData = batterNameMap.get(cleanName);
+      if (bData) nameFallbackCount++;
+    }
+
+    let pData = null;
+    if (mlbamId) pData = pitcherIdMap.get(mlbamId);
+    if (!pData && cleanName && canFallback) {
+      pData = pitcherNameMap.get(cleanName);
+      if (pData) nameFallbackCount++;
+    }
+
+    const res = { ...player };
+
+    if (bData) {
+      bMatched++;
+      res.ZIPSPA = bData.PA ?? player.ZIPSPA;
+      res.ZIPSAB = bData.AB ?? player.ZIPSAB;
+      res.ZIPSH = bData.H ?? player.ZIPSH;
+      res.ZIPSHR = bData.HR ?? player.ZIPSHR;
+      res.ZIPSR = bData.R ?? player.ZIPSR;
+      res.ZIPSRBI = bData.RBI ?? player.ZIPSRBI;
+      res.ZIPSSB = bData.SB ?? player.ZIPSSB;
+      res.ZIPSCS = bData.CS ?? player.ZIPSCS;
+      res.ZIPSBB = bData.BB ?? player.ZIPSBB;
+      res.ZIPSK = bData.SO ?? bData.K ?? player.ZIPSK;
+      res.ZIPSSO = bData.SO ?? bData.K ?? player.ZIPSSO;
+      res.ZIPSOBP = roundNumber(bData.OBP) ?? player.ZIPSOBP;
+      res.ZIPSSLG = roundNumber(bData.SLG) ?? player.ZIPSSLG;
+      res.ZIPSAVG = roundNumber(bData.AVG) ?? player.ZIPSAVG;
+      res.ZIPSwOBA = roundNumber(bData.wOBA) ?? player.ZIPSwOBA;
+      res.ZIPSwRC = bData.wRC ?? player.ZIPSwRC;
+      res.ZIPSwRCplus = bData['wRC+'] ?? player.ZIPSwRCplus;
+      res.ZIPSWAR = bData.WAR ?? player.ZIPSWAR;
+      res.ZIPS2B = bData['2B'] ?? player.ZIPS2B;
+      res.ZIPS3B = bData['3B'] ?? player.ZIPS3B;
+    }
+
+    if (pData) {
+      pMatched++;
+      res.ZIPSW = pData.W ?? player.ZIPSW;
+      res.ZIPSL = pData.L ?? player.ZIPSL;
+      res.ZIPSG = pData.G ?? player.ZIPSG;
+      res.ZIPSGS = pData.GS ?? player.ZIPSGS;
+      res.ZIPSIP = pData.IP ?? player.ZIPSIP;
+      res.ZIPSK = pData.SO ?? pData.K ?? res.ZIPSK ?? player.ZIPSK;
+      res.ZIPSSO = pData.SO ?? pData.K ?? player.ZIPSSO;
+      res.ZIPSBB = pData.BB ?? res.ZIPSBB ?? player.ZIPSBB;
+      res.ZIPSERA = roundNumber(pData.ERA, 2) ?? player.ZIPSERA;
+      res.ZIPSWHIP = roundNumber(pData.WHIP, 2) ?? player.ZIPSWHIP;
+      res.ZIPSFIP = roundNumber(pData.FIP, 2) ?? player.ZIPSFIP;
+      res.ZIPSxFIP = roundNumber(pData.xFIP, 2) ?? player.ZIPSxFIP;
+      res.ZIPSKper9 = roundNumber(pData['K/9'], 2) ?? player.ZIPSKper9;
+      res.ZIPSBBper9 = roundNumber(pData['BB/9'], 2) ?? player.ZIPSBBper9;
+      res.ZIPSSV = pData.SV ?? player.ZIPSSV ?? 0;
+      res.ZIPSHD = pData.HLD ?? pData.HD ?? player.ZIPSHD ?? 0;
+      res['ZIPSSV+HDs'] = (res.ZIPSSV || 0) + (res.ZIPSHD || 0);
+      if (pData.QS === undefined) {
+        if (pData.GS && pData.IP) {
+          res.ZIPSQS = Math.round(pData.GS * 0.45);
+        }
+      } else {
+        res.ZIPSQS = pData.QS;
+      }
+      res.ZIPSWAR_pit = pData.WAR ?? player.ZIPSWAR_pit;
+    }
+
+    return res;
+  });
+
+  console.log(`📊 ZiPS merge complete: ${bMatched} batters, ${pMatched} pitchers matched (${nameFallbackCount} via name fallback)`);
+  return merged;
 }
 
 // --- CONSTANTS ---
@@ -855,17 +1204,20 @@ function QueuePreviewWidget({ queue, onPlayerClick, playerInfo }) {
 }
 
 // --- PLAYER POOL PANEL ---
-function PlayerPoolPanel({ players, onDraft, isMyTurn, queue, onAddToQueue, onRemoveFromQueue, draftMode, testModePicks, onPlayerClick, playerInfo, isMobile = false }) {
+function PlayerPoolPanel({ players, onDraft, isMyTurn, queue, onAddToQueue, onRemoveFromQueue, draftMode, testModePicks, allPicks, onPlayerClick, playerInfo, isMobile = false }) {
   const [sortConfig, setSortConfig] = useState({ key: 'ADP', direction: 'asc' });
   const [filterPos, setFilterPos] = useState('');
   const [searchText, setSearchText] = useState('');
 
   const sortedPlayers = useMemo(() => {
+    const activePicks = (draftMode === 'test' || draftMode === 'mockdraft') && testModePicks?.length > 0
+      ? testModePicks
+      : (allPicks || []);
+    const draftedSet = new Set(activePicks.map(p => String(p['ESPN PlayerID'])).filter(id => id && id !== 'null' && id !== 'undefined'));
+
     let filtered = [...players].filter(p => {
-      if ((draftMode === 'test' || draftMode === 'mockdraft') && testModePicks) {
-        const isDrafted = testModePicks.some(pick => String(pick['ESPN PlayerID']) === String(p['ESPN PlayerID']));
-        if (isDrafted) return false;
-      }
+      const pid = String(p['ESPN PlayerID']);
+      if (draftedSet.has(pid)) return false;
       return p.Availability === 'Available' || !p.Availability;
     });
     
@@ -897,7 +1249,7 @@ function PlayerPoolPanel({ players, onDraft, isMyTurn, queue, onAddToQueue, onRe
     });
     
     return filtered;
-  }, [players, sortConfig, filterPos, searchText, draftMode, testModePicks]);
+  }, [players, sortConfig, filterPos, searchText, draftMode, testModePicks, allPicks]);
 
   const requestSort = (key) => {
     setSortConfig(prev => ({
@@ -1643,6 +1995,16 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [playerInfo, setPlayerInfo] = useState([]);
 
+  // Static and merged draft data states
+  const [_endingRoster, setEndingRoster] = useState([]);
+  const [_draftHistory, setDraftHistory] = useState([]);
+  const [_historicalFinish, setHistoricalFinish] = useState([]);
+  const [_battersZips, setBattersZips] = useState([]);
+  const [_pitchersZips, setPitchersZips] = useState([]);
+  const [_savantBatters, setSavantBatters] = useState([]);
+  const [_savantPitchers, setSavantPitchers] = useState([]);
+  const [_espnPlayers, setEspnPlayers] = useState([]);
+
   // Audio state
   const [audioEnabled, setAudioEnabled] = useState(false);
   const lastAnnouncedPickRef = useRef(null);
@@ -1650,8 +2012,6 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
   useEffect(() => {
     playersRef.current = players;
   }, [players]);
-
-  const syncSupabase = import.meta.env.VITE_SYNC_SUPABASE_DRAFT === 'true';
 
   const [isRunningMock, setIsRunningMock] = useState(false);
   const [mockSpeed, setMockSpeed] = useState(1000);
@@ -1709,78 +2069,173 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
     setAnalysisHistory(prev => [...prev, historyEntry]);
   }, []);
 
+  const fetchDraftOrder = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('draft-order')
+        .select('*')
+        .order('Overall Pick', { ascending: true });
+      if (error) throw error;
+      if (data && data.length > 0) {
+        setPicks(data);
+      } else {
+        setPicks(generateDefaultDraftOrder());
+      }
+    } catch (err) {
+      console.warn('Supabase draft-order fetch error, using default:', err);
+      setPicks(generateDefaultDraftOrder());
+    }
+  }, []);
+
+  const fetchStaticData = useCallback(async () => {
+    console.log(`📦 Fetching static data...`);
+    try {
+      const [poolRes, endingRes, draftHistData, histFinishData] = await Promise.all([
+        supabase.from('player-pool').select('*'),
+        supabase.from('ending-roster').select('*'),
+        fetchFromGCS('draft-history.json', 'gcs_draft_history_v2'),
+        fetchFromGCS('historical-finish.json', 'gcs_league_history')
+      ]);
+
+      let pool = poolRes?.data || [];
+      if (!pool.length) {
+        pool = await fetchFromGCS('player-pool.json', 'gcs_player_pool') || [];
+      }
+      if (endingRes?.error) {
+        console.error(`❌ ENDING-ROSTER ERROR:`, endingRes.error);
+      }
+      const ending = endingRes?.data || [];
+      console.log(`✅ Loaded ${ending.length} ending roster entries`);
+      const history = draftHistData || [];
+      const finishes = histFinishData || [];
+      console.log(`📦 Core data loaded: ${pool.length} players, ${history.length} draft history records`);
+
+      const [battingZipsData, pitchingZipsData] = await Promise.all([
+        fetchFanGraphs('batting'),
+        fetchFanGraphs('pitching')
+      ]);
+
+      let savantBat = [];
+      let savantPitch = [];
+      const savantResults = await Promise.allSettled([
+        fetchFromGCS('savant-batting.json', 'gcs_bat_savant_2025'),
+        fetchFromGCS('savant-pitching.json', 'gcs_pitch_savant_2025')
+      ]);
+      if (savantResults[0].status === 'fulfilled') savantBat = savantResults[0].value || [];
+      if (savantResults[1].status === 'fulfilled') savantPitch = savantResults[1].value || [];
+
+      let espn = [];
+      try {
+        const cached = await draftDbGet('espn_player_info');
+        if (cached) {
+          const { data, timestamp } = cached;
+          if (Date.now() - timestamp < 3600000) {
+            espn = data;
+            console.log(`📺 Using cached ESPN data`);
+          }
+        }
+        if (espn.length === 0) {
+          console.log(`📺 Fetching fresh ESPN data...`);
+          espn = await fetchAllEspnPlayers();
+          if (espn.length > 0) {
+            await draftDbSet('espn_player_info', {
+              data: espn,
+              timestamp: Date.now()
+            });
+          }
+        }
+      } catch (err) {
+        console.error('ESPN fetch error:', err);
+      }
+
+      let mergedPlayers = pool;
+      if (espn.length > 0) {
+        mergedPlayers = mergeEspnData(pool, espn);
+      }
+      if (battingZipsData.length > 0 || pitchingZipsData.length > 0) {
+        console.log(`📊 Starting ZiPS merge: ${battingZipsData.length} batters, ${pitchingZipsData.length} pitchers`);
+        mergedPlayers = mergeZipsData(mergedPlayers, battingZipsData, pitchingZipsData);
+      }
+
+      const mapWithMlbam = list => Array.isArray(list) ? list.map(item => ({
+        ...item,
+        MLBAMID: item.mlbamid || item.MLBAMID || item.playerid
+      })) : [];
+
+      setPlayers(mergedPlayers);
+      setEndingRoster(ending);
+      setDraftHistory(history);
+      setHistoricalFinish(finishes);
+      setBattersZips(mapWithMlbam(battingZipsData));
+      setPitchersZips(mapWithMlbam(pitchingZipsData));
+      setSavantBatters(savantBat);
+      setSavantPitchers(savantPitch);
+      if (espn.length > 0) {
+        setPlayerInfo(espn);
+        setEspnPlayers(espn);
+      }
+      console.log(`✅ All data loaded. Batters: ${battingZipsData.length}, Pitchers: ${pitchingZipsData.length}`);
+    } catch (err) {
+      console.error(`❌ Error fetching static data:`, err);
+    }
+  }, []);
+
   useEffect(() => {
     if (!draftMode) return;
-    let isCancelled = false;
 
-    const loadData = async () => {
-      let pData = null;
-      let dData = null;
+    fetchStaticData();
 
-      // Only attempt Supabase in Live Mode if sync is explicitly enabled (Supabase endpoint is currently paused)
-      if (draftMode === 'live' && syncSupabase) {
+    if (draftMode === 'live' || draftMode === 'multitest' || draftMode === 'mobile' || draftMode === 'host') {
+      console.log(`🟢 Starting Polling for ${draftMode} mode (Every 2s)...`);
+      const poll = async () => {
         try {
-          const pRes = await supabase.from('player-pool').select('*');
-          pData = pRes?.data;
-          const dRes = await supabase.from('draft-order').select('*').order('Overall Pick', { ascending: true });
-          dData = dRes?.data;
+          const { data, error } = await supabase
+            .from('draft-order')
+            .select('*')
+            .order('Overall Pick', { ascending: true });
+          if (error) throw error;
+          if (data && data.length > 0) {
+            setPicks(curr => {
+              const currPicked = curr.filter(p => p['ESPN PlayerID']).length;
+              const newPicked = data.filter(p => p['ESPN PlayerID']).length;
+              if (currPicked !== newPicked) {
+                const latestNewPick = data.filter(p => p['ESPN PlayerID']).slice(-1)[0];
+                if (latestNewPick) {
+                  handleNewPick(latestNewPick);
+                }
+                return data;
+              }
+              return curr;
+            });
+          }
         } catch (err) {
-          console.warn('Supabase fetch failed or unavailable, using fallback:', err);
+          console.error(`🔴 Polling Error:`, err.message);
         }
-      }
-
-      if (!pData || pData.length === 0) {
-        pData = await fetchFromGCS('player-pool.json', 'gcs_player_pool');
-      }
-
-      if (!dData || dData.length === 0) {
-        dData = generateDefaultDraftOrder();
-      }
-
-      const iData = await fetchFromGCS('player-info.json', 'gcs_player_info');
-      
-      if (!isCancelled) {
-        if (pData) setPlayers(pData);
-        if (dData) setPicks(dData);
-        if (iData) setPlayerInfo(iData);
-      }
-    };
-
-    loadData();
-
-    if (draftMode === 'live' && syncSupabase) {
-      const channel = supabase
-        .channel('draft_updates')
-        .on('postgres_changes', { 
-          event: 'UPDATE', 
-          schema: 'public', 
-          table: 'draft-order' 
-        }, (payload) => {
-          setPicks(curr => {
-            const updated = curr.map(p => 
-              p['Overall Pick'] === payload.new['Overall Pick'] ? payload.new : p
-            );
-            
-            if (payload.new['ESPN PlayerID']) {
-              handleNewPick(payload.new);
-            }
-            
-            return updated;
-          });
-          setPickStartTime(Date.now());
-        })
-        .subscribe();
-        
-      return () => {
-        isCancelled = true;
-        supabase.removeChannel(channel);
       };
+      poll();
+      const interval = setInterval(poll, 2000);
+      return () => {
+        console.log(`🛑 Stopping Polling`);
+        clearInterval(interval);
+      };
+    } else if (draftMode === 'test' || draftMode === 'mockdraft') {
+      fetchDraftOrder();
     }
+  }, [draftMode, fetchStaticData, fetchDraftOrder, handleNewPick]);
 
-    return () => {
-      isCancelled = true;
-    };
-  }, [draftMode, syncSupabase, handleNewPick]);
+  useEffect(() => {
+    if (picks.length > 0) {
+      if (draftMode === 'test' && testModePicks.length === 0) {
+        setTestModePicks(picks.map(p => ({
+          ...p,
+          'ESPN PlayerID': null,
+          Selection: null
+        })));
+      } else if (draftMode === 'mockdraft' && testModePicks.length === 0) {
+        setTestModePicks([...picks]);
+      }
+    }
+  }, [draftMode, picks, testModePicks.length]);
 
   const handleModeSelect = (mode) => {
     localStorage.setItem('draftMode', mode);
@@ -1922,13 +2377,11 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
     if (!window.confirm("Are you sure you want to reset all draft picks? This will clear selections from pick 46 onwards.")) return;
     setResetting(true);
     try {
-      if (syncSupabase) {
-        const { error } = await supabase
-          .from('draft-order')
-          .update({ 'ESPN PlayerID': null, 'Selection': null })
-          .gte('Overall Pick', 46);
-        if (error) throw error;
-      }
+      const { error } = await supabase
+        .from('draft-order')
+        .update({ 'ESPN PlayerID': null, 'Selection': null })
+        .gte('Overall Pick', 46);
+      if (error) throw error;
       setTestModePicks(prev => prev.map(p => p['Overall Pick'] >= 46 ? { ...p, 'ESPN PlayerID': null, Selection: null } : p));
       setPicks(prev => prev.map(p => p['Overall Pick'] >= 46 ? { ...p, 'ESPN PlayerID': null, Selection: null } : p));
       setLastPickCommentary("Draft has not started.");
@@ -1961,7 +2414,7 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
     setQueue(newQueue);
     localStorage.setItem('draft_queue', JSON.stringify(newQueue));
 
-    if (draftMode === 'test' || draftMode === 'mockdraft' || !syncSupabase) {
+    if (draftMode === 'test' || draftMode === 'mockdraft') {
       setPickStartTime(Date.now());
       const basePicks = testModePicks.length > 0 ? testModePicks : picks;
       
@@ -1992,10 +2445,7 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
         return;
       }
       
-      await supabase
-        .from('player-pool')
-        .update({ 'Availability': currentUser })
-        .eq('ESPN PlayerID', player['ESPN PlayerID']);
+      fetchDraftOrder();
     }
     
     setShowDashboard(false);
@@ -2400,6 +2850,7 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
               onRemoveFromQueue={removeFromQueue}
               draftMode={draftMode}
               testModePicks={testModePicks}
+              allPicks={displayPicks}
               onPlayerClick={setSelectedPlayer}
               playerInfo={playerInfo}
               isMobile={true}
@@ -2818,6 +3269,7 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
                 onRemoveFromQueue={removeFromQueue}
                 draftMode={draftMode}
                 testModePicks={testModePicks}
+                allPicks={displayPicks}
                 onPlayerClick={setSelectedPlayer}
                 playerInfo={playerInfo}
               />
