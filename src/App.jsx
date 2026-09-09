@@ -436,6 +436,18 @@ function App() {
                 FantasyCast
               </button>
 
+              <a
+                href="https://dsellinger-braves.github.io/fantasy-draft/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-2 rounded text-sm font-bold bg-amber-600 hover:bg-amber-700 text-white flex items-center gap-1.5 transition-colors shadow-xs"
+                title="Launch Live Draft Room"
+              >
+                <span>🎯</span>
+                <span>Draft Room</span>
+                <span className="text-[10px] opacity-75">↗</span>
+              </a>
+
               <select
                 value={selectedSeason}
                 onChange={e => handleSeasonChange(parseInt(e.target.value))}
