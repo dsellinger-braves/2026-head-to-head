@@ -63,6 +63,8 @@ export default function BenchStatsView({ allStats = [], selectedSeason = 2026, o
 
   const [tableSortKey, setTableSortKey] = useState('bench_hr');
   const [tableSortDir, setTableSortDir] = useState('desc');
+  const [perfSortKey, setPerfSortKey] = useState('date'); // 'date' | 'team' | 'player' | 'regret'
+  const [perfSortDir, setPerfSortDir] = useState('desc');
   const [totalsTab, setTotalsTab] = useState('batting'); // 'batting' | 'pitching' | 'waste'
 
   const humanTeams = useMemo(() => {
@@ -251,6 +253,46 @@ export default function BenchStatsView({ allStats = [], selectedSeason = 2026, o
       return true;
     });
   }, [benchPerformances, searchQuery, typeFilter, teamFilter, slotFilter, catFilter]);
+
+  // 3. Sorted performances (date by default, with ability to sort by team, player, or regret)
+  const sortedPerformances = useMemo(() => {
+    const list = [...filteredPerformances];
+    list.sort((a, b) => {
+      if (perfSortKey === 'date') {
+        const diff = a.period - b.period;
+        if (diff !== 0) return perfSortDir === 'desc' ? -diff : diff;
+        return b.regretScore - a.regretScore;
+      }
+      if (perfSortKey === 'team') {
+        const nameA = a.team?.name || '';
+        const nameB = b.team?.name || '';
+        const diff = nameA.localeCompare(nameB);
+        if (diff !== 0) return perfSortDir === 'desc' ? -diff : diff;
+        return b.period - a.period;
+      }
+      if (perfSortKey === 'player') {
+        const diff = a.playerName.localeCompare(b.playerName);
+        if (diff !== 0) return perfSortDir === 'desc' ? -diff : diff;
+        return b.period - a.period;
+      }
+      if (perfSortKey === 'regret') {
+        const diff = a.regretScore - b.regretScore;
+        if (diff !== 0) return perfSortDir === 'desc' ? -diff : diff;
+        return b.period - a.period;
+      }
+      return perfSortDir === 'desc' ? b.period - a.period : a.period - b.period;
+    });
+    return list;
+  }, [filteredPerformances, perfSortKey, perfSortDir]);
+
+  const handlePerfSort = (key) => {
+    if (perfSortKey === key) {
+      setPerfSortDir(d => d === 'desc' ? 'asc' : 'desc');
+    } else {
+      setPerfSortKey(key);
+      setPerfSortDir(key === 'team' || key === 'player' ? 'asc' : 'desc');
+    }
+  };
 
   // KPI calculations
   const summaryKpis = useMemo(() => {
@@ -487,17 +529,42 @@ export default function BenchStatsView({ allStats = [], selectedSeason = 2026, o
                   <option value="BENCH">Bench Only (Slot 16)</option>
                   <option value="IL">IL Only (Slot 17)</option>
                 </select>
+
+                <div className="flex items-center gap-1.5 pl-1 border-l border-slate-800">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider hidden sm:inline">Sort:</span>
+                  <select
+                    value={perfSortKey}
+                    onChange={e => {
+                      const k = e.target.value;
+                      setPerfSortKey(k);
+                      setPerfSortDir(k === 'team' || k === 'player' ? 'asc' : 'desc');
+                    }}
+                    className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-amber-400 font-bold focus:outline-none focus:border-amber-500 cursor-pointer"
+                  >
+                    <option value="date">📅 Date (Newest First)</option>
+                    <option value="team">🛡️ Fantasy Team (A–Z)</option>
+                    <option value="player">👤 Player Name (A–Z)</option>
+                    <option value="regret">💥 Highest Impact</option>
+                  </select>
+                  <button
+                    onClick={() => setPerfSortDir(d => d === 'desc' ? 'asc' : 'desc')}
+                    className="bg-slate-950 border border-slate-800 hover:border-slate-700 rounded-lg px-2 py-1.5 text-xs font-mono text-slate-300 hover:text-white cursor-pointer"
+                    title={perfSortDir === 'desc' ? 'Descending' : 'Ascending'}
+                  >
+                    {perfSortDir === 'desc' ? '▼ Desc' : '▲ Asc'}
+                  </button>
+                </div>
               </div>
 
               <div className="text-xs text-slate-400 font-semibold">
-                Showing <strong className="text-white">{filteredPerformances.length}</strong> benched performances
+                Showing <strong className="text-white">{sortedPerformances.length}</strong> benched performances
               </div>
             </div>
           </div>
 
           {/* Performances Table */}
           <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
-            {filteredPerformances.length === 0 ? (
+            {sortedPerformances.length === 0 ? (
               <div className="py-16 text-center text-slate-400 text-sm">
                 No bench performances match the selected filters.
               </div>
@@ -507,16 +574,40 @@ export default function BenchStatsView({ allStats = [], selectedSeason = 2026, o
                   <thead>
                     <tr className="bg-slate-950 text-slate-400 border-b border-slate-800 uppercase tracking-wider font-black select-none">
                       <th className="py-3 px-3 text-center w-12">#</th>
-                      <th className="py-3 px-4">Player</th>
-                      <th className="py-3 px-4">Fantasy Team</th>
-                      <th className="py-3 px-3 text-center">Date & Period</th>
+                      <th
+                        onClick={() => handlePerfSort('player')}
+                        className="py-3 px-4 cursor-pointer hover:text-white transition-colors"
+                        title="Sort by Player Name"
+                      >
+                        Player {perfSortKey === 'player' ? (perfSortDir === 'desc' ? '▼' : '▲') : ''}
+                      </th>
+                      <th
+                        onClick={() => handlePerfSort('team')}
+                        className="py-3 px-4 cursor-pointer hover:text-white transition-colors"
+                        title="Sort by Fantasy Team"
+                      >
+                        Fantasy Team {perfSortKey === 'team' ? (perfSortDir === 'desc' ? '▼' : '▲') : ''}
+                      </th>
+                      <th
+                        onClick={() => handlePerfSort('date')}
+                        className="py-3 px-3 text-center cursor-pointer hover:text-white transition-colors"
+                        title="Sort by Date (Default: Newest first)"
+                      >
+                        Date & Period {perfSortKey === 'date' ? (perfSortDir === 'desc' ? '▼' : '▲') : ''}
+                      </th>
                       <th className="py-3 px-3 text-center">Slot</th>
                       <th className="py-3 px-4">Highlight Badges</th>
-                      <th className="py-3 px-4">Stat Line</th>
+                      <th
+                        onClick={() => handlePerfSort('regret')}
+                        className="py-3 px-4 cursor-pointer hover:text-white transition-colors"
+                        title="Sort by Impact / Regret Score"
+                      >
+                        Stat Line {perfSortKey === 'regret' ? (perfSortDir === 'desc' ? '▼' : '▲') : ''}
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/60 font-medium text-slate-200">
-                    {filteredPerformances.slice(0, 150).map((item, idx) => (
+                    {sortedPerformances.slice(0, 150).map((item, idx) => (
                       <tr key={item.id} className="hover:bg-slate-800/40 transition-colors group">
                         <td className="py-3 px-3 text-center font-bold text-slate-500 group-hover:text-amber-400">
                           {idx + 1}
