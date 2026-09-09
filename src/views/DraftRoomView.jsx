@@ -2049,7 +2049,7 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
       <div className={`host-mode-container ${isExpired ? 'container-expired' : ''}`} style={{
         backgroundColor: '#000',
         color: '#e0e0e0',
-        height: 'calc(100vh - 64px)',
+        height: '100vh',
         overflow: 'hidden',
         display: 'grid',
         gridTemplateColumns: '60% 40%',
@@ -2153,6 +2153,14 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
             >
               Exit Host
             </button>
+            {onSwitchView && (
+              <button
+                onClick={() => onSwitchView('summary')}
+                style={{ background: '#1e3a8a', color: '#fff', border: '1px solid #3b82f6', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer', fontWeight: 'bold' }}
+              >
+                📊 League Site
+              </button>
+            )}
           </div>
         </div>
 
@@ -2337,7 +2345,7 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
         ...styles.body,
         gridTemplateColumns: '1fr',
         gridTemplateRows: '50px 1fr 50px',
-        height: 'calc(100vh - 64px)'
+        height: '100vh'
       }}>
         {/* Mobile Header */}
         <div style={{
@@ -2369,6 +2377,14 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
             >
               Mode
             </button>
+            {onSwitchView && (
+              <button
+                onClick={() => onSwitchView('summary')}
+                style={{ background: '#1e3a8a', color: '#fff', border: '1px solid #3b82f6', padding: '3px 8px', borderRadius: '4px', fontSize: '10px', cursor: 'pointer', fontWeight: 'bold' }}
+              >
+                League
+              </button>
+            )}
           </div>
         </div>
 
@@ -2958,7 +2974,7 @@ const styles = {
     color: '#e0e0e0',
     fontFamily: "'Roboto Condensed', sans-serif",
     margin: 0,
-    height: 'calc(100vh - 64px)',
+    height: '100vh',
     overflow: 'hidden',
     display: 'grid',
     gridTemplateColumns: '1fr 300px',

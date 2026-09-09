@@ -22,9 +22,44 @@ import DraftRoomView from './views/DraftRoomView';
 
 const AVAILABLE_SEASONS = Array.from({ length: 2026 - 2012 + 1 }, (_, i) => 2026 - i);
 
+const VIEW_TO_HASH = {
+  weekly: 'matchups',
+  summary: 'standings',
+  teams: 'teams',
+  transactions: 'transactions',
+  players: 'players',
+  disparities: 'disparities',
+  progression: 'progression',
+  highlights: 'highlights',
+  fantasycast: 'fantasycast',
+  draft: 'draft',
+};
+
+const HASH_TO_VIEW = {
+  matchups: 'weekly',
+  weekly: 'weekly',
+  standings: 'summary',
+  summary: 'summary',
+  teams: 'teams',
+  transactions: 'transactions',
+  players: 'players',
+  disparities: 'disparities',
+  progression: 'progression',
+  highlights: 'highlights',
+  fantasycast: 'fantasycast',
+  draft: 'draft',
+};
+
+function getViewFromHash() {
+  if (typeof window === 'undefined') return 'weekly';
+  const hash = window.location.hash.replace(/^#\/?/, '').trim().toLowerCase();
+  const route = hash.split('?')[0].split('/')[0];
+  return HASH_TO_VIEW[route] || 'weekly';
+}
+
 function App() {
   const [loading, setLoading] = useState(true);
-  const [currentView, setCurrentView] = useState('weekly');
+  const [currentView, setCurrentView] = useState(getViewFromHash);
   const [rawData, setRawData] = useState([]);
   const [loadStatus, setLoadStatus] = useState("Initializing...");
   const [selectedSeason, setSelectedSeason] = useState(2026);
@@ -32,6 +67,25 @@ function App() {
   const [selectedOwner, setSelectedOwner] = useState(null);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [allSeasonData, setAllSeasonData] = useState({});
+
+  // Synchronize browser URL hash with currentView
+  useEffect(() => {
+    const slug = VIEW_TO_HASH[currentView] || currentView;
+    const targetHash = `#/${slug}`;
+    if (window.location.hash !== targetHash) {
+      window.location.hash = targetHash;
+    }
+  }, [currentView]);
+
+  // Listen to browser Back/Forward and direct hash navigation
+  useEffect(() => {
+    const handleHashChange = () => {
+      const newView = getViewFromHash();
+      setCurrentView((prev) => (prev !== newView ? newView : prev));
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   const baseSchedule = useMemo(() => generateSchedule(), []);
 
@@ -118,7 +172,17 @@ function App() {
       setRawData(records);
     } catch (err) {
       console.error("App Error:", err);
-      setLoadStatus("Error loading data.");
+      try {
+        const cached = await get(`fantasy_data_${season}`);
+        if (cached?.length > 0) {
+          console.warn(`Recovered ${cached.length} records from local cache following server error`);
+          setRawData(cached);
+          return;
+        }
+      } catch (cacheErr) {
+        console.error("Cache recovery failed:", cacheErr);
+      }
+      setLoadStatus("Error loading data from server.");
     } finally {
       setLoading(false);
     }
@@ -403,9 +467,9 @@ function App() {
 
   }, [rawData, baseSchedule]);
 
-
   // --- RENDER ---
-  if (loading) {
+  // Do not block Draft Room on season data loading
+  if (loading && currentView !== 'draft') {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 text-gray-500 gap-4">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-900"></div>
@@ -416,54 +480,64 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-100 font-sans text-gray-800">
-      <nav className="bg-blue-900 text-white shadow-lg sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="font-black text-xl tracking-wider">FANTASY LEAGUE</div>
-            <div className="flex items-center space-x-4">
-              <button onClick={() => setCurrentView('weekly')} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'weekly' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Matchups</button>
-              <button onClick={() => setCurrentView('summary')} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'summary' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Standings</button>
-              <button onClick={() => setCurrentView('teams')} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'teams' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Teams</button>
-              <button onClick={() => setCurrentView('transactions')} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'transactions' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Transactions</button>
-              <button onClick={() => setCurrentView('players')} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'players' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Players</button>
-              <button onClick={() => setCurrentView('disparities')} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'disparities' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Disparities</button>
-              <button onClick={() => setCurrentView('progression')} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'progression' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Progression</button>
-              <button onClick={() => setCurrentView('highlights')} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'highlights' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Highlights</button>
-              <button onClick={() => setCurrentView('fantasycast')} className={`px-3 py-2 rounded text-sm font-bold flex items-center gap-2 ${currentView === 'fantasycast' ? 'bg-red-700' : 'hover:bg-blue-800'}`}>
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-300 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                </span>
-                FantasyCast
-              </button>
-
-              <button
-                onClick={() => setCurrentView('draft')}
-                className={`px-3 py-2 rounded text-sm font-bold flex items-center gap-1.5 transition-colors shadow-xs ${
-                  currentView === 'draft' ? 'bg-amber-600 text-white ring-2 ring-amber-400' : 'bg-amber-700/80 hover:bg-amber-600 text-white'
-                }`}
-                title="Draft War Room"
+      {/* League site header - hidden in Draft Room for clean, full-screen war room layout */}
+      {currentView !== 'draft' && (
+        <nav className="bg-blue-900 text-white shadow-lg sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
+              <a
+                href="#/matchups"
+                onClick={(e) => { e.preventDefault(); setCurrentView('weekly'); }}
+                className="font-black text-xl tracking-wider text-white hover:text-blue-200 transition-colors cursor-pointer"
               >
-                <span>🎯</span>
-                <span>Draft Room</span>
-              </button>
+                FANTASY LEAGUE
+              </a>
+              <div className="flex items-center space-x-4">
+                <a href="#/matchups" onClick={(e) => { e.preventDefault(); setCurrentView('weekly'); }} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'weekly' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Matchups</a>
+                <a href="#/standings" onClick={(e) => { e.preventDefault(); setCurrentView('summary'); }} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'summary' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Standings</a>
+                <a href="#/teams" onClick={(e) => { e.preventDefault(); setCurrentView('teams'); }} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'teams' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Teams</a>
+                <a href="#/transactions" onClick={(e) => { e.preventDefault(); setCurrentView('transactions'); }} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'transactions' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Transactions</a>
+                <a href="#/players" onClick={(e) => { e.preventDefault(); setCurrentView('players'); }} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'players' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Players</a>
+                <a href="#/disparities" onClick={(e) => { e.preventDefault(); setCurrentView('disparities'); }} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'disparities' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Disparities</a>
+                <a href="#/progression" onClick={(e) => { e.preventDefault(); setCurrentView('progression'); }} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'progression' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Progression</a>
+                <a href="#/highlights" onClick={(e) => { e.preventDefault(); setCurrentView('highlights'); }} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'highlights' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Highlights</a>
+                <a href="#/fantasycast" onClick={(e) => { e.preventDefault(); setCurrentView('fantasycast'); }} className={`px-3 py-2 rounded text-sm font-bold flex items-center gap-2 ${currentView === 'fantasycast' ? 'bg-red-700' : 'hover:bg-blue-800'}`}>
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-300 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                  </span>
+                  FantasyCast
+                </a>
 
-              <select
-                value={selectedSeason}
-                onChange={e => handleSeasonChange(parseInt(e.target.value))}
-                className="ml-4 bg-blue-800 text-white text-sm font-bold rounded px-2 py-1 border border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer"
-              >
-                {AVAILABLE_SEASONS.map(y => (
-                  <option key={y} value={y}>{y}</option>
-                ))}
-              </select>
-              <button onClick={handleRefresh} className="ml-2 p-2 text-blue-200 hover:text-white" title="Clear Cache & Reload">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-              </button>
+                <a
+                  href="#/draft"
+                  onClick={(e) => { e.preventDefault(); setCurrentView('draft'); }}
+                  className={`px-3 py-2 rounded text-sm font-bold flex items-center gap-1.5 transition-colors shadow-xs ${
+                    currentView === 'draft' ? 'bg-amber-600 text-white ring-2 ring-amber-400' : 'bg-amber-700/80 hover:bg-amber-600 text-white'
+                  }`}
+                  title="Draft War Room"
+                >
+                  <span>🎯</span>
+                  <span>Draft Room</span>
+                </a>
+
+                <select
+                  value={selectedSeason}
+                  onChange={e => handleSeasonChange(parseInt(e.target.value))}
+                  className="ml-4 bg-blue-800 text-white text-sm font-bold rounded px-2 py-1 border border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer"
+                >
+                  {AVAILABLE_SEASONS.map(y => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
+                <button onClick={handleRefresh} className="ml-2 p-2 text-blue-200 hover:text-white cursor-pointer" title="Clear Cache & Reload">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      </nav>
+        </nav>
+      )}
 
       {currentView === 'draft' ? (
         <DraftRoomView
