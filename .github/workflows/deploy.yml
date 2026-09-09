@@ -31,6 +31,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || secrets.SUPABASE_URL || 'https://wczdkcdqgtzlsbssogoz.supabase.co' }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || secrets.SUPABASE_KEY || 'sb_publishable_4V9eQ0UiBYL4MYQ9v7v_DA_G083Zxhz' }}
         run: npm run build
       - name: Setup Pages
         uses: actions/configure-pages@v4
