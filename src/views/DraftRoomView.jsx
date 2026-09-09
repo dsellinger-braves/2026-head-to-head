@@ -1,6 +1,10 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { supabase, DEFAULT_SUPABASE_URL, DEFAULT_SUPABASE_ANON_KEY } from '../supabaseClient';
 import defaultDraftAssetTrades from '../data/draftAssetTrades2026.json';
+import defaultTeamBudgets from '../data/teamBudgets2026.json';
+import defaultCompPicks from '../data/compensationPicks2026.json';
+import defaultKeepers from '../data/keeperInput2026.json';
+import KeepersBudgetsPanel from '../components/KeepersBudgetsPanel';
 
 // --- CONFIGURATION ---
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyDQ0eRBz6jSsORZrnG19jR5mzmd0QE0DWg';
@@ -1884,9 +1888,9 @@ function MyPicksPanel({ allPicks, players, currentUser, draftTrades = [] }) {
 }
 
 // --- DRAFT CAPITAL & FUTURE PICKS PANEL ---
-function DraftCapitalPanel({ draftTrades = [], currentUser }) {
+function DraftCapitalPanel({ draftTrades = [], compPicks = [], keepers = [], currentUser }) {
   const [selectedOwner, setSelectedOwner] = useState(currentUser || DRAFT_OWNERS[0]);
-  const [activeSubTab, setActiveSubTab] = useState('board'); // 'board' | 'ledgers' | 'history'
+  const [activeSubTab, setActiveSubTab] = useState('board'); // 'board' | 'ledgers' | 'history' | '2026board'
   const [roundFilter, setRoundFilter] = useState('ALL');
 
   const computedPicks = useMemo(() => {
@@ -1935,7 +1939,7 @@ function DraftCapitalPanel({ draftTrades = [], currentUser }) {
       {/* Header */}
       <div style={styles.wrHeader}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <span>🎟️ 2027 Draft Capital & Traded Pick Board</span>
+          <span>🎟️ Draft Capital & Pick Board</span>
           <div style={{ display: 'flex', background: '#111', borderRadius: '6px', padding: '2px', border: '1px solid #333' }}>
             <button
               onClick={() => setActiveSubTab('board')}
@@ -1950,7 +1954,7 @@ function DraftCapitalPanel({ draftTrades = [], currentUser }) {
                 cursor: 'pointer'
               }}
             >
-              📊 Round-by-Round Board
+              📊 2027 Traded Board
             </button>
             <button
               onClick={() => setActiveSubTab('ledgers')}
@@ -1981,6 +1985,21 @@ function DraftCapitalPanel({ draftTrades = [], currentUser }) {
               }}
             >
               📜 Trade Log History ({assetTradesList.length})
+            </button>
+            <button
+              onClick={() => setActiveSubTab('2026board')}
+              style={{
+                background: activeSubTab === '2026board' ? '#00e676' : 'transparent',
+                color: activeSubTab === '2026board' ? '#000' : '#888',
+                border: 'none',
+                borderRadius: '4px',
+                padding: '4px 12px',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                cursor: 'pointer'
+              }}
+            >
+              💎 2026 Ground Truth Board
             </button>
           </div>
         </div>
@@ -2371,6 +2390,169 @@ function DraftCapitalPanel({ draftTrades = [], currentUser }) {
             </table>
           </div>
         )}
+
+        {activeSubTab === '2026board' && (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <span style={{ fontSize: '11px', color: '#888', fontWeight: 'bold', textTransform: 'uppercase' }}>
+                  Filter 2026 Board:
+                </span>
+                {['ALL', 'KEEPERS', 'EARLY', 'MID', 'LATE'].map(rf => (
+                  <button
+                    key={rf}
+                    onClick={() => setRoundFilter(rf)}
+                    style={{
+                      background: roundFilter === rf ? '#333' : '#1e1e1e',
+                      color: roundFilter === rf ? '#00e676' : '#888',
+                      border: roundFilter === rf ? '1px solid #00e676' : '1px solid #333',
+                      borderRadius: '4px',
+                      padding: '3px 8px',
+                      fontSize: '11px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {rf === 'ALL' ? 'All (R1-32)' : rf === 'KEEPERS' ? 'Keepers (R1-5)' : rf === 'EARLY' ? 'Early (R6-14)' : rf === 'MID' ? 'Mid (R15-23)' : 'Late (R24-32)'}
+                  </button>
+                ))}
+              </div>
+
+              <span style={{ fontSize: '11px', color: '#03dac6', fontStyle: 'italic' }}>
+                * Rounds 1–5 are Keepers; Rounds 6–20 include purchased Comp Picks; Rounds 27–32 show Offset picks.
+              </span>
+            </div>
+
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ ...styles.table, minWidth: '950px' }}>
+                <thead style={styles.tableHead}>
+                  <tr>
+                    <th style={{ ...styles.th, width: '100px' }}>Round</th>
+                    {DRAFT_OWNERS.map(o => (
+                      <th key={o} style={{ ...styles.th, textAlign: 'center' }}>
+                        {o}
+                      </th>
+                    ))}
+                    <th style={{ ...styles.th, textAlign: 'center', width: '160px', color: '#bb86fc' }}>
+                      End-of-Round Comp Picks
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Array.from({ length: 32 }, (_, i) => i + 1)
+                    .filter(r => {
+                      if (roundFilter === 'ALL') return true;
+                      if (roundFilter === 'KEEPERS') return r <= 5;
+                      if (roundFilter === 'EARLY') return r >= 6 && r <= 14;
+                      if (roundFilter === 'MID') return r >= 15 && r <= 23;
+                      if (roundFilter === 'LATE') return r >= 24;
+                      return true;
+                    })
+                    .map(rNum => {
+                      const isKeeperRound = rNum <= 5;
+                      const compPicksThisRound = (compPicks || []).filter(cp => cp.round_num === rNum && cp.action_type === 'BOUGHT');
+
+                      return (
+                        <tr key={`2026-round-${rNum}`} style={styles.tableRow}>
+                          <td style={{ ...styles.td, fontWeight: 'bold', color: isKeeperRound ? '#ffb74d' : '#03dac6', whiteSpace: 'nowrap' }}>
+                            {isKeeperRound ? `💎 Round ${rNum} (Keeper)` : `Round ${rNum}`}
+                          </td>
+
+                          {DRAFT_OWNERS.map(owner => {
+                            if (isKeeperRound) {
+                              const keeper = (keepers || []).find(k => k.owner === owner && k.keeper_slot === rNum);
+                              return (
+                                <td key={owner} style={{ ...styles.td, textAlign: 'center', padding: '6px 4px' }}>
+                                  {keeper ? (
+                                    <div style={{
+                                      background: 'rgba(255, 183, 77, 0.15)',
+                                      border: '1px solid rgba(255, 183, 77, 0.4)',
+                                      borderRadius: '6px',
+                                      padding: '4px 6px',
+                                      display: 'inline-block',
+                                      minWidth: '85px'
+                                    }}>
+                                      <div style={{ fontWeight: 'bold', fontSize: '11px', color: '#fff' }}>
+                                        {keeper.player_name}
+                                      </div>
+                                      <div style={{ fontSize: '9px', color: '#ffb74d' }}>
+                                        ${keeper.cost} • Rank {keeper.rank || 'N/A'}
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <span style={{ color: '#666' }}>-</span>
+                                  )}
+                                </td>
+                              );
+                            }
+
+                            // Standard draft rounds (6 to 32)
+                            const isOffset = (compPicks || []).some(cp => cp.owner === owner && cp.round_num === rNum && cp.action_type === 'OFFSET_LOST');
+
+                            return (
+                              <td key={owner} style={{ ...styles.td, textAlign: 'center', padding: '6px 4px' }}>
+                                {isOffset ? (
+                                  <div style={{
+                                    background: 'rgba(244, 67, 54, 0.15)',
+                                    border: '1px solid rgba(244, 67, 54, 0.4)',
+                                    borderRadius: '6px',
+                                    padding: '4px 6px',
+                                    display: 'inline-block',
+                                    minWidth: '85px'
+                                  }}>
+                                    <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#f44336', textDecoration: 'line-through' }}>
+                                      Pick Slot
+                                    </div>
+                                    <div style={{ fontSize: '9px', color: '#ff8a80', fontWeight: 'bold' }}>
+                                      🚫 Offset (Comp Pick)
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div style={{
+                                    background: '#1a1a1a',
+                                    border: '1px solid #333',
+                                    borderRadius: '6px',
+                                    padding: '4px 6px',
+                                    display: 'inline-block',
+                                    minWidth: '75px'
+                                  }}>
+                                    <span style={{ fontSize: '11px', color: '#aaa' }}>Standard Pick</span>
+                                  </div>
+                                )}
+                              </td>
+                            );
+                          })}
+
+                          {/* End-of-round compensation picks column */}
+                          <td style={{ ...styles.td, textAlign: 'center', padding: '6px 4px' }}>
+                            {compPicksThisRound.length > 0 ? (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                {compPicksThisRound.map(cp => (
+                                  <span key={cp.id || `${cp.owner}-${cp.round_num}`} style={{
+                                    background: 'rgba(187, 134, 252, 0.2)',
+                                    border: '1px solid #bb86fc',
+                                    borderRadius: '4px',
+                                    padding: '2px 6px',
+                                    fontSize: '10px',
+                                    fontWeight: 'bold',
+                                    color: '#bb86fc'
+                                  }}>
+                                    🎟️ {cp.owner} (${cp.cost_or_income})
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              <span style={{ color: '#555', fontSize: '11px' }}>-</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -2691,6 +2873,9 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
   const [pickStartTime, setPickStartTime] = useState(() => Date.now());
   const [activeTab, setActiveTab] = useState('Pool');
   const [draftTrades, setDraftTrades] = useState(defaultDraftAssetTrades || []);
+  const [teamBudgets, setTeamBudgets] = useState(defaultTeamBudgets?.budgets || []);
+  const [compPicks, setCompPicks] = useState(defaultCompPicks?.comp_picks || []);
+  const [keepers, setKeepers] = useState(defaultKeepers?.keepers || []);
   const [showDashboard, setShowDashboard] = useState(false);
   
   // Test mode state
@@ -2805,6 +2990,20 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
         }
       } catch (e) {
         console.warn('Supabase draft_asset_trades fetch error:', e);
+      }
+
+      // Refresh draft team budgets, compensation picks, and keepers from Supabase
+      try {
+        const [budgetsRes, cpRes, keepersRes] = await Promise.all([
+          supabase.from('draft_team_budgets').select('*').order('finish_rank', { ascending: true }),
+          supabase.from('draft_compensation_picks').select('*').order('round_num', { ascending: true }),
+          supabase.from('draft_keepers').select('*').order('keeper_slot', { ascending: true })
+        ]);
+        if (budgetsRes?.data && budgetsRes.data.length > 0) setTeamBudgets(budgetsRes.data);
+        if (cpRes?.data && cpRes.data.length > 0) setCompPicks(cpRes.data);
+        if (keepersRes?.data && keepersRes.data.length > 0) setKeepers(keepersRes.data);
+      } catch (e) {
+        console.warn('Supabase draft budgets/keepers fetch notice:', e);
       }
     } catch (err) {
       console.warn('Supabase draft-order fetch error, using default:', err);
@@ -3649,7 +3848,19 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
           {activeTab === 'DraftCapital' && (
             <DraftCapitalPanel
               draftTrades={draftTrades}
+              compPicks={compPicks}
+              keepers={keepers}
               currentUser={currentUser}
+            />
+          )}
+          {activeTab === 'Keepers' && (
+            <KeepersBudgetsPanel
+              teamBudgets={teamBudgets}
+              compPicks={compPicks}
+              keepers={keepers}
+              players={players}
+              currentUser={currentUser}
+              onPlayerClick={setSelectedPlayer}
             />
           )}
           {activeTab === 'Feed' && (
@@ -3697,6 +3908,7 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
             { id: 'Queue', label: 'Queue', icon: '⭐' },
             { id: 'Roster', label: 'Roster', icon: '👥' },
             { id: 'DraftCapital', label: 'Capital', icon: '🎟️' },
+            { id: 'Keepers', label: 'Keepers', icon: '💎' },
             { id: 'Feed', label: 'Feed', icon: '📢' }
           ].map(tab => (
             <button
@@ -4010,7 +4222,7 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
         {showDashboard && (
           <div style={styles.warRoomPanel}>
             <div style={styles.panelNav}>
-              {['Pool', 'Roster', 'MyPicks', 'DraftCapital', 'DraftLog', 'Analysis', 'Standings'].map(tab => (
+              {['Pool', 'Roster', 'MyPicks', 'DraftCapital', 'Keepers', 'DraftLog', 'Analysis', 'Standings'].map(tab => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -4020,6 +4232,7 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
                    tab === 'Roster' ? 'Roster Manager' : 
                    tab === 'MyPicks' ? 'My Picks' :
                    tab === 'DraftCapital' ? 'Draft Capital (2027)' :
+                   tab === 'Keepers' ? 'Keepers & Budgets' :
                    tab === 'DraftLog' ? 'Draft Log' :
                    tab === 'Analysis' ? 'Analysis History' :
                    'Projected Standings'}
@@ -4066,7 +4279,20 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
             <div style={{ ...styles.panelContent, display: activeTab === 'DraftCapital' ? 'grid' : 'none' }}>
               <DraftCapitalPanel
                 draftTrades={draftTrades}
+                compPicks={compPicks}
+                keepers={keepers}
                 currentUser={currentUser}
+              />
+            </div>
+
+            <div style={{ ...styles.panelContent, display: activeTab === 'Keepers' ? 'grid' : 'none' }}>
+              <KeepersBudgetsPanel
+                teamBudgets={teamBudgets}
+                compPicks={compPicks}
+                keepers={keepers}
+                players={players}
+                currentUser={currentUser}
+                onPlayerClick={setSelectedPlayer}
               />
             </div>
 

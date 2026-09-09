@@ -1,0 +1,225 @@
+{
+  "updated_at": "2026-09-09T21:40:00Z",
+  "comp_picks": [
+    {
+      "season_year": 2026,
+      "owner": "Alex",
+      "team_id": 8,
+      "action_type": "BOUGHT",
+      "round_num": 19,
+      "cost_or_income": 2.0,
+      "overall_pick_num": 180,
+      "notes": "Purchased Round 19 compensation pick for $2"
+    },
+    {
+      "season_year": 2026,
+      "owner": "Alex",
+      "team_id": 8,
+      "action_type": "OFFSET_LOST",
+      "round_num": 32,
+      "cost_or_income": 0.0,
+      "overall_pick_num": null,
+      "notes": "Offset/forfeited Round 32 pick due to purchased comp pick"
+    },
+    {
+      "season_year": 2026,
+      "owner": "Anil",
+      "team_id": 6,
+      "action_type": "BOUGHT",
+      "round_num": 9,
+      "cost_or_income": 12.0,
+      "overall_pick_num": 84,
+      "notes": "Purchased Round 9 compensation pick for $12"
+    },
+    {
+      "season_year": 2026,
+      "owner": "Anil",
+      "team_id": 6,
+      "action_type": "OFFSET_LOST",
+      "round_num": 32,
+      "cost_or_income": 0.0,
+      "overall_pick_num": null,
+      "notes": "Offset/forfeited Round 32 pick due to purchased comp pick"
+    },
+    {
+      "season_year": 2026,
+      "owner": "Daniel",
+      "team_id": 5,
+      "action_type": "BOUGHT",
+      "round_num": 15,
+      "cost_or_income": 6.0,
+      "overall_pick_num": 139,
+      "notes": "Purchased Round 15 compensation pick for $6"
+    },
+    {
+      "season_year": 2026,
+      "owner": "Daniel",
+      "team_id": 5,
+      "action_type": "BOUGHT",
+      "round_num": 16,
+      "cost_or_income": 5.0,
+      "overall_pick_num": 149,
+      "notes": "Purchased Round 16 compensation pick for $5"
+    },
+    {
+      "season_year": 2026,
+      "owner": "Daniel",
+      "team_id": 5,
+      "action_type": "BOUGHT",
+      "round_num": 17,
+      "cost_or_income": 4.0,
+      "overall_pick_num": 159,
+      "notes": "Purchased Round 17 compensation pick for $4"
+    },
+    {
+      "season_year": 2026,
+      "owner": "Daniel",
+      "team_id": 5,
+      "action_type": "BOUGHT",
+      "round_num": 18,
+      "cost_or_income": 3.0,
+      "overall_pick_num": 169,
+      "notes": "Purchased Round 18 compensation pick for $3"
+    },
+    {
+      "season_year": 2026,
+      "owner": "Daniel",
+      "team_id": 5,
+      "action_type": "BOUGHT",
+      "round_num": 19,
+      "cost_or_income": 2.0,
+      "overall_pick_num": 181,
+      "notes": "Purchased Round 19 compensation pick for $2"
+    },
+    {
+      "season_year": 2026,
+      "owner": "Daniel",
+      "team_id": 5,
+      "action_type": "BOUGHT",
+      "round_num": 20,
+      "cost_or_income": 1.0,
+      "overall_pick_num": 191,
+      "notes": "Purchased Round 20 compensation pick for $1"
+    },
+    {
+      "season_year": 2026,
+      "owner": "Daniel",
+      "team_id": 5,
+      "action_type": "OFFSET_LOST",
+      "round_num": 27,
+      "cost_or_income": 0.0,
+      "overall_pick_num": null,
+      "notes": "Offset/forfeited Round 27 pick due to purchased comp pick"
+    },
+    {
+      "season_year": 2026,
+      "owner": "Daniel",
+      "team_id": 5,
+      "action_type": "OFFSET_LOST",
+      "round_num": 28,
+      "cost_or_income": 0.0,
+      "overall_pick_num": null,
+      "notes": "Offset/forfeited Round 28 pick due to purchased comp pick"
+    },
+    {
+      "season_year": 2026,
+      "owner": "Daniel",
+      "team_id": 5,
+      "action_type": "OFFSET_LOST",
+      "round_num": 29,
+      "cost_or_income": 0.0,
+      "overall_pick_num": null,
+      "notes": "Offset/forfeited Round 29 pick due to purchased comp pick"
+    },
+    {
+      "season_year": 2026,
+      "owner": "Daniel",
+      "team_id": 5,
+      "action_type": "OFFSET_LOST",
+      "round_num": 30,
+      "cost_or_income": 0.0,
+      "overall_pick_num": null,
+      "notes": "Offset/forfeited Round 30 pick due to purchased comp pick"
+    },
+    {
+      "season_year": 2026,
+      "owner": "Daniel",
+      "team_id": 5,
+      "action_type": "OFFSET_LOST",
+      "round_num": 31,
+      "cost_or_income": 0.0,
+      "overall_pick_num": null,
+      "notes": "Offset/forfeited Round 31 pick due to purchased comp pick"
+    },
+    {
+      "season_year": 2026,
+      "owner": "Daniel",
+      "team_id": 5,
+      "action_type": "OFFSET_LOST",
+      "round_num": 32,
+      "cost_or_income": 0.0,
+      "overall_pick_num": null,
+      "notes": "Offset/forfeited Round 32 pick due to purchased comp pick"
+    },
+    {
+      "season_year": 2026,
+      "owner": "Garrett",
+      "team_id": 3,
+      "action_type": "BOUGHT",
+      "round_num": 6,
+      "cost_or_income": 15.0,
+      "overall_pick_num": 55,
+      "notes": "Purchased Round 6 compensation pick for $15"
+    },
+    {
+      "season_year": 2026,
+      "owner": "Garrett",
+      "team_id": 3,
+      "action_type": "OFFSET_LOST",
+      "round_num": 32,
+      "cost_or_income": 0.0,
+      "overall_pick_num": null,
+      "notes": "Offset/forfeited Round 32 pick due to purchased comp pick"
+    },
+    {
+      "season_year": 2026,
+      "owner": "Tim",
+      "team_id": 1,
+      "action_type": "BOUGHT",
+      "round_num": 6,
+      "cost_or_income": 15.0,
+      "overall_pick_num": 56,
+      "notes": "Purchased Round 6 compensation pick for $15"
+    },
+    {
+      "season_year": 2026,
+      "owner": "Tim",
+      "team_id": 1,
+      "action_type": "OFFSET_LOST",
+      "round_num": 32,
+      "cost_or_income": 0.0,
+      "overall_pick_num": null,
+      "notes": "Offset/forfeited Round 32 pick due to purchased comp pick"
+    },
+    {
+      "season_year": 2026,
+      "owner": "Will",
+      "team_id": 12,
+      "action_type": "BOUGHT",
+      "round_num": 18,
+      "cost_or_income": 3.0,
+      "overall_pick_num": 170,
+      "notes": "Purchased Round 18 compensation pick for $3"
+    },
+    {
+      "season_year": 2026,
+      "owner": "Will",
+      "team_id": 12,
+      "action_type": "OFFSET_LOST",
+      "round_num": 32,
+      "cost_or_income": 0.0,
+      "overall_pick_num": null,
+      "notes": "Offset/forfeited Round 32 pick due to purchased comp pick"
+    }
+  ]
+}

@@ -1,0 +1,183 @@
+{
+  "updated_at": "2026-09-09T21:40:00Z",
+  "purchase_prices": {
+    "6": 15.0,
+    "7": 14.0,
+    "8": 13.0,
+    "9": 12.0,
+    "10": 11.0,
+    "11": 10.0,
+    "12": 9.0,
+    "13": 8.0,
+    "14": 7.0,
+    "15": 6.0,
+    "16": 5.0,
+    "17": 4.0,
+    "18": 3.0,
+    "19": 2.0,
+    "20": 1.0
+  },
+  "sale_prices": {
+    "6": 8.0,
+    "7": 4.0,
+    "8": 2.0,
+    "9": 1.0
+  },
+  "budgets": [
+    {
+      "season_year": 2026,
+      "owner": "Adrian",
+      "team_id": 2,
+      "finish_rank": 4,
+      "base_budget": 101.0,
+      "keeper_spend": 101.0,
+      "comp_pick_spend": 0.0,
+      "comp_pick_income": 0.0,
+      "final_budget": 0.0,
+      "net_picks": 0
+    },
+    {
+      "season_year": 2026,
+      "owner": "Alex",
+      "team_id": 8,
+      "finish_rank": 6,
+      "base_budget": 100.0,
+      "keeper_spend": 91.0,
+      "comp_pick_spend": 2.0,
+      "comp_pick_income": 0.0,
+      "final_budget": 7.0,
+      "net_picks": 1
+    },
+    {
+      "season_year": 2026,
+      "owner": "Anil",
+      "team_id": 6,
+      "finish_rank": 9,
+      "base_budget": 100.0,
+      "keeper_spend": 62.0,
+      "comp_pick_spend": 12.0,
+      "comp_pick_income": 0.0,
+      "final_budget": 26.0,
+      "net_picks": 1
+    },
+    {
+      "season_year": 2026,
+      "owner": "Daniel",
+      "team_id": 5,
+      "finish_rank": 2,
+      "base_budget": 102.0,
+      "keeper_spend": 81.0,
+      "comp_pick_spend": 21.0,
+      "comp_pick_income": 0.0,
+      "final_budget": 0.0,
+      "net_picks": 6
+    },
+    {
+      "season_year": 2026,
+      "owner": "Garrett",
+      "team_id": 3,
+      "finish_rank": 5,
+      "base_budget": 100.0,
+      "keeper_spend": 73.0,
+      "comp_pick_spend": 15.0,
+      "comp_pick_income": 0.0,
+      "final_budget": 12.0,
+      "net_picks": 1
+    },
+    {
+      "season_year": 2026,
+      "owner": "Mark",
+      "team_id": 13,
+      "finish_rank": 7,
+      "base_budget": 111.0,
+      "keeper_spend": 111.0,
+      "comp_pick_spend": 0.0,
+      "comp_pick_income": 0.0,
+      "final_budget": 0.0,
+      "net_picks": 0
+    },
+    {
+      "season_year": 2026,
+      "owner": "Preston",
+      "team_id": 14,
+      "finish_rank": 8,
+      "base_budget": 100.0,
+      "keeper_spend": 87.0,
+      "comp_pick_spend": 0.0,
+      "comp_pick_income": 0.0,
+      "final_budget": 13.0,
+      "net_picks": 0
+    },
+    {
+      "season_year": 2026,
+      "owner": "Tim",
+      "team_id": 1,
+      "finish_rank": 1,
+      "base_budget": 102.0,
+      "keeper_spend": 87.0,
+      "comp_pick_spend": 15.0,
+      "comp_pick_income": 0.0,
+      "final_budget": 0.0,
+      "net_picks": 1
+    },
+    {
+      "season_year": 2026,
+      "owner": "Will",
+      "team_id": 12,
+      "finish_rank": 3,
+      "base_budget": 100.0,
+      "keeper_spend": 94.0,
+      "comp_pick_spend": 3.0,
+      "comp_pick_income": 0.0,
+      "final_budget": 3.0,
+      "net_picks": 1
+    }
+  ],
+  "keeper_summaries": {
+    "Adrian": {
+      "total_spend": 101.0,
+      "average_rank": 27.6,
+      "spend_rank": 8
+    },
+    "Alex": {
+      "total_spend": 91.0,
+      "average_rank": 41.4,
+      "spend_rank": 6
+    },
+    "Anil": {
+      "total_spend": 62.0,
+      "average_rank": 66.8,
+      "spend_rank": 1
+    },
+    "Daniel": {
+      "total_spend": 81.0,
+      "average_rank": 88.0,
+      "spend_rank": 3
+    },
+    "Garrett": {
+      "total_spend": 73.0,
+      "average_rank": 75.6,
+      "spend_rank": 2
+    },
+    "Mark": {
+      "total_spend": 111.0,
+      "average_rank": 519.4,
+      "spend_rank": 9
+    },
+    "Preston": {
+      "total_spend": 87.0,
+      "average_rank": 41.2,
+      "spend_rank": 4
+    },
+    "Tim": {
+      "total_spend": 87.0,
+      "average_rank": 31.6,
+      "spend_rank": 4
+    },
+    "Will": {
+      "total_spend": 94.0,
+      "average_rank": 26.0,
+      "spend_rank": 7
+    }
+  }
+}
