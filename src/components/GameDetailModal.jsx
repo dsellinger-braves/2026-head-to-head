@@ -2,6 +2,16 @@ import { useEffect, useState } from 'react';
 import { fetchGameBoxscore, normalizeName } from '../utils/liveMLB';
 import { TEAMS } from '../schedule';
 import TeamAvatar from './TeamAvatar';
+function FantasyBadge({ team, isBench }) {
+  if (!team) return null;
+  return (
+    <div className={`ml-2 inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${isBench ? 'bg-gray-200 text-gray-500' : 'bg-blue-100 text-blue-800 border border-blue-200'}`}>
+      <TeamAvatar team={team} size="xs" />
+      <span className="truncate max-w-[80px] sm:max-w-none">{team.name}</span>
+      {isBench && <span className="text-red-500">(B)</span>}
+    </div>
+  );
+}
 
 export default function GameDetailModal({ game, rosterDict, onClose }) {
   const [boxscore, setBoxscore] = useState(null);
@@ -84,19 +94,6 @@ export default function GameDetailModal({ game, rosterDict, onClose }) {
   const homeData = processTeamBoxscore(boxscore?.teams?.home);
 
   const activeData = activeTab === 'away' ? awayData : homeData;
-  const activeTeamName = activeTab === 'away' ? game.teams.away.team.name : game.teams.home.team.name;
-
-  // UI Component: Fantasy Badge
-  const FantasyBadge = ({ team, isBench }) => {
-    if (!team) return null;
-    return (
-      <div className={`ml-2 inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${isBench ? 'bg-gray-200 text-gray-500' : 'bg-blue-100 text-blue-800 border border-blue-200'}`}>
-        <TeamAvatar team={team} size="xs" />
-        <span className="truncate max-w-[80px] sm:max-w-none">{team.name}</span>
-        {isBench && <span className="text-red-500">(B)</span>}
-      </div>
-    );
-  };
 
   return (
     <div onClick={handleOverlayClick} className="fixed inset-0 bg-black/75 flex items-center justify-center z-[70] p-2 sm:p-4 backdrop-blur-sm animate-fade-in">

@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { fetchLiveScoreboard, normalizeName, buildRosterDictionary } from '../utils/liveMLB';
 import { TEAMS } from '../schedule';
 import TeamAvatar from '../components/TeamAvatar';
@@ -15,19 +15,32 @@ export default function LiveScoreboardView({ todaysRecords }) {
 
   const rosterDict = useMemo(() => buildRosterDictionary(todaysRecords), [todaysRecords]);
 
-  const loadGames = async () => {
-    setLoading(true);
-    const liveGames = await fetchLiveScoreboard();
-    setGames(liveGames);
-    setLastUpdated(new Date());
-    setLoading(false);
-  };
+  const loadGames = useCallback(async (showLoading = false) => {
+    if (showLoading) setLoading(true);
+    try {
+      const liveGames = await fetchLiveScoreboard();
+      setGames(liveGames);
+      setLastUpdated(new Date());
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    loadGames();
-    const interval = setInterval(loadGames, 30000); // Refresh every 30 seconds
-    return () => clearInterval(interval);
-  }, []);
+    let isMounted = true;
+    fetchLiveScoreboard().then(liveGames => {
+      if (isMounted) {
+        setGames(liveGames);
+        setLastUpdated(new Date());
+        setLoading(false);
+      }
+    });
+    const interval = setInterval(() => loadGames(false), 30000); // Refresh every 30 seconds
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [loadGames]);
 
   const getFantasyOwner = (mlbName) => {
     const cleanName = normalizeName(mlbName);

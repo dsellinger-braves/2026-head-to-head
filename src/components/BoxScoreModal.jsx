@@ -1,7 +1,7 @@
 import { CATEGORIES } from '../utils/scoring';
 import TeamAvatar from './TeamAvatar';
 
-export default function BoxScoreModal({ matchup, onClose, onPlayerClick }) {
+export default function BoxScoreModal({ matchup, onClose }) {
   if (!matchup) return null;
 
   const handleOverlayClick = (e) => {

@@ -33,8 +33,6 @@ function App() {
 
   const baseSchedule = useMemo(() => generateSchedule(), []);
 
-  const cacheKey = `fantasy_data_${selectedSeason}`;
-
   // historical_data rows are flat CSVs from the Python scraper.
   // Reshape them to match the player_daily_stats schema the rest of the app expects.
   const normalizeHistoricalRecord = (row) => {

@@ -14,7 +14,7 @@ export default function WeeklyView({ processedWeeks, allStats, onOwnerClick }) {
   // --- HELPER: Format Date ---
   const formatDate = (dateStr) => {
     if (!dateStr) return '';
-    const [year, month, day] = dateStr.split('-');
+    const [, month, day] = dateStr.split('-');
     return `${parseInt(month)}/${parseInt(day)}`;
   };
 

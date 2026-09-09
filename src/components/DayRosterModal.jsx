@@ -18,6 +18,34 @@ function formatVal(val, cat) {
   return Math.round(n);
 }
 
+function ColHeader({ cat, highlightStat }) {
+  return (
+    <th className={`px-3 py-2 text-center text-xs font-bold uppercase tracking-wider
+      ${cat === highlightStat ? 'text-blue-600 bg-blue-50' : 'text-gray-500'}`}>
+      {SCORING_CATS[cat]?.label || cat}
+    </th>
+  );
+}
+
+function StatCell({ val, cat, bold, highlightStat }) {
+  return (
+    <td className={`px-3 py-2 text-center font-mono text-sm
+      ${cat === highlightStat ? 'text-blue-700 font-bold bg-blue-50/50' : bold ? 'text-gray-900 font-bold' : 'text-gray-700'}`}>
+      {formatVal(val, cat)}
+    </td>
+  );
+}
+
+function TotalRow({ totals, cats, highlightStat }) {
+  return (
+    <tr className="bg-gray-50 border-t-2 border-gray-300">
+      <td className="px-4 py-2 text-xs font-black text-gray-500 uppercase tracking-wider">Total</td>
+      <td />
+      {cats.map(c => <StatCell key={c} val={totals[c]} cat={c} bold highlightStat={highlightStat} />)}
+    </tr>
+  );
+}
+
 export default function DayRosterModal({ teamDayRecord, highlightStat, onClose }) {
   const { teamId, teamName, date, records } = teamDayRecord;
 
@@ -42,28 +70,6 @@ export default function DayRosterModal({ teamDayRecord, highlightStat, onClose }
       pitcherTotals: aggregateStats(pitcherPlayers.map(p => p._r)),
     };
   }, [records]);
-
-  const ColHeader = ({ cat }) => (
-    <th className={`px-3 py-2 text-center text-xs font-bold uppercase tracking-wider
-      ${cat === highlightStat ? 'text-blue-600 bg-blue-50' : 'text-gray-500'}`}>
-      {SCORING_CATS[cat]?.label || cat}
-    </th>
-  );
-
-  const StatCell = ({ val, cat, bold }) => (
-    <td className={`px-3 py-2 text-center font-mono text-sm
-      ${cat === highlightStat ? 'text-blue-700 font-bold bg-blue-50/50' : bold ? 'text-gray-900 font-bold' : 'text-gray-700'}`}>
-      {formatVal(val, cat)}
-    </td>
-  );
-
-  const TotalRow = ({ totals, cats }) => (
-    <tr className="bg-gray-50 border-t-2 border-gray-300">
-      <td className="px-4 py-2 text-xs font-black text-gray-500 uppercase tracking-wider">Total</td>
-      <td />
-      {cats.map(c => <StatCell key={c} val={totals[c]} cat={c} bold />)}
-    </tr>
-  );
 
   return (
     <div
@@ -97,7 +103,7 @@ export default function DayRosterModal({ teamDayRecord, highlightStat, onClose }
                   <tr>
                     <th className="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">Player</th>
                     <th className="px-3 py-2 text-center text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">Slot</th>
-                    {BAT_CATS.map(c => <ColHeader key={c} cat={c} />)}
+                    {BAT_CATS.map(c => <ColHeader key={c} cat={c} highlightStat={highlightStat} />)}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 bg-white">
@@ -105,10 +111,10 @@ export default function DayRosterModal({ teamDayRecord, highlightStat, onClose }
                     <tr key={p.id} className="hover:bg-blue-50/30 transition-colors">
                       <td className="px-4 py-2 font-semibold text-gray-900">{p.name}</td>
                       <td className="px-3 py-2 text-center text-xs text-gray-400">{p.slot}</td>
-                      {BAT_CATS.map(c => <StatCell key={c} val={p.stats[c]} cat={c} />)}
+                      {BAT_CATS.map(c => <StatCell key={c} val={p.stats[c]} cat={c} highlightStat={highlightStat} />)}
                     </tr>
                   ))}
-                  <TotalRow totals={batterTotals} cats={BAT_CATS} />
+                  <TotalRow totals={batterTotals} cats={BAT_CATS} highlightStat={highlightStat} />
                 </tbody>
               </table>
             </div>
@@ -125,7 +131,7 @@ export default function DayRosterModal({ teamDayRecord, highlightStat, onClose }
                   <tr>
                     <th className="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">Player</th>
                     <th className="px-3 py-2 text-center text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">Slot</th>
-                    {PITCH_CATS.map(c => <ColHeader key={c} cat={c} />)}
+                    {PITCH_CATS.map(c => <ColHeader key={c} cat={c} highlightStat={highlightStat} />)}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 bg-white">
@@ -133,10 +139,10 @@ export default function DayRosterModal({ teamDayRecord, highlightStat, onClose }
                     <tr key={p.id} className="hover:bg-blue-50/30 transition-colors">
                       <td className="px-4 py-2 font-semibold text-gray-900">{p.name}</td>
                       <td className="px-3 py-2 text-center text-xs text-gray-400">{p.slot}</td>
-                      {PITCH_CATS.map(c => <StatCell key={c} val={p.stats[c]} cat={c} />)}
+                      {PITCH_CATS.map(c => <StatCell key={c} val={p.stats[c]} cat={c} highlightStat={highlightStat} />)}
                     </tr>
                   ))}
-                  <TotalRow totals={pitcherTotals} cats={PITCH_CATS} />
+                  <TotalRow totals={pitcherTotals} cats={PITCH_CATS} highlightStat={highlightStat} />
                 </tbody>
               </table>
             </div>

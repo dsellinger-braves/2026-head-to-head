@@ -84,9 +84,11 @@ export default function ProgressionView({ allStats, selectedSeason = 2026, proce
     });
 
     return { allPeriods, cumulativeByTeam, cumulativeRotoByTeam };
-  }, [allStats, teamIds]);
+  }, [allStats, teamIds, selectedSeason]);
 
-  const visibleTeamIds = selectedTeamId === 'all' ? teamIds : [String(selectedTeamId)];
+  const visibleTeamIds = useMemo(() => {
+    return selectedTeamId === 'all' ? teamIds : [String(selectedTeamId)];
+  }, [selectedTeamId, teamIds]);
 
   const chartData = useMemo(() => {
     return progressionData.allPeriods.map(period => {

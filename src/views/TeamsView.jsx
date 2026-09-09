@@ -36,10 +36,13 @@ const formatStat = (row, cat) => {
   return isNaN(n) ? '-' : Math.round(n);
 };
 
-const getLabel = (col) => {
-  if (col === 'QS_PCT') return 'QS%';
-  return SCORING_CATS[col]?.label || col;
-};
+function SortIcon({ col, sortKey, sortDir }) {
+  return (
+    <span className={`ml-1 ${sortKey === col ? 'text-blue-500' : 'text-gray-300'}`}>
+      {sortKey === col ? (sortDir === 'desc' ? '↓' : '↑') : '↕'}
+    </span>
+  );
+}
 
 export default function TeamsView({ allStats, onOwnerClick }) {
   const [sortKey, setSortKey] = useState('R');
@@ -91,12 +94,6 @@ export default function TeamsView({ allStats, onOwnerClick }) {
     else { setSortKey(col); setSortDir('desc'); }
   };
 
-  const SortIcon = ({ col }) => (
-    <span className={`ml-1 ${sortKey === col ? 'text-blue-500' : 'text-gray-300'}`}>
-      {sortKey === col ? (sortDir === 'desc' ? '↓' : '↑') : '↕'}
-    </span>
-  );
-
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-4">
@@ -133,7 +130,7 @@ export default function TeamsView({ allStats, onOwnerClick }) {
                     ${sortKey === col ? 'text-blue-600 bg-blue-50' : 'text-gray-500'}`}
                 >
                   {SCORING_CATS[col]?.label || col}
-                  <SortIcon col={col} />
+                  <SortIcon col={col} sortKey={sortKey} sortDir={sortDir} />
                 </th>
               ))}
               {viewMode === 'roto' && (
@@ -143,7 +140,7 @@ export default function TeamsView({ allStats, onOwnerClick }) {
                     ${sortKey === 'total' ? 'text-blue-600 bg-blue-50' : 'text-gray-500'}`}
                 >
                   Total Roto
-                  <SortIcon col="total" />
+                  <SortIcon col="total" sortKey={sortKey} sortDir={sortDir} />
                 </th>
               )}
             </tr>
