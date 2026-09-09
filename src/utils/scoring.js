@@ -152,7 +152,7 @@ export const calculateTrioMatchupResult = (teamStats, teamIds) => {
   return results;
 };
 
-export function aggregateStats(dailyRecords) {
+export function aggregateStats(dailyRecords, options = {}) {
   const totals = {
     // Primary Categories
     R: 0, HR: 0, RBI: 0, SB: 0, K: 0, QS: 0, 'SV+HDs': 0,
@@ -168,23 +168,43 @@ export function aggregateStats(dailyRecords) {
   };
 
   dailyRecords.forEach(record => {
-    if (record.lineup_slot_id === 16 || record.lineup_slot_id === 17) return;
+    if (options.includeBenchOnly) {
+      if (record.lineup_slot_id !== 16 && record.lineup_slot_id !== 17) return;
+    } else if (!options.includeAll) {
+      if (record.lineup_slot_id === 16 || record.lineup_slot_id === 17) return;
+    }
 
     // Normalize ESPN numeric stat IDs → named keys
     const s = {};
     for (const [key, val] of Object.entries(record.stats || {})) {
       s[ESPN_STAT_IDS[key] ?? key] = val;
     }
+    const espnStats = record.stats || {};
 
     const slot = record.lineup_slot_id;
-    const isPitcher = slot >= 13 && slot <= 15;
-    const isBatter = slot >= 0 && slot <= 12;
+    const isPitcher = (slot >= 13 && slot <= 15) || (options.includeBenchOnly && (
+      (parseFloat(s.IP_raw ?? s.IP) || 0) > 0 ||
+      parseFloat(espnStats['34']) > 0 ||
+      parseFloat(s.K ?? espnStats['48']) > 0 ||
+      parseFloat(s.QS ?? espnStats['63']) > 0 ||
+      parseFloat(s.SV ?? espnStats['57']) > 0 ||
+      parseFloat(s.HD ?? espnStats['60']) > 0
+    ));
+
+    const isBatter = (slot >= 0 && slot <= 12) || (options.includeBenchOnly && (
+      parseFloat(s.PA ?? espnStats['16']) > 0 ||
+      parseFloat(s.AB ?? espnStats['0']) > 0 ||
+      parseFloat(s.H ?? espnStats['1']) > 0 ||
+      parseFloat(s.R ?? espnStats['20']) > 0 ||
+      parseFloat(s.HR ?? espnStats['5']) > 0 ||
+      parseFloat(s.RBI ?? espnStats['21']) > 0 ||
+      parseFloat(s.SB ?? espnStats['23']) > 0
+    ));
 
     const pa  = parseFloat(s.PA)  || 0;
     const obp = parseFloat(s.OBP) || 0;
     
     // Determine Games Started strictly by ESPN Stat 33
-    const espnStats = record.stats || {};
     const gs = parseFloat(espnStats['33']) > 0 ? parseFloat(espnStats['33']) : 0;
 
     totals.GS        += gs;
@@ -286,6 +306,10 @@ export function aggregateStats(dailyRecords) {
   calculated.UER_PCT_raw  = totals.ER > 0 ? (totals.UER / totals.ER) * 100 : 0;
 
   return calculated;
+}
+
+export function aggregateBenchStats(dailyRecords) {
+  return aggregateStats(dailyRecords, { includeBenchOnly: true });
 }
 
 // 3. Determine the "Score" (e.g. 6-3-1)

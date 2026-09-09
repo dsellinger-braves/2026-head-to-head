@@ -745,6 +745,7 @@ function App() {
               allStats={rawData}
               selectedSeason={selectedSeason}
               onOwnerClick={(team) => setSelectedOwner(team)}
+              onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
             />
           )}
           {currentView === 'transactions' && (

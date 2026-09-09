@@ -3,6 +3,7 @@ import { TEAMS } from '../schedule';
 import { aggregateStats, SCORING_CATS, MINUTIAE_STATS, getStatMeta, calculateRotoPoints } from '../utils/scoring';
 import TeamAvatar from '../components/TeamAvatar';
 import RotoGapView from './RotoGapView';
+import BenchStatsView from './BenchStatsView';
 
 const STAT_COLS = ['PA', 'R', 'HR', 'RBI', 'SB', 'OBP', 'IP', 'K', 'QS', 'QS_PCT', 'SV+HDs', 'ERA', 'WHIP'];
 
@@ -117,7 +118,7 @@ function SortIcon({ col, sortKey, sortDir }) {
   );
 }
 
-export default function TeamsView({ allStats, onOwnerClick, selectedSeason = 2026 }) {
+export default function TeamsView({ allStats, onOwnerClick, onPlayerClick, selectedSeason = 2026 }) {
   const [sortKey, setSortKey] = useState('R');
   const [sortDir, setSortDir] = useState('desc');
   const [viewMode, setViewMode] = useState('raw'); // 'raw', 'roto', 'minutiae', 'gap'
@@ -214,6 +215,12 @@ export default function TeamsView({ allStats, onOwnerClick, selectedSeason = 202
             Deep Stats & Minutiae
           </button>
           <button
+            onClick={() => handleViewModeChange('bench')}
+            className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${viewMode === 'bench' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+          >
+            🛋️ Bench Stats
+          </button>
+          <button
             onClick={() => handleViewModeChange('gap')}
             className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${viewMode === 'gap' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
           >
@@ -222,7 +229,14 @@ export default function TeamsView({ allStats, onOwnerClick, selectedSeason = 202
         </div>
       </div>
 
-      {viewMode === 'gap' ? (
+      {viewMode === 'bench' ? (
+        <BenchStatsView
+          allStats={allStats}
+          selectedSeason={selectedSeason}
+          onOwnerClick={onOwnerClick}
+          onPlayerClick={onPlayerClick}
+        />
+      ) : viewMode === 'gap' ? (
         <RotoGapView allStats={allStats} selectedSeason={selectedSeason} onOwnerClick={onOwnerClick} />
       ) : (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
