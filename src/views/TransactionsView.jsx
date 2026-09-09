@@ -3,6 +3,7 @@ import { TEAMS } from '../schedule';
 import TeamAvatar from '../components/TeamAvatar';
 import { supabase } from '../supabaseClient';
 import defaultTransactions2026 from '../data/transactions2026.json';
+import defaultDraftAssetTrades from '../data/draftAssetTrades2026.json';
 
 const TYPE_CONFIG = {
   ADD_DROP: {
@@ -50,7 +51,7 @@ const ITEMS_PER_PAGE = 50;
  *  - Multi-item trades into 1 summarized trade row
  *  - Simultaneous add/drops into 1 summarized add/drop row
  */
-function groupTransactions(rawTransactions) {
+function groupTransactions(rawTransactions, draftTrades = []) {
   if (!Array.isArray(rawTransactions)) return [];
 
   const groups = new Map();
@@ -98,6 +99,42 @@ function groupTransactions(rawTransactions) {
         }
       }
 
+      // Check if any draft assets were included in this trade
+      const matchingDraftAssets = (draftTrades || []).filter(da => {
+        if (da.asset_type !== 'Overall Pick' && da.asset_type !== 'Budget' && da.asset_type !== 'Draft Pick') {
+          return false;
+        }
+        if (da.espn_transaction_id) {
+          return (
+            da.espn_transaction_id.toLowerCase().startsWith(baseId.toLowerCase()) ||
+            baseId.toLowerCase().startsWith(da.espn_transaction_id.toLowerCase())
+          );
+        }
+        return false;
+      });
+
+      for (const da of matchingDraftAssets) {
+        if (da.to_team_id) {
+          teamsInvolved.add(da.to_team_id);
+          if (!receivedByTeam[da.to_team_id]) receivedByTeam[da.to_team_id] = [];
+          receivedByTeam[da.to_team_id].push({
+            is_draft_asset: true,
+            asset_type: da.asset_type,
+            asset_name: da.asset_name,
+            round_num: da.round_num,
+            target_draft_year: da.target_draft_year || 2027,
+            from_team_id: da.from_team_id,
+            to_team_id: da.to_team_id,
+            sending_owner: da.sending_owner,
+            receiving_owner: da.receiving_owner,
+            trade_id: da.trade_id
+          });
+        }
+        if (da.from_team_id) {
+          teamsInvolved.add(da.from_team_id);
+        }
+      }
+
       flattened.push({
         id: baseId,
         type: 'TRADE',
@@ -107,7 +144,9 @@ function groupTransactions(rawTransactions) {
         teams: Array.from(teamsInvolved),
         received: receivedByTeam,
         drops: tradeDrops,
-        raw_items_count: items.length
+        raw_items_count: items.length,
+        has_draft_assets: matchingDraftAssets.length > 0,
+        draft_assets: matchingDraftAssets
       });
     } else if ((types.has('ADD') || types.has('WAIVER_ADD')) && types.has('DROP')) {
       const teamId = items.find(i => i.to_team_id > 0)?.to_team_id || first.from_team_id;
@@ -186,6 +225,7 @@ export default function TransactionsView({ onPlayerClick, onOwnerClick }) {
   const [selectedYear, setSelectedYear] = useState('ALL');
   const [currentPage, setCurrentPage] = useState(1);
   const [rawTransactions, setRawTransactions] = useState(defaultTransactions2026 || []);
+  const [draftTrades, setDraftTrades] = useState(defaultDraftAssetTrades || []);
   const [isLoadingSupabase, setIsLoadingSupabase] = useState(false);
 
   // Optional Supabase sync (disabled by default because project wczdkcdqgtzlsbssogoz is currently paused)
@@ -197,20 +237,31 @@ export default function TransactionsView({ onPlayerClick, onOwnerClick }) {
     async function loadSupabaseTxns() {
       try {
         setIsLoadingSupabase(true);
-        const { data, error } = await supabase
-          .from('transactions')
-          .select('*')
-          .order('transaction_date', { ascending: false })
-          .limit(2000);
+        const [txnsRes, draftRes] = await Promise.all([
+          supabase
+            .from('transactions')
+            .select('*')
+            .order('transaction_date', { ascending: false })
+            .limit(2000),
+          supabase
+            .from('draft_asset_trades')
+            .select('*')
+        ]);
 
-        if (!error && data && data.length > 0 && isMounted) {
-          const map = new Map();
-          (defaultTransactions2026 || []).forEach(t => map.set(t.espn_transaction_id, t));
-          data.forEach(t => map.set(t.espn_transaction_id, t));
-          const merged = Array.from(map.values()).sort(
-            (a, b) => new Date(b.transaction_date) - new Date(a.transaction_date)
-          );
-          setRawTransactions(merged);
+        if (isMounted) {
+          if (!txnsRes.error && txnsRes.data && txnsRes.data.length > 0) {
+            const map = new Map();
+            (defaultTransactions2026 || []).forEach(t => map.set(t.espn_transaction_id, t));
+            txnsRes.data.forEach(t => map.set(t.espn_transaction_id, t));
+            const merged = Array.from(map.values()).sort(
+              (a, b) => new Date(b.transaction_date) - new Date(a.transaction_date)
+            );
+            setRawTransactions(merged);
+          }
+
+          if (!draftRes.error && draftRes.data && draftRes.data.length > 0) {
+            setDraftTrades(draftRes.data);
+          }
         }
       } catch (err) {
         console.warn('Transactions Supabase fetch skipped or errored, using bundled transactions:', err);
@@ -224,8 +275,8 @@ export default function TransactionsView({ onPlayerClick, onOwnerClick }) {
 
   // Group raw transactions into flattened single-row trades and add/drops
   const flattenedTransactions = useMemo(() => {
-    return groupTransactions(rawTransactions);
-  }, [rawTransactions]);
+    return groupTransactions(rawTransactions, draftTrades);
+  }, [rawTransactions, draftTrades]);
 
   const availableYears = useMemo(() => {
     const years = new Set(flattenedTransactions.map(t => t.year || 2026));
@@ -239,6 +290,7 @@ export default function TransactionsView({ onPlayerClick, onOwnerClick }) {
       // Type filter
       if (selectedType !== 'ALL') {
         if (selectedType === 'TRADE' && t.type !== 'TRADE') return false;
+        if (selectedType === 'TRADE_DRAFT' && (t.type !== 'TRADE' || !t.has_draft_assets)) return false;
         if (selectedType === 'ADD_DROP' && t.type !== 'ADD_DROP' && t.type !== 'WAIVER_ADD_DROP') return false;
         if (selectedType === 'ADD' && t.type !== 'ADD' && t.type !== 'ADD_DROP' && t.type !== 'WAIVER_ADD' && t.type !== 'WAIVER_ADD_DROP') return false;
         if (selectedType === 'WAIVER_ADD' && !t.is_waiver && t.type !== 'WAIVER_ADD' && t.type !== 'WAIVER_ADD_DROP') return false;
@@ -262,15 +314,25 @@ export default function TransactionsView({ onPlayerClick, onOwnerClick }) {
 
       // Search term filter
       if (term) {
-        // Player names check
+        // Player names and draft asset check
         if (t.adds?.some(p => p.player_name?.toLowerCase().includes(term))) return true;
         if (t.drops?.some(p => p.player_name?.toLowerCase().includes(term))) return true;
         if (t.players?.some(p => p.player_name?.toLowerCase().includes(term))) return true;
         if (t.received) {
           for (const pList of Object.values(t.received)) {
-            if (pList.some(p => p.player_name?.toLowerCase().includes(term))) return true;
+            if (pList.some(p => 
+              p.player_name?.toLowerCase().includes(term) ||
+              p.asset_name?.toLowerCase().includes(term) ||
+              p.sending_owner?.toLowerCase().includes(term) ||
+              (p.is_draft_asset && (term.includes('draft') || term.includes('pick') || term.includes('round')))
+            )) return true;
           }
         }
+        if (t.draft_assets?.some(a => 
+          a.asset_name?.toLowerCase().includes(term) ||
+          a.sending_owner?.toLowerCase().includes(term) ||
+          a.receiving_owner?.toLowerCase().includes(term)
+        )) return true;
 
         // Teams and owners check
         if (t.team_id) {
@@ -392,7 +454,8 @@ export default function TransactionsView({ onPlayerClick, onOwnerClick }) {
             >
               <option value="ALL">All Move Types</option>
               <option value="ADD_DROP">Add / Drops (Simultaneous)</option>
-              <option value="TRADE">Trades</option>
+              <option value="TRADE">Trades (All)</option>
+              <option value="TRADE_DRAFT">🤝 Trades with Future Draft Picks</option>
               <option value="ADD">Free Agent Adds</option>
               <option value="WAIVER_ADD">Waiver Claims</option>
               <option value="DROP">Pure Drops</option>
@@ -469,11 +532,13 @@ export default function TransactionsView({ onPlayerClick, onOwnerClick }) {
                 </tr>
               ) : (
                 paginatedTransactions.map((t) => {
-                  const typeConf = TYPE_CONFIG[t.type] || {
-                    label: t.type || 'Move',
-                    bg: 'bg-gray-100 text-gray-700 border-gray-200',
-                    icon: '•'
-                  };
+                  const typeConf = (t.type === 'TRADE' && t.has_draft_assets)
+                    ? { label: 'Trade (w/ Pick)', bg: 'bg-purple-100 text-purple-900 border-purple-300', icon: '🤝' }
+                    : (TYPE_CONFIG[t.type] || {
+                      label: t.type || 'Move',
+                      bg: 'bg-gray-100 text-gray-700 border-gray-200',
+                      icon: '•'
+                    });
 
                   return (
                     <tr key={t.id} className="hover:bg-blue-50/40 transition-colors">
@@ -488,6 +553,13 @@ export default function TransactionsView({ onPlayerClick, onOwnerClick }) {
                           <span>{typeConf.icon}</span>
                           <span>{typeConf.label}</span>
                         </span>
+                        {t.has_draft_assets && (
+                          <div className="mt-1">
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                              <span>🎟️</span> Pick Traded
+                            </span>
+                          </div>
+                        )}
                       </td>
 
                       {/* Team(s) */}
@@ -553,17 +625,33 @@ export default function TransactionsView({ onPlayerClick, onOwnerClick }) {
                                       <TeamAvatar team={toTeam} size="xs" />
                                       <span>{toTeam?.name || `Team ${teamIdStr}`} receives:</span>
                                     </div>
-                                    <div className="flex flex-wrap gap-x-2 gap-y-1 pl-4">
-                                      {players.map((p) => (
-                                        <button
-                                          key={p.player_id}
-                                          onClick={() => onPlayerClick?.(p.player_id, p.player_name)}
-                                          className="font-bold text-gray-900 hover:text-purple-700 hover:underline cursor-pointer inline-flex items-center gap-1"
-                                        >
-                                          <span className="text-purple-600 font-bold">•</span>
-                                          <span>{p.player_name}</span>
-                                        </button>
-                                      ))}
+                                    <div className="flex flex-wrap gap-x-2 gap-y-1.5 pl-4">
+                                      {players.map((p, pIdx) => {
+                                        if (p.is_draft_asset) {
+                                          return (
+                                            <span
+                                              key={`draft-${pIdx}`}
+                                              className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-100 border border-amber-300 text-amber-950 font-bold text-xs shadow-xs"
+                                            >
+                                              <span className="text-amber-600">🎟️</span>
+                                              <span>{p.asset_name} Pick ({p.target_draft_year || 2027})</span>
+                                              <span className="text-amber-700 text-[10px] font-normal">
+                                                (from {p.sending_owner || TEAMS[p.from_team_id]?.owner || 'team'})
+                                              </span>
+                                            </span>
+                                          );
+                                        }
+                                        return (
+                                          <button
+                                            key={p.player_id}
+                                            onClick={() => onPlayerClick?.(p.player_id, p.player_name)}
+                                            className="font-bold text-gray-900 hover:text-purple-700 hover:underline cursor-pointer inline-flex items-center gap-1"
+                                          >
+                                            <span className="text-purple-600 font-bold">•</span>
+                                            <span>{p.player_name}</span>
+                                          </button>
+                                        );
+                                      })}
                                     </div>
                                   </div>
                                 );
