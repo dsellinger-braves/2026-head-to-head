@@ -20,6 +20,7 @@ import LiveScoreboardView from './views/LiveScoreboardView';
 import TransactionsView from './views/TransactionsView';
 import DraftRoomView from './views/DraftRoomView';
 import PlayerValuationsView from './views/PlayerValuationsView';
+import PickemView from './views/PickemView';
 
 const AVAILABLE_SEASONS = Array.from({ length: 2026 - 2012 + 1 }, (_, i) => 2026 - i);
 
@@ -35,6 +36,7 @@ const VIEW_TO_HASH = {
   fantasycast: 'fantasycast',
   draft: 'draft',
   valuations: 'valuations',
+  pickem: 'pickem',
 };
 
 const HASH_TO_VIEW = {
@@ -52,6 +54,7 @@ const HASH_TO_VIEW = {
   draft: 'draft',
   valuations: 'valuations',
   pricing: 'valuations',
+  pickem: 'pickem',
 };
 
 function getViewFromHash() {
@@ -529,6 +532,18 @@ function App() {
                   <span>Draft Room</span>
                 </a>
 
+                <a
+                  href="#/pickem"
+                  onClick={(e) => { e.preventDefault(); setCurrentView('pickem'); }}
+                  className={`px-3 py-2 rounded text-sm font-bold flex items-center gap-1.5 transition-colors shadow-xs ${
+                    currentView === 'pickem' ? 'bg-purple-700 text-white ring-2 ring-purple-400' : 'hover:bg-blue-800'
+                  }`}
+                  title="Annual MLB Pick'em"
+                >
+                  <span>🔮</span>
+                  <span>Pick'em</span>
+                </a>
+
                 <select
                   value={selectedSeason}
                   onChange={e => handleSeasonChange(parseInt(e.target.value))}
@@ -618,6 +633,9 @@ function App() {
               onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
               onOwnerClick={(team) => setSelectedOwner(team)}
             />
+          )}
+          {currentView === 'pickem' && (
+            <PickemView />
           )}
         </main>
       )}
