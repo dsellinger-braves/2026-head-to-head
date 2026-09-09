@@ -130,31 +130,29 @@ def fetch_activity_trades() -> List[Dict]:
     """Fetch executed trades by safely paging through the Recent Activity feed."""
     url = (
         f"https://lm-api-reads.fantasy.espn.com/apis/v3/games/flb/seasons/{YEAR}"
-        f"/segments/0/leagues/{LEAGUE_ID}/communication/?view=kona_league_communication"
+        f"/segments/0/leagues/{LEAGUE_ID}?view=kona_league_communication"
     )
     
     cookies = {"espn_s2": ESPN_S2, "SWID": ESPN_SWID} if ESPN_S2 else {}
     all_topics = []
     offset = 0
-    limit = 50
+    limit = 200
     
     print("  Paging through activity feed for trades...")
     
     while True:
         filters = {
-            "topics": {
-                "filterType": {"value": ["ACTIVITY_TRANSACTIONS"]},
-                "limit": limit,
-                "limitPerMessageSet": {"value": 50},
-                "offset": offset,
-                "filterCommunicationTopic": {"value": ["TRADE"]},
-                # Added sort parameter to satisfy ESPN's backend requirement for pagination
-                "sortMessageDate": {"sortPriority": 1, "sortAsc": False}
+            "communication": {
+                "topics": {
+                    "filterType": {"value": ["ACTIVITY_TRANSACTIONS"]},
+                    "limit": limit,
+                    "limitPerMessageSet": {"value": 50},
+                    "offset": offset,
+                    "sortMessageDate": {"sortPriority": 1, "sortAsc": False}
+                }
             }
         }
         
-        # 1. Compress the JSON to remove spaces using separators
-        # 2. Add a standard User-Agent so ESPN's firewall doesn't block the automated request
         headers = {
             "x-fantasy-filter": json.dumps(filters, separators=(',', ':')),
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -162,27 +160,27 @@ def fetch_activity_trades() -> List[Dict]:
         }
         
         try:
-            # Use requests.get instead of a Session to avoid triggering WAF blocks
             resp = requests.get(url, headers=headers, cookies=cookies, timeout=10)
             resp.raise_for_status()
             
-            topics = resp.json().get("topics", [])
+            topics = resp.json().get("communication", {}).get("topics", [])
             if not topics:
-                break  # No more topics found, exit loop
+                break
                 
-            all_topics.extend(topics)
+            for t in topics:
+                if t.get("author") == "TradeTaskProcessor":
+                    all_topics.append(t)
             
-            # If we got fewer topics than our limit, we are at the end of the history
             if len(topics) < limit:
                 break
                 
             offset += limit
-            time.sleep(0.5)  # Brief pause between pages so we don't hammer the API
+            time.sleep(0.2)
             
         except requests.exceptions.HTTPError as e:
             print(f"Failed to fetch activity trades at offset {offset}: {e}")
-            # If it fails again, this will print the exact reason ESPN rejected it!
-            print(f"ESPN API Response: {e.response.text}")
+            if hasattr(e, 'response') and e.response is not None:
+                print(f"ESPN API Response: {e.response.text[:200]}")
             break
         except Exception as e:
             print(f"Error fetching trades at offset {offset}: {e}")
@@ -194,7 +192,6 @@ def parse_activity_trades(topics: List[Dict]) -> List[Dict]:
     """Parse only the fully executed system trades from the activity feed."""
     rows = []
     for topic in topics:
-        # We only want trades processed by the system (not the user acceptances)
         if topic.get("author") != "TradeTaskProcessor":
             continue
             
@@ -204,25 +201,40 @@ def parse_activity_trades(topics: List[Dict]) -> List[Dict]:
             player_id = msg.get("targetId")
             from_team_id = msg.get("from")
             to_team_id = msg.get("to")
+            msg_type_id = msg.get("messageTypeId")
             
-            if not player_id or not from_team_id or not to_team_id:
+            if not player_id:
                 continue
                 
-            date_ms = msg.get("date", 0)
+            date_ms = msg.get("date", 0) or topic.get("date", 0)
             txn_date = datetime.fromtimestamp(date_ms / 1000, tz=timezone.utc)
             
-            rows.append({
-                "espn_transaction_id": f"{topic_id}_{player_id}_{to_team_id}",
-                "league_id":           LEAGUE_ID,
-                "transaction_type":    "TRADE",
-                "transaction_date":    txn_date.isoformat(),
-                "scoring_period_id":   0, # Activity feed doesn't attach scoring periods
-                "to_team_id":          to_team_id,
-                "from_team_id":        from_team_id,
-                "player_id":           player_id,
-                "player_name":         f"Player {player_id}",
-                "raw_type":            "ACTIVITY_TRADE"
-            })
+            if msg_type_id == 244 and to_team_id and to_team_id > 0 and from_team_id and from_team_id > 0:
+                rows.append({
+                    "espn_transaction_id": f"{topic_id}_{player_id}_{to_team_id}",
+                    "league_id":           LEAGUE_ID,
+                    "transaction_type":    "TRADE",
+                    "transaction_date":    txn_date.isoformat(),
+                    "scoring_period_id":   0,
+                    "to_team_id":          to_team_id,
+                    "from_team_id":        from_team_id,
+                    "player_id":           player_id,
+                    "player_name":         f"Player {player_id}",
+                    "raw_type":            "TRADE"
+                })
+            elif msg_type_id == 245 or to_team_id == 0:
+                rows.append({
+                    "espn_transaction_id": f"{topic_id}_{player_id}_0",
+                    "league_id":           LEAGUE_ID,
+                    "transaction_type":    "DROP",
+                    "transaction_date":    txn_date.isoformat(),
+                    "scoring_period_id":   0,
+                    "to_team_id":          0,
+                    "from_team_id":        from_team_id,
+                    "player_id":           player_id,
+                    "player_name":         f"Player {player_id}",
+                    "raw_type":            "TRADE_DROP"
+                })
     return rows
 
 # ---------------------------------------------------------------------------
@@ -328,5 +340,16 @@ if __name__ == "__main__":
     if all_rows:
         all_rows = enrich_player_names(all_rows)
         upsert_transactions(all_rows, overwrite=TRANSACTIONS_OVERWRITE)
+
+        # Also persist to bundled JSON if running in repository
+        local_json = os.path.join(os.path.dirname(__file__), "src", "data", "transactions2026.json")
+        if os.path.exists(os.path.dirname(local_json)):
+            try:
+                sorted_rows = sorted(all_rows, key=lambda x: x.get("transaction_date", ""), reverse=True)
+                with open(local_json, "w") as f:
+                    json.dump(sorted_rows, f, indent=2)
+                print(f"Updated local bundled JSON: {local_json} with {len(sorted_rows)} transactions.")
+            except Exception as e:
+                print(f"Failed to update local JSON: {e}")
     else:
         print("  No transactions found.")

@@ -45,7 +45,7 @@ export default function TransactionsView({ onPlayerClick, onOwnerClick }) {
       try {
         setIsLoadingSupabase(true);
         const { data, error } = await supabase
-          .table('transactions')
+          .from('transactions')
           .select('*')
           .order('transaction_date', { ascending: false })
           .limit(2000);
