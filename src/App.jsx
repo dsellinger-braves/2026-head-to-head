@@ -21,6 +21,8 @@ import TransactionsView from './views/TransactionsView';
 import DraftRoomView from './views/DraftRoomView';
 import PlayerValuationsView from './views/PlayerValuationsView';
 import PickemView from './views/PickemView';
+import DraftCapitalView from './views/DraftCapitalView';
+import KeepersBudgetsView from './views/KeepersBudgetsView';
 
 const AVAILABLE_SEASONS = Array.from({ length: 2026 - 2012 + 1 }, (_, i) => 2026 - i);
 
@@ -34,9 +36,11 @@ const VIEW_TO_HASH = {
   progression: 'progression',
   highlights: 'highlights',
   fantasycast: 'fantasycast',
+  valuations: 'keeper-prices',
   draft: 'draft',
-  valuations: 'valuations',
   pickem: 'pickem',
+  capital: 'draft-capital',
+  keepers: 'keepers-budgets',
 };
 
 const HASH_TO_VIEW = {
@@ -51,11 +55,20 @@ const HASH_TO_VIEW = {
   progression: 'progression',
   highlights: 'highlights',
   fantasycast: 'fantasycast',
-  draft: 'draft',
+  'keeper-prices': 'valuations',
+  'keeper-pricing': 'valuations',
   valuations: 'valuations',
   pricing: 'valuations',
+  draft: 'draft',
   pickem: 'pickem',
+  'draft-capital': 'capital',
+  capital: 'capital',
+  'keepers-budgets': 'keepers',
+  keepers: 'keepers',
+  budgets: 'keepers',
 };
+
+const OFFSEASON_VIEWS = new Set(['valuations', 'draft', 'pickem', 'capital', 'keepers']);
 
 function getViewFromHash() {
   if (typeof window === 'undefined') return 'weekly';
@@ -75,6 +88,11 @@ function App() {
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [allSeasonData, setAllSeasonData] = useState({});
 
+  const [activeGroup, setActiveGroup] = useState(() => {
+    const initialView = getViewFromHash();
+    return OFFSEASON_VIEWS.has(initialView) ? 'offseason' : 'season';
+  });
+
   // Synchronize browser URL hash with currentView
   useEffect(() => {
     const slug = VIEW_TO_HASH[currentView] || currentView;
@@ -82,7 +100,17 @@ function App() {
     if (window.location.hash !== targetHash) {
       window.location.hash = targetHash;
     }
+    setActiveGroup(OFFSEASON_VIEWS.has(currentView) ? 'offseason' : 'season');
   }, [currentView]);
+
+  const handleGroupChange = (group) => {
+    setActiveGroup(group);
+    if (group === 'season' && OFFSEASON_VIEWS.has(currentView)) {
+      setCurrentView('weekly');
+    } else if (group === 'offseason' && !OFFSEASON_VIEWS.has(currentView)) {
+      setCurrentView('valuations');
+    }
+  };
 
   // Listen to browser Back/Forward and direct hash navigation
   useEffect(() => {
@@ -491,72 +519,201 @@ function App() {
       {currentView !== 'draft' && (
         <nav className="bg-blue-900 text-white shadow-lg sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
-              <a
-                href="#/matchups"
-                onClick={(e) => { e.preventDefault(); setCurrentView('weekly'); }}
-                className="font-black text-xl tracking-wider text-white hover:text-blue-200 transition-colors cursor-pointer"
-              >
-                FANTASY LEAGUE
-              </a>
-              <div className="flex items-center space-x-4">
-                <a href="#/matchups" onClick={(e) => { e.preventDefault(); setCurrentView('weekly'); }} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'weekly' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Matchups</a>
-                <a href="#/standings" onClick={(e) => { e.preventDefault(); setCurrentView('summary'); }} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'summary' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Standings</a>
-                <a href="#/teams" onClick={(e) => { e.preventDefault(); setCurrentView('teams'); }} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'teams' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Teams</a>
-                <a href="#/transactions" onClick={(e) => { e.preventDefault(); setCurrentView('transactions'); }} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'transactions' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Transactions</a>
-                <a href="#/players" onClick={(e) => { e.preventDefault(); setCurrentView('players'); }} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'players' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Players</a>
-                <a href="#/valuations" onClick={(e) => { e.preventDefault(); setCurrentView('valuations'); }} className={`px-3 py-2 rounded text-sm font-bold flex items-center gap-1.5 transition-colors ${currentView === 'valuations' ? 'bg-indigo-600 text-white ring-2 ring-indigo-400' : 'hover:bg-blue-800'}`} title="Player Pricing & Valuations">
-                  <span>💰</span>
-                  <span>Valuations</span>
-                </a>
-                <a href="#/disparities" onClick={(e) => { e.preventDefault(); setCurrentView('disparities'); }} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'disparities' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Disparities</a>
-                <a href="#/progression" onClick={(e) => { e.preventDefault(); setCurrentView('progression'); }} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'progression' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Progression</a>
-                <a href="#/highlights" onClick={(e) => { e.preventDefault(); setCurrentView('highlights'); }} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'highlights' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Highlights</a>
-                <a href="#/fantasycast" onClick={(e) => { e.preventDefault(); setCurrentView('fantasycast'); }} className={`px-3 py-2 rounded text-sm font-bold flex items-center gap-2 ${currentView === 'fantasycast' ? 'bg-red-700' : 'hover:bg-blue-800'}`}>
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-300 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                  </span>
-                  FantasyCast
-                </a>
-
+            {/* Top Bar: Brand, Group Selector, Controls */}
+            <div className="flex items-center justify-between h-14 border-b border-blue-800/80">
+              <div className="flex items-center gap-4 sm:gap-6">
                 <a
-                  href="#/draft"
-                  onClick={(e) => { e.preventDefault(); setCurrentView('draft'); }}
-                  className={`px-3 py-2 rounded text-sm font-bold flex items-center gap-1.5 transition-colors shadow-xs ${
-                    currentView === 'draft' ? 'bg-amber-600 text-white ring-2 ring-amber-400' : 'bg-amber-700/80 hover:bg-amber-600 text-white'
-                  }`}
-                  title="Draft War Room"
+                  href="#/matchups"
+                  onClick={(e) => { e.preventDefault(); setCurrentView('weekly'); }}
+                  className="font-black text-lg sm:text-xl tracking-wider text-white hover:text-blue-200 transition-colors cursor-pointer flex items-center gap-2"
                 >
-                  <span>🎯</span>
-                  <span>Draft Room</span>
+                  <span className="text-xl">⚾</span>
+                  <span>FANTASY LEAGUE</span>
                 </a>
 
-                <a
-                  href="#/pickem"
-                  onClick={(e) => { e.preventDefault(); setCurrentView('pickem'); }}
-                  className={`px-3 py-2 rounded text-sm font-bold flex items-center gap-1.5 transition-colors shadow-xs ${
-                    currentView === 'pickem' ? 'bg-purple-700 text-white ring-2 ring-purple-400' : 'hover:bg-blue-800'
-                  }`}
-                  title="Annual MLB Pick'em"
-                >
-                  <span>🔮</span>
-                  <span>Pick'em</span>
-                </a>
+                {/* Season vs. Off-Season Group Switcher */}
+                <div className="flex items-center bg-blue-950/80 p-1 rounded-xl border border-blue-800 shadow-inner">
+                  <button
+                    onClick={() => handleGroupChange('season')}
+                    className={`px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
+                      activeGroup === 'season'
+                        ? 'bg-blue-600 text-white shadow-sm ring-1 ring-blue-400'
+                        : 'text-blue-300 hover:text-white hover:bg-blue-800/50'
+                    }`}
+                  >
+                    <span>⚾</span>
+                    <span>Season</span>
+                  </button>
+                  <button
+                    onClick={() => handleGroupChange('offseason')}
+                    className={`px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
+                      activeGroup === 'offseason'
+                        ? 'bg-amber-600 text-white shadow-sm ring-1 ring-amber-400'
+                        : 'text-amber-200 hover:text-white hover:bg-blue-800/50'
+                    }`}
+                  >
+                    <span>🌴</span>
+                    <span>Off-Season</span>
+                  </button>
+                </div>
+              </div>
 
+              {/* Right Side: Season Selector & Refresh */}
+              <div className="flex items-center space-x-2">
                 <select
                   value={selectedSeason}
                   onChange={e => handleSeasonChange(parseInt(e.target.value))}
-                  className="ml-4 bg-blue-800 text-white text-sm font-bold rounded px-2 py-1 border border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer"
+                  className="bg-blue-800 text-white text-xs font-bold rounded-lg px-2.5 py-1.5 border border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer"
                 >
                   {AVAILABLE_SEASONS.map(y => (
                     <option key={y} value={y}>{y}</option>
                   ))}
                 </select>
-                <button onClick={handleRefresh} className="ml-2 p-2 text-blue-200 hover:text-white cursor-pointer" title="Clear Cache & Reload">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                <button
+                  onClick={handleRefresh}
+                  className="p-1.5 text-blue-200 hover:text-white cursor-pointer rounded-lg hover:bg-blue-800 transition-colors"
+                  title="Clear Cache & Reload"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                 </button>
               </div>
+            </div>
+
+            {/* Bottom Bar: Sub-Navigation for Active Group */}
+            <div className="flex items-center space-x-1.5 py-2 overflow-x-auto scrollbar-none text-xs">
+              {activeGroup === 'season' ? (
+                <>
+                  <a
+                    href="#/matchups"
+                    onClick={(e) => { e.preventDefault(); setCurrentView('weekly'); }}
+                    className={`px-3 py-1.5 rounded-lg font-bold transition-colors ${currentView === 'weekly' ? 'bg-blue-700 text-white shadow-xs' : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'}`}
+                  >
+                    Matchups
+                  </a>
+                  <a
+                    href="#/standings"
+                    onClick={(e) => { e.preventDefault(); setCurrentView('summary'); }}
+                    className={`px-3 py-1.5 rounded-lg font-bold transition-colors ${currentView === 'summary' ? 'bg-blue-700 text-white shadow-xs' : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'}`}
+                  >
+                    Standings
+                  </a>
+                  <a
+                    href="#/teams"
+                    onClick={(e) => { e.preventDefault(); setCurrentView('teams'); }}
+                    className={`px-3 py-1.5 rounded-lg font-bold transition-colors ${currentView === 'teams' ? 'bg-blue-700 text-white shadow-xs' : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'}`}
+                  >
+                    Teams
+                  </a>
+                  <a
+                    href="#/transactions"
+                    onClick={(e) => { e.preventDefault(); setCurrentView('transactions'); }}
+                    className={`px-3 py-1.5 rounded-lg font-bold transition-colors ${currentView === 'transactions' ? 'bg-blue-700 text-white shadow-xs' : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'}`}
+                  >
+                    Transactions
+                  </a>
+                  <a
+                    href="#/players"
+                    onClick={(e) => { e.preventDefault(); setCurrentView('players'); }}
+                    className={`px-3 py-1.5 rounded-lg font-bold transition-colors ${currentView === 'players' ? 'bg-blue-700 text-white shadow-xs' : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'}`}
+                  >
+                    Players
+                  </a>
+                  <a
+                    href="#/disparities"
+                    onClick={(e) => { e.preventDefault(); setCurrentView('disparities'); }}
+                    className={`px-3 py-1.5 rounded-lg font-bold transition-colors ${currentView === 'disparities' ? 'bg-blue-700 text-white shadow-xs' : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'}`}
+                  >
+                    Disparities
+                  </a>
+                  <a
+                    href="#/progression"
+                    onClick={(e) => { e.preventDefault(); setCurrentView('progression'); }}
+                    className={`px-3 py-1.5 rounded-lg font-bold transition-colors ${currentView === 'progression' ? 'bg-blue-700 text-white shadow-xs' : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'}`}
+                  >
+                    Progression
+                  </a>
+                  <a
+                    href="#/highlights"
+                    onClick={(e) => { e.preventDefault(); setCurrentView('highlights'); }}
+                    className={`px-3 py-1.5 rounded-lg font-bold transition-colors ${currentView === 'highlights' ? 'bg-blue-700 text-white shadow-xs' : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'}`}
+                  >
+                    Highlights
+                  </a>
+                  <a
+                    href="#/fantasycast"
+                    onClick={(e) => { e.preventDefault(); setCurrentView('fantasycast'); }}
+                    className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-colors ${currentView === 'fantasycast' ? 'bg-red-700 text-white shadow-xs' : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'}`}
+                  >
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-300 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                    </span>
+                    FantasyCast
+                  </a>
+                </>
+              ) : (
+                <>
+                  <a
+                    href="#/keeper-prices"
+                    onClick={(e) => { e.preventDefault(); setCurrentView('valuations'); }}
+                    className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-colors ${
+                      currentView === 'valuations' ? 'bg-indigo-600 text-white ring-1 ring-indigo-400 shadow-xs' : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'
+                    }`}
+                    title="Keeper Prices & Player Valuations"
+                  >
+                    <span>💰</span>
+                    <span>Keeper Prices</span>
+                  </a>
+
+                  <a
+                    href="#/draft"
+                    onClick={(e) => { e.preventDefault(); setCurrentView('draft'); }}
+                    className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-colors ${
+                      currentView === 'draft' ? 'bg-amber-600 text-white ring-1 ring-amber-400 shadow-xs' : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'
+                    }`}
+                    title="Draft War Room"
+                  >
+                    <span>🎯</span>
+                    <span>Draft Room</span>
+                  </a>
+
+                  <a
+                    href="#/pickem"
+                    onClick={(e) => { e.preventDefault(); setCurrentView('pickem'); }}
+                    className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-colors ${
+                      currentView === 'pickem' ? 'bg-purple-700 text-white ring-1 ring-purple-400 shadow-xs' : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'
+                    }`}
+                    title="Annual MLB Pick'em"
+                  >
+                    <span>🔮</span>
+                    <span>Pick&apos;em</span>
+                  </a>
+
+                  <a
+                    href="#/draft-capital"
+                    onClick={(e) => { e.preventDefault(); setCurrentView('capital'); }}
+                    className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-colors ${
+                      currentView === 'capital' ? 'bg-teal-600 text-white ring-1 ring-teal-400 shadow-xs' : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'
+                    }`}
+                    title="2027 Draft Capital & Future Pick Ledgers"
+                  >
+                    <span>🎟️</span>
+                    <span>Draft Capital</span>
+                  </a>
+
+                  <a
+                    href="#/keepers-budgets"
+                    onClick={(e) => { e.preventDefault(); setCurrentView('keepers'); }}
+                    className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-colors ${
+                      currentView === 'keepers' ? 'bg-emerald-600 text-white ring-1 ring-emerald-400 shadow-xs' : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'
+                    }`}
+                    title="Keepers, Budget Matrix & Compensation Simulator"
+                  >
+                    <span>💎</span>
+                    <span>Keepers & Budget</span>
+                  </a>
+                </>
+              )}
             </div>
           </div>
         </nav>
@@ -630,12 +787,22 @@ function App() {
           )}
           {currentView === 'valuations' && (
             <PlayerValuationsView
+              allStats={rawData}
               onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
               onOwnerClick={(team) => setSelectedOwner(team)}
             />
           )}
           {currentView === 'pickem' && (
             <PickemView />
+          )}
+          {currentView === 'capital' && (
+            <DraftCapitalView currentUser="Daniel" />
+          )}
+          {currentView === 'keepers' && (
+            <KeepersBudgetsView
+              currentUser="Daniel"
+              onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
+            />
           )}
         </main>
       )}

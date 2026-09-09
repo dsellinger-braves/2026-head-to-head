@@ -2873,9 +2873,9 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
   const [pickStartTime, setPickStartTime] = useState(() => Date.now());
   const [activeTab, setActiveTab] = useState('Pool');
   const [draftTrades, setDraftTrades] = useState(defaultDraftAssetTrades || []);
-  const [teamBudgets, setTeamBudgets] = useState(defaultTeamBudgets?.budgets || []);
-  const [compPicks, setCompPicks] = useState(defaultCompPicks?.comp_picks || []);
-  const [keepers, setKeepers] = useState(defaultKeepers?.keepers || []);
+  const [_teamBudgets, setTeamBudgets] = useState(defaultTeamBudgets?.budgets || []);
+  const [_compPicks, setCompPicks] = useState(defaultCompPicks?.comp_picks || []);
+  const [_keepers, setKeepers] = useState(defaultKeepers?.keepers || []);
   const [showDashboard, setShowDashboard] = useState(false);
   
   // Test mode state
@@ -3845,24 +3845,6 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
               currentUser={currentUser}
             />
           )}
-          {activeTab === 'DraftCapital' && (
-            <DraftCapitalPanel
-              draftTrades={draftTrades}
-              compPicks={compPicks}
-              keepers={keepers}
-              currentUser={currentUser}
-            />
-          )}
-          {activeTab === 'Keepers' && (
-            <KeepersBudgetsPanel
-              teamBudgets={teamBudgets}
-              compPicks={compPicks}
-              keepers={keepers}
-              players={players}
-              currentUser={currentUser}
-              onPlayerClick={setSelectedPlayer}
-            />
-          )}
           {activeTab === 'Feed' && (
             <div style={{ height: '100%', overflowY: 'auto' }}>
               <div style={styles.wrHeader}>Draft Feed</div>
@@ -3907,8 +3889,6 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
             { id: 'Pool', label: 'Pool', icon: '📋' },
             { id: 'Queue', label: 'Queue', icon: '⭐' },
             { id: 'Roster', label: 'Roster', icon: '👥' },
-            { id: 'DraftCapital', label: 'Capital', icon: '🎟️' },
-            { id: 'Keepers', label: 'Keepers', icon: '💎' },
             { id: 'Feed', label: 'Feed', icon: '📢' }
           ].map(tab => (
             <button
@@ -4118,26 +4098,68 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
             <CountdownTimer pickStartTime={pickStartTime} />
 
             {onSwitchView && (
-              <button
-                onClick={() => onSwitchView('summary')}
-                style={{
-                  background: '#1e3a8a',
-                  color: '#fff',
-                  border: '1px solid #3b82f6',
-                  padding: '8px 14px',
-                  borderRadius: '6px',
-                  fontSize: '13px',
-                  fontWeight: 'bold',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  cursor: 'pointer'
-                }}
-                title="Switch to in-season dashboard"
-              >
-                <span>📊</span>
-                <span>League Dashboard</span>
-              </button>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <button
+                  onClick={() => onSwitchView('capital')}
+                  style={{
+                    background: '#2e1065',
+                    color: '#d8b4fe',
+                    border: '1px solid #7e22ce',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    fontSize: '13px',
+                    fontWeight: 'bold',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    cursor: 'pointer'
+                  }}
+                  title="View 2027 Draft Capital & Traded Picks"
+                >
+                  <span>🎟️</span>
+                  <span>Draft Capital</span>
+                </button>
+                <button
+                  onClick={() => onSwitchView('keepers')}
+                  style={{
+                    background: '#064e3b',
+                    color: '#6ee7b7',
+                    border: '1px solid #059669',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    fontSize: '13px',
+                    fontWeight: 'bold',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    cursor: 'pointer'
+                  }}
+                  title="View Keepers & Budgets Panel"
+                >
+                  <span>💎</span>
+                  <span>Keepers & Budget</span>
+                </button>
+                <button
+                  onClick={() => onSwitchView('weekly')}
+                  style={{
+                    background: '#1e3a8a',
+                    color: '#fff',
+                    border: '1px solid #3b82f6',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    fontSize: '13px',
+                    fontWeight: 'bold',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    cursor: 'pointer'
+                  }}
+                  title="Return to Main League Site"
+                >
+                  <span>⚾</span>
+                  <span>League Site</span>
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -4222,7 +4244,7 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
         {showDashboard && (
           <div style={styles.warRoomPanel}>
             <div style={styles.panelNav}>
-              {['Pool', 'Roster', 'MyPicks', 'DraftCapital', 'Keepers', 'DraftLog', 'Analysis', 'Standings'].map(tab => (
+              {['Pool', 'Roster', 'MyPicks', 'DraftLog', 'Analysis', 'Standings'].map(tab => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -4231,8 +4253,6 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
                   {tab === 'Pool' ? 'Draft Pool' : 
                    tab === 'Roster' ? 'Roster Manager' : 
                    tab === 'MyPicks' ? 'My Picks' :
-                   tab === 'DraftCapital' ? 'Draft Capital (2027)' :
-                   tab === 'Keepers' ? 'Keepers & Budgets' :
                    tab === 'DraftLog' ? 'Draft Log' :
                    tab === 'Analysis' ? 'Analysis History' :
                    'Projected Standings'}
@@ -4273,26 +4293,6 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
                 players={players}
                 currentUser={currentUser}
                 draftTrades={draftTrades}
-              />
-            </div>
-
-            <div style={{ ...styles.panelContent, display: activeTab === 'DraftCapital' ? 'grid' : 'none' }}>
-              <DraftCapitalPanel
-                draftTrades={draftTrades}
-                compPicks={compPicks}
-                keepers={keepers}
-                currentUser={currentUser}
-              />
-            </div>
-
-            <div style={{ ...styles.panelContent, display: activeTab === 'Keepers' ? 'grid' : 'none' }}>
-              <KeepersBudgetsPanel
-                teamBudgets={teamBudgets}
-                compPicks={compPicks}
-                keepers={keepers}
-                players={players}
-                currentUser={currentUser}
-                onPlayerClick={setSelectedPlayer}
               />
             </div>
 

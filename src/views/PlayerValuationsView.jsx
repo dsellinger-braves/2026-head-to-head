@@ -1,8 +1,12 @@
 // src/views/PlayerValuationsView.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../supabaseClient';
+import defaultKeepers from '../data/keeperInput2026.json';
+import { TEAMS } from '../schedule';
 
-export default function PlayerValuationsView({ onPlayerClick }) {
+const FANTASY_MANAGERS = ["Adrian", "Alex", "Anil", "Daniel", "Garrett", "Mark", "Preston", "Tim", "Will"];
+
+export default function PlayerValuationsView({ allStats = [], onPlayerClick, onOwnerClick }) {
   const [modelType, setModelType] = useState('3_YEAR_KEEPER'); // '3_YEAR_KEEPER' or 'SINGLE_SEASON'
   const [valuations, setValuations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -11,12 +15,55 @@ export default function PlayerValuationsView({ onPlayerClick }) {
   // Filters
   const [searchText, setSearchText] = useState('');
   const [posFilter, setPosFilter] = useState('ALL');
-  const [valueFilter, setValueFilter] = useState('ALL'); // 'ALL', 'BARGAINS', 'OVERVALUED'
+  const [teamFilter, setTeamFilter] = useState('ALL'); // 'ALL', 'FA', or manager name
   const [priceFilter, setPriceFilter] = useState('ALL'); // 'ALL', 'TIER_TOP', 'TIER_MID', 'TIER_LOW', 'TIER_FREE'
   const [expandedPlayerId, setExpandedPlayerId] = useState(null);
 
   // Sorting
   const [sortConfig, setSortConfig] = useState({ key: 'model_rank', direction: 'asc' });
+
+  // Compute Fantasy Team Ownership Map
+  const playerOwnershipMap = useMemo(() => {
+    const map = {}; // playerId -> { owner, teamId, isKeeper }
+
+    // 1. Ingest declared 2026 keepers (45 players)
+    (defaultKeepers?.keepers || defaultKeepers || []).forEach(k => {
+      const pid = parseInt(k.espn_player_id || k.player_id);
+      if (pid) {
+        map[pid] = {
+          owner: k.owner === 'Dan' ? 'Daniel' : k.owner,
+          teamId: k.team_id,
+          isKeeper: true,
+        };
+      }
+    });
+
+    // 2. Cross-reference with active season rosters from allStats (latest scoring period)
+    if (allStats && allStats.length > 0) {
+      const latestRoster = {};
+      allStats.forEach(r => {
+        const pid = r.player_id;
+        if (!pid) return;
+        if (!latestRoster[pid] || r.scoring_period_id > latestRoster[pid].period) {
+          latestRoster[pid] = { period: r.scoring_period_id, teamId: r.team_id };
+        }
+      });
+
+      Object.entries(latestRoster).forEach(([pidStr, obj]) => {
+        const pid = parseInt(pidStr);
+        const teamInfo = TEAMS[obj.teamId];
+        if (teamInfo && teamInfo.id !== 99) {
+          map[pid] = {
+            owner: teamInfo.name === 'Dan' ? 'Daniel' : teamInfo.name,
+            teamId: obj.teamId,
+            isKeeper: map[pid]?.isKeeper || false,
+          };
+        }
+      });
+    }
+
+    return map;
+  }, [allStats]);
 
   // Fetch valuations from Supabase on mount
   useEffect(() => {
@@ -59,7 +106,6 @@ export default function PlayerValuationsView({ onPlayerClick }) {
                 model_price: kPrice,
                 espn_rank: eRank,
                 espn_price: ePrice,
-                surplus_value: kPrice - ePrice,
                 category_prs: {},
                 projected_stats: {},
               };
@@ -83,15 +129,17 @@ export default function PlayerValuationsView({ onPlayerClick }) {
     return valuations.filter((v) => v.model_type === modelType);
   }, [valuations, modelType]);
 
-  // Apply search, position, value filter, and price filter
+  // Apply search, position, fantasy team filter, and price filter
   const filteredPlayers = useMemo(() => {
     return currentModelData.filter((p) => {
       // Search
       if (searchText) {
         const query = searchText.toLowerCase();
         const matchesName = p.player_name?.toLowerCase().includes(query);
-        const matchesTeam = p.team?.toLowerCase().includes(query);
-        if (!matchesName && !matchesTeam) return false;
+        const matchesMlbTeam = p.team?.toLowerCase().includes(query);
+        const owner = playerOwnershipMap[p.player_id]?.owner?.toLowerCase() || '';
+        const matchesOwner = owner.includes(query);
+        if (!matchesName && !matchesMlbTeam && !matchesOwner) return false;
       }
 
       // Position
@@ -108,9 +156,10 @@ export default function PlayerValuationsView({ onPlayerClick }) {
         }
       }
 
-      // Value Filter
-      if (valueFilter === 'BARGAINS' && (p.surplus_value || 0) <= 0) return false;
-      if (valueFilter === 'OVERVALUED' && (p.surplus_value || 0) >= 0) return false;
+      // Fantasy Team Filter
+      const ownership = playerOwnershipMap[p.player_id];
+      if (teamFilter === 'FA' && ownership?.owner) return false;
+      if (teamFilter !== 'ALL' && teamFilter !== 'FA' && ownership?.owner !== teamFilter) return false;
 
       // Price Tier Filter
       const price = p.model_price || 0;
@@ -121,7 +170,7 @@ export default function PlayerValuationsView({ onPlayerClick }) {
 
       return true;
     });
-  }, [currentModelData, searchText, posFilter, valueFilter, priceFilter]);
+  }, [currentModelData, searchText, posFilter, teamFilter, priceFilter, playerOwnershipMap]);
 
   // Sorting
   const sortedPlayers = useMemo(() => {
@@ -136,12 +185,18 @@ export default function PlayerValuationsView({ onPlayerClick }) {
         return sortConfig.direction === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
       }
 
+      if (sortConfig.key === 'fantasy_team') {
+        const aOwner = playerOwnershipMap[a.player_id]?.owner || 'ZZZ_FA';
+        const bOwner = playerOwnershipMap[b.player_id]?.owner || 'ZZZ_FA';
+        return sortConfig.direction === 'asc' ? aOwner.localeCompare(bOwner) : bOwner.localeCompare(aOwner);
+      }
+
       const aNum = parseFloat(aVal) || 0;
       const bNum = parseFloat(bVal) || 0;
       return sortConfig.direction === 'asc' ? aNum - bNum : bNum - aNum;
     });
     return list;
-  }, [filteredPlayers, sortConfig]);
+  }, [filteredPlayers, sortConfig, playerOwnershipMap]);
 
   const requestSort = (key) => {
     setSortConfig((prev) => ({
@@ -149,22 +204,6 @@ export default function PlayerValuationsView({ onPlayerClick }) {
       direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc',
     }));
   };
-
-  // Summary Metrics
-  const summaryMetrics = useMemo(() => {
-    if (!currentModelData.length) return null;
-
-    const topHitter = currentModelData.find((p) => !(p.position || '').includes('SP') && !(p.position || '').includes('RP'));
-    const topPitcher = currentModelData.find((p) => (p.position || '').includes('SP') || (p.position || '').includes('RP'));
-
-    const bargains = [...currentModelData].sort((a, b) => (b.surplus_value || 0) - (a.surplus_value || 0));
-    const topBargain = bargains[0];
-
-    const totalValued = currentModelData.length;
-    const totalPositiveDollar = currentModelData.filter((p) => (p.model_price || 0) > 0).length;
-
-    return { topHitter, topPitcher, topBargain, totalValued, totalPositiveDollar };
-  }, [currentModelData]);
 
   return (
     <div className="space-y-6 animate-fadeIn pb-12">
@@ -176,10 +215,10 @@ export default function PlayerValuationsView({ onPlayerClick }) {
           <div>
             <div className="flex items-center gap-2">
               <span className="text-2xl">💰</span>
-              <h1 className="text-2xl font-black tracking-tight text-white">Player Valuations & Pricing Engine</h1>
+              <h1 className="text-2xl font-black tracking-tight text-white">Keeper Prices & Player Valuations</h1>
             </div>
             <p className="text-slate-400 text-sm mt-1 max-w-2xl">
-              Automated auction prices and 9-category Player Ratings (PR) reverse-engineered from FanGraphs ZiPS and Depth Charts.
+              Projected auction dollar values, multi-year keeper costs, and fantasy team ownership across all MLB players.
             </p>
           </div>
 
@@ -214,92 +253,19 @@ export default function PlayerValuationsView({ onPlayerClick }) {
             <span className="text-blue-400 font-semibold">Methodology:</span>
             {modelType === '3_YEAR_KEEPER' ? (
               <span>
-                Weighted blend across 3 seasons (<strong>60% 2026</strong> + <strong>30% 2027</strong> + <strong>10% 2028</strong>). Starters & relievers evaluated on 9 scoring categories with QS/SV+H role protection.
+                Weighted blend across 3 seasons (<strong>60% 2026</strong> + <strong>30% 2027</strong> + <strong>10% 2028</strong>). Starters & relievers evaluated on 10 scoring categories with QS/SV+H role protection.
               </span>
             ) : (
               <span>
-                Workbook Single-Year Methodology: Combines <strong>2026 Actuals YTD</strong> + <strong>FanGraphs ROS Projections</strong>, evaluated across 3 seasons (<strong>60% Y1</strong> + <strong>30% Y2</strong> + <strong>10% Y3</strong>) using graduated volume thresholds.
+                Workbook Single-Year Methodology: Combines <strong>2026 Actuals YTD</strong> + <strong>FanGraphs ROS Projections</strong>, evaluated across 3 seasons (<strong>60% Y1</strong> + <strong>30% Y2</strong> + <strong>10% Y3</strong>).
               </span>
             )}
-          </div>
-          <div className="hidden lg:flex items-center gap-3">
-            <span className="inline-flex items-center gap-1 text-slate-500">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80"></span> Surplus Bargain
-            </span>
-            <span className="inline-flex items-center gap-1 text-slate-500">
-              <span className="w-2.5 h-2.5 rounded-full bg-rose-500/80"></span> Overvalued
-            </span>
           </div>
         </div>
       </div>
 
-      {/* KPI Cards */}
-      {summaryMetrics && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 shadow-md flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-xl text-blue-400">
-              ⚾
-            </div>
-            <div>
-              <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Top Value Hitter</div>
-              <div className="text-base font-black text-white truncate max-w-[160px]">
-                {summaryMetrics.topHitter?.player_name || 'N/A'}
-              </div>
-              <div className="text-xs text-blue-400 font-bold">
-                ${summaryMetrics.topHitter?.model_price || 0} • {summaryMetrics.topHitter?.total_pr?.toFixed(2)} PR
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 shadow-md flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-xl text-amber-400">
-              🔥
-            </div>
-            <div>
-              <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Top Value Pitcher</div>
-              <div className="text-base font-black text-white truncate max-w-[160px]">
-                {summaryMetrics.topPitcher?.player_name || 'N/A'}
-              </div>
-              <div className="text-xs text-amber-400 font-bold">
-                ${summaryMetrics.topPitcher?.model_price || 0} • {summaryMetrics.topPitcher?.total_pr?.toFixed(2)} PR
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 shadow-md flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-xl text-emerald-400">
-              💎
-            </div>
-            <div>
-              <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Biggest Draft Bargain</div>
-              <div className="text-base font-black text-white truncate max-w-[160px]">
-                {summaryMetrics.topBargain?.player_name || 'N/A'}
-              </div>
-              <div className="text-xs text-emerald-400 font-bold">
-                +${summaryMetrics.topBargain?.surplus_value || 0} Surplus Value
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 shadow-md flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-xl text-indigo-400">
-              📊
-            </div>
-            <div>
-              <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Universe Valued</div>
-              <div className="text-base font-black text-white">
-                {summaryMetrics.totalValued.toLocaleString()} Players
-              </div>
-              <div className="text-xs text-indigo-400 font-bold">
-                {summaryMetrics.totalPositiveDollar} Players with &gt;$0 Value
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Filter Toolbar */}
-      <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 shadow-md flex flex-wrap items-center justify-between gap-3">
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-md flex flex-wrap items-center justify-between gap-3">
         {/* Positional Tabs */}
         <div className="flex flex-wrap items-center gap-1">
           {['ALL', 'C', '1B', '2B', '3B', 'SS', 'OF', 'SP', 'RP', 'DH'].map((pos) => (
@@ -321,22 +287,28 @@ export default function PlayerValuationsView({ onPlayerClick }) {
         <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
           <input
             type="text"
-            placeholder="Search player or team..."
+            placeholder="Search player, team, owner..."
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 w-full sm:w-48"
           />
 
+          {/* Fantasy Team / Owner Filter */}
           <select
-            value={valueFilter}
-            onChange={(e) => setValueFilter(e.target.value)}
+            value={teamFilter}
+            onChange={(e) => setTeamFilter(e.target.value)}
             className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500 cursor-pointer"
           >
-            <option value="ALL">All Values</option>
-            <option value="BARGAINS">🟢 Bargains (Hefty &gt; ESPN)</option>
-            <option value="OVERVALUED">🔴 Overvalued (ESPN &gt; Hefty)</option>
+            <option value="ALL">All Fantasy Rosters</option>
+            <option value="FA">Free Agents (Unowned)</option>
+            {FANTASY_MANAGERS.map((m) => (
+              <option key={m} value={m}>
+                {m}&apos;s Team
+              </option>
+            ))}
           </select>
 
+          {/* Price Filter */}
           <select
             value={priceFilter}
             onChange={(e) => setPriceFilter(e.target.value)}
@@ -348,33 +320,18 @@ export default function PlayerValuationsView({ onPlayerClick }) {
             <option value="TIER_LOW">Value ($1 - $9)</option>
             <option value="TIER_FREE">End of Bench ($0)</option>
           </select>
-
-          {(searchText || posFilter !== 'ALL' || valueFilter !== 'ALL' || priceFilter !== 'ALL') && (
-            <button
-              onClick={() => {
-                setSearchText('');
-                setPosFilter('ALL');
-                setValueFilter('ALL');
-                setPriceFilter('ALL');
-              }}
-              className="text-xs text-slate-400 hover:text-white px-2 py-1 bg-slate-800/80 rounded-md cursor-pointer transition-colors"
-              title="Reset Filters"
-            >
-              ✕ Reset
-            </button>
-          )}
         </div>
       </div>
 
-      {/* Main Table */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl shadow-xl overflow-hidden">
+      {/* Main Valuations Table */}
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
         {loading ? (
-          <div className="py-20 text-center space-y-3">
-            <div className="inline-block w-8 h-8 border-3 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-slate-400 text-sm font-medium">Computing live valuations & prices...</p>
+          <div className="py-24 text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-3"></div>
+            <div className="text-slate-400 text-sm font-semibold">Loading player keeper prices & valuations...</div>
           </div>
         ) : error ? (
-          <div className="py-16 text-center text-rose-400 text-sm font-medium">
+          <div className="py-16 text-center text-rose-400 text-sm font-semibold">
             {error}
           </div>
         ) : sortedPlayers.length === 0 ? (
@@ -399,7 +356,13 @@ export default function PlayerValuationsView({ onPlayerClick }) {
                     Player {sortConfig.key === 'player_name' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
                   </th>
                   <th className="py-3 px-3 text-center">Pos</th>
-                  <th className="py-3 px-3 text-center">Team</th>
+                  <th className="py-3 px-3 text-center">MLB</th>
+                  <th
+                    onClick={() => requestSort('fantasy_team')}
+                    className="py-3 px-3 text-center cursor-pointer hover:text-white transition-colors"
+                  >
+                    Fantasy Team {sortConfig.key === 'fantasy_team' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
+                  </th>
                   <th
                     onClick={() => requestSort('model_price')}
                     className="py-3 px-4 text-right cursor-pointer hover:text-white transition-colors"
@@ -413,12 +376,6 @@ export default function PlayerValuationsView({ onPlayerClick }) {
                     ESPN Price {sortConfig.key === 'espn_price' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
                   </th>
                   <th
-                    onClick={() => requestSort('surplus_value')}
-                    className="py-3 px-4 text-right cursor-pointer hover:text-white transition-colors"
-                  >
-                    Surplus Value {sortConfig.key === 'surplus_value' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
-                  </th>
-                  <th
                     onClick={() => requestSort('total_pr')}
                     className="py-3 px-4 text-right cursor-pointer hover:text-white transition-colors"
                   >
@@ -429,10 +386,11 @@ export default function PlayerValuationsView({ onPlayerClick }) {
               </thead>
               <tbody className="divide-y divide-slate-800/60 font-medium text-slate-200">
                 {sortedPlayers.slice(0, 250).map((player) => {
-                  const surplus = player.surplus_value || 0;
                   const isExpanded = expandedPlayerId === player.player_id;
                   const cats = player.category_prs || {};
                   const isPitcher = (player.position || '').includes('SP') || (player.position || '').includes('RP');
+                  const ownership = playerOwnershipMap[player.player_id];
+                  const ownerName = ownership?.owner;
 
                   return (
                     <React.Fragment key={`${player.player_id}-${player.model_type}`}>
@@ -447,22 +405,15 @@ export default function PlayerValuationsView({ onPlayerClick }) {
 
                         {/* Player */}
                         <td className="py-3 px-4">
-                          <div className="flex items-center gap-2">
-                            <span
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (onPlayerClick) onPlayerClick(player.player_id, player.player_name);
-                              }}
-                              className="font-bold text-white hover:text-blue-400 hover:underline cursor-pointer"
-                            >
-                              {player.player_name}
-                            </span>
-                            {player.model_rank <= 10 && (
-                              <span className="text-[10px] px-1.5 py-0.5 rounded font-black bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                                TOP 10
-                              </span>
-                            )}
-                          </div>
+                          <span
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (onPlayerClick) onPlayerClick(player.player_id, player.player_name);
+                            }}
+                            className="font-bold text-white hover:text-blue-400 hover:underline cursor-pointer"
+                          >
+                            {player.player_name}
+                          </span>
                         </td>
 
                         {/* Pos */}
@@ -472,9 +423,36 @@ export default function PlayerValuationsView({ onPlayerClick }) {
                           </span>
                         </td>
 
-                        {/* Team */}
+                        {/* MLB Team */}
                         <td className="py-3 px-3 text-center text-slate-400 font-semibold">
                           {player.team || 'FA'}
+                        </td>
+
+                        {/* Fantasy Team / Owner */}
+                        <td className="py-3 px-3 text-center">
+                          {ownerName ? (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (onOwnerClick && ownership.teamId) {
+                                  onOwnerClick(TEAMS[ownership.teamId]);
+                                }
+                              }}
+                              className={`px-2.5 py-0.5 rounded-full text-[11px] font-black tracking-tight inline-flex items-center gap-1 transition-all ${
+                                ownership.isKeeper
+                                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30'
+                                  : 'bg-blue-500/20 text-blue-300 border border-blue-500/40 hover:bg-blue-500/30'
+                              }`}
+                              title={ownership.isKeeper ? `${ownerName} (Official Keeper)` : `${ownerName}'s Roster`}
+                            >
+                              <span>{ownership.isKeeper ? '👑' : '⚾'}</span>
+                              <span>{ownerName}</span>
+                            </button>
+                          ) : (
+                            <span className="text-slate-600 text-[11px] font-medium">
+                              Free Agent
+                            </span>
+                          )}
                         </td>
 
                         {/* Hefty Price */}
@@ -502,21 +480,6 @@ export default function PlayerValuationsView({ onPlayerClick }) {
                           <span className="text-[10px] text-slate-500">
                             (#{player.espn_rank || 999})
                           </span>
-                        </td>
-
-                        {/* Surplus Value */}
-                        <td className="py-3 px-4 text-right">
-                          {surplus > 0 ? (
-                            <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                              +${surplus}
-                            </span>
-                          ) : surplus < 0 ? (
-                            <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-black bg-rose-500/20 text-rose-400 border border-rose-500/30">
-                              -${Math.abs(surplus)}
-                            </span>
-                          ) : (
-                            <span className="text-slate-500 font-semibold">$0</span>
-                          )}
                         </td>
 
                         {/* Total PR */}
@@ -571,7 +534,7 @@ export default function PlayerValuationsView({ onPlayerClick }) {
                               {/* PR Category Grid */}
                               <div className="bg-slate-900 border border-slate-800 rounded-lg p-3">
                                 <div className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-2">
-                                  9-Category Rating Contribution
+                                  Category Rating Contribution
                                 </div>
                                 <div className="grid grid-cols-5 gap-2 text-center">
                                   {!isPitcher ? (
@@ -594,27 +557,45 @@ export default function PlayerValuationsView({ onPlayerClick }) {
                                 </div>
                               </div>
 
-                              {/* Projection Stats Grid */}
+                              {/* Underlying Projections Grid - Matches 10 Scored Categories */}
                               <div className="bg-slate-900 border border-slate-800 rounded-lg p-3">
                                 <div className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-2">
-                                  Underlying FanGraphs Projections
+                                  Underlying FanGraphs Projections (Scored Categories)
                                 </div>
                                 <div className="grid grid-cols-5 gap-2 text-center text-slate-300">
                                   {!isPitcher ? (
                                     <>
-                                      <StatBox label="AB" val={player.projected_stats?.AB} />
-                                      <StatBox label="R" val={player.projected_stats?.R} />
-                                      <StatBox label="HR" val={player.projected_stats?.HR} />
-                                      <StatBox label="RBI" val={player.projected_stats?.RBI} />
-                                      <StatBox label="OBP" val={player.projected_stats?.OBP ? player.projected_stats.OBP.toFixed(3) : '-'} />
+                                      <StatBox label="R" val={player.projected_stats?.R ?? '-'} />
+                                      <StatBox label="HR" val={player.projected_stats?.HR ?? '-'} />
+                                      <StatBox label="RBI" val={player.projected_stats?.RBI ?? '-'} />
+                                      <StatBox label="SB" val={player.projected_stats?.SB ?? '-'} />
+                                      <StatBox
+                                        label="OBP"
+                                        val={player.projected_stats?.OBP != null ? Number(player.projected_stats.OBP).toFixed(3).replace(/^0/, '') : '-'}
+                                      />
                                     </>
                                   ) : (
                                     <>
-                                      <StatBox label="IP" val={player.projected_stats?.IP} />
-                                      <StatBox label="K" val={player.projected_stats?.SO} />
-                                      <StatBox label="QS" val={player.projected_stats?.QS} />
-                                      <StatBox label="ERA" val={player.projected_stats?.ERA ? player.projected_stats.ERA.toFixed(2) : '-'} />
-                                      <StatBox label="WHIP" val={player.projected_stats?.WHIP ? player.projected_stats.WHIP.toFixed(2) : '-'} />
+                                      <StatBox label="K" val={player.projected_stats?.SO ?? player.projected_stats?.K ?? '-'} />
+                                      <StatBox label="QS" val={player.projected_stats?.QS ?? '-'} />
+                                      <StatBox
+                                        label="SV+HD"
+                                        val={
+                                          player.projected_stats?.SVHD != null
+                                            ? Math.round(Number(player.projected_stats.SVHD))
+                                            : player.projected_stats?.SV != null
+                                            ? Math.round((Number(player.projected_stats.SV) || 0) + (Number(player.projected_stats.HLD) || 0))
+                                            : '-'
+                                        }
+                                      />
+                                      <StatBox
+                                        label="ERA"
+                                        val={player.projected_stats?.ERA != null ? Number(player.projected_stats.ERA).toFixed(2) : '-'}
+                                      />
+                                      <StatBox
+                                        label="WHIP"
+                                        val={player.projected_stats?.WHIP != null ? Number(player.projected_stats.WHIP).toFixed(2) : '-'}
+                                      />
                                     </>
                                   )}
                                 </div>
@@ -633,7 +614,7 @@ export default function PlayerValuationsView({ onPlayerClick }) {
 
         {sortedPlayers.length > 250 && (
           <div className="p-4 text-center text-xs text-slate-500 border-t border-slate-800 bg-slate-950">
-            Showing top 250 of {sortedPlayers.length} players. Use search or position filters to narrow down.
+            Showing top 250 of {sortedPlayers.length} players. Use search, position, or fantasy team filters to narrow down.
           </div>
         )}
       </div>
