@@ -218,7 +218,7 @@ export default function PlayerValuationsView({ onPlayerClick }) {
               </span>
             ) : (
               <span>
-                Pure <strong>2026 Season Performance</strong>. 9-category volume-weighted PR against qualified baseline thresholds with immediate redraft auction cost mapping.
+                Workbook Single-Year Methodology: Combines <strong>2026 Actuals YTD</strong> + <strong>FanGraphs ROS Projections</strong>, evaluated across 3 seasons (<strong>60% Y1</strong> + <strong>30% Y2</strong> + <strong>10% Y3</strong>) using graduated volume thresholds.
               </span>
             )}
           </div>
