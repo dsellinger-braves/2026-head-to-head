@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { TEAMS } from '../schedule';
-import { aggregateStats, SCORING_CATS, MINUTIAE_STATS, calculateRotoPoints } from '../utils/scoring';
+import { aggregateStats, SCORING_CATS, MINUTIAE_STATS, getStatMeta, calculateRotoPoints } from '../utils/scoring';
 import TeamAvatar from '../components/TeamAvatar';
 import RotoGapView from './RotoGapView';
 
@@ -10,7 +10,7 @@ const MINUTIAE_COLS = [
   // Hitting
   'AB', 'H', '2B', '3B', 'BB', 'SO', 'HBP', 'CS', 'SB_PCT', 'E', 'AVG', 'SLG', 'OPS',
   // Pitching
-  'W', 'L', 'SV', 'HD', 'BS', 'R_Allowed', 'UER', 'HR_Allowed', 'K/9', 'BB/9', 'K/BB'
+  'W', 'L', 'SV', 'HD', 'BS', 'R_Allowed', 'ER', 'UER', 'UER/9', 'UER_PCT', 'HR_Allowed', 'K/9', 'BB/9', 'K/BB'
 ];
 
 const formatStat = (row, cat) => {
@@ -38,11 +38,11 @@ const formatStat = (row, cat) => {
     const n = parseFloat(val);
     return isNaN(n) ? '-' : n.toFixed(3).replace(/^0/, '');
   }
-  if (cat === 'QS_PCT' || cat === 'SB_PCT') {
+  if (cat === 'QS_PCT' || cat === 'SB_PCT' || cat === 'UER_PCT') {
     const n = parseFloat(val);
     return isNaN(n) ? '-' : n.toFixed(1) + '%';
   }
-  if (cat === 'K/9' || cat === 'BB/9' || cat === 'K/BB') {
+  if (cat === 'K/9' || cat === 'BB/9' || cat === 'K/BB' || cat === 'UER/9') {
     const n = parseFloat(val);
     return isNaN(n) ? '-' : n.toFixed(2);
   }
@@ -52,6 +52,61 @@ const formatStat = (row, cat) => {
   }
   const n = parseFloat(val);
   return isNaN(n) ? '-' : Math.round(n);
+};
+
+const formatCellTooltip = (rowData, col, viewMode) => {
+  const meta = getStatMeta(col);
+  const fullName = meta.name || meta.label || col;
+
+  if (viewMode === 'roto') {
+    const pts = rowData[col];
+    return `${fullName}: ${pts !== undefined ? (pts % 1 === 0 ? pts : pts.toFixed(1)) : '-'} Roto Pts`;
+  }
+
+  if (col === 'UER') {
+    const uer = rowData.UER ?? 0;
+    const uer9 = rowData['UER/9'] ?? '0.00';
+    const uerPct = rowData.UER_PCT ?? '0.0';
+    const er = rowData.ER ?? 0;
+    return `${fullName}: ${uer} (${uer9} UER/9 IP · ${uerPct}% of ${er} Earned Runs)`;
+  }
+
+  if (col === 'UER/9') {
+    const uer = rowData.UER ?? 0;
+    const uer9 = rowData['UER/9'] ?? '0.00';
+    const ip = formatStat(rowData, 'IP');
+    return `${fullName}: ${uer9} (${uer} Unearned Runs across ${ip} IP)`;
+  }
+
+  if (col === 'UER_PCT') {
+    const uer = rowData.UER ?? 0;
+    const er = rowData.ER ?? 0;
+    const uerPct = rowData.UER_PCT ?? '0.0';
+    return `${fullName}: ${uerPct}% (${uer} Unearned Runs vs ${er} Earned Runs)`;
+  }
+
+  if (col === 'SB_PCT') {
+    const sb = rowData.SB ?? 0;
+    const cs = rowData.CS ?? 0;
+    const pct = rowData.SB_PCT ?? '0.0';
+    return `${fullName}: ${pct}% (${sb} SB / ${sb + cs} Attempts)`;
+  }
+
+  if (col === 'QS_PCT') {
+    const qs = rowData.QS ?? 0;
+    const gs = rowData.GS ?? 0;
+    const pct = rowData.QS_PCT ?? '0.0';
+    return `${fullName}: ${pct}% (${qs} QS / ${gs} Starts)`;
+  }
+
+  const formatted = formatStat(rowData, col);
+  const raw = rowData[`${col}_raw`];
+  if (raw !== undefined && !isNaN(raw) && String(raw) !== formatted) {
+    const rawStr = typeof raw === 'number' ? (raw % 1 === 0 ? raw : raw.toFixed(4)) : raw;
+    return `${fullName}: ${formatted} (exact: ${rawStr})`;
+  }
+
+  return `${fullName}: ${formatted}`;
 };
 
 function SortIcon({ col, sortKey, sortDir }) {
@@ -103,8 +158,7 @@ export default function TeamsView({ allStats, onOwnerClick, selectedSeason = 202
       const va = parseFloat(valA) || 0;
       const vb = parseFloat(valB) || 0;
       
-      const isLow = (viewMode === 'raw' && SCORING_CATS[sortKey]?.type === 'low') ||
-                    (viewMode === 'minutiae' && MINUTIAE_STATS[sortKey]?.type === 'low');
+      const isLow = getStatMeta(sortKey)?.type === 'low';
       const cmp = isLow ? va - vb : vb - va;
       return sortDir === 'desc' ? cmp : -cmp;
     });
@@ -114,8 +168,7 @@ export default function TeamsView({ allStats, onOwnerClick, selectedSeason = 202
     if (sortKey === col) setSortDir(d => d === 'desc' ? 'asc' : 'desc');
     else {
       setSortKey(col);
-      const isLow = (viewMode === 'raw' && SCORING_CATS[col]?.type === 'low') ||
-                    (viewMode === 'minutiae' && MINUTIAE_STATS[col]?.type === 'low');
+      const isLow = getStatMeta(col)?.type === 'low';
       setSortDir(isLow ? 'asc' : 'desc');
     }
   };
@@ -178,15 +231,17 @@ export default function TeamsView({ allStats, onOwnerClick, selectedSeason = 202
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-10">Team</th>
                 {activeCols.map(col => {
-                  const meta = viewMode === 'minutiae' ? MINUTIAE_STATS[col] : SCORING_CATS[col];
+                  const meta = getStatMeta(col);
                   const label = meta?.label || col;
+                  const fullName = meta?.name || label;
+                  const direction = meta?.type === 'low' ? 'Lower is better' : 'Higher is better';
                   return (
                     <th
                       key={col}
                       onClick={() => handleSort(col)}
                       className={`px-3 py-3 text-center text-xs font-bold uppercase tracking-wider cursor-pointer select-none hover:bg-blue-50 transition-colors whitespace-nowrap
                         ${sortKey === col ? 'text-blue-600 bg-blue-50' : 'text-gray-500'}`}
-                      title={meta?.type === 'low' ? `${label} (Lower is better)` : `${label} (Higher is better)`}
+                      title={`${fullName} (${direction})`}
                     >
                       {label}
                       <SortIcon col={col} sortKey={sortKey} sortDir={sortDir} />
@@ -198,6 +253,7 @@ export default function TeamsView({ allStats, onOwnerClick, selectedSeason = 202
                     onClick={() => handleSort('total')}
                     className={`px-3 py-3 text-center text-xs font-bold uppercase tracking-wider cursor-pointer select-none hover:bg-blue-50 transition-colors whitespace-nowrap
                       ${sortKey === 'total' ? 'text-blue-600 bg-blue-50' : 'text-gray-500'}`}
+                    title="Total Rotisserie Points (Higher is better)"
                   >
                     Total Roto
                     <SortIcon col="total" sortKey={sortKey} sortDir={sortDir} />
@@ -225,7 +281,7 @@ export default function TeamsView({ allStats, onOwnerClick, selectedSeason = 202
                     {activeCols.map(col => (
                       <td
                         key={col}
-                        title={rowData[`${col}_raw`] !== undefined ? rowData[`${col}_raw`] : ''}
+                        title={formatCellTooltip(rowData, col, viewMode)}
                         className={`px-3 py-3 text-center font-mono text-sm whitespace-nowrap
                           ${sortKey === col ? 'text-blue-700 font-bold bg-blue-50/50' : 'text-gray-700'}`}
                       >
@@ -233,7 +289,10 @@ export default function TeamsView({ allStats, onOwnerClick, selectedSeason = 202
                       </td>
                     ))}
                     {viewMode === 'roto' && (
-                      <td className={`px-3 py-3 text-center font-mono text-sm font-black whitespace-nowrap ${sortKey === 'total' ? 'text-blue-700 bg-blue-50/50' : 'text-blue-900'}`}>
+                      <td 
+                        title={`Total Rotisserie Points: ${rowData.total % 1 === 0 ? rowData.total : rowData.total.toFixed(1)}`}
+                        className={`px-3 py-3 text-center font-mono text-sm font-black whitespace-nowrap ${sortKey === 'total' ? 'text-blue-700 bg-blue-50/50' : 'text-blue-900'}`}
+                      >
                         {rowData.total % 1 === 0 ? rowData.total : rowData.total.toFixed(1)}
                       </td>
                     )}

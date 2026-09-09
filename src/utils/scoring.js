@@ -10,56 +10,66 @@ export const LINEUP_SLOTS = {
 // 1. Define your scoring categories
 export const SCORING_CATS = {
   // Hitting
-  R: { label: 'Runs', type: 'high' },   // 'high' means higher is better
-  HR: { label: 'HR', type: 'high' },
-  RBI: { label: 'RBI', type: 'high' },
-  SB: { label: 'SB', type: 'high' },
-  OBP: { label: 'OBP', type: 'high', isRate: true }, // Rate stats need special math
+  R: { label: 'Runs', name: 'Runs Scored', type: 'high' },
+  HR: { label: 'HR', name: 'Home Runs', type: 'high' },
+  RBI: { label: 'RBI', name: 'Runs Batted In', type: 'high' },
+  SB: { label: 'SB', name: 'Stolen Bases', type: 'high' },
+  OBP: { label: 'OBP', name: 'On-Base Percentage', type: 'high', isRate: true },
 
   // Pitching
-  K: { label: 'K', type: 'high' },
-  QS: { label: 'Quality Starts', type: 'high' },
-  'SV+HDs': { label: 'Save+Holds', type: 'high' },
-  ERA: { label: 'ERA', type: 'low' },   // 'low' means lower is better
-  WHIP: { label: 'WHIP', type: 'low', isRate: true }
+  K: { label: 'K', name: 'Strikeouts', type: 'high' },
+  QS: { label: 'Quality Starts', name: 'Quality Starts', type: 'high' },
+  'SV+HDs': { label: 'Save+Holds', name: 'Saves + Holds', type: 'high' },
+  ERA: { label: 'ERA', name: 'Earned Run Average', type: 'low' },
+  WHIP: { label: 'WHIP', name: 'Walks + Hits per Inning Pitched', type: 'low', isRate: true }
 };
 
 export const CATEGORIES = Object.keys(SCORING_CATS).map(key => ({
   id: key,
-  name: SCORING_CATS[key].label,
+  name: SCORING_CATS[key].name || SCORING_CATS[key].label,
   higherIsBetter: SCORING_CATS[key].type === 'high'
 }));
 
-// 1b. Secondary & Minutiae Stats metadata
+// 1b. Secondary & Minutiae Stats metadata with full names for tooltips
 export const MINUTIAE_STATS = {
   // Hitting
-  AB: { label: 'AB', type: 'high' },
-  H: { label: 'H', type: 'high' },
-  '2B': { label: '2B', type: 'high' },
-  '3B': { label: '3B', type: 'high' },
-  BB: { label: 'BB', type: 'high' },
-  SO: { label: 'SO', type: 'low' },
-  HBP: { label: 'HBP', type: 'high' },
-  CS: { label: 'CS', type: 'low' },
-  SB_PCT: { label: 'SB%', type: 'high', isRate: true },
-  E: { label: 'E', type: 'low' },
-  GDP: { label: 'GDP', type: 'low' },
-  AVG: { label: 'AVG', type: 'high', isRate: true },
-  SLG: { label: 'SLG', type: 'high', isRate: true },
-  OPS: { label: 'OPS', type: 'high', isRate: true },
+  PA: { label: 'PA', name: 'Plate Appearances', type: 'high' },
+  AB: { label: 'AB', name: 'At Bats', type: 'high' },
+  H: { label: 'H', name: 'Hits', type: 'high' },
+  '2B': { label: '2B', name: 'Doubles', type: 'high' },
+  '3B': { label: '3B', name: 'Triples', type: 'high' },
+  BB: { label: 'BB', name: 'Base on Balls (Walks)', type: 'high' },
+  SO: { label: 'SO', name: 'Batter Strikeouts', type: 'low' },
+  HBP: { label: 'HBP', name: 'Hit By Pitch', type: 'high' },
+  CS: { label: 'CS', name: 'Caught Stealing', type: 'low' },
+  SB_PCT: { label: 'SB%', name: 'Stolen Base Success %', type: 'high', isRate: true },
+  E: { label: 'E', name: 'Fielding Errors', type: 'low' },
+  GDP: { label: 'GDP', name: 'Grounded into Double Play', type: 'low' },
+  AVG: { label: 'AVG', name: 'Batting Average', type: 'high', isRate: true },
+  SLG: { label: 'SLG', name: 'Slugging Percentage', type: 'high', isRate: true },
+  OPS: { label: 'OPS', name: 'On-Base Plus Slugging', type: 'high', isRate: true },
 
   // Pitching
-  W: { label: 'W', type: 'high' },
-  L: { label: 'L', type: 'low' },
-  R_Allowed: { label: 'RA', type: 'low' },
-  UER: { label: 'UER', type: 'low' },
-  HR_Allowed: { label: 'HRA', type: 'low' },
-  SV: { label: 'SV', type: 'high' },
-  HD: { label: 'HD', type: 'high' },
-  BS: { label: 'BS', type: 'low' },
-  'K/9': { label: 'K/9', type: 'high', isRate: true },
-  'BB/9': { label: 'BB/9', type: 'low', isRate: true },
-  'K/BB': { label: 'K/BB', type: 'high', isRate: true }
+  IP: { label: 'IP', name: 'Innings Pitched', type: 'high' },
+  QS_PCT: { label: 'QS%', name: 'Quality Start Percentage', type: 'high', isRate: true },
+  W: { label: 'W', name: 'Pitching Wins', type: 'high' },
+  L: { label: 'L', name: 'Pitching Losses', type: 'low' },
+  R_Allowed: { label: 'RA', name: 'Total Runs Allowed', type: 'low' },
+  ER: { label: 'ER', name: 'Earned Runs Allowed', type: 'low' },
+  UER: { label: 'UER', name: 'Unearned Runs Allowed', type: 'low' },
+  'UER/9': { label: 'UER/9', name: 'Unearned Runs per 9 Innings', type: 'low', isRate: true },
+  UER_PCT: { label: 'UER%', name: 'Unearned Runs % (relative to Earned Runs)', type: 'low', isRate: true },
+  HR_Allowed: { label: 'HRA', name: 'Home Runs Allowed', type: 'low' },
+  SV: { label: 'SV', name: 'Saves', type: 'high' },
+  HD: { label: 'HD', name: 'Holds', type: 'high' },
+  BS: { label: 'BS', name: 'Blown Saves', type: 'low' },
+  'K/9': { label: 'K/9', name: 'Strikeouts per 9 Innings', type: 'high', isRate: true },
+  'BB/9': { label: 'BB/9', name: 'Walks Allowed per 9 Innings', type: 'low', isRate: true },
+  'K/BB': { label: 'K/BB', name: 'Strikeout-to-Walk Ratio', type: 'high', isRate: true }
+};
+
+export const getStatMeta = (cat) => {
+  return MINUTIAE_STATS[cat] || SCORING_CATS[cat] || { label: cat, name: cat, type: 'high' };
 };
 
 // 2. ESPN numeric stat ID → named key used throughout aggregateStats
@@ -238,7 +248,7 @@ export function aggregateStats(dailyRecords) {
       totals.R_Allowed  += rAll;
       totals.HR_Allowed += parseFloat(s.HR_Allowed ?? espnStats['46']) || 0;
       totals.WP         += parseFloat(s.WP ?? espnStats['50']) || 0;
-      totals.UER        += Math.max(0, rAll - er);
+      totals.UER        += s.UER !== undefined ? (parseFloat(s.UER) || 0) : Math.max(0, rAll - er);
     }
   });
 
@@ -261,13 +271,19 @@ export function aggregateStats(dailyRecords) {
   calculated['BB/9']  = totals.IP > 0 ? ((totals.BB_Allowed * 9) / totals.IP).toFixed(2) : "0.00";
   calculated['K/BB']  = totals.BB_Allowed > 0 ? (totals.K / totals.BB_Allowed).toFixed(2) : totals.K.toFixed(2);
 
+  // Unearned runs rate metrics
+  calculated['UER/9']  = totals.IP > 0 ? ((totals.UER * 9) / totals.IP).toFixed(2) : "0.00";
+  calculated.UER_PCT   = totals.ER > 0 ? ((totals.UER / totals.ER) * 100).toFixed(1) : "0.0";
+
   // Unrounded values for tooltips and precise display
-  calculated.OBP_raw  = obpNum;
-  calculated.ERA_raw  = totals.IP > 0 ? (totals.ER * 9) / totals.IP : 0;
-  calculated.WHIP_raw = totals.IP > 0 ? (totals.BB_Allowed + totals.H_Allowed) / totals.IP : 0;
-  calculated.AVG_raw  = avgNum;
-  calculated.SLG_raw  = slgNum;
-  calculated.OPS_raw  = obpNum + slgNum;
+  calculated.OBP_raw      = obpNum;
+  calculated.ERA_raw      = totals.IP > 0 ? (totals.ER * 9) / totals.IP : 0;
+  calculated.WHIP_raw     = totals.IP > 0 ? (totals.BB_Allowed + totals.H_Allowed) / totals.IP : 0;
+  calculated.AVG_raw      = avgNum;
+  calculated.SLG_raw      = slgNum;
+  calculated.OPS_raw      = obpNum + slgNum;
+  calculated['UER/9_raw'] = totals.IP > 0 ? (totals.UER * 9) / totals.IP : 0;
+  calculated.UER_PCT_raw  = totals.ER > 0 ? (totals.UER / totals.ER) * 100 : 0;
 
   return calculated;
 }
