@@ -824,6 +824,7 @@ function App() {
             playerId={selectedPlayer.id}
             playerName={selectedPlayer.name}
             allStats={rawData}
+            selectedSeason={selectedSeason}
             onClose={() => setSelectedPlayer(null)}
           />
         </div>

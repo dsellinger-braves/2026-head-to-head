@@ -1,14 +1,137 @@
-import { useMemo, useState, Fragment } from 'react';
+import { useMemo, useState, useEffect, Fragment } from 'react';
 import { TEAMS, getDateFromPeriodId } from '../schedule';
 import { SCORING_CATS, LINEUP_SLOTS, aggregateStats } from '../utils/scoring';
+import { supabase } from '../supabaseClient';
 import TeamAvatar from './TeamAvatar';
 
-export default function PlayerHistoryModal({ playerId, playerName, allStats, onClose }) {
+// In-memory cache for full MLB season stats to avoid redundant network calls
+const overallStatsCache = new Map();
+
+async function fetchPlayerOverallStats(playerName, isPitcher, seasonYear = 2026) {
+  const cacheKey = `${playerName}__${isPitcher ? 'P' : 'B'}__${seasonYear}`;
+  if (overallStatsCache.has(cacheKey)) {
+    return overallStatsCache.get(cacheKey);
+  }
+
+  try {
+    // 1. First attempt: Official MLB Stats API (ultra-fast, official box scores)
+    const searchRes = await fetch(`https://statsapi.mlb.com/api/v1/people/search?names=${encodeURIComponent(playerName)}`);
+    if (searchRes.ok) {
+      const searchJson = await searchRes.json();
+      const person = searchJson.people?.[0];
+      if (person?.id) {
+        const group = isPitcher ? 'pitching' : 'hitting';
+        const statsRes = await fetch(`https://statsapi.mlb.com/api/v1/people/${person.id}/stats?stats=season&season=${seasonYear}&group=${group}`);
+        if (statsRes.ok) {
+          const statsJson = await statsRes.json();
+          const stat = statsJson.stats?.[0]?.splits?.[0]?.stat;
+          if (stat) {
+            let res;
+            if (isPitcher) {
+              const ipFloat = stat.outs ? stat.outs / 3 : (parseFloat(stat.inningsPitched) || 0);
+              res = {
+                source: 'MLB Stats API',
+                games: stat.gamesPlayed || 0,
+                GS: stat.gamesStarted || 0,
+                IP: ipFloat,
+                ER: stat.earnedRuns || 0,
+                K: stat.strikeOuts || 0,
+                QS: stat.qualityStarts !== undefined ? stat.qualityStarts : 0,
+                SV: stat.saves || 0,
+                HD: stat.holds || 0,
+                'SV+HDs': (stat.saves || 0) + (stat.holds || 0),
+                H_Allowed: stat.hits || 0,
+                BB_Allowed: stat.baseOnBalls || 0,
+                ERA: parseFloat(stat.era) || 0,
+                WHIP: parseFloat(stat.whip) || 0,
+              };
+            } else {
+              res = {
+                source: 'MLB Stats API',
+                games: stat.gamesPlayed || 0,
+                PA: stat.plateAppearances || 0,
+                AB: stat.atBats || 0,
+                H: stat.hits || 0,
+                R: stat.runs || 0,
+                HR: stat.homeRuns || 0,
+                RBI: stat.rbi || 0,
+                SB: stat.stolenBases || 0,
+                BB: stat.baseOnBalls || 0,
+                OBP: parseFloat(stat.obp) || 0,
+                AVG: parseFloat(stat.avg) || 0,
+              };
+            }
+            overallStatsCache.set(cacheKey, res);
+            return res;
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('MLB Stats API lookup failed, trying fallback:', e);
+  }
+
+  // 2. Second attempt: FanGraphs Edge Function fallback
+  try {
+    const mode = isPitcher ? 'pitching' : 'batting';
+    const { data } = await supabase.functions.invoke('fangraphs', { body: { mode } });
+    if (data?.players?.length > 0) {
+      const cleanName = playerName.toLowerCase().replace(/[^a-z]/g, '');
+      const match = data.players.find(p => (p.PlayerName || '').toLowerCase().replace(/[^a-z]/g, '') === cleanName);
+      if (match) {
+        let res;
+        if (isPitcher) {
+          res = {
+            source: 'FanGraphs',
+            games: match.G || 0,
+            GS: match.GS || 0,
+            IP: parseFloat(match.IP) || 0,
+            ER: match.ER || 0,
+            K: match.SO || 0,
+            QS: match.QS || 0,
+            SV: match.SV || 0,
+            HD: match.HLD || 0,
+            'SV+HDs': (match.SV || 0) + (match.HLD || 0),
+            H_Allowed: match.H || 0,
+            BB_Allowed: match.BB || 0,
+            ERA: parseFloat(match.ERA) || 0,
+            WHIP: parseFloat(match.WHIP) || 0,
+          };
+        } else {
+          res = {
+            source: 'FanGraphs',
+            games: match.G || 0,
+            PA: match.PA || 0,
+            AB: match.AB || 0,
+            H: match.H || 0,
+            R: match.R || 0,
+            HR: match.HR || 0,
+            RBI: match.RBI || 0,
+            SB: match.SB || 0,
+            BB: match.BB || 0,
+            OBP: parseFloat(match.OBP) || 0,
+            AVG: parseFloat(match.AVG) || 0,
+          };
+        }
+        overallStatsCache.set(cacheKey, res);
+        return res;
+      }
+    }
+  } catch (fgErr) {
+    console.warn('FanGraphs fallback failed:', fgErr);
+  }
+
+  overallStatsCache.set(cacheKey, null);
+  return null;
+}
+
+export default function PlayerHistoryModal({ playerId, playerName, allStats, selectedSeason = 2026, onClose }) {
   const [selectedTeamId, setSelectedTeamId] = useState(null);
   const [gameLogSlotFilter, setGameLogSlotFilter] = useState('ALL'); // 'ALL' | 'STARTER' | 'BENCH'
+  const [overallStats, setOverallStats] = useState(null);
+  const [loadingOverall, setLoadingOverall] = useState(false);
 
   // 1. Helper: Determine if a record is an appearance (played on active roster or bench)
-  // Uses raw ESPN stat IDs and named keys
   const isActiveAppearance = (record) => {
     const s = record.stats || {};
     return (
@@ -57,6 +180,24 @@ export default function PlayerHistoryModal({ playerId, playerName, allStats, onC
   const pitchCats = ['IP', 'ER', 'K', 'QS', 'QS_PCT', 'SV+HDs', 'ERA', 'WHIP'];
   
   const displayCats = displayMode === 'batting' ? batCats : pitchCats;
+
+  const seasonYear = selectedSeason || fullGameLog[0]?.season_year || 2026;
+
+  // Fetch full-season MLB stats (FanGraphs / MLB Stats API) to calculate unrostered production
+  useEffect(() => {
+    let isCancelled = false;
+    async function loadOverall() {
+      if (!playerName) return;
+      setLoadingOverall(true);
+      const res = await fetchPlayerOverallStats(playerName, isPitcher, seasonYear);
+      if (!isCancelled) {
+        setOverallStats(res);
+        setLoadingOverall(false);
+      }
+    }
+    loadOverall();
+    return () => { isCancelled = true; };
+  }, [playerName, isPitcher, seasonYear]);
 
   // 4. Build Owner Summary with Starter vs Bench Splits
   const ownerSummary = useMemo(() => {
@@ -114,7 +255,76 @@ export default function PlayerHistoryModal({ playerId, playerName, allStats, onC
     }).sort((a, b) => b.total.games - a.total.games);
   }, [fullGameLog]);
 
-  // 5. Helper for formatting
+  // 5. Calculate unrostered line: Total MLB Season Stats minus Total Rostered Stats
+  const unrosteredRow = useMemo(() => {
+    if (!overallStats) return null;
+
+    // Total rostered stats across all fantasy teams (active + bench)
+    const totalRostered = aggregateStats(fullGameLog, { includeAll: true });
+    const rosteredGames = fullGameLog.length;
+
+    const unrosteredGames = Math.max(0, (overallStats.games || 0) - rosteredGames);
+
+    if (isPitcher) {
+      const mlbIp = overallStats.IP || 0;
+      const rosIp = totalRostered.IP || 0;
+      const unrosteredIp = Math.max(0, mlbIp - rosIp);
+      const unrosteredEr = Math.max(0, (overallStats.ER || 0) - (totalRostered.ER || 0));
+      const unrosteredK = Math.max(0, (overallStats.K || 0) - (totalRostered.K || 0));
+      const unrosteredSvHd = Math.max(0, (overallStats['SV+HDs'] || 0) - (totalRostered['SV+HDs'] || 0));
+      const unrosteredH = Math.max(0, (overallStats.H_Allowed || 0) - (totalRostered.H_Allowed || 0));
+      const unrosteredBb = Math.max(0, (overallStats.BB_Allowed || 0) - (totalRostered.BB_Allowed || 0));
+      const unrosteredGs = Math.max(0, (overallStats.GS || 0) - (totalRostered.GS || 0));
+      const unrosteredQs = Math.max(0, (overallStats.QS || 0) - (totalRostered.QS || 0));
+
+      const era = unrosteredIp > 0 ? ((unrosteredEr * 9) / unrosteredIp).toFixed(2) : '-';
+      const whip = unrosteredIp > 0 ? ((unrosteredBb + unrosteredH) / unrosteredIp).toFixed(2) : '-';
+      const qsPct = unrosteredGs > 0 ? ((unrosteredQs / unrosteredGs) * 100).toFixed(1) + '%' : '-';
+
+      return {
+        games: unrosteredGames,
+        stats: {
+          IP: unrosteredIp,
+          ER: unrosteredEr,
+          K: unrosteredK,
+          QS: unrosteredQs,
+          QS_PCT: qsPct,
+          'SV+HDs': unrosteredSvHd,
+          ERA: era,
+          WHIP: whip,
+        },
+      };
+    } else {
+      const mlbPa = overallStats.PA || 0;
+      const rosPa = totalRostered.PA || 0;
+      const unrosteredPa = Math.max(0, mlbPa - rosPa);
+      const unrosteredR = Math.max(0, (overallStats.R || 0) - (totalRostered.R || 0));
+      const unrosteredHr = Math.max(0, (overallStats.HR || 0) - (totalRostered.HR || 0));
+      const unrosteredRbi = Math.max(0, (overallStats.RBI || 0) - (totalRostered.RBI || 0));
+      const unrosteredSb = Math.max(0, (overallStats.SB || 0) - (totalRostered.SB || 0));
+      const unrosteredH = Math.max(0, (overallStats.H || 0) - (totalRostered.H || 0));
+      const unrosteredBb = Math.max(0, (overallStats.BB || 0) - (totalRostered.BB || 0));
+
+      let obp = '-';
+      if (unrosteredPa > 0) {
+        obp = ((unrosteredH + unrosteredBb) / unrosteredPa).toFixed(3).replace(/^0/, '');
+      }
+
+      return {
+        games: unrosteredGames,
+        stats: {
+          PA: unrosteredPa,
+          R: unrosteredR,
+          HR: unrosteredHr,
+          RBI: unrosteredRbi,
+          SB: unrosteredSb,
+          OBP: obp,
+        },
+      };
+    }
+  }, [overallStats, fullGameLog, isPitcher]);
+
+  // 6. Helper for formatting
   const formatStat = (val, catKey, games = 1, statsObj = null) => {
     if (games === 0) return '-';
     if (val === undefined || val === null) return '-';
@@ -150,7 +360,7 @@ export default function PlayerHistoryModal({ playerId, playerName, allStats, onC
     return SCORING_CATS[col]?.label || col;
   };
 
-  // 6. Filter for Detail View
+  // 7. Filter for Detail View
   const teamAllRecords = useMemo(() => {
     if (!selectedTeamId) return [];
     return fullGameLog.filter(r => r.team_id === parseInt(selectedTeamId));
@@ -176,7 +386,7 @@ export default function PlayerHistoryModal({ playerId, playerName, allStats, onC
             {selectedTeamId && (
               <button 
                 onClick={() => { setSelectedTeamId(null); setGameLogSlotFilter('ALL'); }}
-                className="bg-blue-800 hover:bg-blue-700 text-white px-3 py-1 rounded-full text-sm font-semibold transition-colors flex items-center gap-1"
+                className="bg-blue-800 hover:bg-blue-700 text-white px-3 py-1 rounded-full text-sm font-semibold transition-colors flex items-center gap-1 cursor-pointer"
               >
                 &larr; Back
               </button>
@@ -185,7 +395,7 @@ export default function PlayerHistoryModal({ playerId, playerName, allStats, onC
               <h2 className="text-xl font-bold">{playerName}</h2>
               <div className="flex items-center gap-2 mt-0.5">
                 <p className="text-blue-200 text-xs uppercase tracking-wider font-semibold">
-                  {selectedTeamId ? `${activeTeamName} Game Log` : 'Season Summary by Owner'}
+                  {selectedTeamId ? `${activeTeamName} Game Log` : `Season Summary by Owner (${seasonYear})`}
                 </p>
                 {selectedTeamId && gameLogSlotFilter !== 'ALL' && (
                   <span className={`text-[10px] font-black uppercase px-1.5 py-0.5 rounded ${
@@ -197,7 +407,7 @@ export default function PlayerHistoryModal({ playerId, playerName, allStats, onC
               </div>
             </div>
           </div>
-          <button onClick={onClose} className="text-blue-300 hover:text-white text-3xl leading-none font-light">&times;</button>
+          <button onClick={onClose} className="text-blue-300 hover:text-white text-3xl leading-none font-light cursor-pointer">&times;</button>
         </div>
 
         {/* --- CONTENT --- */}
@@ -222,7 +432,7 @@ export default function PlayerHistoryModal({ playerId, playerName, allStats, onC
                 {ownerSummary.length === 0 ? (
                   <tr>
                     <td colSpan={displayCats.length + 3} className="p-8 text-center text-gray-400 italic">
-                      No games recorded this season.
+                      No games recorded this season on any fantasy team.
                     </td>
                   </tr>
                 ) : (
@@ -310,6 +520,60 @@ export default function PlayerHistoryModal({ playerId, playerName, allStats, onC
                     </Fragment>
                   ))
                 )}
+
+                {/* 4. Unrostered / Free Agent Split Line */}
+                {loadingOverall ? (
+                  <tr className="bg-slate-50/50 border-t-2 border-dashed border-gray-300 text-xs text-gray-400 animate-pulse">
+                    <td className="p-3 pl-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-xs text-slate-500 font-bold">
+                          FA
+                        </div>
+                        <div>
+                          <span className="font-semibold text-slate-600">Unrostered / Free Agent</span>
+                          <span className="text-[11px] text-slate-400 ml-2">(calculating net stats from full season MLB data…)</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-3 text-center font-mono text-gray-400">-</td>
+                    {displayCats.map(c => (
+                      <td key={c} className="p-3 text-center font-mono text-gray-400">-</td>
+                    ))}
+                    <td className="p-3"></td>
+                  </tr>
+                ) : unrosteredRow ? (
+                  <tr className="bg-slate-50/80 hover:bg-slate-100/70 transition-colors border-t-2 border-dashed border-gray-300 text-xs text-gray-700">
+                    <td className="p-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center text-xs font-black text-slate-600 shadow-xs">
+                          FA
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-gray-900">Unrostered / Free Agent</span>
+                            <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-200 text-slate-700">
+                              Waivers
+                            </span>
+                          </div>
+                          <div className="text-[11px] text-gray-400">
+                            Production while not on any fantasy roster ({overallStats?.source || 'MLB/FanGraphs'})
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-3 text-center font-mono font-bold text-gray-700">
+                      {unrosteredRow.games}
+                    </td>
+                    {displayCats.map(cat => (
+                      <td key={cat} className="p-3 text-center font-mono text-gray-700 font-semibold">
+                        {formatStat(unrosteredRow.stats[cat], cat, unrosteredRow.games, unrosteredRow.stats)}
+                      </td>
+                    ))}
+                    <td className="p-3 text-right text-xs text-gray-400 italic">
+                      MLB Net
+                    </td>
+                  </tr>
+                ) : null}
               </tbody>
             </table>
           )}
