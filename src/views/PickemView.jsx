@@ -17,6 +17,12 @@ export default function PickemView() {
   const [picks, setPicks] = useState([]);
   const [scores, setScores] = useState([]);
 
+  // Live in-progress tracking state (for 2026)
+  const [showLiveProjections, setShowLiveProjections] = useState(true);
+  const [liveProjectionsData, setLiveProjectionsData] = useState(null);
+  const [refreshingLive, setRefreshingLive] = useState(false);
+  const [showMethodologyModal, setShowMethodologyModal] = useState(false);
+
   // All-time scores for Hall of Fame
   const [allTimeScores, setAllTimeScores] = useState([]);
 
@@ -40,6 +46,11 @@ export default function PickemView() {
   useEffect(() => {
     if (selectedSeason) {
       fetchSeasonDetails(selectedSeason);
+      if (selectedSeason === 2026) {
+        setShowLiveProjections(true);
+      } else {
+        setShowLiveProjections(false);
+      }
     }
   }, [selectedSeason]);
 
@@ -84,6 +95,9 @@ export default function PickemView() {
         setSeasons(sData);
         const currentActive = sData.find(s => s.season_year === 2026) || sData[0];
         setSelectedSeason(currentActive.season_year);
+        if (currentActive.live_projections) {
+          setLiveProjectionsData(currentActive.live_projections);
+        }
       }
 
       // Fetch all scores for Hall of Fame
@@ -108,7 +122,7 @@ export default function PickemView() {
       setLoading(true);
       setErrorMessage(null);
 
-      const [qRes, pRes, scRes] = await Promise.all([
+      const [qRes, pRes, scRes, sRes] = await Promise.all([
         supabase
           .from('pickem_questions')
           .select('*')
@@ -122,7 +136,12 @@ export default function PickemView() {
           .from('pickem_scores')
           .select('*')
           .eq('season_year', year)
-          .order('place', { ascending: true })
+          .order('place', { ascending: true }),
+        supabase
+          .from('pickem_seasons')
+          .select('*')
+          .eq('season_year', year)
+          .single()
       ]);
 
       if (qRes.error) throw qRes.error;
@@ -132,6 +151,12 @@ export default function PickemView() {
       setQuestions(qRes.data || []);
       setPicks(pRes.data || []);
       setScores(scRes.data || []);
+
+      if (sRes.data?.live_projections) {
+        setLiveProjectionsData(sRes.data.live_projections);
+      } else {
+        setLiveProjectionsData(null);
+      }
     } catch (err) {
       console.error(`Error loading details for ${year}:`, err);
       setErrorMessage(err.message || 'Failed to load season details');
@@ -139,6 +164,48 @@ export default function PickemView() {
       setLoading(false);
     }
   }
+
+  // Live In-Browser Refresh from MLB Stats API
+  const handleRefreshLiveStandings = async () => {
+    setRefreshingLive(true);
+    try {
+      const resp = await fetch('https://statsapi.mlb.com/api/v1/standings?leagueId=103,104&hydrate=team');
+      if (!resp.ok) throw new Error('Failed to fetch from MLB Stats API');
+      const data = await resp.json();
+
+      // Simple real-time update of division standings
+      const updatedCats = { ...(liveProjectionsData?.categories || {}) };
+      const divMap = { 201: 'al_east', 202: 'al_central', 200: 'al_west', 204: 'nl_east', 205: 'nl_central', 203: 'nl_west' };
+
+      for (const rec of data.records || []) {
+        const divKey = divMap[rec.division?.id];
+        if (divKey && rec.teamRecords?.[0]) {
+          const top = rec.teamRecords[0];
+          const runner = rec.teamRecords[1];
+          updatedCats[divKey] = {
+            ...updatedCats[divKey],
+            leader: top.team.name,
+            stat: `${top.wins}-${top.losses} (${top.winningPercentage})`,
+            runner_up: runner ? `${runner.team.name} (${runner.gamesBack} GB)` : ''
+          };
+        }
+      }
+
+      setLiveProjectionsData(prev => ({
+        ...prev,
+        as_of: new Date().toISOString(),
+        categories: updatedCats
+      }));
+
+      setSaveSuccess('Live MLB Standings refreshed directly from MLB Stats API! ⚡');
+      setTimeout(() => setSaveSuccess(null), 4000);
+    } catch (err) {
+      console.error('Error refreshing MLB standings:', err);
+      setErrorMessage('Could not refresh live standings directly: ' + err.message);
+    } finally {
+      setRefreshingLive(false);
+    }
+  };
 
   // Handle Pick Input Change
   const handlePickChange = (questionKey, value) => {
@@ -277,12 +344,11 @@ export default function PickemView() {
             isCorrect = true;
             points = q.points_exact || 3;
           } else if (q.category === 'wild_card' || q.category === 'division') {
-            // Check crossover: if picked team made playoffs
             const inAL = alPlayoffs.has(pVal);
             const inNL = nlPlayoffs.has(pVal);
             if ((q.question_key.startsWith('al_') && inAL) || (q.question_key.startsWith('nl_') && inNL)) {
               isCorrect = false;
-              points = q.points_partial || 2; // Crossover wild card value
+              points = q.points_partial || 2;
             }
           }
         }
@@ -304,7 +370,6 @@ export default function PickemView() {
         ownerTotals[p.owner_name].total += points;
       }
 
-      // Batch update picks
       await supabase.from('pickem_picks').upsert(updatedPicks);
 
       // Rank owners & determine prize money
@@ -348,13 +413,11 @@ export default function PickemView() {
     setSaving(true);
     try {
       const yearInt = parseInt(newSeasonYear);
-      // 1. Create season
       await supabase.from('pickem_seasons').upsert({
         season_year: yearInt,
         status: 'open'
       });
 
-      // 2. Standard 23 questions definition
       const standardQuestions = [
         { key: 'nl_east', label: 'NL East', cat: 'division', exact: 3, partial: 2, ord: 1 },
         { key: 'nl_central', label: 'NL Central', cat: 'division', exact: 3, partial: 2, ord: 2 },
@@ -482,7 +545,71 @@ export default function PickemView() {
   const isUpcoming = currentSeasonObj?.status === 'open' || currentSeasonObj?.status === 'upcoming';
   const isInProgress = currentSeasonObj?.status === 'in_progress' || selectedSeason === 2026;
 
-  // Category labels helper
+  // Active Standings Data: Live Projections (if enabled) or Final Settled Scores
+  const activeStandings = useMemo(() => {
+    if (isInProgress && showLiveProjections && liveProjectionsData?.projected_standings) {
+      return liveProjectionsData.projected_standings.map(s => ({
+        owner_name: s.owner_name,
+        team_id: s.team_id,
+        place: s.place,
+        total_points: s.projected_points,
+        budget_awarded: s.projected_budget,
+        is_live: true,
+        hits: s.hits,
+        total_hits: s.total_hits
+      }));
+    }
+    return scores.map(s => ({
+      ...s,
+      is_live: false
+    }));
+  }, [isInProgress, showLiveProjections, liveProjectionsData, scores]);
+
+  // Live evaluation helper for pick cells
+  const evaluateLivePick = (qKey, pickVal) => {
+    if (!liveProjectionsData?.categories) return null;
+    const cat = liveProjectionsData.categories[qKey];
+    if (!cat) return null;
+
+    const leaderName = (cat.leader || '').toLowerCase().trim();
+    const pVal = (pickVal || '').toLowerCase().trim();
+
+    if (!pVal) return null;
+
+    const norm = (s) => s.replace('.', '').replace("'", '').replace('-', ' ').trim();
+    const np = norm(pVal);
+    const nl = norm(leaderName);
+
+    if (np && nl && (np.includes(nl) || nl.includes(np))) {
+      return { status: 'EXACT', label: '✓ Leading (+3 pts)', pts: 3, leaderText: cat.leader };
+    }
+
+    // Check award
+    if (cat.type === 'award') {
+      if (np && nl && (np.includes(nl) || nl.includes(np))) {
+        return { status: 'EXACT', label: '✓ #1 in WAR (+4 pts)', pts: 4, leaderText: cat.leader };
+      }
+      // Check contenders
+      const isContender = (cat.contenders || []).some(c => norm(c).includes(np));
+      if (isContender) {
+        return { status: 'CONTENDER', label: '⚡ Top Contender', pts: 0, leaderText: cat.leader };
+      }
+    }
+
+    // Check Playoff Crossover
+    const alPlayoffs = (liveProjectionsData.playoff_al || []).map(norm);
+    const nlPlayoffs = (liveProjectionsData.playoff_nl || []).map(norm);
+
+    if (qKey.startsWith('al_') && alPlayoffs.some(t => t.includes(np) || np.includes(t))) {
+      return { status: 'CROSSOVER', label: '✦ In Wild Card (+2 pts)', pts: 2, leaderText: cat.leader };
+    }
+    if (qKey.startsWith('nl_') && nlPlayoffs.some(t => t.includes(np) || np.includes(t))) {
+      return { status: 'CROSSOVER', label: '✦ In Wild Card (+2 pts)', pts: 2, leaderText: cat.leader };
+    }
+
+    return { status: 'OFF_PACE', label: 'Off Pace', pts: 0, leaderText: cat.leader };
+  };
+
   const getCategoryLabel = (cat) => {
     switch (cat) {
       case 'division': return 'Division';
@@ -514,20 +641,38 @@ export default function PickemView() {
             </p>
           </div>
 
-          {/* Quick Season Switcher */}
-          <div className="flex items-center gap-3 bg-slate-950/70 p-2 rounded-xl border border-indigo-900/60 shadow-inner">
-            <span className="text-xs font-bold uppercase tracking-wider text-indigo-300 pl-2">Season:</span>
-            <select
-              value={selectedSeason}
-              onChange={(e) => setSelectedSeason(parseInt(e.target.value))}
-              className="bg-indigo-950 text-white font-bold text-sm px-3 py-1.5 rounded-lg border border-indigo-700/60 focus:outline-none focus:ring-2 focus:ring-indigo-400 cursor-pointer"
-            >
-              {seasons.map(s => (
-                <option key={s.season_year} value={s.season_year}>
-                  {s.season_year} {s.season_year === 2027 ? '🚀 (Open Entry)' : s.season_year === 2026 ? '⚡ (Live)' : '🏆 (Final)'}
-                </option>
-              ))}
-            </select>
+          {/* Quick Season Switcher & Live Tracker Controls */}
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2 bg-slate-950/70 p-2 rounded-xl border border-indigo-900/60 shadow-inner">
+              <span className="text-xs font-bold uppercase tracking-wider text-indigo-300 pl-2">Season:</span>
+              <select
+                value={selectedSeason}
+                onChange={(e) => setSelectedSeason(parseInt(e.target.value))}
+                className="bg-indigo-950 text-white font-bold text-sm px-3 py-1.5 rounded-lg border border-indigo-700/60 focus:outline-none focus:ring-2 focus:ring-indigo-400 cursor-pointer"
+              >
+                {seasons.map(s => (
+                  <option key={s.season_year} value={s.season_year}>
+                    {s.season_year} {s.season_year === 2027 ? '🚀 (Open Entry)' : s.season_year === 2026 ? '⚡ (Live Tracker)' : '🏆 (Final)'}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* In-Progress Live Tracker Mode Switch */}
+            {isInProgress && liveProjectionsData && (
+              <button
+                onClick={() => setShowLiveProjections(!showLiveProjections)}
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-md ${
+                  showLiveProjections
+                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 ring-2 ring-amber-300 font-black animate-pulse'
+                    : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700'
+                }`}
+                title="Toggle between Live In-Progress Standings and Settled Results"
+              >
+                <span>⚡</span>
+                <span>{showLiveProjections ? 'Live In-Progress Standings: ON' : 'Show Live Projections'}</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -541,7 +686,7 @@ export default function PickemView() {
               </span>
             ) : isInProgress ? (
               <span className="px-2.5 py-1 rounded-full bg-amber-950/80 border border-amber-500/40 text-amber-300 font-bold flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-amber-400"></span> 2026 Live In-Progress
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span> Live 2026 In-Progress (YTD MLB Standings + Projected WAR)
               </span>
             ) : (
               <span className="px-2.5 py-1 rounded-full bg-indigo-950/80 border border-indigo-500/40 text-indigo-300 font-bold">
@@ -555,17 +700,84 @@ export default function PickemView() {
             </span>
           </div>
 
-          {/* Scoring Quick Legend */}
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-slate-300">
-            <span className="text-slate-400 font-medium">Scoring:</span>
-            <span className="px-2 py-0.5 rounded bg-emerald-950/60 border border-emerald-500/30 text-emerald-300 font-semibold">Division: 3 pts</span>
-            <span className="px-2 py-0.5 rounded bg-sky-950/60 border border-sky-500/30 text-sky-300 font-semibold">Wild Card / Playoff: 2 pts</span>
-            <span className="px-2 py-0.5 rounded bg-purple-950/60 border border-purple-500/30 text-purple-300 font-semibold">Pennant: 5 pts</span>
-            <span className="px-2 py-0.5 rounded bg-amber-950/60 border border-amber-500/30 text-amber-300 font-semibold">World Series: 7 pts</span>
-            <span className="px-2 py-0.5 rounded bg-pink-950/60 border border-pink-500/30 text-pink-300 font-semibold">Award: 4 pts</span>
+          {/* Quick Refresh & Methodology Links */}
+          <div className="flex items-center gap-2">
+            {isInProgress && (
+              <>
+                <button
+                  onClick={handleRefreshLiveStandings}
+                  disabled={refreshingLive}
+                  className="px-2.5 py-1 rounded bg-indigo-900/60 hover:bg-indigo-800 border border-indigo-700/60 text-indigo-200 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+                  title="Fetch live MLB standings directly from MLB Stats API"
+                >
+                  <span className={refreshingLive ? 'animate-spin' : ''}>🔄</span>
+                  <span>{refreshingLive ? 'Refreshing...' : 'Refresh MLB Standings'}</span>
+                </button>
+                <button
+                  onClick={() => setShowMethodologyModal(true)}
+                  className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors cursor-pointer"
+                >
+                  ℹ️ Projections Methodology
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
+
+      {/* METHODOLOGY MODAL */}
+      {showMethodologyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-xs p-4">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-xl w-full p-6 shadow-2xl relative space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <span>⚡</span> In-Progress Projections Methodology
+              </h3>
+              <button
+                onClick={() => setShowMethodologyModal(false)}
+                className="text-slate-400 hover:text-white text-lg font-bold cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="text-xs text-slate-300 space-y-3 leading-relaxed">
+              <p>
+                To track which predictions are working out while the MLB season is actively underway, our system combines live official standings with sabermetric projections:
+              </p>
+              <ul className="space-y-2 list-disc pl-4 text-slate-300">
+                <li>
+                  <strong className="text-white">Division Winners (3 pts):</strong> Evaluated against current 1st-place teams in each division via the official MLB Stats API.
+                </li>
+                <li>
+                  <strong className="text-white">Wild Card & Playoff Crossovers (2 pts):</strong> Teams holding wild card seeds 1–3 in AL and NL. If an owner predicted a team to win a division and that team is currently in a wild card spot (or vice versa), they earn 2 crossover playoff points.
+                </li>
+                <li>
+                  <strong className="text-white">Pennants (5 pts) & World Series (7 pts):</strong> Current top seed in each league and best overall record in baseball.
+                </li>
+                <li>
+                  <strong className="text-white">Player Awards Placeholder (4 pts):</strong> Because awards are officially announced in November, we use <span className="text-amber-300 font-bold">Projected Full-Season fWAR</span> (combining FanGraphs actual YTD fWAR + Rest-of-Season projected fWAR). The #1 player in each league's projected fWAR is the current placeholder leader.
+                </li>
+                <li>
+                  <strong className="text-white">Extreme Win / Loss Totals (3 pts):</strong> Teams holding the most total wins and most total losses in Major League Baseball.
+                </li>
+              </ul>
+              <p className="text-[11px] text-slate-400 pt-2 border-t border-slate-800">
+                Data sources: Official MLB Stats API (`statsapi.mlb.com`) and FanGraphs Depth Charts / ROS Leaderboards API.
+              </p>
+            </div>
+
+            <div className="pt-2 text-right">
+              <button
+                onClick={() => setShowMethodologyModal(false)}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-lg cursor-pointer"
+              >
+                Got It
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* TOAST / ALERTS */}
       {saveSuccess && (
@@ -638,7 +850,7 @@ export default function PickemView() {
         <div className="hidden sm:flex items-center gap-2 text-xs font-medium text-slate-400">
           <span>{picks.length} picks</span>
           <span>•</span>
-          <span>{scores.length || seasonOwners.length} owners</span>
+          <span>{activeStandings.length || seasonOwners.length} owners</span>
         </div>
       </div>
 
@@ -658,11 +870,20 @@ export default function PickemView() {
               <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-800 gap-2">
                   <div>
-                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                      <span>🏆</span> {selectedSeason} Standings & Budget Prizes
-                    </h2>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                        <span>🏆</span> {selectedSeason} Standings & Budget Prizes
+                      </h2>
+                      {isInProgress && showLiveProjections && (
+                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-amber-400 text-slate-950 uppercase tracking-wider animate-pulse">
+                          ⚡ Live Interim Projection
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-slate-400 mt-0.5">
-                      Top 5 finishers earn additional auction draft dollars for next season's draft: 1st (+$4), 2nd-4th (+$3), 5th (+$1).
+                      {isInProgress && showLiveProjections
+                        ? 'Projected standings calculated from current live MLB records, division leaders, wild cards, and FanGraphs projected fWAR for awards.'
+                        : "Top 5 finishers earn additional auction draft dollars for next season's draft: 1st (+$4), 2nd-4th (+$3), 5th (+$1)."}
                     </p>
                   </div>
                   {isUpcoming && selectedSeason === 2027 && (
@@ -672,7 +893,7 @@ export default function PickemView() {
                   )}
                 </div>
 
-                {scores.length > 0 ? (
+                {activeStandings.length > 0 ? (
                   <>
                     {/* TOP 3 PODIUM */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 my-6">
@@ -681,34 +902,44 @@ export default function PickemView() {
                         <span className="text-3xl mb-1">🥈</span>
                         <span className="text-xs uppercase font-bold tracking-widest text-slate-400">2nd Place</span>
                         <div className="text-lg font-black text-white mt-1">
-                          {scores[1]?.owner_name || '—'}
+                          {activeStandings[1]?.owner_name || '—'}
                         </div>
                         <div className="text-2xl font-black text-indigo-300 mt-0.5">
-                          {scores[1]?.total_points ?? 0} <span className="text-xs text-slate-400 font-normal">pts</span>
+                          {activeStandings[1]?.total_points ?? 0} <span className="text-xs text-slate-400 font-normal">pts</span>
                         </div>
-                        {(scores[1]?.budget_awarded || 0) > 0 && (
+                        {(activeStandings[1]?.budget_awarded || 0) > 0 && (
                           <span className="mt-2 text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-950 border border-emerald-500/40 text-emerald-300">
-                            +${scores[1].budget_awarded} Draft Budget
+                            +${activeStandings[1].budget_awarded} Draft Budget
+                          </span>
+                        )}
+                        {activeStandings[1]?.total_hits > 0 && (
+                          <span className="text-[10px] text-slate-400 mt-1">
+                            {activeStandings[1].total_hits} active hits
                           </span>
                         )}
                       </div>
 
-                      {/* 1st Place (Champion) */}
+                      {/* 1st Place (Leader) */}
                       <div className="order-1 md:order-2 bg-gradient-to-b from-amber-950/40 via-slate-800/90 to-slate-900 border-2 border-amber-500/60 rounded-xl p-5 text-center flex flex-col items-center justify-center relative shadow-lg shadow-amber-950/20 transform md:-translate-y-2">
                         <div className="absolute -top-3 bg-amber-500 text-slate-950 text-[10px] uppercase font-black px-3 py-0.5 rounded-full tracking-wider shadow">
-                          CHAMPION
+                          {isInProgress && showLiveProjections ? 'CURRENT LEADER' : 'CHAMPION'}
                         </div>
                         <span className="text-4xl mb-1 mt-1">🥇</span>
                         <span className="text-xs uppercase font-bold tracking-widest text-amber-400">1st Place</span>
                         <div className="text-xl font-black text-white mt-1">
-                          {scores[0]?.owner_name || '—'}
+                          {activeStandings[0]?.owner_name || '—'}
                         </div>
                         <div className="text-3xl font-black text-amber-300 mt-0.5">
-                          {scores[0]?.total_points ?? 0} <span className="text-xs text-slate-400 font-normal">pts</span>
+                          {activeStandings[0]?.total_points ?? 0} <span className="text-xs text-slate-400 font-normal">pts</span>
                         </div>
-                        {(scores[0]?.budget_awarded || 0) > 0 && (
+                        {(activeStandings[0]?.budget_awarded || 0) > 0 && (
                           <span className="mt-2 text-xs font-black px-3 py-1 rounded-full bg-amber-400 text-slate-950 shadow">
-                            +${scores[0].budget_awarded} Draft Budget
+                            +${activeStandings[0].budget_awarded} Draft Budget
+                          </span>
+                        )}
+                        {activeStandings[0]?.total_hits > 0 && (
+                          <span className="text-[10px] text-amber-200/80 mt-1 font-medium">
+                            {activeStandings[0].total_hits} active hits
                           </span>
                         )}
                       </div>
@@ -718,14 +949,19 @@ export default function PickemView() {
                         <span className="text-3xl mb-1">🥉</span>
                         <span className="text-xs uppercase font-bold tracking-widest text-amber-600">3rd Place</span>
                         <div className="text-lg font-black text-white mt-1">
-                          {scores[2]?.owner_name || '—'}
+                          {activeStandings[2]?.owner_name || '—'}
                         </div>
                         <div className="text-2xl font-black text-indigo-300 mt-0.5">
-                          {scores[2]?.total_points ?? 0} <span className="text-xs text-slate-400 font-normal">pts</span>
+                          {activeStandings[2]?.total_points ?? 0} <span className="text-xs text-slate-400 font-normal">pts</span>
                         </div>
-                        {(scores[2]?.budget_awarded || 0) > 0 && (
+                        {(activeStandings[2]?.budget_awarded || 0) > 0 && (
                           <span className="mt-2 text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-950 border border-emerald-500/40 text-emerald-300">
-                            +${scores[2].budget_awarded} Draft Budget
+                            +${activeStandings[2].budget_awarded} Draft Budget
+                          </span>
+                        )}
+                        {activeStandings[2]?.total_hits > 0 && (
+                          <span className="text-[10px] text-slate-400 mt-1">
+                            {activeStandings[2].total_hits} active hits
                           </span>
                         )}
                       </div>
@@ -738,7 +974,9 @@ export default function PickemView() {
                           <tr className="border-b border-slate-800 text-xs uppercase font-bold text-slate-400">
                             <th className="py-2.5 px-3">Rank</th>
                             <th className="py-2.5 px-3">Owner</th>
-                            <th className="py-2.5 px-3 text-right">Total Points</th>
+                            <th className="py-2.5 px-3 text-right">
+                              {isInProgress && showLiveProjections ? 'Projected Pts' : 'Total Points'}
+                            </th>
                             <th className="py-2.5 px-3 text-center">Prize Money</th>
                             {isSummaryEra ? (
                               <>
@@ -749,13 +987,15 @@ export default function PickemView() {
                                 <th className="py-2.5 px-3 text-right text-xs">AL Award</th>
                                 <th className="py-2.5 px-3 text-right text-xs">Wins/Loss</th>
                               </>
+                            ) : isInProgress && showLiveProjections ? (
+                              <th className="py-2.5 px-3 text-slate-400">Current Active Hits (YTD Standings & WAR)</th>
                             ) : (
                               <th className="py-2.5 px-3 text-slate-400">Performance Status</th>
                             )}
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-800/60">
-                          {scores.map((sc) => {
+                          {activeStandings.map((sc) => {
                             const place = sc.place || 99;
                             const isPodium = place <= 3;
                             const budget = sc.budget_awarded || 0;
@@ -801,6 +1041,29 @@ export default function PickemView() {
                                     <td className="py-2.5 px-3 text-right text-xs text-slate-300 font-mono">{cats.al_award ?? cats['AL Award'] ?? '—'}</td>
                                     <td className="py-2.5 px-3 text-right text-xs text-slate-300 font-mono">{cats['most_wins/losses'] ?? cats['Most Wins/Losses'] ?? '—'}</td>
                                   </>
+                                ) : isInProgress && showLiveProjections ? (
+                                  <td className="py-2.5 px-3 text-xs">
+                                    <div className="flex flex-wrap items-center gap-1.5 max-w-lg">
+                                      {(sc.hits || []).slice(0, 5).map((h, i) => (
+                                        <span
+                                          key={i}
+                                          className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
+                                            h.hit_type === 'EXACT'
+                                              ? 'bg-emerald-950/80 border border-emerald-500/40 text-emerald-300'
+                                              : 'bg-sky-950/80 border border-sky-500/40 text-sky-300'
+                                          }`}
+                                          title={`${h.question_label}: ${h.pick_value}`}
+                                        >
+                                          {h.pick_value} (+{h.points})
+                                        </span>
+                                      ))}
+                                      {(sc.hits || []).length > 5 && (
+                                        <span className="text-[10px] text-slate-400 font-bold">
+                                          +{(sc.hits || []).length - 5} more
+                                        </span>
+                                      )}
+                                    </div>
+                                  </td>
                                 ) : (
                                   <td className="py-2.5 px-3 text-xs text-slate-400">
                                     {place === 1 ? '🏆 Champion' : place <= 4 ? '✨ In the Money' : place === 5 ? '🎯 Budget Cash' : 'Out of the Money'}
@@ -835,7 +1098,9 @@ export default function PickemView() {
                         <span>📋</span> {selectedSeason} Master Pick Matrix
                       </h2>
                       <p className="text-xs text-slate-400 mt-0.5">
-                        Side-by-side comparison of every owner's predictions and scoring results.
+                        {isInProgress && showLiveProjections
+                          ? 'Real-time side-by-side evaluation against live 2026 MLB division leaders and FanGraphs projected fWAR leaders.'
+                          : "Side-by-side comparison of every owner's predictions and official outcomes."}
                       </p>
                     </div>
 
@@ -863,8 +1128,8 @@ export default function PickemView() {
                       <thead className="sticky top-0 bg-slate-950 z-20 shadow-md">
                         <tr className="border-b border-slate-800 text-slate-300 font-bold uppercase tracking-wider">
                           <th className="py-3 px-3 min-w-[200px]">Question</th>
-                          <th className="py-3 px-3 min-w-[130px] bg-slate-900/90 text-emerald-300 border-x border-slate-800">
-                            Actual Outcome
+                          <th className="py-3 px-3 min-w-[160px] bg-slate-900/90 text-emerald-300 border-x border-slate-800">
+                            {isInProgress && showLiveProjections ? '⚡ YTD Leader (MLB / WAR)' : 'Actual Outcome'}
                           </th>
                           {seasonOwners.map(o => (
                             <th key={o.name} className="py-3 px-3 min-w-[140px] text-center">
@@ -878,6 +1143,9 @@ export default function PickemView() {
                         {filteredQuestions.map(q => {
                           const outcome = q.correct_answer || q.actual_answer;
                           const hasActual = outcome && outcome.trim() !== '';
+
+                          // Live info for 2026
+                          const liveCat = liveProjectionsData?.categories?.[q.question_key];
 
                           return (
                             <tr key={q.id} className="hover:bg-slate-800/30 transition-colors">
@@ -894,12 +1162,22 @@ export default function PickemView() {
                                 </div>
                               </td>
 
-                              {/* Actual Answer Column */}
+                              {/* Actual Answer / Live Leader Column */}
                               <td className="py-2.5 px-3 bg-slate-950/40 border-x border-slate-800">
                                 {hasActual ? (
                                   <span className="font-bold text-emerald-300 bg-emerald-950/80 px-2 py-1 rounded border border-emerald-600/40 block text-center">
                                     {outcome}
                                   </span>
+                                ) : isInProgress && showLiveProjections && liveCat ? (
+                                  <div className="text-center space-y-0.5">
+                                    <div className="font-bold text-amber-300 text-xs flex items-center justify-center gap-1">
+                                      <span>⚡</span>
+                                      <span>{liveCat.leader}</span>
+                                    </div>
+                                    <div className="text-[10px] text-slate-400 font-mono">
+                                      {liveCat.stat}
+                                    </div>
+                                  </div>
                                 ) : (
                                   <span className="text-slate-600 italic block text-center">Pending</span>
                                 )}
@@ -922,31 +1200,65 @@ export default function PickemView() {
                                 const pts = pick?.points_awarded ?? pick?.points_earned ?? 0;
                                 const isCrossover = !isExact && pts > 0;
 
+                                // If live in progress mode
+                                const liveEval = isInProgress && showLiveProjections
+                                  ? evaluateLivePick(q.question_key, pickVal)
+                                  : null;
+
                                 return (
                                   <td key={o.name} className="py-2.5 px-3 text-center">
-                                    <div
-                                      className={`p-2 rounded-lg border transition-all text-xs ${
-                                        isExact
-                                          ? 'bg-emerald-950/70 border-emerald-500/50 text-emerald-200 font-bold shadow-xs'
-                                          : isCrossover
-                                          ? 'bg-sky-950/70 border-sky-500/50 text-sky-200 font-semibold'
-                                          : hasActual
-                                          ? 'bg-slate-950/40 border-slate-800 text-slate-400 line-through opacity-75'
-                                          : 'bg-slate-800/40 border-slate-700/60 text-slate-200 font-medium'
-                                      }`}
-                                    >
-                                      <div>{pickVal}</div>
-                                      {isExact && (
-                                        <div className="text-[10px] text-emerald-400 font-black mt-0.5">
-                                          ✓ +{pts} pts
+                                    {liveEval ? (
+                                      <div
+                                        className={`p-2 rounded-lg border transition-all text-xs ${
+                                          liveEval.status === 'EXACT'
+                                            ? 'bg-emerald-950/80 border-emerald-500/60 text-emerald-200 font-bold shadow-xs'
+                                            : liveEval.status === 'CROSSOVER'
+                                            ? 'bg-sky-950/80 border-sky-500/60 text-sky-200 font-semibold'
+                                            : liveEval.status === 'CONTENDER'
+                                            ? 'bg-amber-950/40 border-amber-500/40 text-amber-200'
+                                            : 'bg-slate-900/60 border-slate-800 text-slate-400'
+                                        }`}
+                                      >
+                                        <div>{pickVal}</div>
+                                        <div
+                                          className={`text-[10px] font-black mt-0.5 ${
+                                            liveEval.status === 'EXACT'
+                                              ? 'text-emerald-400'
+                                              : liveEval.status === 'CROSSOVER'
+                                              ? 'text-sky-400'
+                                              : liveEval.status === 'CONTENDER'
+                                              ? 'text-amber-400'
+                                              : 'text-slate-500'
+                                          }`}
+                                        >
+                                          {liveEval.label}
                                         </div>
-                                      )}
-                                      {isCrossover && (
-                                        <div className="text-[10px] text-sky-400 font-black mt-0.5">
-                                          ✦ +{pts} pts (WC)
-                                        </div>
-                                      )}
-                                    </div>
+                                      </div>
+                                    ) : (
+                                      <div
+                                        className={`p-2 rounded-lg border transition-all text-xs ${
+                                          isExact
+                                            ? 'bg-emerald-950/70 border-emerald-500/50 text-emerald-200 font-bold shadow-xs'
+                                            : isCrossover
+                                            ? 'bg-sky-950/70 border-sky-500/50 text-sky-200 font-semibold'
+                                            : hasActual
+                                            ? 'bg-slate-950/40 border-slate-800 text-slate-400 line-through opacity-75'
+                                            : 'bg-slate-800/40 border-slate-700/60 text-slate-200 font-medium'
+                                        }`}
+                                      >
+                                        <div>{pickVal}</div>
+                                        {isExact && (
+                                          <div className="text-[10px] text-emerald-400 font-black mt-0.5">
+                                            ✓ +{pts} pts
+                                          </div>
+                                        )}
+                                        {isCrossover && (
+                                          <div className="text-[10px] text-sky-400 font-black mt-0.5">
+                                            ✦ +{pts} pts (WC)
+                                          </div>
+                                        )}
+                                      </div>
+                                    )}
                                   </td>
                                 );
                               })}
