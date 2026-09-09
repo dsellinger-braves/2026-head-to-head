@@ -2,94 +2,9 @@ import { useMemo } from 'react';
 import { TEAMS } from '../schedule';
 import TeamAvatar from '../components/TeamAvatar';
 
-export default function SummaryView({ processedWeeks, onOwnerClick }) {
-
-// --- 1. HELPER: CALCULATE STANDINGS FOR A SPECIFIC PHASE ---
-  const getStandings = (phaseFilter) => {
-    const stats = {};
-    Object.keys(TEAMS).forEach(id => {
-      if (parseInt(id) === 99) return;
-      stats[id] = {
-        id: parseInt(id),
-        name: TEAMS[id].name,
-        owner: TEAMS[id].owner,
-        points: 0,
-        possiblePoints: 0
-      };
-    });
-
-    if (processedWeeks) {
-      processedWeeks.forEach(week => {
-        if (week.phase !== phaseFilter) return;
-        if (!week.matchups) return;
-
-        week.matchups.forEach(m => {
-          if (!m.result || m.isPlaceholder) return;
-
-          if (m.type === 'trio') {
-            // Skip unplayed weeks: all teams have 0 points
-            const totalPts = Object.values(m.result).reduce((sum, r) => sum + (r.points ?? 0), 0);
-            if (totalPts === 0) return;
-
-            m.teams.forEach(team => {
-              const tr = m.result[team.id];
-              if (!tr || !stats[team.id]) return;
-              stats[team.id].points += tr.points;
-              stats[team.id].possiblePoints += 20; // 10 cats × 2 pts max
-            });
-          } else {
-            if (m.result.homeScore === 0 && m.result.awayScore === 0 && m.result.ties === 0) return;
-            if (!m.homeTeam?.id || !m.awayTeam?.id) return;
-            if (!stats[m.homeTeam.id] || !stats[m.awayTeam.id]) return;
-
-            stats[m.homeTeam.id].points += m.result.homeScore + (m.result.ties * 0.5);
-            stats[m.awayTeam.id].points += m.result.awayScore + (m.result.ties * 0.5);
-            stats[m.homeTeam.id].possiblePoints += 10; // 10 cats max per H2H week
-            stats[m.awayTeam.id].possiblePoints += 10;
-          }
-        });
-      });
-    }
-
-    return Object.values(stats).sort((a, b) => {
-      const pctA = a.possiblePoints > 0 ? a.points / a.possiblePoints : 0;
-      const pctB = b.possiblePoints > 0 ? b.points / b.possiblePoints : 0;
-      if (Math.abs(pctB - pctA) > 0.0001) return pctB - pctA;
-      return b.points - a.points;
-    });
-  };
-
-  // --- 2. GENERATE DATA SETS ---
-  const phase1Standings = useMemo(() => getStandings(1), [processedWeeks]);
-  const phase2Standings = useMemo(() => getStandings(2), [processedWeeks]);
-  const phase3Standings = useMemo(() => getStandings(3), [processedWeeks]);
-
-  // Determine who is in which league based on Phase 1 results
-  // Top 4 = Winners, Bottom 4 = Consolation
-  const winnersLeagueIds = new Set(phase1Standings.slice(0, 4).map(t => t.id));
-  
-  const winnersStandings = phase3Standings.filter(t => winnersLeagueIds.has(t.id));
-  const consolationStandings = phase3Standings.filter(t => !winnersLeagueIds.has(t.id));
-
-  // --- 3. HELPER: GET PLAYOFF MATCHUPS ---
-  const getPlayoffMatchup = (id) => {
-    // Search weeks 24 and 25
-    for (const w of processedWeeks) {
-      if (w.phase === 3 && w.matchups) {
-        const m = w.matchups.find(m => m.id === id || m.matchupId === id);
-        if (m) return m;
-      }
-    }
-    return null;
-  };
-
-  const sf1 = getPlayoffMatchup('sf1');
-  const sf2 = getPlayoffMatchup('sf2');
-  const final = getPlayoffMatchup('final');
-  const third = getPlayoffMatchup('3rd');
-
-  // --- 4. SHARED TABLE COMPONENT ---
-  const StandingsTable = ({ title, data, showRank = true }) => (
+// --- 4. SHARED TABLE COMPONENT ---
+function StandingsTable({ title, data, showRank = true, onOwnerClick }) {
+  return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8">
       <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
         <h3 className="text-lg font-bold text-gray-800">{title}</h3>
@@ -116,7 +31,7 @@ export default function SummaryView({ processedWeeks, onOwnerClick }) {
                   {showRank ? index + 1 : '-'}
                 </td>
                 <td className="px-6 py-4">
-                  <div onClick={() => onOwnerClick(team)} className="flex items-center cursor-pointer">
+                  <div onClick={() => onOwnerClick?.(team)} className="flex items-center cursor-pointer">
                     <div className="transform group-hover:scale-110 transition-transform duration-200">
                       <TeamAvatar team={team} size="sm" />
                     </div>
@@ -136,40 +51,127 @@ export default function SummaryView({ processedWeeks, onOwnerClick }) {
       </table>
     </div>
   );
+}
 
-  // --- 5. BRACKET CARD COMPONENT ---
-  const BracketMatch = ({ title, m }) => {
-    if (!m) return <div className="bg-gray-50 rounded border border-gray-200 p-4 h-24 flex items-center justify-center text-gray-400 text-xs">TBD</div>;
-    
-    // Check if placeholder
-    const isPlaceholder = !m.homeTeam.id;
-    
-    return (
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col w-64">
-        <div className="bg-gray-100 px-3 py-1 text-[10px] uppercase font-bold text-gray-500 border-b border-gray-200 text-center">
-          {title}
-        </div>
-        {/* Home */}
-        <div className={`flex justify-between items-center p-2 border-b border-gray-100 ${m.result?.homeScore > m.result?.awayScore ? 'bg-green-50' : ''}`}>
-          <div className="flex items-center gap-2">
-            <div className="text-xs font-bold text-gray-700 truncate w-24">
-               {isPlaceholder ? m.homeTeam.name : TEAMS[m.homeTeam.id]?.name}
-            </div>
-          </div>
-          <span className="font-mono font-bold text-sm">{m.result?.homeScore || 0}</span>
-        </div>
-        {/* Away */}
-        <div className={`flex justify-between items-center p-2 ${m.result?.awayScore > m.result?.homeScore ? 'bg-green-50' : ''}`}>
-           <div className="flex items-center gap-2">
-            <div className="text-xs font-bold text-gray-700 truncate w-24">
-              {isPlaceholder ? m.awayTeam.name : TEAMS[m.awayTeam.id]?.name}
-            </div>
-          </div>
-          <span className="font-mono font-bold text-sm">{m.result?.awayScore || 0}</span>
-        </div>
+// --- 5. BRACKET CARD COMPONENT ---
+function BracketMatch({ title, m }) {
+  if (!m) return <div className="bg-gray-50 rounded border border-gray-200 p-4 h-24 flex items-center justify-center text-gray-400 text-xs">TBD</div>;
+  
+  // Check if placeholder
+  const isPlaceholder = !m.homeTeam.id;
+  
+  return (
+    <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col w-64">
+      <div className="bg-gray-100 px-3 py-1 text-[10px] uppercase font-bold text-gray-500 border-b border-gray-200 text-center">
+        {title}
       </div>
-    );
+      {/* Home */}
+      <div className={`flex justify-between items-center p-2 border-b border-gray-100 ${m.result?.homeScore > m.result?.awayScore ? 'bg-green-50' : ''}`}>
+        <div className="flex items-center gap-2">
+          <div className="text-xs font-bold text-gray-700 truncate w-24">
+             {isPlaceholder ? m.homeTeam.name : TEAMS[m.homeTeam.id]?.name}
+          </div>
+        </div>
+        <span className="font-mono font-bold text-sm">{m.result?.homeScore || 0}</span>
+      </div>
+      {/* Away */}
+      <div className={`flex justify-between items-center p-2 ${m.result?.awayScore > m.result?.homeScore ? 'bg-green-50' : ''}`}>
+         <div className="flex items-center gap-2">
+          <div className="text-xs font-bold text-gray-700 truncate w-24">
+            {isPlaceholder ? m.awayTeam.name : TEAMS[m.awayTeam.id]?.name}
+          </div>
+        </div>
+        <span className="font-mono font-bold text-sm">{m.result?.awayScore || 0}</span>
+      </div>
+    </div>
+  );
+}
+
+// --- HELPER: CALCULATE STANDINGS FOR A SPECIFIC PHASE ---
+function getStandings(processedWeeks, phaseFilter) {
+  const stats = {};
+  Object.keys(TEAMS).forEach(id => {
+    if (parseInt(id) === 99) return;
+    stats[id] = {
+      id: parseInt(id),
+      name: TEAMS[id].name,
+      owner: TEAMS[id].owner,
+      points: 0,
+      possiblePoints: 0
+    };
+  });
+
+  if (processedWeeks) {
+    processedWeeks.forEach(week => {
+      if (week.phase !== phaseFilter) return;
+      if (!week.matchups) return;
+
+      week.matchups.forEach(m => {
+        if (!m.result || m.isPlaceholder) return;
+
+        if (m.type === 'trio') {
+          // Skip unplayed weeks: all teams have 0 points
+          const totalPts = Object.values(m.result).reduce((sum, r) => sum + (r.points ?? 0), 0);
+          if (totalPts === 0) return;
+
+          m.teams.forEach(team => {
+            const tr = m.result[team.id];
+            if (!tr || !stats[team.id]) return;
+            stats[team.id].points += tr.points;
+            stats[team.id].possiblePoints += 20; // 10 cats × 2 pts max
+          });
+        } else {
+          if (m.result.homeScore === 0 && m.result.awayScore === 0 && m.result.ties === 0) return;
+          if (!m.homeTeam?.id || !m.awayTeam?.id) return;
+          if (!stats[m.homeTeam.id] || !stats[m.awayTeam.id]) return;
+
+          stats[m.homeTeam.id].points += m.result.homeScore + (m.result.ties * 0.5);
+          stats[m.awayTeam.id].points += m.result.awayScore + (m.result.ties * 0.5);
+          stats[m.homeTeam.id].possiblePoints += 10; // 10 cats max per H2H week
+          stats[m.awayTeam.id].possiblePoints += 10;
+        }
+      });
+    });
+  }
+
+  return Object.values(stats).sort((a, b) => {
+    const pctA = a.possiblePoints > 0 ? a.points / a.possiblePoints : 0;
+    const pctB = b.possiblePoints > 0 ? b.points / b.possiblePoints : 0;
+    if (Math.abs(pctB - pctA) > 0.0001) return pctB - pctA;
+    return b.points - a.points;
+  });
+}
+
+export default function SummaryView({ processedWeeks, onOwnerClick }) {
+  // --- 2. GENERATE DATA SETS ---
+  const phase1Standings = useMemo(() => getStandings(processedWeeks, 1), [processedWeeks]);
+  const phase2Standings = useMemo(() => getStandings(processedWeeks, 2), [processedWeeks]);
+  const phase3Standings = useMemo(() => getStandings(processedWeeks, 3), [processedWeeks]);
+
+  // Determine who is in which league based on Phase 1 results
+  // Top 4 = Winners, Bottom 4 = Consolation
+  const winnersLeagueIds = new Set(phase1Standings.slice(0, 4).map(t => t.id));
+  
+  const winnersStandings = phase3Standings.filter(t => winnersLeagueIds.has(t.id));
+  const consolationStandings = phase3Standings.filter(t => !winnersLeagueIds.has(t.id));
+
+  // --- 3. HELPER: GET PLAYOFF MATCHUPS ---
+  const getPlayoffMatchup = (id) => {
+    // Search weeks 24 and 25
+    for (const w of processedWeeks) {
+      if (w.phase === 3 && w.matchups) {
+        const m = w.matchups.find(m => m.id === id || m.matchupId === id);
+        if (m) return m;
+      }
+    }
+    return null;
   };
+
+  const sf1 = getPlayoffMatchup('sf1');
+  const sf2 = getPlayoffMatchup('sf2');
+  const final = getPlayoffMatchup('final');
+  const third = getPlayoffMatchup('3rd');
+
 
   return (
     <div className="space-y-12 animate-fade-in-up pb-20">
@@ -216,8 +218,8 @@ export default function SummaryView({ processedWeeks, onOwnerClick }) {
           Split Leagues
         </h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <StandingsTable title="🏆 Winner's League (Top 4)" data={winnersStandings} />
-          <StandingsTable title="🛡️ Consolation League" data={consolationStandings} />
+          <StandingsTable title="🏆 Winner's League (Top 4)" data={winnersStandings} onOwnerClick={onOwnerClick} />
+          <StandingsTable title="🛡️ Consolation League" data={consolationStandings} onOwnerClick={onOwnerClick} />
         </div>
       </div>
 
@@ -227,7 +229,7 @@ export default function SummaryView({ processedWeeks, onOwnerClick }) {
           <span className="bg-gray-500 text-white text-sm px-3 py-1 rounded-full">Phase 2</span>
           Mid-Season Championship
         </h2>
-        <StandingsTable title="Weeks 13-14 Mid-Season" data={phase2Standings} />
+        <StandingsTable title="Weeks 13-14 Mid-Season" data={phase2Standings} onOwnerClick={onOwnerClick} />
       </div>
 
       {/* --- SECTION 3: PHASE 1 STANDINGS (Weeks 1-14) --- */}
@@ -236,7 +238,7 @@ export default function SummaryView({ processedWeeks, onOwnerClick }) {
           <span className="bg-gray-400 text-white text-sm px-3 py-1 rounded-full">Phase 1</span>
           Regular Season History
         </h2>
-        <StandingsTable title="Weeks 1-14 Round Robin" data={phase1Standings} />
+        <StandingsTable title="Weeks 1-14 Round Robin" data={phase1Standings} onOwnerClick={onOwnerClick} />
       </div>
 
     </div>

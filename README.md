@@ -1,16 +1,107 @@
-# React + Vite
+# 2026 Head to Head Heftystrong
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Interactive analytics dashboard, real-time scoreboard, historical records, and automated Discord bot for the **2026 Head to Head Heftystrong** fantasy baseball league (ESPN League ID: `130215`).
 
-Currently, two official plugins are available:
+🌐 **Live Dashboard**: [https://dsellinger-braves.github.io/2026-head-to-head](https://dsellinger-braves.github.io/2026-head-to-head)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Live Scoreboard**: Real-time category tracking, live active matchup scores, and active roster lookups.
+- **Highlights & Top Performers**: Daily batting and pitching category leaders.
+- **Standings & Progression**: Cumulative season performance, category win/loss matrices, and historical trend charts.
+- **Owner Disparities & History**: Head-to-head owner records, multi-season history, and trade analytics.
+- **Discord Bot**: 24/7 slash-command bot hosted on Railway (`/live`, `/standings`, `/roster`, `/projections`).
+- **AI Daily Recaps**: Automated daily editorial summaries powered by Google Gemini and posted directly to Discord via GitHub Actions.
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Tech Stack & Architecture
+
+- **Frontend**: React 19, Vite, Tailwind CSS, Recharts, `idb-keyval` (IndexedDB caching).
+- **Backend & Database**: Supabase PostgreSQL (`player_daily_stats`, `transactions`, `historical_data`).
+- **Data Scrapers**: Python 3.11+, Requests, Pandas, Supabase client.
+- **Bots & AI**: `discord.py`, Google Gemini (`google-genai` / `google-generativeai`).
+- **Hosting & CI/CD**: GitHub Pages (`deploy.yml`), Railway (Discord Bot), GitHub Actions (Scheduled scrapers).
+- **AI Tooling**: Composio & Antigravity MCP integration with project-specific skills (`.agents/`).
+
+---
+
+## Project Structure
+
+```text
+├── .agents/                 # AI Agent customizations, skills, and Composio configs
+│   ├── plugins/composio/    # Composio MCP plugin configuration
+│   └── skills/              # Reusable agent runbooks (github-flow, supabase-ops, frontend-deploy)
+├── .github/workflows/       # GitHub Actions CI/CD (scrapers, recap bot, deploy)
+├── src/                     # React dashboard frontend
+│   ├── views/               # Dashboard view components (LiveScoreboard, Highlights, etc.)
+│   ├── components/          # Reusable UI components
+│   └── supabaseClient.js    # Supabase JS client configuration
+├── active-stats-pull.py     # Ingests daily player stats from ESPN API to Supabase
+├── transaction-scraper.py   # Ingests trades, waivers, and free-agent adds/drops
+├── projections.py           # Calculates rest-of-season and final standings projections
+├── discord-bot.py           # 24/7 Discord bot service (Railway)
+├── discord-daily-recap.py   # Daily Gemini AI recap generator
+├── check_schema.py          # Verifies active Supabase table columns
+├── check_types.py           # Verifies Supabase column data types
+└── AGENTS.md                # Detailed system blueprint and developer guidelines
+```
+
+---
+
+## Getting Started
+
+### 1. Frontend Development
+
+```bash
+# Install dependencies
+npm install
+
+# Start local Vite development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Deploy to GitHub Pages
+npm run deploy
+```
+
+### 2. Python Environment & Scrapers
+
+```bash
+# Activate virtual environment
+source .venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Verify database connection
+python check_schema.py
+```
+
+### Environment Variables (`.env`)
+
+```env
+VITE_SUPABASE_URL=https://wczdkcdqgtzlsbssogoz.supabase.co
+VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+SUPABASE_URL=https://wczdkcdqgtzlsbssogoz.supabase.co
+SUPABASE_KEY=your-supabase-service-or-anon-key
+DISCORD_BOT_TOKEN=your-discord-bot-token
+GEMINI_API_KEY=your-gemini-api-key
+ESPN_S2=your-espn-s2-cookie
+ESPN_SWID=your-espn-swid-cookie
+```
+
+---
+
+## AI Agent & Developer Guidelines
+
+For agents and contributors working on this codebase:
+- Review [AGENTS.md](AGENTS.md) for full system specifications, ESPN stat ID mappings, and table schemas.
+- Reusable runbooks are available in `.agents/skills/`:
+  - [`github-flow`](.agents/skills/github-flow/SKILL.md): Branching and Composio PR creation.
+  - [`supabase-ops`](.agents/skills/supabase-ops/SKILL.md): Database validation and safe migrations.
+  - [`frontend-deploy`](.agents/skills/frontend-deploy/SKILL.md): Building and deploying the dashboard.

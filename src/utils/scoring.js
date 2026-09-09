@@ -30,24 +30,81 @@ export const CATEGORIES = Object.keys(SCORING_CATS).map(key => ({
   higherIsBetter: SCORING_CATS[key].type === 'high'
 }));
 
+// 1b. Secondary & Minutiae Stats metadata
+export const MINUTIAE_STATS = {
+  // Hitting
+  AB: { label: 'AB', type: 'high' },
+  H: { label: 'H', type: 'high' },
+  '2B': { label: '2B', type: 'high' },
+  '3B': { label: '3B', type: 'high' },
+  BB: { label: 'BB', type: 'high' },
+  SO: { label: 'SO', type: 'low' },
+  HBP: { label: 'HBP', type: 'high' },
+  CS: { label: 'CS', type: 'low' },
+  SB_PCT: { label: 'SB%', type: 'high', isRate: true },
+  E: { label: 'E', type: 'low' },
+  GDP: { label: 'GDP', type: 'low' },
+  AVG: { label: 'AVG', type: 'high', isRate: true },
+  SLG: { label: 'SLG', type: 'high', isRate: true },
+  OPS: { label: 'OPS', type: 'high', isRate: true },
+
+  // Pitching
+  W: { label: 'W', type: 'high' },
+  L: { label: 'L', type: 'low' },
+  R_Allowed: { label: 'RA', type: 'low' },
+  UER: { label: 'UER', type: 'low' },
+  HR_Allowed: { label: 'HRA', type: 'low' },
+  SV: { label: 'SV', type: 'high' },
+  HD: { label: 'HD', type: 'high' },
+  BS: { label: 'BS', type: 'low' },
+  'K/9': { label: 'K/9', type: 'high', isRate: true },
+  'BB/9': { label: 'BB/9', type: 'low', isRate: true },
+  'K/BB': { label: 'K/BB', type: 'high', isRate: true }
+};
+
 // 2. ESPN numeric stat ID → named key used throughout aggregateStats
 const ESPN_STAT_IDS = {
   // Batting
-  '16': 'PA',
+  '0':  'AB',
+  '1':  'H',
+  '2':  'AVG_raw',
+  '3':  '2B',
+  '4':  '3B',
   '5':  'HR',
+  '6':  'TB_raw',
+  '8':  'TB',
+  '10': 'BB',
+  '12': 'HBP',
+  '13': 'SO_raw',
+  '16': 'PA',
+  '17': 'OBP',
   '20': 'R',
   '21': 'RBI',
   '23': 'SB',
-  '17': 'OBP',   // direct daily OBP from ESPN
+  '24': 'CS',
+  '26': 'GDP',
+  '27': 'SO',
+  '72': 'E',
+
   // Pitching
-  '34': 'IP_raw', // ESPN stores IP as outs (thirds); divide by 3 for real IP
-  '63': 'QS',
+  '32': 'W_app',
+  '33': 'GS',
+  '34': 'IP_raw',
+  '35': 'TBF',
+  '36': 'Pitches',
+  '37': 'H_Allowed',
+  '39': 'BB_Allowed',
+  '44': 'R_Allowed',
   '45': 'ER',
-  '37': 'BB_Allowed',
-  '39': 'H_Allowed',
+  '46': 'HR_Allowed',
   '48': 'K',
+  '50': 'WP',
+  '53': 'W',
+  '54': 'L',
   '57': 'SV',
+  '58': 'BS',
   '60': 'HD',
+  '63': 'QS',
 };
 
 // 3. Helper to aggregate stats
@@ -87,9 +144,17 @@ export const calculateTrioMatchupResult = (teamStats, teamIds) => {
 
 export function aggregateStats(dailyRecords) {
   const totals = {
+    // Primary Categories
     R: 0, HR: 0, RBI: 0, SB: 0, K: 0, QS: 0, 'SV+HDs': 0,
     ER: 0, IP: 0, BB_Allowed: 0, H_Allowed: 0,
-    OBP_num: 0, PA: 0, GS: 0
+    OBP_num: 0, PA: 0, GS: 0,
+
+    // Deep / Minutiae Hitting Stats
+    AB: 0, H: 0, '2B': 0, '3B': 0, BB: 0, SO: 0, HBP: 0,
+    CS: 0, E: 0, GDP: 0, TB: 0,
+
+    // Deep / Minutiae Pitching Stats
+    W: 0, L: 0, SV: 0, HD: 0, BS: 0, R_Allowed: 0, HR_Allowed: 0, WP: 0, UER: 0
   };
 
   dailyRecords.forEach(record => {
@@ -101,6 +166,10 @@ export function aggregateStats(dailyRecords) {
       s[ESPN_STAT_IDS[key] ?? key] = val;
     }
 
+    const slot = record.lineup_slot_id;
+    const isPitcher = slot >= 13 && slot <= 15;
+    const isBatter = slot >= 0 && slot <= 12;
+
     const pa  = parseFloat(s.PA)  || 0;
     const obp = parseFloat(s.OBP) || 0;
     
@@ -108,23 +177,69 @@ export function aggregateStats(dailyRecords) {
     const espnStats = record.stats || {};
     const gs = parseFloat(espnStats['33']) > 0 ? parseFloat(espnStats['33']) : 0;
 
-    totals.GS          += gs;
-    totals.R           += parseFloat(s.R)  || 0;
-    totals.HR          += parseFloat(s.HR) || 0;
-    totals.RBI         += parseFloat(s.RBI) || 0;
-    totals.SB          += parseFloat(s.SB)  || 0;
-    totals.K           += parseFloat(s.K)   || 0;
-    totals.QS          += parseFloat(s.QS)  || 0;
-    totals['SV+HDs']   += (parseFloat(s.SV) || 0) + (parseFloat(s.HD) || 0);
+    totals.GS        += gs;
+    totals.R         += parseFloat(s.R)  || 0;
+    totals.HR        += parseFloat(s.HR) || 0;
+    totals.RBI       += parseFloat(s.RBI) || 0;
+    totals.SB        += parseFloat(s.SB)  || 0;
+    totals.K         += parseFloat(s.K)   || 0;
+    totals.QS        += parseFloat(s.QS)  || 0;
+    totals['SV+HDs'] += (parseFloat(s.SV) || 0) + (parseFloat(s.HD) || 0);
 
     // OBP: accumulate PA-weighted so we can average correctly across days
     totals.OBP_num += obp * pa;
     totals.PA      += pa;
 
-    totals.ER         += parseFloat(s.ER)         || 0;
-    totals.IP         += (parseFloat(s.IP_raw ?? s.IP) || 0) / 3;
-    totals.BB_Allowed += parseFloat(s.BB_Allowed)  || 0;
-    totals.H_Allowed  += parseFloat(s.H_Allowed)   || 0;
+    const er       = parseFloat(s.ER) || 0;
+    const ip       = (parseFloat(s.IP_raw ?? s.IP) || 0) / 3;
+    const bbAll    = parseFloat(s.BB_Allowed) || 0;
+    const hAll     = parseFloat(s.H_Allowed)  || 0;
+    const rAll     = parseFloat(s.R_Allowed ?? espnStats['44']) || 0;
+
+    totals.ER         += er;
+    totals.IP         += ip;
+    totals.BB_Allowed += bbAll;
+    totals.H_Allowed  += hAll;
+
+    if (isBatter) {
+      const ab  = parseFloat(s.AB ?? espnStats['0']) || 0;
+      const h   = parseFloat(s.H ?? espnStats['1']) || 0;
+      const d2  = parseFloat(s['2B'] ?? espnStats['3']) || 0;
+      const d3  = parseFloat(s['3B'] ?? espnStats['4']) || 0;
+      const hr  = parseFloat(s.HR ?? espnStats['5']) || 0;
+      const bb  = parseFloat(s.BB ?? espnStats['10']) || 0;
+      const so  = parseFloat(s.SO ?? espnStats['27'] ?? espnStats['13']) || 0;
+      const hbp = parseFloat(s.HBP ?? espnStats['12']) || 0;
+      const cs  = parseFloat(s.CS ?? espnStats['24']) || 0;
+      const e   = parseFloat(s.E ?? espnStats['72']) || 0;
+      const gdp = parseFloat(s.GDP ?? espnStats['26'] ?? espnStats['14']) || 0;
+      const singles = Math.max(0, h - (d2 + d3 + hr));
+      const tb  = parseFloat(s.TB ?? espnStats['8']) || (singles + (d2 * 2) + (d3 * 3) + (hr * 4));
+
+      totals.AB  += ab;
+      totals.H   += h;
+      totals['2B'] += d2;
+      totals['3B'] += d3;
+      totals.BB  += bb;
+      totals.SO  += so;
+      totals.HBP += hbp;
+      totals.CS  += cs;
+      totals.E   += e;
+      totals.GDP += gdp;
+      totals.TB  += tb;
+    }
+
+    if (isPitcher) {
+      totals.W          += parseFloat(s.W ?? espnStats['53']) || 0;
+      totals.L          += parseFloat(s.L ?? espnStats['54']) || 0;
+      totals.SV         += parseFloat(s.SV ?? espnStats['57']) || 0;
+      totals.HD         += parseFloat(s.HD ?? espnStats['60']) || 0;
+      totals.BS         += parseFloat(s.BS ?? espnStats['58']) || 0;
+      totals.R_Allowed  += rAll;
+      totals.HR_Allowed += parseFloat(s.HR_Allowed ?? espnStats['46']) || 0;
+      totals.WP         += parseFloat(s.WP ?? espnStats['50']) || 0;
+      totals.UER        += Math.max(0, rAll - er);
+    }
   });
 
   const calculated = { ...totals };
@@ -133,10 +248,26 @@ export function aggregateStats(dailyRecords) {
   calculated.WHIP = totals.IP > 0 ? ((totals.BB_Allowed + totals.H_Allowed) / totals.IP).toFixed(2) : "0.00";
   calculated.QS_PCT = totals.GS > 0 ? ((totals.QS / totals.GS) * 100).toFixed(1) : "0.0";
   
+  // Rate minutiae stats
+  calculated.AVG    = totals.AB > 0 ? (totals.H / totals.AB).toFixed(3) : ".000";
+  calculated.SLG    = totals.AB > 0 ? (totals.TB / totals.AB).toFixed(3) : ".000";
+  const avgNum      = totals.AB > 0 ? totals.H / totals.AB : 0;
+  const slgNum      = totals.AB > 0 ? totals.TB / totals.AB : 0;
+  const obpNum      = totals.PA > 0 ? totals.OBP_num / totals.PA : 0;
+  calculated.OPS    = (obpNum + slgNum).toFixed(3);
+  calculated.SB_PCT = (totals.SB + totals.CS) > 0 ? ((totals.SB / (totals.SB + totals.CS)) * 100).toFixed(1) : "0.0";
+
+  calculated['K/9']   = totals.IP > 0 ? ((totals.K * 9) / totals.IP).toFixed(2) : "0.00";
+  calculated['BB/9']  = totals.IP > 0 ? ((totals.BB_Allowed * 9) / totals.IP).toFixed(2) : "0.00";
+  calculated['K/BB']  = totals.BB_Allowed > 0 ? (totals.K / totals.BB_Allowed).toFixed(2) : totals.K.toFixed(2);
+
   // Unrounded values for tooltips and precise display
-  calculated.OBP_raw  = totals.PA > 0 ? totals.OBP_num / totals.PA : 0;
+  calculated.OBP_raw  = obpNum;
   calculated.ERA_raw  = totals.IP > 0 ? (totals.ER * 9) / totals.IP : 0;
   calculated.WHIP_raw = totals.IP > 0 ? (totals.BB_Allowed + totals.H_Allowed) / totals.IP : 0;
+  calculated.AVG_raw  = avgNum;
+  calculated.SLG_raw  = slgNum;
+  calculated.OPS_raw  = obpNum + slgNum;
 
   return calculated;
 }

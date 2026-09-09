@@ -17,6 +17,7 @@ import OwnerDisparitiesView from './views/OwnerDisparitiesView';
 import OwnerDetailModal from './components/OwnerDetailModal';
 import PlayerHistoryModal from './components/PlayerHistoryModal';
 import LiveScoreboardView from './views/LiveScoreboardView';
+import TransactionsView from './views/TransactionsView';
 
 const AVAILABLE_SEASONS = Array.from({ length: 2026 - 2012 + 1 }, (_, i) => 2026 - i);
 
@@ -32,8 +33,6 @@ function App() {
   const [allSeasonData, setAllSeasonData] = useState({});
 
   const baseSchedule = useMemo(() => generateSchedule(), []);
-
-  const cacheKey = `fantasy_data_${selectedSeason}`;
 
   // historical_data rows are flat CSVs from the Python scraper.
   // Reshape them to match the player_daily_stats schema the rest of the app expects.
@@ -424,6 +423,7 @@ function App() {
               <button onClick={() => setCurrentView('weekly')} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'weekly' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Matchups</button>
               <button onClick={() => setCurrentView('summary')} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'summary' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Standings</button>
               <button onClick={() => setCurrentView('teams')} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'teams' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Teams</button>
+              <button onClick={() => setCurrentView('transactions')} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'transactions' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Transactions</button>
               <button onClick={() => setCurrentView('players')} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'players' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Players</button>
               <button onClick={() => setCurrentView('disparities')} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'disparities' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Disparities</button>
               <button onClick={() => setCurrentView('progression')} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'progression' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Progression</button>
@@ -471,6 +471,13 @@ function App() {
         {currentView === 'teams' && (
           <TeamsView
             allStats={rawData}
+            selectedSeason={selectedSeason}
+            onOwnerClick={(team) => setSelectedOwner(team)}
+          />
+        )}
+        {currentView === 'transactions' && (
+          <TransactionsView
+            onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
             onOwnerClick={(team) => setSelectedOwner(team)}
           />
         )}
