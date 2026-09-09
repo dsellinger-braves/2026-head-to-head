@@ -32,7 +32,7 @@ function parseRecordStats(record) {
   const obp = parseFloat(s.OBP ?? espn['17']) || 0;
 
   const rawIp = parseFloat(s.IP_raw ?? s.IP ?? espn['34']) || 0;
-  const ip = rawIp > 0 ? (s.IP_raw !== undefined ? rawIp / 3 : (espn['34'] !== undefined ? rawIp / 3 : rawIp)) : 0;
+  const ip = rawIp > 0 ? rawIp / 3 : 0;
   const k = parseFloat(s.K ?? espn['48']) || 0;
   const qs = parseFloat(s.QS ?? espn['63']) || 0;
   const sv = parseFloat(s.SV ?? espn['57']) || 0;
@@ -301,6 +301,7 @@ export default function BenchStatsView({ allStats = [], selectedSeason = 2026, o
       else if (tableSortKey === 'bench_svhd') { valA = a.bench['SV+HDs'] || 0; valB = b.bench['SV+HDs'] || 0; }
       else if (tableSortKey === 'bench_era') { valA = a.bench.ERA_raw || 0; valB = b.bench.ERA_raw || 0; }
       else if (tableSortKey === 'bench_whip') { valA = a.bench.WHIP_raw || 0; valB = b.bench.WHIP_raw || 0; }
+      else if (tableSortKey === 'bench_ip') { valA = a.bench.IP || 0; valB = b.bench.IP || 0; }
       else if (tableSortKey === 'waste_hr_pct') { valA = a.waste.hrPct; valB = b.waste.hrPct; }
       else if (tableSortKey === 'waste_qs_pct') { valA = a.waste.qsPct; valB = b.waste.qsPct; }
       else if (tableSortKey === 'waste_k_pct') { valA = a.waste.kPct; valB = b.waste.kPct; }
@@ -676,7 +677,9 @@ export default function BenchStatsView({ allStats = [], selectedSeason = 2026, o
                         <th onClick={() => requestTableSort('bench_whip')} className="py-3 px-3 text-center cursor-pointer hover:text-white">
                           WHIP {tableSortKey === 'bench_whip' ? (tableSortDir === 'desc' ? '▼' : '▲') : ''}
                         </th>
-                        <th className="py-3 px-3 text-center">Bench IP</th>
+                        <th onClick={() => requestTableSort('bench_ip')} className="py-3 px-3 text-center cursor-pointer hover:text-white">
+                          Bench IP {tableSortKey === 'bench_ip' ? (tableSortDir === 'desc' ? '▼' : '▲') : ''}
+                        </th>
                       </>
                     )}
 
