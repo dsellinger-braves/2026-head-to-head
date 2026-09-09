@@ -171,13 +171,69 @@ export default function RotoGapView({ allStats, selectedSeason = 2026, onOwnerCl
         }
       }
 
-      // Gap defending behind
+      // Gap defending behind (-1 Roto Point buffer & downside pace risk)
       let cushionBehind = null;
+      let downsideNumeratorBuffer = null;
+      let downsideRateRiskPerDay = null;
+
       if (defendingBehind) {
         if (!isRate) {
-          cushionBehind = Math.abs(myVal - defendingBehind.rawVal);
+          const diff = Math.abs(myVal - defendingBehind.rawVal);
+          cushionBehind = diff;
+          if (diff === 0) {
+            downsideRateRiskPerDay = `Tied (any +1 ${cat.unit} surrenders point)`;
+          } else if (daysRemainingInfo.days > 0) {
+            const daily = (diff / daysRemainingInfo.days).toFixed(2);
+            downsideRateRiskPerDay = `+${daily} ${cat.unit} / day`;
+          }
         } else {
           cushionBehind = Math.abs(myVal - defendingBehind.rawVal);
+          if (cat.id === 'OBP') {
+            const trailingOBP = defendingBehind.rawVal;
+            const currentPA = selStats.PA || 1;
+            const currentTOB = selStats.OBP_num || 0;
+            const tobBuffer = Math.max(0, currentTOB - (trailingOBP * currentPA));
+            const slumpTolerance = trailingOBP > 0 ? Math.ceil(tobBuffer / trailingOBP) : 0;
+            const dailyTOB = daysRemainingInfo.days > 0 ? (tobBuffer / daysRemainingInfo.days).toFixed(2) : '0';
+            downsideNumeratorBuffer = {
+              label: 'Times on Base (TOB) Cushion',
+              needed: `+${tobBuffer.toFixed(1)} TOB lead`,
+              context: `Can absorb a 0-for-${slumpTolerance} slump (or chaser outpacing by +${dailyTOB} TOB/day) before dropping`
+            };
+            if (daysRemainingInfo.days > 0) {
+              downsideRateRiskPerDay = `+${dailyTOB} TOB / day`;
+            }
+          } else if (cat.id === 'ERA') {
+            const trailingERA = defendingBehind.rawVal;
+            const currentIP = selStats.IP || 1;
+            const currentER = selStats.ER || 0;
+            const allowedERTotal = (trailingERA * currentIP) / 9;
+            const erAllowance = Math.max(0, allowedERTotal - currentER);
+            const dailyER = daysRemainingInfo.days > 0 ? (erAllowance / daysRemainingInfo.days).toFixed(2) : '0';
+            downsideNumeratorBuffer = {
+              label: 'Earned Runs (ER) Buffer',
+              needed: `+${erAllowance.toFixed(1)} ER buffer`,
+              context: `Can surrender up to ${erAllowance.toFixed(1)} extra ER before being passed (or +${dailyER} ER/day)`
+            };
+            if (daysRemainingInfo.days > 0) {
+              downsideRateRiskPerDay = `+${dailyER} ER / day`;
+            }
+          } else if (cat.id === 'WHIP') {
+            const trailingWHIP = defendingBehind.rawVal;
+            const currentIP = selStats.IP || 1;
+            const currentBaserunners = (selStats.BB_Allowed || 0) + (selStats.H_Allowed || 0);
+            const allowedBaserunners = trailingWHIP * currentIP;
+            const brAllowance = Math.max(0, allowedBaserunners - currentBaserunners);
+            const dailyBR = daysRemainingInfo.days > 0 ? (brAllowance / daysRemainingInfo.days).toFixed(2) : '0';
+            downsideNumeratorBuffer = {
+              label: 'Baserunners Allowed (H+BB) Buffer',
+              needed: `+${brAllowance.toFixed(1)} H+BB buffer`,
+              context: `Can allow up to ${brAllowance.toFixed(1)} extra baserunners before being passed (or +${dailyBR} H+BB/day)`
+            };
+            if (daysRemainingInfo.days > 0) {
+              downsideRateRiskPerDay = `+${dailyBR} H+BB / day`;
+            }
+          }
         }
       }
 
@@ -210,11 +266,45 @@ export default function RotoGapView({ allStats, selectedSeason = 2026, onOwnerCl
           team: defendingBehind.team,
           val: formatValue(defendingBehind.rawVal),
           rotoPts: defendingBehind.rotoPts,
-          cushion: cushionBehind
+          cushion: cushionBehind,
+          numeratorBuffer: downsideNumeratorBuffer,
+          rateRiskPerDay: downsideRateRiskPerDay
         } : null
       };
     });
   }, [selectedOwnerId, humanTeamIds, teamStatsMap, rotoPointsMap, daysRemainingInfo]);
+
+  // Top upside targets (where deficit is smallest / closest to +1 pt)
+  const topOpportunities = useMemo(() => {
+    return categoryAnalysis
+      .filter(c => c.targetAhead)
+      .map(c => {
+        let score = 999;
+        if (!c.cat.isRate) score = c.targetAhead.gap;
+        else if (c.cat.id === 'OBP') score = parseFloat(c.targetAhead.numeratorDifference?.needed) || 999;
+        else if (c.cat.id === 'ERA') score = parseFloat(c.targetAhead.numeratorDifference?.needed?.replace('-', '')) || 999;
+        else if (c.cat.id === 'WHIP') score = parseFloat(c.targetAhead.numeratorDifference?.needed?.replace('-', '')) || 999;
+        return { ...c, score };
+      })
+      .sort((a, b) => a.score - b.score)
+      .slice(0, 3);
+  }, [categoryAnalysis]);
+
+  // Highest downside risks (where cushion is smallest / closest to -1 pt)
+  const highestRisks = useMemo(() => {
+    return categoryAnalysis
+      .filter(c => c.defendingBehind)
+      .map(c => {
+        let score = 999;
+        if (!c.cat.isRate) score = c.defendingBehind.cushion;
+        else if (c.cat.id === 'OBP') score = parseFloat(c.defendingBehind.numeratorBuffer?.needed?.replace('+', '')) || 999;
+        else if (c.cat.id === 'ERA') score = parseFloat(c.defendingBehind.numeratorBuffer?.needed?.replace('+', '')) || 999;
+        else if (c.cat.id === 'WHIP') score = parseFloat(c.defendingBehind.numeratorBuffer?.needed?.replace('+', '')) || 999;
+        return { ...c, score };
+      })
+      .sort((a, b) => a.score - b.score)
+      .slice(0, 3);
+  }, [categoryAnalysis]);
 
   const selectedTeam = TEAMS[selectedOwnerId];
   const totalRotoPoints = rotoPointsMap[selectedOwnerId]?.total || 0;
@@ -237,7 +327,7 @@ export default function RotoGapView({ allStats, selectedSeason = 2026, onOwnerCl
               </div>
             </div>
             <p className="text-xs text-gray-500 mt-2">
-              Inspect your current position in each category, the exact gap to gain +1 Roto Point, numerator differences for ratio stats, and required daily pace.
+              Inspect your current position in each category, the exact gap to gain +1 Roto Point, the downside pace risk of getting caught (-1 Roto Point), numerator buffers, and required daily pace.
             </p>
           </div>
 
@@ -275,6 +365,63 @@ export default function RotoGapView({ allStats, selectedSeason = 2026, onOwnerCl
                 </button>
               );
             })}
+          </div>
+        </div>
+
+        {/* Quick Strategic Summary: Upside Opportunities vs Downside Risks */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5 pt-4 border-t border-gray-100">
+          <div className="bg-blue-50/70 border border-blue-200/80 rounded-xl p-3.5">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-black uppercase text-blue-900 tracking-wider flex items-center gap-1.5">
+                <span>🎯 Top Upside Targets (+1 Roto Pt)</span>
+              </span>
+              <span className="text-[10px] text-blue-700 font-semibold">Closest deficits to overtake</span>
+            </div>
+            <div className="space-y-1.5">
+              {topOpportunities.length > 0 ? (
+                topOpportunities.map(opp => (
+                  <div key={opp.cat.id} className="flex items-center justify-between text-xs bg-white/90 px-2.5 py-1.5 rounded border border-blue-200/60 font-sans">
+                    <span className="font-bold text-gray-900 flex items-center gap-1.5">
+                      <span>{opp.cat.icon}</span>
+                      <span>{opp.cat.name}</span>
+                      <span className="text-[11px] font-normal text-gray-500 font-mono">(#{opp.myRank})</span>
+                    </span>
+                    <span className="font-mono text-blue-800 font-bold text-[11px]">
+                      {!opp.cat.isRate ? `-${opp.targetAhead.gap} ${opp.cat.unit} (+${opp.targetAhead.rateNeededPerDay}/day)` : `${opp.targetAhead.numeratorDifference?.needed} (${opp.targetAhead.rateNeededPerDay})`}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <div className="text-xs text-blue-700 italic">Holding 1st place in all categories!</div>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-rose-50/70 border border-rose-200/80 rounded-xl p-3.5">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-black uppercase text-rose-900 tracking-wider flex items-center gap-1.5">
+                <span>🛡️ Highest Downside Risks (-1 Roto Pt)</span>
+              </span>
+              <span className="text-[10px] text-rose-700 font-semibold">Most vulnerable leads</span>
+            </div>
+            <div className="space-y-1.5">
+              {highestRisks.length > 0 ? (
+                highestRisks.map(risk => (
+                  <div key={risk.cat.id} className="flex items-center justify-between text-xs bg-white/90 px-2.5 py-1.5 rounded border border-rose-200/60 font-sans">
+                    <span className="font-bold text-gray-900 flex items-center gap-1.5">
+                      <span>{risk.cat.icon}</span>
+                      <span>{risk.cat.name}</span>
+                      <span className="text-[11px] font-normal text-gray-500 font-mono">(#{risk.myRank})</span>
+                    </span>
+                    <span className="font-mono text-rose-800 font-bold text-[11px]">
+                      {!risk.cat.isRate ? `+${risk.defendingBehind.cushion} lead (${risk.defendingBehind.rateRiskPerDay})` : `${risk.defendingBehind.numeratorBuffer?.needed} (${risk.defendingBehind.rateRiskPerDay})`}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <div className="text-xs text-rose-700 italic">No vulnerable leads (category floor).</div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -390,21 +537,60 @@ export default function RotoGapView({ allStats, selectedSeason = 2026, onOwnerCl
                 </div>
               )}
 
-              {/* Defending Behind Section (-1 Roto Point Buffer) */}
-              <div className="flex items-center justify-between text-xs pt-3 mt-3 border-t border-gray-100 text-gray-500">
-                {defendingBehind ? (
-                  <>
-                    <span className="truncate">
-                      Defending vs <strong>{defendingBehind.team.name}</strong> ({defendingBehind.val}):
+              {/* Defending Behind & Downside Risk Section (-1 Roto Point) */}
+              {defendingBehind ? (
+                <div className="bg-rose-50/70 border border-rose-200 rounded-lg p-3 space-y-2 mt-3">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-bold text-rose-950 flex items-center gap-1">
+                      <span>🛡️ Downside Risk (-1 Roto Point):</span>
                     </span>
-                    <span className="font-mono font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 whitespace-nowrap ml-2">
-                      +{cat.isRate ? defendingBehind.cushion.toFixed(3) : defendingBehind.cushion} lead
-                    </span>
-                  </>
-                ) : (
-                  <span className="text-gray-400 italic">No teams behind you in this category.</span>
-                )}
-              </div>
+                    <button
+                      onClick={() => onOwnerClick?.(defendingBehind.team)}
+                      className="font-bold text-rose-700 hover:underline flex items-center gap-1"
+                    >
+                      <TeamAvatar team={defendingBehind.team} size="sm" />
+                      <span>{defendingBehind.team.name}</span>
+                    </button>
+                  </div>
+
+                  <div className="flex items-baseline justify-between text-xs font-mono">
+                    <span className="text-gray-600">{defendingBehind.team.name}&apos;s Total: <strong>{defendingBehind.val}</strong></span>
+                    {!cat.isRate ? (
+                      <span className="font-bold text-rose-800 bg-rose-100 px-2 py-0.5 rounded">
+                        Lead Cushion: +{defendingBehind.cushion} {cat.unit}
+                      </span>
+                    ) : (
+                      <span className="font-bold text-rose-800 bg-rose-100 px-2 py-0.5 rounded">
+                        {defendingBehind.numeratorBuffer?.needed || `Lead: +${defendingBehind.cushion.toFixed(3)}`}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Ratio Numerator Specifics */}
+                  {cat.isRate && defendingBehind.numeratorBuffer && (
+                    <div className="text-[11px] text-rose-950 bg-white/80 p-2 rounded border border-rose-200/60 leading-relaxed font-sans">
+                      <div className="font-bold text-rose-950 mb-0.5">
+                        📐 Buffer Allowance ({defendingBehind.numeratorBuffer.label}):
+                      </div>
+                      <div>{defendingBehind.numeratorBuffer.context}</div>
+                    </div>
+                  )}
+
+                  {/* Downside Pace Risk */}
+                  {defendingBehind.rateRiskPerDay && (
+                    <div className="flex items-center justify-between text-xs pt-1 border-t border-rose-200/60 font-sans">
+                      <span className="text-gray-700 font-medium">Chaser Breakeven Pace:</span>
+                      <span className="font-bold font-mono text-rose-800 bg-white px-2 py-0.5 rounded border border-rose-300">
+                        {cat.isRate ? `Caught if outpaced by ${defendingBehind.rateRiskPerDay}` : `Caught if chaser outpaces by ${defendingBehind.rateRiskPerDay}`}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center text-xs font-bold text-gray-500 mt-3">
+                  🛡️ Category Floor: You are in last place ({myRoto % 1 === 0 ? myRoto : myRoto.toFixed(1)} pt floor — cannot drop further).
+                </div>
+              )}
 
               {/* Leader Callout if not #1 */}
               {!isFirstPlace && (
