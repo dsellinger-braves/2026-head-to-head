@@ -1,0 +1,39 @@
+name: Pre-Draft Pool Sync
+
+on:
+  schedule:
+    # Runs at 8:00 AM UTC every Monday during February and March (pre-draft period)
+    - cron: '0 8 * 2,3 1'
+  workflow_dispatch:
+    inputs:
+      season:
+        description: "Target season year (leave blank for dynamic lookup from league_settings)"
+        required: false
+        default: ""
+
+jobs:
+  sync-draft-pool:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install requests supabase
+
+      - name: Sync Draft Pool
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          if [ -n "${{ github.event.inputs.season }}" ]; then
+            python pipelines/sync_draft_pool.py --season=${{ github.event.inputs.season }}
+          else
+            python pipelines/sync_draft_pool.py
+          fi

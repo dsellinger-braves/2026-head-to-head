@@ -2090,25 +2090,63 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
   const fetchStaticData = useCallback(async () => {
     console.log(`📦 Fetching static data...`);
     try {
-      const [poolRes, endingRes, draftHistData, histFinishData] = await Promise.all([
-        supabase.from('player-pool').select('*'),
-        supabase.from('ending-roster').select('*'),
-        fetchFromGCS('draft-history.json', 'gcs_draft_history_v2'),
-        fetchFromGCS('historical-finish.json', 'gcs_league_history')
-      ]);
+      let pool = [];
+      let ending = [];
+      let history = [];
+      let finishes = [];
 
-      let pool = poolRes?.data || [];
+      try {
+        const [poolRes, endingRes, dhRes, hfRes, settingsRes] = await Promise.all([
+          supabase.from('player-pool').select('*'),
+          supabase.from('ending-roster').select('*'),
+          supabase.from('draft_picks').select('*').order('season_year', { ascending: false }).order('overall_pick', { ascending: true }),
+          supabase.from('historical_finishes').select('*').order('season_year', { ascending: false }),
+          supabase.from('league_settings').select('*').limit(1)
+        ]);
+
+        pool = poolRes?.data || [];
+        ending = endingRes?.data || [];
+        if (dhRes?.data && dhRes.data.length > 0) {
+          history = dhRes.data.map(p => ({
+            Year: String(p.season_year),
+            Round: String(p.round || ''),
+            Pick_Overall: String(p.overall_pick),
+            Player_Name: p.player_name,
+            Team_ID: p.team_owner,
+            Owner: p.team_owner,
+            player_id: String(p.player_id || ''),
+            Keeper: p.is_keeper ? 'True' : 'False'
+          }));
+        }
+        if (hfRes?.data && hfRes.data.length > 0) {
+          finishes = hfRes.data.map(f => ({
+            Year: String(f.season_year),
+            Owner: f.team_owner,
+            "Final Rank": String(f.final_place || ''),
+            Points: String(f.total_roto_points || ''),
+            "Active Owner?": f.is_active_owner ? 'Y' : 'N',
+            ...(f.category_ranks || {})
+          }));
+        }
+        if (settingsRes?.data?.[0]?.current_season) {
+          console.log(`⚾ Active League Season: ${settingsRes.data[0].current_season}`);
+        }
+      } catch (dbErr) {
+        console.warn('Supabase warehouse query notice:', dbErr);
+      }
+
       if (!pool.length) {
         pool = await fetchFromGCS('player-pool.json', 'gcs_player_pool') || [];
       }
-      if (endingRes?.error) {
-        console.error(`❌ ENDING-ROSTER ERROR:`, endingRes.error);
+      if (!history.length) {
+        history = await fetchFromGCS('draft-history.json', 'gcs_draft_history_v2') || [];
       }
-      const ending = endingRes?.data || [];
+      if (!finishes.length) {
+        finishes = await fetchFromGCS('historical-finish.json', 'gcs_league_history') || [];
+      }
+
       console.log(`✅ Loaded ${ending.length} ending roster entries`);
-      const history = draftHistData || [];
-      const finishes = histFinishData || [];
-      console.log(`📦 Core data loaded: ${pool.length} players, ${history.length} draft history records`);
+      console.log(`📦 Core data loaded: ${pool.length} players, ${history.length} draft history records, ${finishes.length} historical finish records`);
 
       const [battingZipsData, pitchingZipsData] = await Promise.all([
         fetchFanGraphs('batting'),
