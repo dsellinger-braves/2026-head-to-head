@@ -1,7 +1,7 @@
 // src/views/PickemView.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../supabaseClient';
-import { MLB_TEAMS, MLB_DIVISIONS, PICKEM_RULES, LEAGUE_OWNERS, PROMINENT_AWARD_CANDIDATES } from '../utils/mlbTeams';
+import { MLB_TEAMS, LEAGUE_OWNERS, PROMINENT_AWARD_CANDIDATES } from '../utils/mlbTeams';
 
 export default function PickemView() {
   const [seasons, setSeasons] = useState([]);
@@ -65,7 +65,7 @@ export default function PickemView() {
   useEffect(() => {
     const answers = {};
     questions.forEach(q => {
-      answers[q.question_key] = q.actual_answer || '';
+      answers[q.question_key] = q.correct_answer || q.actual_answer || '';
     });
     setGradingAnswers(answers);
   }, [questions]);
@@ -82,7 +82,6 @@ export default function PickemView() {
       if (sErr) throw sErr;
       if (sData && sData.length > 0) {
         setSeasons(sData);
-        // Default to 2026 or the first active/in-progress season
         const currentActive = sData.find(s => s.season_year === 2026) || sData[0];
         setSelectedSeason(currentActive.season_year);
       }
@@ -114,7 +113,7 @@ export default function PickemView() {
           .from('pickem_questions')
           .select('*')
           .eq('season_year', year)
-          .order('question_order', { ascending: true }),
+          .order('display_order', { ascending: true }),
         supabase
           .from('pickem_picks')
           .select('*')
@@ -123,7 +122,7 @@ export default function PickemView() {
           .from('pickem_scores')
           .select('*')
           .eq('season_year', year)
-          .order('rank', { ascending: true })
+          .order('place', { ascending: true })
       ]);
 
       if (qRes.error) throw qRes.error;
@@ -174,7 +173,9 @@ export default function PickemView() {
             question_id: q.id,
             owner_name: entryOwner,
             team_id: teamId,
-            pick_value: val.trim()
+            pick_value: val.trim(),
+            points_awarded: 0,
+            is_correct: false
           });
         }
       }
@@ -200,9 +201,9 @@ export default function PickemView() {
             owner_name: entryOwner,
             team_id: teamId,
             total_points: 0,
-            rank: scores.length + 1,
-            prize_money: 0,
-            breakdown: {}
+            place: scores.length + 1,
+            budget_awarded: null,
+            category_scores: {}
           }, { onConflict: 'season_year,owner_name' });
       }
 
@@ -221,13 +222,13 @@ export default function PickemView() {
   const handleGradeSeason = async () => {
     setSaving(true);
     try {
-      // 1. Update questions actual_answers
+      // 1. Update questions correct_answer
       for (const q of questions) {
         const actual = gradingAnswers[q.question_key] || null;
-        if (actual !== q.actual_answer) {
+        if (actual !== q.correct_answer) {
           await supabase
             .from('pickem_questions')
-            .update({ actual_answer: actual })
+            .update({ correct_answer: actual })
             .eq('id', q.id);
         }
       }
@@ -244,7 +245,6 @@ export default function PickemView() {
         .eq('season_year', selectedSeason);
 
       // 3. Compute score for each pick
-      // Division winner = 3 pts, Wild Card = 2 pts, Pennant = 5 pts, WS = 7 pts, Award = 4 pts, Win/Loss = 3 pts
       const updatedPicks = [];
       const ownerTotals = {};
 
@@ -255,10 +255,10 @@ export default function PickemView() {
       const alPlayoffs = new Set();
       const nlPlayoffs = new Set();
       updatedQuestions.forEach(q => {
-        if (q.actual_answer) {
-          const ans = q.actual_answer.toLowerCase().trim();
-          if (q.question_key.startsWith('AL_')) alPlayoffs.add(ans);
-          if (q.question_key.startsWith('NL_')) nlPlayoffs.add(ans);
+        if (q.correct_answer) {
+          const ans = q.correct_answer.toLowerCase().trim();
+          if (q.question_key.startsWith('al_')) alPlayoffs.add(ans);
+          if (q.question_key.startsWith('nl_')) nlPlayoffs.add(ans);
         }
       });
 
@@ -267,23 +267,22 @@ export default function PickemView() {
         if (!q) continue;
 
         let isCorrect = false;
-        let isCrossover = false;
         let points = 0;
 
         const pVal = p.pick_value?.toLowerCase().trim() || '';
-        const aVal = q.actual_answer?.toLowerCase().trim() || '';
+        const aVal = q.correct_answer?.toLowerCase().trim() || '';
 
         if (aVal && pVal) {
           if (pVal === aVal || aVal.includes(pVal) || pVal.includes(aVal)) {
             isCorrect = true;
-            points = q.points_value;
-          } else if (q.question_key.includes('WC') || q.question_key.endsWith('_EAST') || q.question_key.endsWith('_CENTRAL') || q.question_key.endsWith('_WEST')) {
+            points = q.points_exact || 3;
+          } else if (q.category === 'wild_card' || q.category === 'division') {
             // Check crossover: if picked team made playoffs
             const inAL = alPlayoffs.has(pVal);
             const inNL = nlPlayoffs.has(pVal);
-            if ((q.question_key.startsWith('AL_') && inAL) || (q.question_key.startsWith('NL_') && inNL)) {
-              isCrossover = true;
-              points = 2; // Crossover wild card value
+            if ((q.question_key.startsWith('al_') && inAL) || (q.question_key.startsWith('nl_') && inNL)) {
+              isCorrect = false;
+              points = q.points_partial || 2; // Crossover wild card value
             }
           }
         }
@@ -295,9 +294,8 @@ export default function PickemView() {
           owner_name: p.owner_name,
           team_id: p.team_id,
           pick_value: p.pick_value,
-          points_earned: points,
-          is_correct: isCorrect,
-          is_crossover: isCrossover
+          points_awarded: points,
+          is_correct: isCorrect
         });
 
         if (!ownerTotals[p.owner_name]) {
@@ -312,20 +310,20 @@ export default function PickemView() {
       // Rank owners & determine prize money
       const sortedOwners = Object.entries(ownerTotals).sort((a, b) => b[1].total - a[1].total);
       const scoreRows = sortedOwners.map(([name, data], idx) => {
-        const rank = idx + 1;
-        let prize = 0;
-        if (rank === 1) prize = 4;
-        else if (rank >= 2 && rank <= 4) prize = 3;
-        else if (rank === 5) prize = 1;
+        const place = idx + 1;
+        let prize = null;
+        if (place === 1) prize = 4;
+        else if (place >= 2 && place <= 4) prize = 3;
+        else if (place === 5) prize = 1;
 
         return {
           season_year: selectedSeason,
           owner_name: name,
           team_id: data.teamId,
           total_points: data.total,
-          rank,
-          prize_money: prize,
-          breakdown: data.breakdown
+          place,
+          budget_awarded: prize,
+          category_scores: data.breakdown
         };
       });
 
@@ -349,55 +347,56 @@ export default function PickemView() {
     if (!newSeasonYear || isNaN(newSeasonYear)) return;
     setSaving(true);
     try {
+      const yearInt = parseInt(newSeasonYear);
       // 1. Create season
       await supabase.from('pickem_seasons').upsert({
-        season_year: parseInt(newSeasonYear),
-        status: 'upcoming',
-        format_type: 'standard_23',
-        notes: `Season ${newSeasonYear} MLB Pick'em Forecast`
+        season_year: yearInt,
+        status: 'open'
       });
 
       // 2. Standard 23 questions definition
       const standardQuestions = [
-        { key: 'AL_EAST', text: 'AL East Winner', cat: 'Division Winner', pts: 3, ord: 1 },
-        { key: 'AL_CENTRAL', text: 'AL Central Winner', cat: 'Division Winner', pts: 3, ord: 2 },
-        { key: 'AL_WEST', text: 'AL West Winner', cat: 'Division Winner', pts: 3, ord: 3 },
-        { key: 'AL_WC1', text: 'AL Wild Card 1', cat: 'Wild Card', pts: 2, ord: 4 },
-        { key: 'AL_WC2', text: 'AL Wild Card 2', cat: 'Wild Card', pts: 2, ord: 5 },
-        { key: 'AL_WC3', text: 'AL Wild Card 3', cat: 'Wild Card', pts: 2, ord: 6 },
-        { key: 'NL_EAST', text: 'NL East Winner', cat: 'Division Winner', pts: 3, ord: 7 },
-        { key: 'NL_CENTRAL', text: 'NL Central Winner', cat: 'Division Winner', pts: 3, ord: 8 },
-        { key: 'NL_WEST', text: 'NL West Winner', cat: 'Division Winner', pts: 3, ord: 9 },
-        { key: 'NL_WC1', text: 'NL Wild Card 1', cat: 'Wild Card', pts: 2, ord: 10 },
-        { key: 'NL_WC2', text: 'NL Wild Card 2', cat: 'Wild Card', pts: 2, ord: 11 },
-        { key: 'NL_WC3', text: 'NL Wild Card 3', cat: 'Wild Card', pts: 2, ord: 12 },
-        { key: 'AL_PENNANT', text: 'AL Champion (Pennant)', cat: 'Pennant', pts: 5, ord: 13 },
-        { key: 'NL_PENNANT', text: 'NL Champion (Pennant)', cat: 'Pennant', pts: 5, ord: 14 },
-        { key: 'WS_CHAMP', text: 'World Series Champion', cat: 'World Series', pts: 7, ord: 15 },
-        { key: 'AL_MVP', text: 'AL MVP', cat: 'Award', pts: 4, ord: 16 },
-        { key: 'NL_MVP', text: 'NL MVP', cat: 'Award', pts: 4, ord: 17 },
-        { key: 'AL_CY', text: 'AL Cy Young', cat: 'Award', pts: 4, ord: 18 },
-        { key: 'NL_CY', text: 'NL Cy Young', cat: 'Award', pts: 4, ord: 19 },
-        { key: 'AL_ROY', text: 'AL Rookie of the Year', cat: 'Award', pts: 4, ord: 20 },
-        { key: 'NL_ROY', text: 'NL Rookie of the Year', cat: 'Award', pts: 4, ord: 21 },
-        { key: 'MOST_WINS', text: 'Most MLB Wins', cat: 'Win / Loss', pts: 3, ord: 22 },
-        { key: 'FEWEST_WINS', text: 'Fewest MLB Wins', cat: 'Win / Loss', pts: 3, ord: 23 },
+        { key: 'nl_east', label: 'NL East', cat: 'division', exact: 3, partial: 2, ord: 1 },
+        { key: 'nl_central', label: 'NL Central', cat: 'division', exact: 3, partial: 2, ord: 2 },
+        { key: 'nl_west', label: 'NL West', cat: 'division', exact: 3, partial: 2, ord: 3 },
+        { key: 'nl_wc_1', label: 'NL Wild Card 1', cat: 'wild_card', exact: 2, partial: 2, ord: 4 },
+        { key: 'nl_wc_2', label: 'NL Wild Card 2', cat: 'wild_card', exact: 2, partial: 2, ord: 5 },
+        { key: 'nl_wc_3', label: 'NL Wild Card 3', cat: 'wild_card', exact: 2, partial: 2, ord: 6 },
+        { key: 'al_east', label: 'AL East', cat: 'division', exact: 3, partial: 2, ord: 7 },
+        { key: 'al_central', label: 'AL Central', cat: 'division', exact: 3, partial: 2, ord: 8 },
+        { key: 'al_west', label: 'AL West', cat: 'division', exact: 3, partial: 2, ord: 9 },
+        { key: 'al_wc_1', label: 'AL Wild Card 1', cat: 'wild_card', exact: 2, partial: 2, ord: 10 },
+        { key: 'al_wc_2', label: 'AL Wild Card 2', cat: 'wild_card', exact: 2, partial: 2, ord: 11 },
+        { key: 'al_wc_3', label: 'AL Wild Card 3', cat: 'wild_card', exact: 2, partial: 2, ord: 12 },
+        { key: 'nl_pennant', label: 'NL Pennant', cat: 'playoff_result', exact: 5, partial: 0, ord: 13 },
+        { key: 'al_pennant', label: 'AL Pennant', cat: 'playoff_result', exact: 5, partial: 0, ord: 14 },
+        { key: 'world_series', label: 'World Series Winner', cat: 'playoff_result', exact: 7, partial: 0, ord: 15 },
+        { key: 'nl_mvp', label: 'NL MVP', cat: 'award', exact: 4, partial: 0, ord: 16 },
+        { key: 'nl_cy_young', label: 'NL Cy Young', cat: 'award', exact: 4, partial: 0, ord: 17 },
+        { key: 'nl_roy', label: 'NL Rookie of the Year', cat: 'award', exact: 4, partial: 0, ord: 18 },
+        { key: 'al_mvp', label: 'AL MVP', cat: 'award', exact: 4, partial: 0, ord: 19 },
+        { key: 'al_cy_young', label: 'AL Cy Young', cat: 'award', exact: 4, partial: 0, ord: 20 },
+        { key: 'al_roy', label: 'AL Rookie of the Year', cat: 'award', exact: 4, partial: 0, ord: 21 },
+        { key: 'most_wins', label: 'Most Team Wins (reg. season)', cat: 'extremes', exact: 3, partial: 0, ord: 22 },
+        { key: 'most_losses', label: 'Most Team Losses (reg. season)', cat: 'extremes', exact: 3, partial: 0, ord: 23 },
       ];
 
       const qRows = standardQuestions.map(q => ({
-        season_year: parseInt(newSeasonYear),
+        season_year: yearInt,
         question_key: q.key,
-        question_text: q.text,
+        question_label: q.label,
         category: q.cat,
-        points_value: q.pts,
-        question_order: q.ord
+        options_type: q.cat === 'award' ? 'player_text' : 'mlb_team',
+        display_order: q.ord,
+        points_exact: q.exact,
+        points_partial: q.partial
       }));
 
       await supabase.from('pickem_questions').upsert(qRows, { onConflict: 'season_year,question_key' });
 
-      setSaveSuccess(`Successfully bootstrapped Season ${newSeasonYear}! 🚀`);
+      setSaveSuccess(`Successfully bootstrapped Season ${yearInt}! 🚀`);
       await fetchInitialData();
-      setSelectedSeason(parseInt(newSeasonYear));
+      setSelectedSeason(yearInt);
       setActiveTab('entry');
     } catch (err) {
       console.error('Bootstrap failed:', err);
@@ -458,11 +457,13 @@ export default function PickemView() {
         };
       }
       const r = records[name];
+      const place = s.place || 99;
+      const budget = s.budget_awarded || 0;
       r.seasonsCount += 1;
       r.totalPoints += (s.total_points || 0);
-      r.totalPrizes += (s.prize_money || 0);
-      if (s.rank === 1) r.titles += 1;
-      if (s.rank <= 3) r.top3 += 1;
+      r.totalPrizes += budget;
+      if (place === 1) r.titles += 1;
+      if (place <= 3) r.top3 += 1;
       if ((s.total_points || 0) > r.bestScore) {
         r.bestScore = s.total_points;
         r.bestYear = s.season_year;
@@ -477,9 +478,21 @@ export default function PickemView() {
   }, [allTimeScores]);
 
   const currentSeasonObj = seasons.find(s => s.season_year === selectedSeason);
-  const isSummaryEra = currentSeasonObj?.format_type === 'summary_era';
-  const isUpcoming = currentSeasonObj?.status === 'upcoming';
-  const isInProgress = currentSeasonObj?.status === 'in_progress';
+  const isSummaryEra = selectedSeason <= 2018;
+  const isUpcoming = currentSeasonObj?.status === 'open' || currentSeasonObj?.status === 'upcoming';
+  const isInProgress = currentSeasonObj?.status === 'in_progress' || selectedSeason === 2026;
+
+  // Category labels helper
+  const getCategoryLabel = (cat) => {
+    switch (cat) {
+      case 'division': return 'Division';
+      case 'wild_card': return 'Wild Card';
+      case 'playoff_result': return 'Playoffs / WS';
+      case 'award': return 'Awards';
+      case 'extremes': return 'Win / Loss Extremes';
+      default: return cat;
+    }
+  };
 
   return (
     <div className="space-y-6 pb-12">
@@ -511,7 +524,7 @@ export default function PickemView() {
             >
               {seasons.map(s => (
                 <option key={s.season_year} value={s.season_year}>
-                  {s.season_year} {s.status === 'upcoming' ? '🚀 (Open Entry)' : s.status === 'in_progress' ? '⚡ (Live)' : '🏆 (Final)'}
+                  {s.season_year} {s.season_year === 2027 ? '🚀 (Open Entry)' : s.season_year === 2026 ? '⚡ (Live)' : '🏆 (Final)'}
                 </option>
               ))}
             </select>
@@ -536,9 +549,9 @@ export default function PickemView() {
               </span>
             )}
             <span className="text-slate-500 mx-1">•</span>
-            <span className="text-slate-400">Format:</span>
-            <span className="text-slate-200 font-medium capitalize">
-              {currentSeasonObj?.format_type?.replace('_', ' ') || 'Standard 23'}
+            <span className="text-slate-400">Questions:</span>
+            <span className="text-slate-200 font-medium">
+              {questions.length || 23} Categories
             </span>
           </div>
 
@@ -546,7 +559,7 @@ export default function PickemView() {
           <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-slate-300">
             <span className="text-slate-400 font-medium">Scoring:</span>
             <span className="px-2 py-0.5 rounded bg-emerald-950/60 border border-emerald-500/30 text-emerald-300 font-semibold">Division: 3 pts</span>
-            <span className="px-2 py-0.5 rounded bg-sky-950/60 border border-sky-500/30 text-sky-300 font-semibold">Wild Card / Crossover: 2 pts</span>
+            <span className="px-2 py-0.5 rounded bg-sky-950/60 border border-sky-500/30 text-sky-300 font-semibold">Wild Card / Playoff: 2 pts</span>
             <span className="px-2 py-0.5 rounded bg-purple-950/60 border border-purple-500/30 text-purple-300 font-semibold">Pennant: 5 pts</span>
             <span className="px-2 py-0.5 rounded bg-amber-950/60 border border-amber-500/30 text-amber-300 font-semibold">World Series: 7 pts</span>
             <span className="px-2 py-0.5 rounded bg-pink-950/60 border border-pink-500/30 text-pink-300 font-semibold">Award: 4 pts</span>
@@ -556,7 +569,7 @@ export default function PickemView() {
 
       {/* TOAST / ALERTS */}
       {saveSuccess && (
-        <div className="bg-emerald-900/60 border border-emerald-500/50 text-emerald-200 p-4 rounded-xl flex items-center gap-3 shadow-lg animate-fade-in">
+        <div className="bg-emerald-900/60 border border-emerald-500/50 text-emerald-200 p-4 rounded-xl flex items-center gap-3 shadow-lg">
           <span className="text-2xl">🎉</span>
           <div className="font-semibold text-sm">{saveSuccess}</div>
         </div>
@@ -593,7 +606,7 @@ export default function PickemView() {
           >
             <span>✍️</span>
             <span>Submit / Edit Picks</span>
-            {isUpcoming && <span className="w-2 h-2 rounded-full bg-emerald-300 animate-ping"></span>}
+            {selectedSeason === 2027 && <span className="w-2 h-2 rounded-full bg-emerald-300 animate-ping"></span>}
           </button>
 
           <button
@@ -652,7 +665,7 @@ export default function PickemView() {
                       Top 5 finishers earn additional auction draft dollars for next season's draft: 1st (+$4), 2nd-4th (+$3), 5th (+$1).
                     </p>
                   </div>
-                  {isUpcoming && (
+                  {isUpcoming && selectedSeason === 2027 && (
                     <span className="text-xs bg-emerald-950 text-emerald-300 px-3 py-1 rounded-full border border-emerald-800/60 font-semibold self-start">
                       Picks open – scores pending season results
                     </span>
@@ -673,9 +686,9 @@ export default function PickemView() {
                         <div className="text-2xl font-black text-indigo-300 mt-0.5">
                           {scores[1]?.total_points ?? 0} <span className="text-xs text-slate-400 font-normal">pts</span>
                         </div>
-                        {scores[1]?.prize_money > 0 && (
+                        {(scores[1]?.budget_awarded || 0) > 0 && (
                           <span className="mt-2 text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-950 border border-emerald-500/40 text-emerald-300">
-                            +{scores[1].prize_money} Draft Budget
+                            +${scores[1].budget_awarded} Draft Budget
                           </span>
                         )}
                       </div>
@@ -693,9 +706,9 @@ export default function PickemView() {
                         <div className="text-3xl font-black text-amber-300 mt-0.5">
                           {scores[0]?.total_points ?? 0} <span className="text-xs text-slate-400 font-normal">pts</span>
                         </div>
-                        {scores[0]?.prize_money > 0 && (
+                        {(scores[0]?.budget_awarded || 0) > 0 && (
                           <span className="mt-2 text-xs font-black px-3 py-1 rounded-full bg-amber-400 text-slate-950 shadow">
-                            +{scores[0].prize_money} Draft Budget
+                            +${scores[0].budget_awarded} Draft Budget
                           </span>
                         )}
                       </div>
@@ -710,9 +723,9 @@ export default function PickemView() {
                         <div className="text-2xl font-black text-indigo-300 mt-0.5">
                           {scores[2]?.total_points ?? 0} <span className="text-xs text-slate-400 font-normal">pts</span>
                         </div>
-                        {scores[2]?.prize_money > 0 && (
+                        {(scores[2]?.budget_awarded || 0) > 0 && (
                           <span className="mt-2 text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-950 border border-emerald-500/40 text-emerald-300">
-                            +{scores[2].prize_money} Draft Budget
+                            +${scores[2].budget_awarded} Draft Budget
                           </span>
                         )}
                       </div>
@@ -743,16 +756,20 @@ export default function PickemView() {
                         </thead>
                         <tbody className="divide-y divide-slate-800/60">
                           {scores.map((sc) => {
-                            const isPodium = sc.rank <= 3;
+                            const place = sc.place || 99;
+                            const isPodium = place <= 3;
+                            const budget = sc.budget_awarded || 0;
+                            const cats = sc.category_scores || {};
+
                             return (
                               <tr
                                 key={sc.id || sc.owner_name}
                                 className={`hover:bg-slate-800/40 transition-colors ${
-                                  sc.rank === 1 ? 'bg-amber-950/10' : isPodium ? 'bg-indigo-950/10' : ''
+                                  place === 1 ? 'bg-amber-950/10' : isPodium ? 'bg-indigo-950/10' : ''
                                 }`}
                               >
                                 <td className="py-2.5 px-3 font-extrabold">
-                                  {sc.rank === 1 ? '🥇 1' : sc.rank === 2 ? '🥈 2' : sc.rank === 3 ? '🥉 3' : `#${sc.rank}`}
+                                  {place === 1 ? '🥇 1' : place === 2 ? '🥈 2' : place === 3 ? '🥉 3' : `#${place}`}
                                 </td>
                                 <td className="py-2.5 px-3 font-bold text-white flex items-center gap-2">
                                   <span>{sc.owner_name}</span>
@@ -766,9 +783,9 @@ export default function PickemView() {
                                   {sc.total_points ?? 0}
                                 </td>
                                 <td className="py-2.5 px-3 text-center">
-                                  {sc.prize_money > 0 ? (
+                                  {budget > 0 ? (
                                     <span className="px-2.5 py-1 rounded-full text-xs font-black bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 inline-block shadow-xs">
-                                      +${sc.prize_money}
+                                      +${budget}
                                     </span>
                                   ) : (
                                     <span className="text-slate-600 text-xs font-medium">—</span>
@@ -777,16 +794,16 @@ export default function PickemView() {
 
                                 {isSummaryEra ? (
                                   <>
-                                    <td className="py-2.5 px-3 text-right text-xs text-slate-300 font-mono">{sc.breakdown?.NL_Playoffs ?? '—'}</td>
-                                    <td className="py-2.5 px-3 text-right text-xs text-slate-300 font-mono">{sc.breakdown?.AL_Playoffs ?? '—'}</td>
-                                    <td className="py-2.5 px-3 text-right text-xs text-slate-300 font-mono">{sc.breakdown?.Playoff_Result ?? '—'}</td>
-                                    <td className="py-2.5 px-3 text-right text-xs text-slate-300 font-mono">{sc.breakdown?.NL_Award ?? '—'}</td>
-                                    <td className="py-2.5 px-3 text-right text-xs text-slate-300 font-mono">{sc.breakdown?.AL_Award ?? '—'}</td>
-                                    <td className="py-2.5 px-3 text-right text-xs text-slate-300 font-mono">{sc.breakdown?.Most_Wins_Losses ?? '—'}</td>
+                                    <td className="py-2.5 px-3 text-right text-xs text-slate-300 font-mono">{cats.nl_playoffs ?? cats['NL Playoffs'] ?? '—'}</td>
+                                    <td className="py-2.5 px-3 text-right text-xs text-slate-300 font-mono">{cats.al_playoffs ?? cats['AL Playoffs'] ?? '—'}</td>
+                                    <td className="py-2.5 px-3 text-right text-xs text-slate-300 font-mono">{cats.playoff_result ?? cats['Playoff Result'] ?? '—'}</td>
+                                    <td className="py-2.5 px-3 text-right text-xs text-slate-300 font-mono">{cats.nl_award ?? cats['NL Award'] ?? '—'}</td>
+                                    <td className="py-2.5 px-3 text-right text-xs text-slate-300 font-mono">{cats.al_award ?? cats['AL Award'] ?? '—'}</td>
+                                    <td className="py-2.5 px-3 text-right text-xs text-slate-300 font-mono">{cats['most_wins/losses'] ?? cats['Most Wins/Losses'] ?? '—'}</td>
                                   </>
                                 ) : (
                                   <td className="py-2.5 px-3 text-xs text-slate-400">
-                                    {sc.rank === 1 ? '🏆 Champion' : sc.rank <= 4 ? '✨ In the Money' : sc.rank === 5 ? '🎯 Budget Cash' : 'Out of the Money'}
+                                    {place === 1 ? '🏆 Champion' : place <= 4 ? '✨ In the Money' : place === 5 ? '🎯 Budget Cash' : 'Out of the Money'}
                                   </td>
                                 )}
                               </tr>
@@ -824,7 +841,7 @@ export default function PickemView() {
 
                     {/* Filter by category */}
                     <div className="flex items-center gap-1.5 overflow-x-auto text-xs">
-                      {['ALL', 'Division Winner', 'Wild Card', 'Pennant', 'World Series', 'Award', 'Win / Loss'].map(cat => (
+                      {['ALL', 'division', 'wild_card', 'playoff_result', 'award', 'extremes'].map(cat => (
                         <button
                           key={cat}
                           onClick={() => setGridCategoryFilter(cat)}
@@ -834,7 +851,7 @@ export default function PickemView() {
                               : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
                           }`}
                         >
-                          {cat === 'ALL' ? 'All Questions' : cat}
+                          {cat === 'ALL' ? 'All Questions' : getCategoryLabel(cat)}
                         </button>
                       ))}
                     </div>
@@ -859,19 +876,20 @@ export default function PickemView() {
                       </thead>
                       <tbody className="divide-y divide-slate-800/50">
                         {filteredQuestions.map(q => {
-                          const hasActual = q.actual_answer && q.actual_answer.trim() !== '';
+                          const outcome = q.correct_answer || q.actual_answer;
+                          const hasActual = outcome && outcome.trim() !== '';
 
                           return (
                             <tr key={q.id} className="hover:bg-slate-800/30 transition-colors">
                               {/* Question Column */}
                               <td className="py-2.5 px-3">
-                                <div className="font-bold text-white text-sm">{q.question_text}</div>
+                                <div className="font-bold text-white text-sm">{q.question_label || q.question_text}</div>
                                 <div className="flex items-center gap-2 mt-0.5">
                                   <span className="text-[10px] px-1.5 py-0.2 rounded bg-indigo-950/80 border border-indigo-700/50 text-indigo-300 font-semibold">
-                                    {q.category}
+                                    {getCategoryLabel(q.category)}
                                   </span>
                                   <span className="text-[10px] text-slate-400 font-medium">
-                                    {q.points_value} pts
+                                    {q.points_exact || 3} pts
                                   </span>
                                 </div>
                               </td>
@@ -880,7 +898,7 @@ export default function PickemView() {
                               <td className="py-2.5 px-3 bg-slate-950/40 border-x border-slate-800">
                                 {hasActual ? (
                                   <span className="font-bold text-emerald-300 bg-emerald-950/80 px-2 py-1 rounded border border-emerald-600/40 block text-center">
-                                    {q.actual_answer}
+                                    {outcome}
                                   </span>
                                 ) : (
                                   <span className="text-slate-600 italic block text-center">Pending</span>
@@ -901,8 +919,8 @@ export default function PickemView() {
                                 }
 
                                 const isExact = pick?.is_correct;
-                                const isCrossover = pick?.is_crossover;
-                                const pts = pick?.points_earned;
+                                const pts = pick?.points_awarded ?? pick?.points_earned ?? 0;
+                                const isCrossover = !isExact && pts > 0;
 
                                 return (
                                   <td key={o.name} className="py-2.5 px-3 text-center">
@@ -983,16 +1001,16 @@ export default function PickemView() {
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
                     {questions
-                      .filter(q => q.category === 'Division Winner')
+                      .filter(q => q.category === 'division')
                       .map(q => {
-                        // Extract division name to filter teams
                         let divFilter = null;
-                        if (q.question_key.includes('AL_EAST')) divFilter = 'AL East';
-                        if (q.question_key.includes('AL_CENTRAL')) divFilter = 'AL Central';
-                        if (q.question_key.includes('AL_WEST')) divFilter = 'AL West';
-                        if (q.question_key.includes('NL_EAST')) divFilter = 'NL East';
-                        if (q.question_key.includes('NL_CENTRAL')) divFilter = 'NL Central';
-                        if (q.question_key.includes('NL_WEST')) divFilter = 'NL West';
+                        const key = q.question_key.toLowerCase();
+                        if (key.includes('al_east')) divFilter = 'AL East';
+                        if (key.includes('al_central')) divFilter = 'AL Central';
+                        if (key.includes('al_west')) divFilter = 'AL West';
+                        if (key.includes('nl_east')) divFilter = 'NL East';
+                        if (key.includes('nl_central')) divFilter = 'NL Central';
+                        if (key.includes('nl_west')) divFilter = 'NL West';
 
                         const divTeams = divFilter
                           ? MLB_TEAMS.filter(t => t.division === divFilter)
@@ -1001,7 +1019,7 @@ export default function PickemView() {
                         return (
                           <div key={q.id} className="bg-slate-950/60 border border-slate-800 rounded-xl p-3.5 space-y-1.5">
                             <label className="text-xs font-bold text-slate-200 block">
-                              {q.question_text}
+                              {q.question_label}
                             </label>
                             <select
                               value={entryPicks[q.question_key] || ''}
@@ -1028,15 +1046,15 @@ export default function PickemView() {
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
                     {questions
-                      .filter(q => q.category === 'Wild Card')
+                      .filter(q => q.category === 'wild_card')
                       .map(q => {
-                        const isAL = q.question_key.startsWith('AL_');
+                        const isAL = q.question_key.toLowerCase().startsWith('al_');
                         const leagueTeams = MLB_TEAMS.filter(t => (isAL ? t.league === 'AL' : t.league === 'NL'));
 
                         return (
                           <div key={q.id} className="bg-slate-950/60 border border-slate-800 rounded-xl p-3.5 space-y-1.5">
                             <label className="text-xs font-bold text-slate-200 block">
-                              {q.question_text}
+                              {q.question_label}
                             </label>
                             <select
                               value={entryPicks[q.question_key] || ''}
@@ -1063,16 +1081,17 @@ export default function PickemView() {
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-3">
                     {questions
-                      .filter(q => q.category === 'Pennant' || q.category === 'World Series')
+                      .filter(q => q.category === 'playoff_result')
                       .map(q => {
                         let pool = MLB_TEAMS;
-                        if (q.question_key.startsWith('AL_')) pool = MLB_TEAMS.filter(t => t.league === 'AL');
-                        if (q.question_key.startsWith('NL_')) pool = MLB_TEAMS.filter(t => t.league === 'NL');
+                        const key = q.question_key.toLowerCase();
+                        if (key.startsWith('al_')) pool = MLB_TEAMS.filter(t => t.league === 'AL');
+                        if (key.startsWith('nl_')) pool = MLB_TEAMS.filter(t => t.league === 'NL');
 
                         return (
                           <div key={q.id} className="bg-slate-950/60 border border-slate-800 rounded-xl p-3.5 space-y-1.5">
                             <label className="text-xs font-bold text-amber-200 block">
-                              {q.question_text} ({q.points_value} pts)
+                              {q.question_label} ({q.points_exact} pts)
                             </label>
                             <select
                               value={entryPicks[q.question_key] || ''}
@@ -1099,14 +1118,14 @@ export default function PickemView() {
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
                     {questions
-                      .filter(q => q.category === 'Award')
+                      .filter(q => q.category === 'award')
                       .map(q => {
                         const suggestions = PROMINENT_AWARD_CANDIDATES[q.question_key] || [];
 
                         return (
                           <div key={q.id} className="bg-slate-950/60 border border-slate-800 rounded-xl p-3.5 space-y-2">
                             <label className="text-xs font-bold text-slate-200 block">
-                              {q.question_text}
+                              {q.question_label}
                             </label>
                             <input
                               type="text"
@@ -1143,11 +1162,11 @@ export default function PickemView() {
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
                     {questions
-                      .filter(q => q.category === 'Win / Loss')
+                      .filter(q => q.category === 'extremes')
                       .map(q => (
                         <div key={q.id} className="bg-slate-950/60 border border-slate-800 rounded-xl p-3.5 space-y-1.5">
                           <label className="text-xs font-bold text-slate-200 block">
-                            {q.question_text}
+                            {q.question_label}
                           </label>
                           <select
                             value={entryPicks[q.question_key] || ''}
@@ -1334,9 +1353,9 @@ export default function PickemView() {
                     <div key={q.id} className="bg-slate-950/60 border border-slate-800 rounded-xl p-3 space-y-1.5">
                       <div className="flex items-center justify-between">
                         <label className="text-xs font-bold text-slate-200">
-                          {q.question_text}
+                          {q.question_label}
                         </label>
-                        <span className="text-[10px] text-slate-500 font-mono">{q.points_value} pts</span>
+                        <span className="text-[10px] text-slate-500 font-mono">{q.points_exact || 3} pts</span>
                       </div>
                       <input
                         type="text"

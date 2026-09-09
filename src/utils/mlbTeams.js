@@ -82,6 +82,12 @@ export const LEAGUE_OWNERS = [
 ];
 
 export const PROMINENT_AWARD_CANDIDATES = {
+  al_mvp: ['Aaron Judge', 'Bobby Witt Jr.', 'Gunnar Henderson', 'Juan Soto', 'Corey Seager', 'Jose Ramirez', 'Kyle Tucker', 'Yordan Alvarez', 'Adley Rutschman', 'Rafael Devers', 'Vladimir Guerrero Jr.', 'Jarren Duran', 'Julio Rodriguez'],
+  nl_mvp: ['Shohei Ohtani', 'Francisco Lindor', 'Bryce Harper', 'Mookie Betts', 'Freddie Freeman', 'Fernando Tatis Jr.', 'Ronald Acuna Jr.', 'Elly De La Cruz', 'Jackson Chourio', 'Corbin Carroll', 'Ketel Marte', 'Austin Riley', 'Manny Machado'],
+  al_cy_young: ['Tarik Skubal', 'Corbin Burnes', 'Seth Lugo', 'Cole Ragans', 'Logan Gilbert', 'George Kirby', 'Garrett Crochet', 'Framber Valdez', 'Ronel Blanco', 'Kevin Gausman', 'Tanner Houck', 'Gerrit Cole'],
+  nl_cy_young: ['Chris Sale', 'Zack Wheeler', 'Paul Skenes', 'Dylan Cease', 'Logan Webb', 'Shota Imanaga', 'Yoshinobu Yamamoto', 'Freddy Peralta', 'Ranger Suarez', 'Sonny Gray', 'Tyler Glasnow'],
+  al_roy: ['Colton Cowser', 'Luis Gil', 'Austin Wells', 'Mason Miller', 'Wilyer Abreu', 'Wyatt Langford', 'Ceddanne Rafaela', 'Jackson Holliday', 'Brooks Lee'],
+  nl_roy: ['Paul Skenes', 'Jackson Merrill', 'Jackson Chourio', 'Shota Imanaga', 'Michael Busch', 'Masyn Winn', 'Tyler Fitzgerald', 'Gavin Stone'],
   AL_MVP: ['Aaron Judge', 'Bobby Witt Jr.', 'Gunnar Henderson', 'Juan Soto', 'Corey Seager', 'Jose Ramirez', 'Kyle Tucker', 'Yordan Alvarez', 'Adley Rutschman', 'Rafael Devers', 'Vladimir Guerrero Jr.', 'Jarren Duran', 'Julio Rodriguez'],
   NL_MVP: ['Shohei Ohtani', 'Francisco Lindor', 'Bryce Harper', 'Mookie Betts', 'Freddie Freeman', 'Fernando Tatis Jr.', 'Ronald Acuna Jr.', 'Elly De La Cruz', 'Jackson Chourio', 'Corbin Carroll', 'Ketel Marte', 'Austin Riley', 'Manny Machado'],
   AL_CY: ['Tarik Skubal', 'Corbin Burnes', 'Seth Lugo', 'Cole Ragans', 'Logan Gilbert', 'George Kirby', 'Garrett Crochet', 'Framber Valdez', 'Ronel Blanco', 'Kevin Gausman', 'Tanner Houck', 'Gerrit Cole'],
