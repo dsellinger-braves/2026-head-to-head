@@ -37,3 +37,5 @@ jobs:
           else
             python pipelines/sync_draft_pool.py
           fi
+          echo "⚡ Computing player pricing models and valuations..."
+          python pipelines/compute_player_values.py

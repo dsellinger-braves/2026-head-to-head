@@ -19,6 +19,7 @@ import PlayerHistoryModal from './components/PlayerHistoryModal';
 import LiveScoreboardView from './views/LiveScoreboardView';
 import TransactionsView from './views/TransactionsView';
 import DraftRoomView from './views/DraftRoomView';
+import PlayerValuationsView from './views/PlayerValuationsView';
 
 const AVAILABLE_SEASONS = Array.from({ length: 2026 - 2012 + 1 }, (_, i) => 2026 - i);
 
@@ -33,6 +34,7 @@ const VIEW_TO_HASH = {
   highlights: 'highlights',
   fantasycast: 'fantasycast',
   draft: 'draft',
+  valuations: 'valuations',
 };
 
 const HASH_TO_VIEW = {
@@ -48,6 +50,8 @@ const HASH_TO_VIEW = {
   highlights: 'highlights',
   fantasycast: 'fantasycast',
   draft: 'draft',
+  valuations: 'valuations',
+  pricing: 'valuations',
 };
 
 function getViewFromHash() {
@@ -498,6 +502,10 @@ function App() {
                 <a href="#/teams" onClick={(e) => { e.preventDefault(); setCurrentView('teams'); }} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'teams' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Teams</a>
                 <a href="#/transactions" onClick={(e) => { e.preventDefault(); setCurrentView('transactions'); }} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'transactions' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Transactions</a>
                 <a href="#/players" onClick={(e) => { e.preventDefault(); setCurrentView('players'); }} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'players' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Players</a>
+                <a href="#/valuations" onClick={(e) => { e.preventDefault(); setCurrentView('valuations'); }} className={`px-3 py-2 rounded text-sm font-bold flex items-center gap-1.5 transition-colors ${currentView === 'valuations' ? 'bg-indigo-600 text-white ring-2 ring-indigo-400' : 'hover:bg-blue-800'}`} title="Player Pricing & Valuations">
+                  <span>💰</span>
+                  <span>Valuations</span>
+                </a>
                 <a href="#/disparities" onClick={(e) => { e.preventDefault(); setCurrentView('disparities'); }} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'disparities' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Disparities</a>
                 <a href="#/progression" onClick={(e) => { e.preventDefault(); setCurrentView('progression'); }} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'progression' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Progression</a>
                 <a href="#/highlights" onClick={(e) => { e.preventDefault(); setCurrentView('highlights'); }} className={`px-3 py-2 rounded text-sm font-bold ${currentView === 'highlights' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}>Highlights</a>
@@ -603,6 +611,12 @@ function App() {
           {currentView === 'fantasycast' && (
             <LiveScoreboardView
               todaysRecords={todaysRecords}
+            />
+          )}
+          {currentView === 'valuations' && (
+            <PlayerValuationsView
+              onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
+              onOwnerClick={(team) => setSelectedOwner(team)}
             />
           )}
         </main>

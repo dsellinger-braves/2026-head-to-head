@@ -1300,6 +1300,8 @@ function PlayerPoolPanel({ players, onDraft, isMyTurn, queue, onAddToQueue, onRe
                 <th style={styles.th} onClick={() => requestSort('Player')}>Player</th>
                 <th style={styles.th} onClick={() => requestSort('Position')}>Pos</th>
                 <th style={styles.th} onClick={() => requestSort('Team')}>Team</th>
+                <th style={{ ...styles.th, color: '#ffc107' }} onClick={() => requestSort('Hefty Keeper Price')}>Hefty $</th>
+                <th style={{ ...styles.th, color: '#90caf9' }} onClick={() => requestSort('Hefty Keeper Rank')}>Rank</th>
                 <th style={styles.th} onClick={() => requestSort('ZIPSR')}>R</th>
                 <th style={styles.th} onClick={() => requestSort('ZIPSHR')}>HR</th>
                 <th style={styles.th} onClick={() => requestSort('ZIPSRBI')}>RBI</th>
@@ -1317,6 +1319,8 @@ function PlayerPoolPanel({ players, onDraft, isMyTurn, queue, onAddToQueue, onRe
                 const queued = isQueued(p['ESPN PlayerID']);
                 const isPitcher = p.Position?.includes('SP') || p.Position?.includes('RP');
                 const injury = getInjuryIndicator(p['ESPN PlayerID'], playerInfo);
+                const heftyPrice = p['Hefty Keeper Price'] ?? p['Hefty Single Season Price'];
+                const heftyRank = p['Hefty Keeper Rank'] ?? p['Hefty Single Season Rank'];
                 
                 return (
                   <tr key={p['ESPN PlayerID']} style={styles.tableRow}>
@@ -1356,6 +1360,12 @@ function PlayerPoolPanel({ players, onDraft, isMyTurn, queue, onAddToQueue, onRe
                     </td>
                     <td style={styles.td}>{p.Position}</td>
                     <td style={styles.td}>{p.Team}</td>
+                    <td style={{ ...styles.td, textAlign: 'right', fontWeight: 'bold', color: heftyPrice ? '#ffc107' : '#666' }}>
+                      {heftyPrice !== undefined && heftyPrice !== null && heftyPrice !== '' ? `$${heftyPrice}` : '-'}
+                    </td>
+                    <td style={{ ...styles.td, textAlign: 'center', color: '#90caf9', fontSize: '11px', fontWeight: '600' }}>
+                      {heftyRank ? `#${heftyRank}` : '-'}
+                    </td>
                     <td style={styles.td}>{isPitcher ? '-' : (p.ZIPSR || '-')}</td>
                     <td style={styles.td}>{isPitcher ? '-' : (p.ZIPSHR || '-')}</td>
                     <td style={styles.td}>{isPitcher ? '-' : (p.ZIPSRBI || '-')}</td>
