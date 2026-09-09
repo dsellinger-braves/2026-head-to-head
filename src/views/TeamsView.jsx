@@ -1,9 +1,17 @@
 import { useMemo, useState } from 'react';
 import { TEAMS } from '../schedule';
-import { aggregateStats, SCORING_CATS, calculateRotoPoints } from '../utils/scoring';
+import { aggregateStats, SCORING_CATS, MINUTIAE_STATS, calculateRotoPoints } from '../utils/scoring';
 import TeamAvatar from '../components/TeamAvatar';
+import RotoGapView from './RotoGapView';
 
 const STAT_COLS = ['PA', 'R', 'HR', 'RBI', 'SB', 'OBP', 'IP', 'K', 'QS', 'QS_PCT', 'SV+HDs', 'ERA', 'WHIP'];
+
+const MINUTIAE_COLS = [
+  // Hitting
+  'AB', 'H', '2B', '3B', 'BB', 'SO', 'HBP', 'CS', 'SB_PCT', 'E', 'AVG', 'SLG', 'OPS',
+  // Pitching
+  'W', 'L', 'SV', 'HD', 'BS', 'R_Allowed', 'UER', 'HR_Allowed', 'K/9', 'BB/9', 'K/BB'
+];
 
 const formatStat = (row, cat) => {
   const val = row[cat];
@@ -24,11 +32,21 @@ const formatStat = (row, cat) => {
     const n = parseFloat(val);
     return isNaN(n) ? '-' : n.toFixed(4).replace(/^0/, '');
   }
-  if (cat === 'QS_PCT') {
+  if (cat === 'AVG' || cat === 'SLG' || cat === 'OPS') {
+    const raw = row[`${cat}_raw`];
+    if (raw !== undefined) return isNaN(raw) ? '-' : raw.toFixed(3).replace(/^0/, '');
+    const n = parseFloat(val);
+    return isNaN(n) ? '-' : n.toFixed(3).replace(/^0/, '');
+  }
+  if (cat === 'QS_PCT' || cat === 'SB_PCT') {
     const n = parseFloat(val);
     return isNaN(n) ? '-' : n.toFixed(1) + '%';
   }
-  if (SCORING_CATS[cat]?.isRate) {
+  if (cat === 'K/9' || cat === 'BB/9' || cat === 'K/BB') {
+    const n = parseFloat(val);
+    return isNaN(n) ? '-' : n.toFixed(2);
+  }
+  if (SCORING_CATS[cat]?.isRate || MINUTIAE_STATS[cat]?.isRate) {
     const n = parseFloat(val);
     return isNaN(n) ? '-' : n.toFixed(3).replace(/^0/, '');
   }
@@ -44,10 +62,10 @@ function SortIcon({ col, sortKey, sortDir }) {
   );
 }
 
-export default function TeamsView({ allStats, onOwnerClick }) {
+export default function TeamsView({ allStats, onOwnerClick, selectedSeason = 2026 }) {
   const [sortKey, setSortKey] = useState('R');
   const [sortDir, setSortDir] = useState('desc');
-  const [viewMode, setViewMode] = useState('raw'); // 'raw' or 'roto'
+  const [viewMode, setViewMode] = useState('raw'); // 'raw', 'roto', 'minutiae', 'gap'
 
   const teamRows = useMemo(() => {
     const groups = {};
@@ -73,6 +91,8 @@ export default function TeamsView({ allStats, onOwnerClick }) {
     }));
   }, [allStats]);
 
+  const activeCols = viewMode === 'minutiae' ? MINUTIAE_COLS : STAT_COLS;
+
   const sorted = useMemo(() => {
     return [...teamRows].sort((a, b) => {
       const dataA = viewMode === 'roto' && SCORING_CATS[sortKey] ? a.rotoPoints : a.stats;
@@ -83,7 +103,8 @@ export default function TeamsView({ allStats, onOwnerClick }) {
       const va = parseFloat(valA) || 0;
       const vb = parseFloat(valB) || 0;
       
-      const isLow = viewMode === 'raw' && SCORING_CATS[sortKey]?.type === 'low';
+      const isLow = (viewMode === 'raw' && SCORING_CATS[sortKey]?.type === 'low') ||
+                    (viewMode === 'minutiae' && MINUTIAE_STATS[sortKey]?.type === 'low');
       const cmp = isLow ? va - vb : vb - va;
       return sortDir === 'desc' ? cmp : -cmp;
     });
@@ -91,98 +112,138 @@ export default function TeamsView({ allStats, onOwnerClick }) {
 
   const handleSort = (col) => {
     if (sortKey === col) setSortDir(d => d === 'desc' ? 'asc' : 'desc');
-    else { setSortKey(col); setSortDir('desc'); }
+    else {
+      setSortKey(col);
+      const isLow = (viewMode === 'raw' && SCORING_CATS[col]?.type === 'low') ||
+                    (viewMode === 'minutiae' && MINUTIAE_STATS[col]?.type === 'low');
+      setSortDir(isLow ? 'asc' : 'desc');
+    }
+  };
+
+  const handleViewModeChange = (mode) => {
+    setViewMode(mode);
+    if (mode === 'minutiae') {
+      setSortKey('H');
+      setSortDir('desc');
+    } else if (mode === 'roto') {
+      setSortKey('total');
+      setSortDir('desc');
+    } else if (mode === 'raw') {
+      setSortKey('R');
+      setSortDir('desc');
+    }
   };
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h2 className="text-2xl font-black text-gray-900">Team Stats — 2026 Season</h2>
+          <h2 className="text-2xl font-black text-gray-900">Team Stats — {selectedSeason} Season</h2>
           <p className="text-xs text-gray-400">Active roster only · click column header to sort · click row to drill in</p>
         </div>
-        <div className="flex items-center bg-gray-200 rounded-lg p-1">
+        <div className="flex items-center bg-gray-200 rounded-lg p-1 gap-1 flex-wrap">
           <button
-            onClick={() => setViewMode('raw')}
-            className={`px-4 py-1.5 text-sm font-bold rounded-md transition-all ${viewMode === 'raw' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+            onClick={() => handleViewModeChange('raw')}
+            className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${viewMode === 'raw' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
           >
             Raw Stats
           </button>
           <button
-            onClick={() => setViewMode('roto')}
-            className={`px-4 py-1.5 text-sm font-bold rounded-md transition-all ${viewMode === 'roto' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+            onClick={() => handleViewModeChange('roto')}
+            className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${viewMode === 'roto' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
           >
             Roto Points
+          </button>
+          <button
+            onClick={() => handleViewModeChange('minutiae')}
+            className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${viewMode === 'minutiae' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+          >
+            Deep Stats & Minutiae
+          </button>
+          <button
+            onClick={() => handleViewModeChange('gap')}
+            className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${viewMode === 'gap' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+          >
+            🎯 Roto Gap & Pace
           </button>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
-        <table className="min-w-full text-sm">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Team</th>
-              {STAT_COLS.map(col => (
-                <th
-                  key={col}
-                  onClick={() => handleSort(col)}
-                  className={`px-3 py-3 text-center text-xs font-bold uppercase tracking-wider cursor-pointer select-none hover:bg-blue-50 transition-colors whitespace-nowrap
-                    ${sortKey === col ? 'text-blue-600 bg-blue-50' : 'text-gray-500'}`}
-                >
-                  {SCORING_CATS[col]?.label || col}
-                  <SortIcon col={col} sortKey={sortKey} sortDir={sortDir} />
-                </th>
-              ))}
-              {viewMode === 'roto' && (
-                <th 
-                  onClick={() => handleSort('total')}
-                  className={`px-3 py-3 text-center text-xs font-bold uppercase tracking-wider cursor-pointer select-none hover:bg-blue-50 transition-colors whitespace-nowrap
-                    ${sortKey === 'total' ? 'text-blue-600 bg-blue-50' : 'text-gray-500'}`}
-                >
-                  Total Roto
-                  <SortIcon col="total" sortKey={sortKey} sortDir={sortDir} />
-                </th>
-              )}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {sorted.map(team => {
-              const rowData = viewMode === 'roto' ? team.rotoPoints : team.stats;
-              return (
-                <tr
-                  key={team.id}
-                  onClick={() => onOwnerClick(team)}
-                  className="hover:bg-blue-50 cursor-pointer transition-colors group"
-                >
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="group-hover:scale-110 transition-transform">
-                        <TeamAvatar team={team} size="sm" />
-                      </div>
-                      <span className="font-bold text-gray-900 group-hover:text-blue-700">{team.name}</span>
-                    </div>
-                  </td>
-                  {STAT_COLS.map(col => (
-                    <td
+      {viewMode === 'gap' ? (
+        <RotoGapView allStats={allStats} selectedSeason={selectedSeason} onOwnerClick={onOwnerClick} />
+      ) : (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-10">Team</th>
+                {activeCols.map(col => {
+                  const meta = viewMode === 'minutiae' ? MINUTIAE_STATS[col] : SCORING_CATS[col];
+                  const label = meta?.label || col;
+                  return (
+                    <th
                       key={col}
-                      title={rowData[`${col}_raw`] !== undefined ? rowData[`${col}_raw`] : ''}
-                      className={`px-3 py-3 text-center font-mono text-sm
-                        ${sortKey === col ? 'text-blue-700 font-bold bg-blue-50/50' : 'text-gray-700'}`}
+                      onClick={() => handleSort(col)}
+                      className={`px-3 py-3 text-center text-xs font-bold uppercase tracking-wider cursor-pointer select-none hover:bg-blue-50 transition-colors whitespace-nowrap
+                        ${sortKey === col ? 'text-blue-600 bg-blue-50' : 'text-gray-500'}`}
+                      title={meta?.type === 'low' ? `${label} (Lower is better)` : `${label} (Higher is better)`}
                     >
-                      {viewMode === 'roto' ? (rowData[col] === undefined ? '-' : (rowData[col] % 1 === 0 ? rowData[col] : rowData[col].toFixed(1))) : formatStat(rowData, col)}
+                      {label}
+                      <SortIcon col={col} sortKey={sortKey} sortDir={sortDir} />
+                    </th>
+                  );
+                })}
+                {viewMode === 'roto' && (
+                  <th 
+                    onClick={() => handleSort('total')}
+                    className={`px-3 py-3 text-center text-xs font-bold uppercase tracking-wider cursor-pointer select-none hover:bg-blue-50 transition-colors whitespace-nowrap
+                      ${sortKey === 'total' ? 'text-blue-600 bg-blue-50' : 'text-gray-500'}`}
+                  >
+                    Total Roto
+                    <SortIcon col="total" sortKey={sortKey} sortDir={sortDir} />
+                  </th>
+                )}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {sorted.map(team => {
+                const rowData = viewMode === 'roto' ? team.rotoPoints : team.stats;
+                return (
+                  <tr
+                    key={team.id}
+                    onClick={() => onOwnerClick(team)}
+                    className="hover:bg-blue-50 cursor-pointer transition-colors group"
+                  >
+                    <td className="px-4 py-3 sticky left-0 bg-white group-hover:bg-blue-50 z-10 border-r border-gray-100">
+                      <div className="flex items-center gap-3">
+                        <div className="group-hover:scale-110 transition-transform">
+                          <TeamAvatar team={team} size="sm" />
+                        </div>
+                        <span className="font-bold text-gray-900 group-hover:text-blue-700 whitespace-nowrap">{team.name}</span>
+                      </div>
                     </td>
-                  ))}
-                  {viewMode === 'roto' && (
-                    <td className={`px-3 py-3 text-center font-mono text-sm font-black ${sortKey === 'total' ? 'text-blue-700 bg-blue-50/50' : 'text-blue-900'}`}>
-                      {rowData.total % 1 === 0 ? rowData.total : rowData.total.toFixed(1)}
-                    </td>
-                  )}
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+                    {activeCols.map(col => (
+                      <td
+                        key={col}
+                        title={rowData[`${col}_raw`] !== undefined ? rowData[`${col}_raw`] : ''}
+                        className={`px-3 py-3 text-center font-mono text-sm whitespace-nowrap
+                          ${sortKey === col ? 'text-blue-700 font-bold bg-blue-50/50' : 'text-gray-700'}`}
+                      >
+                        {viewMode === 'roto' ? (rowData[col] === undefined ? '-' : (rowData[col] % 1 === 0 ? rowData[col] : rowData[col].toFixed(1))) : formatStat(rowData, col)}
+                      </td>
+                    ))}
+                    {viewMode === 'roto' && (
+                      <td className={`px-3 py-3 text-center font-mono text-sm font-black whitespace-nowrap ${sortKey === 'total' ? 'text-blue-700 bg-blue-50/50' : 'text-blue-900'}`}>
+                        {rowData.total % 1 === 0 ? rowData.total : rowData.total.toFixed(1)}
+                      </td>
+                    )}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

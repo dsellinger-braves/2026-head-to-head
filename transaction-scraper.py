@@ -229,26 +229,20 @@ def parse_activity_trades(topics: List[Dict]) -> List[Dict]:
 # PLAYER NAME ENRICHMENT
 # ---------------------------------------------------------------------------
 
-def fetch_player_name(player_id: int) -> str:
-    url = (
-        f"https://lm-api-reads.fantasy.espn.com/apis/v3/games/flb"
-        f"/seasons/{YEAR}/players/{player_id}?view=players_wl"
-    )
+def fetch_all_player_names() -> Dict[int, str]:
+    """Fetch all MLB player names in a single bulk request."""
+    url = f"https://lm-api-reads.fantasy.espn.com/apis/v3/games/flb/seasons/{YEAR}/players?view=players_wl"
+    headers = {"x-fantasy-filter": '{"filterActive":null}'}
     try:
-        resp = requests.get(url, timeout=10)
+        resp = requests.get(url, headers=headers, timeout=15)
         if resp.status_code == 200:
-            return resp.json().get("fullName", f"Player {player_id}")
-    except Exception:
-        pass
-    return f"Player {player_id}"
+            return {p["id"]: p.get("fullName", f"Player {p['id']}") for p in resp.json()}
+    except Exception as e:
+        print(f"Error bulk fetching player names: {e}")
+    return {}
 
 def enrich_player_names(rows: List[Dict]) -> List[Dict]:
-    needs_lookup = {r["player_id"] for r in rows if r["player_name"].startswith("Player ")}
-    name_map: Dict[int, str] = {}
-
-    for pid in needs_lookup:
-        name_map[pid] = fetch_player_name(pid)
-
+    name_map = fetch_all_player_names()
     for row in rows:
         if row["player_name"].startswith("Player "):
             row["player_name"] = name_map.get(row["player_id"], row["player_name"])
