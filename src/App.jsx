@@ -18,6 +18,7 @@ import OwnerDetailModal from './components/OwnerDetailModal';
 import PlayerHistoryModal from './components/PlayerHistoryModal';
 import LiveScoreboardView from './views/LiveScoreboardView';
 import TransactionsView from './views/TransactionsView';
+import DraftRoomView from './views/DraftRoomView';
 
 const AVAILABLE_SEASONS = Array.from({ length: 2026 - 2012 + 1 }, (_, i) => 2026 - i);
 
@@ -436,17 +437,16 @@ function App() {
                 FantasyCast
               </button>
 
-              <a
-                href="https://dsellinger-braves.github.io/fantasy-draft/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-3 py-2 rounded text-sm font-bold bg-amber-600 hover:bg-amber-700 text-white flex items-center gap-1.5 transition-colors shadow-xs"
-                title="Launch Live Draft Room"
+              <button
+                onClick={() => setCurrentView('draft')}
+                className={`px-3 py-2 rounded text-sm font-bold flex items-center gap-1.5 transition-colors shadow-xs ${
+                  currentView === 'draft' ? 'bg-amber-600 text-white ring-2 ring-amber-400' : 'bg-amber-700/80 hover:bg-amber-600 text-white'
+                }`}
+                title="Draft War Room"
               >
                 <span>🎯</span>
                 <span>Draft Room</span>
-                <span className="text-[10px] opacity-75">↗</span>
-              </a>
+              </button>
 
               <select
                 value={selectedSeason}
@@ -465,67 +465,74 @@ function App() {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        {currentView === 'weekly' && (
-          <WeeklyView
-            processedWeeks={processedWeeks}
-            allStats={rawData}
-            onOwnerClick={(team) => setSelectedOwner(team)}
-          />
-        )}
-        {currentView === 'summary' && (
-          <SummaryView
-            processedWeeks={processedWeeks}
-            allStats={rawData}
-            onOwnerClick={(team) => setSelectedOwner(team)}
-          />
-        )}
-        {currentView === 'teams' && (
-          <TeamsView
-            allStats={rawData}
-            selectedSeason={selectedSeason}
-            onOwnerClick={(team) => setSelectedOwner(team)}
-          />
-        )}
-        {currentView === 'transactions' && (
-          <TransactionsView
-            onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
-            onOwnerClick={(team) => setSelectedOwner(team)}
-          />
-        )}
-        {currentView === 'players' && (
-          <PlayersView
-            allStats={rawData}
-            selectedSeason={selectedSeason}
-            onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
-          />
-        )}
-        {currentView === 'disparities' && (
-          <OwnerDisparitiesView
-            allStats={rawData}
-            selectedSeason={selectedSeason}
-            onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
-            onOwnerClick={(team) => setSelectedOwner(team)}
-          />
-        )}
-        {currentView === 'progression' && (
-          <ProgressionView allStats={rawData} selectedSeason={selectedSeason} processedWeeks={processedWeeks} />
-        )}
-        {currentView === 'highlights' && (
-          <HighlightsView
-            allStats={rawData}
-            allSeasonData={allSeasonData}
-            selectedSeason={selectedSeason}
-            onDownloadAll={downloadAllSeasons}
-            downloadAllProgress={downloadAllProgress}
-          />
-        )}
-        {currentView === 'fantasycast' && (
-          <LiveScoreboardView
-            todaysRecords={todaysRecords}
-          />
-        )}
-      </main>
+      {currentView === 'draft' ? (
+        <DraftRoomView
+          onOpenPlayerModal={(id, name) => setSelectedPlayer({ id, name })}
+          onSwitchView={(view) => setCurrentView(view)}
+        />
+      ) : (
+        <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+          {currentView === 'weekly' && (
+            <WeeklyView
+              processedWeeks={processedWeeks}
+              allStats={rawData}
+              onOwnerClick={(team) => setSelectedOwner(team)}
+            />
+          )}
+          {currentView === 'summary' && (
+            <SummaryView
+              processedWeeks={processedWeeks}
+              allStats={rawData}
+              onOwnerClick={(team) => setSelectedOwner(team)}
+            />
+          )}
+          {currentView === 'teams' && (
+            <TeamsView
+              allStats={rawData}
+              selectedSeason={selectedSeason}
+              onOwnerClick={(team) => setSelectedOwner(team)}
+            />
+          )}
+          {currentView === 'transactions' && (
+            <TransactionsView
+              onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
+              onOwnerClick={(team) => setSelectedOwner(team)}
+            />
+          )}
+          {currentView === 'players' && (
+            <PlayersView
+              allStats={rawData}
+              selectedSeason={selectedSeason}
+              onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
+            />
+          )}
+          {currentView === 'disparities' && (
+            <OwnerDisparitiesView
+              allStats={rawData}
+              selectedSeason={selectedSeason}
+              onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
+              onOwnerClick={(team) => setSelectedOwner(team)}
+            />
+          )}
+          {currentView === 'progression' && (
+            <ProgressionView allStats={rawData} selectedSeason={selectedSeason} processedWeeks={processedWeeks} />
+          )}
+          {currentView === 'highlights' && (
+            <HighlightsView
+              allStats={rawData}
+              allSeasonData={allSeasonData}
+              selectedSeason={selectedSeason}
+              onDownloadAll={downloadAllSeasons}
+              downloadAllProgress={downloadAllProgress}
+            />
+          )}
+          {currentView === 'fantasycast' && (
+            <LiveScoreboardView
+              todaysRecords={todaysRecords}
+            />
+          )}
+        </main>
+      )}
 
       {/* --- MODAL LAYER --- */}
       {selectedOwner && (
