@@ -457,16 +457,56 @@ function App() {
     }
 
     // --- STEP D: PROCESS PHASE 4 (Weeks 24-25) PLAYOFFS ---
+    // Option 1: Seeding is determined by Phase 3 (Weeks 15-23) head-to-head records
+    // within each respective tier (Winners League Seeds 1-4, Consolation League Seeds 5-9).
+    const phase3Standings = calculateStandings(resolvedSchedule, { startWeek: 15, upToWeek: 23, phase: 3 });
     const standingsAfter23 = calculateStandings(resolvedSchedule, 23);
-    const playoffSeeds = standingsAfter23.slice(0, 8);
+
+    const getFullSeasonRank = (teamId) => {
+      const idx = standingsAfter23.findIndex(t => t.id === teamId);
+      return idx >= 0 ? idx : 999;
+    };
+
+    const sortTier = (teamA, teamB) => {
+      const totalA = teamA.wins + teamA.losses + teamA.ties;
+      const totalB = teamB.wins + teamB.losses + teamB.ties;
+      const pctA = totalA > 0 ? (teamA.wins + teamA.ties * 0.5) / totalA : 0;
+      const pctB = totalB > 0 ? (teamB.wins + teamB.ties * 0.5) / totalB : 0;
+      if (Math.abs(pctB - pctA) > 0.0001) return pctB - pctA;
+      if (teamB.score !== teamA.score) return teamB.score - teamA.score;
+      return getFullSeasonRank(teamA.id) - getFullSeasonRank(teamB.id);
+    };
+
+    const winnersTeamIds = [
+      splitSeeds.SEED_1,
+      splitSeeds.SEED_2,
+      splitSeeds.SEED_3,
+      splitSeeds.SEED_4
+    ].filter(Boolean);
+
+    const champSeeds = winnersTeamIds
+      .map(id => phase3Standings.find(t => t.id === id) || { id, wins: 0, losses: 0, ties: 0, score: 0 })
+      .sort(sortTier);
+
+    const consolTeamIds = [
+      splitSeeds.SEED_5,
+      splitSeeds.SEED_6,
+      splitSeeds.SEED_7,
+      splitSeeds.SEED_8,
+      splitSeeds.SEED_9
+    ].filter(Boolean);
+
+    const consolSeeds = consolTeamIds
+      .map(id => phase3Standings.find(t => t.id === id) || { id, wins: 0, losses: 0, ties: 0, score: 0 })
+      .sort(sortTier);
 
     if (baseSchedule[23]) {
       const week24 = baseSchedule[23];
       const sfMatchups = [
-        { id: 'sf1', homeTeamId: playoffSeeds[0]?.id, awayTeamId: playoffSeeds[3]?.id, label: "Semi-Final A" },
-        { id: 'sf2', homeTeamId: playoffSeeds[1]?.id, awayTeamId: playoffSeeds[2]?.id, label: "Semi-Final B" },
-        { id: 'c1', homeTeamId: playoffSeeds[4]?.id, awayTeamId: playoffSeeds[7]?.id, label: "Consolation A" },
-        { id: 'c2', homeTeamId: playoffSeeds[5]?.id, awayTeamId: playoffSeeds[6]?.id, label: "Consolation B" }
+        { id: 'sf1', homeTeamId: champSeeds[0]?.id, awayTeamId: champSeeds[3]?.id, label: "Semi-Final A" },
+        { id: 'sf2', homeTeamId: champSeeds[1]?.id, awayTeamId: champSeeds[2]?.id, label: "Semi-Final B" },
+        { id: 'c1', homeTeamId: consolSeeds[0]?.id, awayTeamId: consolSeeds[3]?.id, label: "Consolation A" },
+        { id: 'c2', homeTeamId: consolSeeds[1]?.id, awayTeamId: consolSeeds[2]?.id, label: "Consolation B" }
       ];
 
       const resolvedSF = sfMatchups.map(m => resolveMatchupStats(m, week24));
@@ -477,16 +517,21 @@ function App() {
       const week25 = baseSchedule[24];
       const prevWeek = resolvedSchedule[23];
 
+      const isUnplayed = (m) => {
+        if (!m || !m.result) return true;
+        return m.result.homeScore === 0 && m.result.awayScore === 0 && (m.result.ties === 0 || m.result.ties === undefined);
+      };
+
       const getWinner = (matchId) => {
         const m = prevWeek?.matchups.find(pm => pm.id === matchId || pm.matchupId === matchId);
-        if (!m || !m.result) return "TBD";
-        return m.result.homeScore > m.result.awayScore ? m.homeTeam.id : m.awayTeam.id;
+        if (isUnplayed(m)) return "TBD";
+        return m.result.homeScore >= m.result.awayScore ? m.homeTeam?.id : m.awayTeam?.id;
       };
 
       const getLoser = (matchId) => {
         const m = prevWeek?.matchups.find(pm => pm.id === matchId || pm.matchupId === matchId);
-        if (!m || !m.result) return "TBD";
-        return m.result.homeScore > m.result.awayScore ? m.awayTeam.id : m.homeTeam.id;
+        if (isUnplayed(m)) return "TBD";
+        return m.result.homeScore >= m.result.awayScore ? m.awayTeam?.id : m.homeTeam?.id;
       };
 
       const finalMatchups = [

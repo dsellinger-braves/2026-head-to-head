@@ -1,11 +1,16 @@
 // src/utils/standings.js
 import { TEAMS } from '../schedule';
 
-export function calculateStandings(processedWeeks, upToWeek = 100) {
+export function calculateStandings(processedWeeks, options = 100) {
+  const upToWeek = typeof options === 'number' ? options : (options?.upToWeek ?? 100);
+  const startWeek = typeof options === 'object' ? (options?.startWeek ?? 1) : 1;
+  const phaseFilter = typeof options === 'object' ? (options?.phase ?? null) : null;
+
   const standings = {};
   
-  // Initialize
+  // Initialize (exclude Ghost Team 99 from standings)
   Object.keys(TEAMS).forEach(id => {
+    if (parseInt(id) === 99) return;
     standings[id] = { 
       id: parseInt(id), 
       wins: 0, losses: 0, ties: 0, 
@@ -15,7 +20,8 @@ export function calculateStandings(processedWeeks, upToWeek = 100) {
 
   // Calculate Records
   processedWeeks.forEach(week => {
-    if (week.weekId > upToWeek) return;
+    if (week.weekId > upToWeek || week.weekId < startWeek) return;
+    if (phaseFilter !== null && week.phase !== phaseFilter) return;
 
     if (week.matchups) {
       week.matchups.forEach(m => {
@@ -25,7 +31,7 @@ export function calculateStandings(processedWeeks, upToWeek = 100) {
         if (m.type === 'trio') {
           m.teams.forEach(team => {
             const tr = m.result[team.id];
-            if (!tr) return;
+            if (!tr || !standings[team.id]) return;
 
             // 1st place = Win, 3rd place = Loss, 2nd place = Tie
             if (tr.rank === 1) standings[team.id].wins++;
@@ -45,17 +51,19 @@ export function calculateStandings(processedWeeks, upToWeek = 100) {
           // If score is 0-0, the week probably hasn't happened yet
           if (m.result.homeScore + m.result.awayScore === 0 && m.result.ties === 0) return;
 
-          if (m.result.homeScore > m.result.awayScore) home.wins++;
-          else if (m.result.homeScore < m.result.awayScore) home.losses++;
-          else home.ties++;
+          if (home) {
+            if (m.result.homeScore > m.result.awayScore) home.wins++;
+            else if (m.result.homeScore < m.result.awayScore) home.losses++;
+            else home.ties++;
+            home.score += m.result.homeScore + (m.result.ties * 0.5);
+          }
 
-          if (m.result.awayScore > m.result.homeScore) away.wins++;
-          else if (m.result.awayScore < m.result.homeScore) away.losses++;
-          else away.ties++;
-
-          // Add Category Score for Tiebreakers
-          home.score += m.result.homeScore + (m.result.ties * 0.5);
-          away.score += m.result.awayScore + (m.result.ties * 0.5);
+          if (away) {
+            if (m.result.awayScore > m.result.homeScore) away.wins++;
+            else if (m.result.awayScore < m.result.homeScore) away.losses++;
+            else away.ties++;
+            away.score += m.result.awayScore + (m.result.ties * 0.5);
+          }
         }
       });
     }
@@ -70,7 +78,7 @@ export function calculateStandings(processedWeeks, upToWeek = 100) {
     const pctA = totalA > 0 ? (a.wins + (a.ties * 0.5)) / totalA : 0;
     const pctB = totalB > 0 ? (b.wins + (b.ties * 0.5)) / totalB : 0;
     
-    if (pctB !== pctA) return pctB - pctA;
+    if (Math.abs(pctB - pctA) > 0.0001) return pctB - pctA;
 
     // 2. Tiebreaker: Total Category Score
     return b.score - a.score;

@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { TEAMS } from '../schedule';
+import { calculateStandings } from '../utils/standings';
 import TeamAvatar from '../components/TeamAvatar';
 
 // --- 4. SHARED TABLE COMPONENT ---
@@ -57,31 +58,39 @@ function StandingsTable({ title, data, showRank = true, onOwnerClick }) {
 function BracketMatch({ title, m }) {
   if (!m) return <div className="bg-gray-50 rounded border border-gray-200 p-4 h-24 flex items-center justify-center text-gray-400 text-xs">TBD</div>;
   
-  // Check if placeholder
-  const isPlaceholder = !m.homeTeam.id;
-  
+  const homeId = m.homeTeam?.id;
+  const awayId = m.awayTeam?.id;
+  const isHomeTBD = !homeId || homeId === 'TBD';
+  const isAwayTBD = !awayId || awayId === 'TBD';
+  const homeName = isHomeTBD ? (m.homeTeam?.name || 'TBD') : (TEAMS[homeId]?.name || m.homeTeam?.name || 'TBD');
+  const awayName = isAwayTBD ? (m.awayTeam?.name || 'TBD') : (TEAMS[awayId]?.name || m.awayTeam?.name || 'TBD');
+
+  const hasScores = m.result && (m.result.homeScore > 0 || m.result.awayScore > 0 || m.result.ties > 0);
+  const homeWins = hasScores && m.result.homeScore >= m.result.awayScore;
+  const awayWins = hasScores && m.result.awayScore > m.result.homeScore;
+
   return (
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col w-64">
       <div className="bg-gray-100 px-3 py-1 text-[10px] uppercase font-bold text-gray-500 border-b border-gray-200 text-center">
         {title}
       </div>
       {/* Home */}
-      <div className={`flex justify-between items-center p-2 border-b border-gray-100 ${m.result?.homeScore > m.result?.awayScore ? 'bg-green-50' : ''}`}>
+      <div className={`flex justify-between items-center p-2 border-b border-gray-100 ${homeWins ? 'bg-green-50' : ''}`}>
         <div className="flex items-center gap-2">
-          <div className="text-xs font-bold text-gray-700 truncate w-24">
-             {isPlaceholder ? m.homeTeam.name : TEAMS[m.homeTeam.id]?.name}
+          <div className="text-xs font-bold text-gray-700 truncate w-24" title={homeName}>
+             {homeName}
           </div>
         </div>
-        <span className="font-mono font-bold text-sm">{m.result?.homeScore || 0}</span>
+        <span className="font-mono font-bold text-sm">{hasScores ? (m.result.homeScore || 0) : '-'}</span>
       </div>
       {/* Away */}
-      <div className={`flex justify-between items-center p-2 ${m.result?.awayScore > m.result?.homeScore ? 'bg-green-50' : ''}`}>
+      <div className={`flex justify-between items-center p-2 ${awayWins ? 'bg-green-50' : ''}`}>
          <div className="flex items-center gap-2">
-          <div className="text-xs font-bold text-gray-700 truncate w-24">
-            {isPlaceholder ? m.awayTeam.name : TEAMS[m.awayTeam.id]?.name}
+          <div className="text-xs font-bold text-gray-700 truncate w-24" title={awayName}>
+            {awayName}
           </div>
         </div>
-        <span className="font-mono font-bold text-sm">{m.result?.awayScore || 0}</span>
+        <span className="font-mono font-bold text-sm">{hasScores ? (m.result.awayScore || 0) : '-'}</span>
       </div>
     </div>
   );
@@ -148,18 +157,19 @@ export default function SummaryView({ processedWeeks, onOwnerClick }) {
   const phase2Standings = useMemo(() => getStandings(processedWeeks, 2), [processedWeeks]);
   const phase3Standings = useMemo(() => getStandings(processedWeeks, 3), [processedWeeks]);
 
-  // Determine who is in which league based on Phase 1 results
-  // Top 4 = Winners, Bottom 4 = Consolation
-  const winnersLeagueIds = new Set(phase1Standings.slice(0, 4).map(t => t.id));
+  // Determine who is in which league based on standings through Week 14 (Phase 1 + Mid-Season)
+  const splitStandings = useMemo(() => calculateStandings(processedWeeks, 14), [processedWeeks]);
+  const winnersLeagueIds = useMemo(() => new Set(splitStandings.slice(0, 4).map(t => t.id)), [splitStandings]);
   
-  const winnersStandings = phase3Standings.filter(t => winnersLeagueIds.has(t.id));
-  const consolationStandings = phase3Standings.filter(t => !winnersLeagueIds.has(t.id));
+  const winnersStandings = useMemo(() => phase3Standings.filter(t => winnersLeagueIds.has(t.id)), [phase3Standings, winnersLeagueIds]);
+  const consolationStandings = useMemo(() => phase3Standings.filter(t => !winnersLeagueIds.has(t.id)), [phase3Standings, winnersLeagueIds]);
 
   // --- 3. HELPER: GET PLAYOFF MATCHUPS ---
   const getPlayoffMatchup = (id) => {
-    // Search weeks 24 and 25
+    if (!processedWeeks) return null;
+    // Search weeks 24 and 25 (Phase 4 Playoffs)
     for (const w of processedWeeks) {
-      if (w.phase === 3 && w.matchups) {
+      if ((w.phase === 4 || w.weekId >= 24) && w.matchups) {
         const m = w.matchups.find(m => m.id === id || m.matchupId === id);
         if (m) return m;
       }
@@ -169,6 +179,8 @@ export default function SummaryView({ processedWeeks, onOwnerClick }) {
 
   const sf1 = getPlayoffMatchup('sf1');
   const sf2 = getPlayoffMatchup('sf2');
+  const c1 = getPlayoffMatchup('c1');
+  const c2 = getPlayoffMatchup('c2');
   const final = getPlayoffMatchup('final');
   const third = getPlayoffMatchup('3rd');
 
@@ -179,7 +191,7 @@ export default function SummaryView({ processedWeeks, onOwnerClick }) {
       {/* --- SECTION 1: PLAYOFF BRACKET (Weeks 24-25) --- */}
       <div className="space-y-4">
         <h2 className="text-2xl font-black text-gray-900 flex items-center gap-3">
-          <span className="bg-blue-600 text-white text-sm px-3 py-1 rounded-full">Phase 3</span>
+          <span className="bg-blue-600 text-white text-sm px-3 py-1 rounded-full">Phase 4</span>
           Championship Bracket
         </h2>
         
@@ -209,6 +221,19 @@ export default function SummaryView({ processedWeeks, onOwnerClick }) {
              </div>
           </div>
         </div>
+
+        {/* Consolation Playoff Matchups */}
+        {(c1 || c2) && (
+          <div className="bg-slate-900/60 rounded-xl p-6 border border-slate-700/60">
+            <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider mb-4 flex items-center gap-2">
+              <span>🛡️</span> Consolation Playoffs (Week 24)
+            </h3>
+            <div className="flex flex-wrap gap-6 justify-center">
+              <BracketMatch title="Consolation Semi 1" m={c1} />
+              <BracketMatch title="Consolation Semi 2" m={c2} />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* --- SECTION 2: PHASE 3 STANDINGS (Weeks 15-23) --- */}
