@@ -63,10 +63,79 @@ export const PICKEM_RULES = {
   prizes: {
     1: 4,
     2: 3,
-    3: 3,
-    4: 3,
-    5: 1
+    3: 2,
+    4: 1
   }
+};
+
+/**
+ * Match a raw user pick or API team name to a canonical MLB team object.
+ */
+export const findMlbTeam = (input) => {
+  if (!input || typeof input !== 'string') return null;
+  const s = input.toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (!s) return null;
+
+  const codeAliases = {
+    tb: 'TB', tbr: 'TB',
+    cws: 'CWS', chw: 'CWS',
+    kc: 'KC', kcr: 'KC',
+    wsh: 'WSH', wsn: 'WSH',
+    az: 'AZ', ari: 'AZ', dbacks: 'AZ',
+    sd: 'SD', sdp: 'SD',
+    sf: 'SF', sfg: 'SF',
+    oak: 'ATH', ath: 'ATH', as: 'ATH',
+    nyy: 'NYY', nym: 'NYM',
+    lad: 'LAD', laa: 'LAA',
+    chc: 'CHC', bos: 'BOS',
+    stl: 'STL', cards: 'STL',
+    nats: 'WSH'
+  };
+
+  if (codeAliases[s]) {
+    return MLB_TEAMS.find(t => t.code === codeAliases[s]) || null;
+  }
+
+  const byCode = MLB_TEAMS.find(t => t.code.toLowerCase() === s);
+  if (byCode) return byCode;
+
+  const byFullName = MLB_TEAMS.find(t => t.name.toLowerCase().replace(/[^a-z0-9]/g, '') === s);
+  if (byFullName) return byFullName;
+
+  for (const t of MLB_TEAMS) {
+    const words = t.name.toLowerCase().split(' ');
+    const nickname = words[words.length - 1].replace(/[^a-z0-9]/g, '');
+    if (nickname === s) return t;
+    if (words.length >= 3) {
+      const multiNick = words.slice(words.length - 2).join('').replace(/[^a-z0-9]/g, '');
+      if (multiNick === s) return t;
+    }
+  }
+
+  for (const t of MLB_TEAMS) {
+    const tNorm = t.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (tNorm.includes(s) || s.includes(tNorm)) {
+      return t;
+    }
+  }
+
+  return null;
+};
+
+/**
+ * Check if two strings refer to the same MLB team or entity (with fallback to normalized string match).
+ */
+export const teamsMatch = (str1, str2) => {
+  if (!str1 || !str2) return false;
+  const t1 = findMlbTeam(str1);
+  const t2 = findMlbTeam(str2);
+  if (t1 && t2) {
+    return t1.code === t2.code;
+  }
+  const norm1 = str1.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const norm2 = str2.toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (!norm1 || !norm2) return false;
+  return norm1 === norm2 || norm1.includes(norm2) || norm2.includes(norm1);
 };
 
 export const LEAGUE_OWNERS = [

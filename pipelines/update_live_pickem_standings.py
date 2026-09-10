@@ -37,6 +37,64 @@ def normalize_text(s: Optional[str]) -> str:
     return s.lower().replace(".", "").replace("'", "").replace("-", " ").strip()
 
 
+MLB_TEAM_ALIASES = {
+    'bal': 'BAL', 'baltimore': 'BAL', 'orioles': 'BAL', 'baltimore orioles': 'BAL',
+    'bos': 'BOS', 'boston': 'BOS', 'red sox': 'BOS', 'boston red sox': 'BOS',
+    'nyy': 'NYY', 'yankees': 'NYY', 'new york yankees': 'NYY',
+    'tb': 'TB', 'tbr': 'TB', 'rays': 'TB', 'tampa bay rays': 'TB', 'tampa bay': 'TB',
+    'tor': 'TOR', 'blue jays': 'TOR', 'toronto blue jays': 'TOR', 'toronto': 'TOR', 'jays': 'TOR',
+    'cws': 'CWS', 'chw': 'CWS', 'white sox': 'CWS', 'chicago white sox': 'CWS',
+    'cle': 'CLE', 'guardians': 'CLE', 'cleveland guardians': 'CLE', 'cleveland': 'CLE',
+    'det': 'DET', 'tigers': 'DET', 'detroit tigers': 'DET', 'detroit': 'DET',
+    'kc': 'KC', 'kcr': 'KC', 'royals': 'KC', 'kansas city royals': 'KC', 'kansas city': 'KC',
+    'min': 'MIN', 'twins': 'MIN', 'minnesota twins': 'MIN', 'minnesota': 'MIN',
+    'hou': 'HOU', 'astros': 'HOU', 'houston astros': 'HOU', 'houston': 'HOU',
+    'laa': 'LAA', 'angels': 'LAA', 'los angeles angels': 'LAA',
+    'ath': 'ATH', 'oak': 'ATH', 'athletics': 'ATH', 'oakland athletics': 'ATH', 'as': 'ATH',
+    'sea': 'SEA', 'mariners': 'SEA', 'seattle mariners': 'SEA', 'seattle': 'SEA',
+    'tex': 'TEX', 'rangers': 'TEX', 'texas rangers': 'TEX', 'texas': 'TEX',
+    'atl': 'ATL', 'braves': 'ATL', 'atlanta braves': 'ATL', 'atlanta': 'ATL',
+    'mia': 'MIA', 'marlins': 'MIA', 'miami marlins': 'MIA', 'miami': 'MIA',
+    'nym': 'NYM', 'mets': 'NYM', 'new york mets': 'NYM',
+    'phi': 'PHI', 'phillies': 'PHI', 'philadelphia phillies': 'PHI', 'philadelphia': 'PHI',
+    'wsh': 'WSH', 'wsn': 'WSH', 'nationals': 'WSH', 'washington nationals': 'WSH', 'washington': 'WSH', 'nats': 'WSH',
+    'chc': 'CHC', 'cubs': 'CHC', 'chicago cubs': 'CHC',
+    'cin': 'CIN', 'reds': 'CIN', 'cincinnati reds': 'CIN', 'cincinnati': 'CIN',
+    'mil': 'MIL', 'brewers': 'MIL', 'milwaukee brewers': 'MIL', 'milwaukee': 'MIL',
+    'pit': 'PIT', 'pirates': 'PIT', 'pittsburgh pirates': 'PIT', 'pittsburgh': 'PIT',
+    'stl': 'STL', 'cardinals': 'STL', 'st louis cardinals': 'STL', 'cards': 'STL',
+    'az': 'AZ', 'ari': 'AZ', 'diamondbacks': 'AZ', 'arizona diamondbacks': 'AZ', 'arizona': 'AZ', 'dbacks': 'AZ',
+    'col': 'COL', 'rockies': 'COL', 'colorado rockies': 'COL', 'colorado': 'COL',
+    'lad': 'LAD', 'dodgers': 'LAD', 'los angeles dodgers': 'LAD',
+    'sd': 'SD', 'sdp': 'SD', 'padres': 'SD', 'san diego padres': 'SD', 'san diego': 'SD',
+    'sf': 'SF', 'sfg': 'SF', 'giants': 'SF', 'san francisco giants': 'SF', 'san francisco': 'SF'
+}
+
+
+def get_team_code(s: Optional[str]) -> Optional[str]:
+    if not s:
+        return None
+    norm = normalize_text(s)
+    clean = norm.replace(" ", "")
+    if norm in MLB_TEAM_ALIASES:
+        return MLB_TEAM_ALIASES[norm]
+    if clean in MLB_TEAM_ALIASES:
+        return MLB_TEAM_ALIASES[clean]
+    return None
+
+
+def matches_team_or_val(s1: Optional[str], s2: Optional[str]) -> bool:
+    if not s1 or not s2:
+        return False
+    t1 = get_team_code(s1)
+    t2 = get_team_code(s2)
+    if t1 and t2:
+        return t1 == t2
+    n1 = normalize_text(s1)
+    n2 = normalize_text(s2)
+    return n1 == n2 or n1 in n2 or n2 in n1
+
+
 def fetch_mlb_standings() -> Dict[str, Any]:
     """Fetch live MLB team standings from MLB Stats API."""
     print("⚾ Fetching live MLB Standings from statsapi.mlb.com...")
@@ -362,15 +420,15 @@ def evaluate_owner_projected_scores(snapshot: Dict[str, Any]) -> List[Dict[str, 
         hit_label = ""
 
         # Check Exact Match
-        if n_val and n_target and (n_val in n_target or n_target in n_val):
+        if matches_team_or_val(val, target):
             pts = q.get("points_exact", 3)
             hit_label = "EXACT"
         elif q["category"] in ("division", "wild_card"):
-            # Playoff Crossover
-            in_al = any(n_val in t or t in n_val for t in playoff_al)
-            in_nl = any(n_val in t or t in n_val for t in playoff_nl)
+            # Playoff Crossover: 2 points for correct team in wrong playoff spot
+            in_al = any(matches_team_or_val(val, t) for t in snapshot["playoff_al"])
+            in_nl = any(matches_team_or_val(val, t) for t in snapshot["playoff_nl"])
             if (k.startswith("al_") and in_al) or (k.startswith("nl_") and in_nl):
-                pts = q.get("points_partial") or 2
+                pts = 2
                 hit_label = "PLAYOFF_CROSSOVER"
 
         if pts > 0:
@@ -385,14 +443,19 @@ def evaluate_owner_projected_scores(snapshot: Dict[str, Any]) -> List[Dict[str, 
 
     sorted_owners = sorted(owner_scores.items(), key=lambda x: x[1], reverse=True)
     results = []
+    current_rank = 1
     for idx, (owner, total) in enumerate(sorted_owners):
-        place = idx + 1
+        if idx > 0 and total < sorted_owners[idx - 1][1]:
+            current_rank = idx + 1
+        place = current_rank
         prize = None
         if place == 1:
             prize = 4
-        elif 2 <= place <= 4:
+        elif place == 2:
             prize = 3
-        elif place == 5:
+        elif place == 3:
+            prize = 2
+        elif place == 4:
             prize = 1
 
         results.append({

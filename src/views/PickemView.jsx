@@ -1,7 +1,7 @@
 // src/views/PickemView.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../supabaseClient';
-import { MLB_TEAMS, LEAGUE_OWNERS, PROMINENT_AWARD_CANDIDATES } from '../utils/mlbTeams';
+import { MLB_TEAMS, LEAGUE_OWNERS, PROMINENT_AWARD_CANDIDATES, teamsMatch, PICKEM_RULES } from '../utils/mlbTeams';
 
 export default function PickemView() {
   const [seasons, setSeasons] = useState([]);
@@ -328,14 +328,13 @@ export default function PickemView() {
       const qMap = {};
       updatedQuestions.forEach(q => { qMap[q.id] = q; });
 
-      // Build playoff pool for crossover checking
-      const alPlayoffs = new Set();
-      const nlPlayoffs = new Set();
+      // Build playoff pool for crossover checking (only division and wild card questions qualify)
+      const alPlayoffs = [];
+      const nlPlayoffs = [];
       updatedQuestions.forEach(q => {
-        if (q.correct_answer) {
-          const ans = q.correct_answer.toLowerCase().trim();
-          if (q.question_key.startsWith('al_')) alPlayoffs.add(ans);
-          if (q.question_key.startsWith('nl_')) nlPlayoffs.add(ans);
+        if (q.correct_answer && (q.category === 'division' || q.category === 'wild_card')) {
+          if (q.question_key.startsWith('al_')) alPlayoffs.push(q.correct_answer);
+          if (q.question_key.startsWith('nl_')) nlPlayoffs.push(q.correct_answer);
         }
       });
 
@@ -346,19 +345,19 @@ export default function PickemView() {
         let isCorrect = false;
         let points = 0;
 
-        const pVal = p.pick_value?.toLowerCase().trim() || '';
-        const aVal = q.correct_answer?.toLowerCase().trim() || '';
+        const pVal = p.pick_value?.trim() || '';
+        const aVal = q.correct_answer?.trim() || '';
 
         if (aVal && pVal) {
-          if (pVal === aVal || aVal.includes(pVal) || pVal.includes(aVal)) {
+          if (teamsMatch(pVal, aVal)) {
             isCorrect = true;
-            points = q.points_exact || 3;
+            points = q.points_exact || (q.category === 'division' ? 3 : q.category === 'wild_card' ? 2 : 3);
           } else if (q.category === 'wild_card' || q.category === 'division') {
-            const inAL = alPlayoffs.has(pVal);
-            const inNL = nlPlayoffs.has(pVal);
-            if ((q.question_key.startsWith('al_') && inAL) || (q.question_key.startsWith('nl_') && inNL)) {
+            const inAL = q.question_key.startsWith('al_') && alPlayoffs.some(ans => teamsMatch(pVal, ans));
+            const inNL = q.question_key.startsWith('nl_') && nlPlayoffs.some(ans => teamsMatch(pVal, ans));
+            if (inAL || inNL) {
               isCorrect = false;
-              points = q.points_partial || 2;
+              points = 2; // Awards 2 points for correct team in wrong playoff spot
             }
           }
         }
@@ -378,18 +377,25 @@ export default function PickemView() {
           ownerTotals[p.owner_name] = { total: 0, teamId: p.team_id, breakdown: {} };
         }
         ownerTotals[p.owner_name].total += points;
+        const catKey = q.category || 'other';
+        ownerTotals[p.owner_name].breakdown[catKey] = (ownerTotals[p.owner_name].breakdown[catKey] || 0) + points;
       }
 
       await supabase.from('pickem_picks').upsert(updatedPicks);
 
-      // Rank owners & determine prize money
+      // Rank owners & determine prize money (standard competition ranking with ties)
       const sortedOwners = Object.entries(ownerTotals).sort((a, b) => b[1].total - a[1].total);
+      let currentRank = 1;
       const scoreRows = sortedOwners.map(([name, data], idx) => {
-        const place = idx + 1;
+        if (idx > 0 && data.total < sortedOwners[idx - 1][1].total) {
+          currentRank = idx + 1;
+        }
+        const place = currentRank;
         let prize = null;
         if (place === 1) prize = 4;
-        else if (place >= 2 && place <= 4) prize = 3;
-        else if (place === 5) prize = 1;
+        else if (place === 2) prize = 3;
+        else if (place === 3) prize = 2;
+        else if (place === 4) prize = 1;
 
         return {
           season_year: selectedSeason,
@@ -581,40 +587,46 @@ export default function PickemView() {
     const cat = liveProjectionsData.categories[qKey];
     if (!cat) return null;
 
-    const leaderName = (cat.leader || '').toLowerCase().trim();
-    const pVal = (pickVal || '').toLowerCase().trim();
+    const leaderName = cat.leader || '';
+    const pVal = pickVal || '';
 
     if (!pVal) return null;
 
-    const norm = (s) => s.replace('.', '').replace("'", '').replace('-', ' ').trim();
-    const np = norm(pVal);
-    const nl = norm(leaderName);
+    // Check exact match (using teamsMatch for team/player matching)
+    if (leaderName && teamsMatch(pVal, leaderName)) {
+      let exactPts = 3;
+      if (cat.type === 'wild_card') exactPts = 2;
+      else if (cat.type === 'division') exactPts = 3;
+      else if (cat.type === 'award') exactPts = 4;
+      else if (cat.type === 'playoff_result') exactPts = qKey.includes('world_series') ? 7 : 5;
+      else if (cat.type === 'extremes') exactPts = 3;
 
-    if (np && nl && (np.includes(nl) || nl.includes(np))) {
-      return { status: 'EXACT', label: '✓ Leading (+3 pts)', pts: 3, leaderText: cat.leader };
+      const label = cat.type === 'award' ? '✓ #1 in WAR (+4 pts)' : `✓ Leading (+${exactPts} pts)`;
+      return { status: 'EXACT', label, pts: exactPts, leaderText: cat.leader };
     }
 
-    // Check award
+    // Check award contenders
     if (cat.type === 'award') {
-      if (np && nl && (np.includes(nl) || nl.includes(np))) {
-        return { status: 'EXACT', label: '✓ #1 in WAR (+4 pts)', pts: 4, leaderText: cat.leader };
-      }
-      // Check contenders
-      const isContender = (cat.contenders || []).some(c => norm(c).includes(np));
+      const isContender = (cat.contenders || []).some(c => teamsMatch(pVal, c));
       if (isContender) {
         return { status: 'CONTENDER', label: '⚡ Top Contender', pts: 0, leaderText: cat.leader };
       }
     }
 
-    // Check Playoff Crossover
-    const alPlayoffs = (liveProjectionsData.playoff_al || []).map(norm);
-    const nlPlayoffs = (liveProjectionsData.playoff_nl || []).map(norm);
+    // Check Playoff Crossover for division and wild card questions
+    const isPlayoffQ = cat.type === 'division' || cat.type === 'wild_card' ||
+      qKey.includes('east') || qKey.includes('central') || qKey.includes('west') || qKey.includes('wc');
 
-    if (qKey.startsWith('al_') && alPlayoffs.some(t => t.includes(np) || np.includes(t))) {
-      return { status: 'CROSSOVER', label: '✦ In Wild Card (+2 pts)', pts: 2, leaderText: cat.leader };
-    }
-    if (qKey.startsWith('nl_') && nlPlayoffs.some(t => t.includes(np) || np.includes(t))) {
-      return { status: 'CROSSOVER', label: '✦ In Wild Card (+2 pts)', pts: 2, leaderText: cat.leader };
+    if (isPlayoffQ) {
+      const alPlayoffs = liveProjectionsData.playoff_al || [];
+      const nlPlayoffs = liveProjectionsData.playoff_nl || [];
+
+      if (qKey.startsWith('al_') && alPlayoffs.some(t => teamsMatch(pVal, t))) {
+        return { status: 'CROSSOVER', label: '✦ In Playoff Spot (+2 pts)', pts: 2, leaderText: cat.leader };
+      }
+      if (qKey.startsWith('nl_') && nlPlayoffs.some(t => teamsMatch(pVal, t))) {
+        return { status: 'CROSSOVER', label: '✦ In Playoff Spot (+2 pts)', pts: 2, leaderText: cat.leader };
+      }
     }
 
     return { status: 'OFF_PACE', label: 'Off Pace', pts: 0, leaderText: cat.leader };
@@ -763,7 +775,7 @@ export default function PickemView() {
                   <strong className="text-white">Division Winners (3 pts):</strong> Evaluated against current 1st-place teams in each division via the official MLB Stats API.
                 </li>
                 <li>
-                  <strong className="text-white">Wild Card & Playoff Crossovers (2 pts):</strong> Teams holding wild card seeds 1–3 in AL and NL. If an owner predicted a team to win a division and that team is currently in a wild card spot (or vice versa), they earn 2 crossover playoff points.
+                  <strong className="text-white">Wild Card & Playoff Crossovers (2 pts):</strong> Teams holding playoff seeds in AL and NL (division winners and wild card seeds 1–3). If an owner predicted a team for a playoff spot (division or wild card) and that team qualifies for any playoff spot in that league, they earn 2 points if not an exact match.
                 </li>
                 <li>
                   <strong className="text-white">Pennants (5 pts) & World Series (7 pts):</strong> Current top seed in each league and best overall record in baseball.
@@ -896,7 +908,7 @@ export default function PickemView() {
                     <p className="text-xs text-slate-400 mt-0.5">
                       {isInProgress && showLiveProjections
                         ? 'Projected standings calculated from current live MLB records, division leaders, wild cards, and FanGraphs projected fWAR for awards.'
-                        : "Top 5 finishers earn additional auction draft dollars for next season's draft: 1st (+$4), 2nd-4th (+$3), 5th (+$1)."}
+                        : "Top 4 finishers earn additional auction draft dollars for next season's draft: 1st (+$4), 2nd (+$3), 3rd (+$2), 4th (+$1). Ties award the full amount for that place."}
                     </p>
                   </div>
                   {isUpcoming && selectedSeason === 2027 && (
@@ -1079,7 +1091,7 @@ export default function PickemView() {
                                   </td>
                                 ) : (
                                   <td className="py-2.5 px-3 text-xs text-slate-400">
-                                    {place === 1 ? '🏆 Champion' : place <= 4 ? '✨ In the Money' : place === 5 ? '🎯 Budget Cash' : 'Out of the Money'}
+                                    {place === 1 ? '🏆 Champion' : place <= 4 ? '✨ In the Money' : 'Out of the Money'}
                                   </td>
                                 )}
                               </tr>
@@ -1267,7 +1279,7 @@ export default function PickemView() {
                                         )}
                                         {isCrossover && (
                                           <div className="text-[10px] text-sky-400 font-black mt-0.5">
-                                            ✦ +{pts} pts (WC)
+                                            ✦ +{pts} pts (Playoff Spot)
                                           </div>
                                         )}
                                       </div>
