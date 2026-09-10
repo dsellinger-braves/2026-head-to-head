@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { supabase } from './supabaseClient';
 import { get, set, del } from 'idb-keyval';
 
@@ -103,6 +103,7 @@ function App() {
   const [loadStatus, setLoadStatus] = useState("Initializing...");
   const [selectedSeason, setSelectedSeason] = useState(2026);
   const [offseasonYear, setOffseasonYear] = useState(2027);
+  const fetchingRef = useRef(false);
 
   const [selectedOwner, setSelectedOwner] = useState(null);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
@@ -173,36 +174,58 @@ function App() {
   // Core fetch: check cache → Supabase. Returns normalized records, touches no state.
   const fetchRawSeason = async (season, onProgress) => {
     const cacheKey = `fantasy_data_${season}`;
-    const cached = await get(cacheKey);
-    if (cached?.length > 0) return cached;
+    try {
+      const cached = await get(cacheKey);
+      if (cached?.length > 0) return cached;
+    } catch (cacheErr) {
+      console.warn('Local cache read notice:', cacheErr);
+    }
 
     const isHistorical = season < 2026;
     const tableName = isHistorical ? 'historical_data' : 'player_daily_stats';
-    let allRecords = [];
-    let page = 0;
     const pageSize = 1000;
-    let hasMore = true;
 
-    while (hasMore) {
-      let query = supabase
-        .from(tableName)
-        .select('*')
-        .range(page * pageSize, (page + 1) * pageSize - 1);
+    let countQuery = supabase
+      .from(tableName)
+      .select('*', { count: 'exact', head: true });
 
-      if (!isHistorical) {
-        query = query.eq('league_id', 130215).order('id', { ascending: true });
-      } else {
-        query = query.eq('league_id', 130215).eq('season_year', season);
+    if (!isHistorical) {
+      countQuery = countQuery.eq('league_id', 130215);
+    } else {
+      countQuery = countQuery.eq('league_id', 130215).eq('season_year', season);
+    }
+
+    const { count, error: countErr } = await countQuery;
+    if (countErr) throw countErr;
+
+    const totalPages = Math.max(1, Math.ceil((count || 0) / pageSize));
+    let allRecords = [];
+    const batchSize = 6;
+
+    for (let b = 0; b < totalPages; b += batchSize) {
+      const promises = [];
+      for (let p = b; p < Math.min(b + batchSize, totalPages); p++) {
+        let q = supabase
+          .from(tableName)
+          .select('*')
+          .range(p * pageSize, (p + 1) * pageSize - 1);
+
+        if (!isHistorical) {
+          q = q.eq('league_id', 130215).order('id', { ascending: true });
+        } else {
+          q = q.eq('league_id', 130215).eq('season_year', season);
+        }
+        promises.push(q);
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
-      if (data?.length > 0) {
-        allRecords = [...allRecords, ...data];
-        onProgress?.(`Downloading ${season}… (${allRecords.length} records)`);
+      const results = await Promise.all(promises);
+      for (const res of results) {
+        if (res.error) throw res.error;
+        if (res.data?.length > 0) {
+          allRecords.push(...res.data);
+        }
       }
-      if (!data || data.length < pageSize) hasMore = false;
-      else page++;
+      onProgress?.(`Downloading ${season}… (${Math.min(allRecords.length, count || allRecords.length)} of ${count || allRecords.length} records)`);
     }
 
     const normalized = isHistorical
@@ -219,16 +242,23 @@ function App() {
       return true;
     });
 
-    await set(cacheKey, deduped);
+    try {
+      await set(cacheKey, deduped);
+    } catch (cacheWriteErr) {
+      console.warn('Local cache write notice:', cacheWriteErr);
+    }
+
     return deduped;
   };
 
   const fetchAllData = async (season) => {
+    if (fetchingRef.current) return;
+    fetchingRef.current = true;
     try {
       setLoading(true);
       setLoadStatus("Checking local cache...");
       const records = await fetchRawSeason(season, setLoadStatus);
-      setRawData(records);
+      setRawData(records || []);
     } catch (err) {
       console.error("App Error:", err);
       try {
@@ -243,6 +273,7 @@ function App() {
       }
       setLoadStatus("Error loading data from server.");
     } finally {
+      fetchingRef.current = false;
       setLoading(false);
     }
   };
@@ -271,7 +302,12 @@ function App() {
 
   const todaysRecords = useMemo(() => {
     if (!rawData.length) return [];
-    const maxPeriodId = Math.max(...rawData.map(r => r.scoring_period_id));
+    let maxPeriodId = -1;
+    for (let i = 0; i < rawData.length; i++) {
+      if (rawData[i].scoring_period_id > maxPeriodId) {
+        maxPeriodId = rawData[i].scoring_period_id;
+      }
+    }
     return rawData.filter(r => r.scoring_period_id === maxPeriodId);
   }, [rawData]);
 
@@ -574,8 +610,8 @@ function App() {
   }, [rawData, baseSchedule]);
 
   // --- RENDER ---
-  // Do not block Draft Room on season data loading
-  if (loading && currentView !== 'draft') {
+  // Do not block Offseason views (Keepers, Capital, Pick'em, Draft Room, Valuations) on in-season data loading
+  if (loading && !OFFSEASON_VIEWS.has(currentView)) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 text-gray-500 gap-4">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-900"></div>
