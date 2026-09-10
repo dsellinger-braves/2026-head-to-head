@@ -9,6 +9,12 @@ import { LEAGUE_OWNERS } from '../utils/mlbTeams';
 
 const DRAFT_OWNERS = ["Adrian", "Alex", "Anil", "Daniel", "Garrett", "Mark", "Preston", "Tim", "Will"];
 
+const getTeamId = (ownerName) => {
+  const norm = ownerName === 'Dan' ? 'Daniel' : ownerName;
+  const match = LEAGUE_OWNERS.find(lo => lo.name.toLowerCase() === norm?.toLowerCase());
+  return match ? match.id : 0;
+};
+
 function compute2027DraftPicks(draftTrades = []) {
   const owners = [...DRAFT_OWNERS].sort();
   const picks = [];
@@ -62,11 +68,16 @@ export default function DraftCapitalView({
   const [compPicks, setCompPicks] = useState(defaultCompPicks);
   const [keepers, setKeepers] = useState(defaultKeepers);
   const [proposals, setProposals] = useState([]);
+  const [teamRosters, setTeamRosters] = useState({});
   const [loading, setLoading] = useState(true);
 
   const [activeSubTab, setActiveSubTab] = useState(draftYear === 2026 ? '2026board' : 'board'); // 'board' | 'ledgers' | 'history' | '2026board' | 'proposals'
   const [selectedOwner, setSelectedOwner] = useState(currentUser);
   const [roundFilter, setRoundFilter] = useState('ALL');
+
+  // Trade Proposals Sub-Navigation & Perspectives
+  const [inboxTab, setInboxTab] = useState('inbox'); // 'inbox' | 'outbox' | 'commish' | 'all' | 'archive'
+  const [viewPerspectiveOwner, setViewPerspectiveOwner] = useState(effectiveOwner || currentUser);
 
   // Sync activeSubTab when draftYear prop changes
   useEffect(() => {
@@ -77,43 +88,104 @@ export default function DraftCapitalView({
     }
   }, [draftYear, activeSubTab]);
 
-  // Trade Proposal Form State
+  // Sync viewPerspectiveOwner when effectiveOwner updates
+  useEffect(() => {
+    if (effectiveOwner) {
+      setViewPerspectiveOwner(effectiveOwner);
+      setSelectedOwner(effectiveOwner);
+      setPropSender(effectiveOwner);
+    }
+  }, [effectiveOwner]);
+
+  // Trade Proposal Form State (Multi-asset support: Picks, Players, Budget)
   const [propSender, setPropSender] = useState(effectiveOwner || currentUser);
   const [propTarget, setPropTarget] = useState(DRAFT_OWNERS.find(o => o !== (effectiveOwner || currentUser)) || 'Adrian');
-  const [offeredPickRound, setOfferedPickRound] = useState('');
-  const [offeredBudget, setOfferedBudget] = useState('');
-  const [requestedPickRound, setRequestedPickRound] = useState('');
-  const [requestedBudget, setRequestedBudget] = useState('');
+  const [offeredAssets, setOfferedAssets] = useState([]); // [{ type: 'pick'|'player'|'budget', ... }]
+  const [requestedAssets, setRequestedAssets] = useState([]);
+
+  // Form input staging
+  const [selectedOfferedPickRound, setSelectedOfferedPickRound] = useState('');
+  const [selectedOfferedPlayerId, setSelectedOfferedPlayerId] = useState('');
+  const [selectedOfferedBudget, setSelectedOfferedBudget] = useState('');
+
+  const [selectedRequestedPickRound, setSelectedRequestedPickRound] = useState('');
+  const [selectedRequestedPlayerId, setSelectedRequestedPlayerId] = useState('');
+  const [selectedRequestedBudget, setSelectedRequestedBudget] = useState('');
+
   const [tradeNotes, setTradeNotes] = useState('');
   const [submittingTrade, setSubmittingTrade] = useState(false);
   const [actionLoadingId, setActionLoadingId] = useState(null);
   const [proposeModalOpen, setProposeModalOpen] = useState(false);
 
-  // Sync propSender when effectiveOwner updates
-  useEffect(() => {
-    if (effectiveOwner) {
-      setPropSender(effectiveOwner);
-      setSelectedOwner(effectiveOwner);
-      if (propTarget === effectiveOwner) {
-        setPropTarget(DRAFT_OWNERS.find(o => o !== effectiveOwner) || 'Adrian');
-      }
-    }
-  }, [effectiveOwner, propTarget]);
+  // Commissioner Edit Modal State
+  const [editingProposal, setEditingProposal] = useState(null);
+  const [editOfferedPickRound, setEditOfferedPickRound] = useState('');
+  const [editOfferedPlayerId, setEditOfferedPlayerId] = useState('');
+  const [editOfferedBudget, setEditOfferedBudget] = useState('');
+  const [editRequestedPickRound, setEditRequestedPickRound] = useState('');
+  const [editRequestedPlayerId, setEditRequestedPlayerId] = useState('');
+  const [editRequestedBudget, setEditRequestedBudget] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
 
+  // Load All Data including Active Rosters
   const loadData = React.useCallback(async () => {
     setLoading(true);
     try {
-      const [tradesRes, compRes, keepersRes, proposalsRes] = await Promise.all([
+      const [tradesRes, compRes, keepersRes, proposalsRes, pdsRes, p1, p2, p3, p4] = await Promise.all([
         supabase.from('draft_asset_trades').select('*').order('trade_id', { ascending: true }),
         supabase.from('draft_compensation_picks').select('*').order('round_num', { ascending: true }),
         supabase.from('draft_keepers').select('*').order('team_id', { ascending: true }),
-        supabase.from('league_trade_proposals').select('*').order('created_at', { ascending: false })
+        supabase.from('league_trade_proposals').select('*').order('created_at', { ascending: false }),
+        supabase.from('player_daily_stats').select('team_id, player_id, full_name, lineup_slot_id').eq('scoring_period_id', 195),
+        supabase.from('player-pool').select('Player, Team, Position, "ESPN PlayerID"').range(0, 999),
+        supabase.from('player-pool').select('Player, Team, Position, "ESPN PlayerID"').range(1000, 1999),
+        supabase.from('player-pool').select('Player, Team, Position, "ESPN PlayerID"').range(2000, 2999),
+        supabase.from('player-pool').select('Player, Team, Position, "ESPN PlayerID"').range(3000, 3999),
       ]);
 
       if (tradesRes.data?.length > 0) setDraftTrades(tradesRes.data);
       if (compRes.data?.length > 0) setCompPicks(compRes.data);
       if (keepersRes.data?.length > 0) setKeepers(keepersRes.data);
       if (proposalsRes.data) setProposals(proposalsRes.data);
+
+      // Build active roster lookup
+      const rostersByOwner = {};
+      DRAFT_OWNERS.forEach(o => { rostersByOwner[o] = []; });
+
+      const poolMap = new Map();
+      const rawPool = [
+        ...(p1?.data || []),
+        ...(p2?.data || []),
+        ...(p3?.data || []),
+        ...(p4?.data || [])
+      ];
+      rawPool.forEach(p => {
+        if (p['ESPN PlayerID']) poolMap.set(String(p['ESPN PlayerID']), p);
+        if (p.Player) poolMap.set(p.Player.toLowerCase().trim(), p);
+      });
+
+      (pdsRes?.data || []).forEach(r => {
+        const ownerObj = LEAGUE_OWNERS.find(lo => lo.id === r.team_id);
+        const ownerName = ownerObj ? (ownerObj.name === 'Dan' ? 'Daniel' : ownerObj.name) : null;
+        if (!ownerName || !rostersByOwner[ownerName]) return;
+
+        const poolPlayer = poolMap.get(String(r.player_id)) || poolMap.get(r.full_name?.toLowerCase().trim());
+        const pos = poolPlayer?.Position || 'UTIL';
+        const team = poolPlayer?.Team || '';
+        rostersByOwner[ownerName].push({
+          player_id: r.player_id,
+          name: r.full_name,
+          position: pos,
+          team: team,
+          label: `${r.full_name} (${pos}${team ? ' - ' + team : ''})`
+        });
+      });
+
+      Object.keys(rostersByOwner).forEach(k => {
+        rostersByOwner[k].sort((a, b) => a.name.localeCompare(b.name));
+      });
+      setTeamRosters(rostersByOwner);
+
     } catch (err) {
       console.warn('Using local fallback for draft assets:', err);
     } finally {
@@ -137,9 +209,151 @@ export default function DraftCapitalView({
     return computedPicks.filter(p => p.currentOwner === propTarget).sort((a, b) => a.round - b.round);
   }, [computedPicks, propTarget]);
 
-  const pendingCount = useMemo(() => {
-    return proposals.filter(p => p.status === 'pending' || p.status === 'accepted_by_partner').length;
-  }, [proposals]);
+  // Available picks for commissioner edit modal
+  const editSenderAvailablePicks = useMemo(() => {
+    if (!editingProposal) return [];
+    return computedPicks.filter(p => p.currentOwner === editingProposal.proposing_owner).sort((a, b) => a.round - b.round);
+  }, [computedPicks, editingProposal]);
+
+  const editTargetAvailablePicks = useMemo(() => {
+    if (!editingProposal) return [];
+    return computedPicks.filter(p => p.currentOwner === editingProposal.target_owner).sort((a, b) => a.round - b.round);
+  }, [computedPicks, editingProposal]);
+
+  // Asset helpers for proposal creation form
+  const handleAddOfferedPick = (roundVal) => {
+    const r = parseInt(roundVal);
+    if (!r) return;
+    const p = senderAvailablePicks.find(item => item.round === r);
+    if (offeredAssets.some(a => a.type === 'pick' && a.round === r)) return;
+    setOfferedAssets(prev => [...prev, {
+      type: 'pick',
+      round: r,
+      original_owner: p?.originalOwner || propSender,
+      label: `Round ${r} Pick (Orig: ${p?.originalOwner || propSender})`
+    }]);
+    setSelectedOfferedPickRound('');
+  };
+
+  const handleAddOfferedPlayer = (playerIdVal) => {
+    const pid = parseInt(playerIdVal);
+    if (!pid) return;
+    const p = (teamRosters[propSender] || []).find(item => item.player_id === pid);
+    if (!p || offeredAssets.some(a => a.type === 'player' && a.player_id === pid)) return;
+    setOfferedAssets(prev => [...prev, {
+      type: 'player',
+      player_id: p.player_id,
+      name: p.name,
+      position: p.position,
+      team: p.team,
+      label: p.label
+    }]);
+    setSelectedOfferedPlayerId('');
+  };
+
+  const handleAddOfferedBudget = (amtVal) => {
+    const amt = parseFloat(amtVal);
+    if (!amt || amt <= 0) return;
+    setOfferedAssets(prev => [...prev.filter(a => a.type !== 'budget'), {
+      type: 'budget',
+      amount: amt,
+      label: `$${amt} Draft Budget`
+    }]);
+    setSelectedOfferedBudget('');
+  };
+
+  const handleRemoveOfferedAsset = (index) => {
+    setOfferedAssets(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleAddRequestedPick = (roundVal) => {
+    const r = parseInt(roundVal);
+    if (!r) return;
+    const p = targetAvailablePicks.find(item => item.round === r);
+    if (requestedAssets.some(a => a.type === 'pick' && a.round === r)) return;
+    setRequestedAssets(prev => [...prev, {
+      type: 'pick',
+      round: r,
+      original_owner: p?.originalOwner || propTarget,
+      label: `Round ${r} Pick (Orig: ${p?.originalOwner || propTarget})`
+    }]);
+    setSelectedRequestedPickRound('');
+  };
+
+  const handleAddRequestedPlayer = (playerIdVal) => {
+    const pid = parseInt(playerIdVal);
+    if (!pid) return;
+    const p = (teamRosters[propTarget] || []).find(item => item.player_id === pid);
+    if (!p || requestedAssets.some(a => a.type === 'player' && a.player_id === pid)) return;
+    setRequestedAssets(prev => [...prev, {
+      type: 'player',
+      player_id: p.player_id,
+      name: p.name,
+      position: p.position,
+      team: p.team,
+      label: p.label
+    }]);
+    setSelectedRequestedPlayerId('');
+  };
+
+  const handleAddRequestedBudget = (amtVal) => {
+    const amt = parseFloat(amtVal);
+    if (!amt || amt <= 0) return;
+    setRequestedAssets(prev => [...prev.filter(a => a.type !== 'budget'), {
+      type: 'budget',
+      amount: amt,
+      label: `$${amt} Draft Budget`
+    }]);
+    setSelectedRequestedBudget('');
+  };
+
+  const handleRemoveRequestedAsset = (index) => {
+    setRequestedAssets(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Switch Proposing or Target Owner in Form
+  const handlePropSenderChange = (newSender) => {
+    setPropSender(newSender);
+    setOfferedAssets([]);
+    setSelectedOfferedPickRound('');
+    setSelectedOfferedPlayerId('');
+    setSelectedOfferedBudget('');
+    if (propTarget === newSender) {
+      const nextTarget = DRAFT_OWNERS.find(o => o !== newSender) || 'Adrian';
+      setPropTarget(nextTarget);
+      setRequestedAssets([]);
+    }
+  };
+
+  const handlePropTargetChange = (newTarget) => {
+    setPropTarget(newTarget);
+    setRequestedAssets([]);
+    setSelectedRequestedPickRound('');
+    setSelectedRequestedPlayerId('');
+    setSelectedRequestedBudget('');
+  };
+
+  // Compute Pick Counts & Imbalance in Form
+  const builderOfferedPicksCount = useMemo(() => {
+    let count = offeredAssets.filter(a => a.type === 'pick').length;
+    if (selectedOfferedPickRound && !offeredAssets.some(a => a.type === 'pick' && a.round === parseInt(selectedOfferedPickRound))) {
+      count++;
+    }
+    return count;
+  }, [offeredAssets, selectedOfferedPickRound]);
+
+  const builderRequestedPicksCount = useMemo(() => {
+    let count = requestedAssets.filter(a => a.type === 'pick').length;
+    if (selectedRequestedPickRound && !requestedAssets.some(a => a.type === 'pick' && a.round === parseInt(selectedRequestedPickRound))) {
+      count++;
+    }
+    return count;
+  }, [requestedAssets, selectedRequestedPickRound]);
+
+  const hasFormPickDisparity = useMemo(() => {
+    return (builderOfferedPicksCount > 0 || builderRequestedPicksCount > 0) &&
+      builderOfferedPicksCount !== builderRequestedPicksCount;
+  }, [builderOfferedPicksCount, builderRequestedPicksCount]);
 
   // Handle Propose Trade
   const handleSendProposal = async (e) => {
@@ -159,56 +373,92 @@ export default function DraftCapitalView({
       return;
     }
 
-    const hasOffered = offeredPickRound || (offeredBudget && parseFloat(offeredBudget) > 0);
-    const hasRequested = requestedPickRound || (requestedBudget && parseFloat(requestedBudget) > 0);
+    // Flush any pending selections into asset arrays
+    const finalOffered = [...offeredAssets];
+    if (selectedOfferedPickRound) {
+      const r = parseInt(selectedOfferedPickRound);
+      const p = senderAvailablePicks.find(item => item.round === r);
+      if (!finalOffered.some(a => a.type === 'pick' && a.round === r)) {
+        finalOffered.push({
+          type: 'pick',
+          round: r,
+          original_owner: p?.originalOwner || propSender,
+          label: `Round ${r} Pick (Orig: ${p?.originalOwner || propSender})`
+        });
+      }
+    }
+    if (selectedOfferedPlayerId) {
+      const pid = parseInt(selectedOfferedPlayerId);
+      const p = (teamRosters[propSender] || []).find(item => item.player_id === pid);
+      if (p && !finalOffered.some(a => a.type === 'player' && a.player_id === pid)) {
+        finalOffered.push({
+          type: 'player',
+          player_id: p.player_id,
+          name: p.name,
+          position: p.position,
+          team: p.team,
+          label: p.label
+        });
+      }
+    }
+    if (selectedOfferedBudget && parseFloat(selectedOfferedBudget) > 0) {
+      const amt = parseFloat(selectedOfferedBudget);
+      if (!finalOffered.some(a => a.type === 'budget')) {
+        finalOffered.push({
+          type: 'budget',
+          amount: amt,
+          label: `$${amt} Draft Budget`
+        });
+      }
+    }
 
-    if (!hasOffered || !hasRequested) {
-      alert('A trade proposal must include at least one offered asset and one requested asset.');
+    const finalRequested = [...requestedAssets];
+    if (selectedRequestedPickRound) {
+      const r = parseInt(selectedRequestedPickRound);
+      const p = targetAvailablePicks.find(item => item.round === r);
+      if (!finalRequested.some(a => a.type === 'pick' && a.round === r)) {
+        finalRequested.push({
+          type: 'pick',
+          round: r,
+          original_owner: p?.originalOwner || propTarget,
+          label: `Round ${r} Pick (Orig: ${p?.originalOwner || propTarget})`
+        });
+      }
+    }
+    if (selectedRequestedPlayerId) {
+      const pid = parseInt(selectedRequestedPlayerId);
+      const p = (teamRosters[propTarget] || []).find(item => item.player_id === pid);
+      if (p && !finalRequested.some(a => a.type === 'player' && a.player_id === pid)) {
+        finalRequested.push({
+          type: 'player',
+          player_id: p.player_id,
+          name: p.name,
+          position: p.position,
+          team: p.team,
+          label: p.label
+        });
+      }
+    }
+    if (selectedRequestedBudget && parseFloat(selectedRequestedBudget) > 0) {
+      const amt = parseFloat(selectedRequestedBudget);
+      if (!finalRequested.some(a => a.type === 'budget')) {
+        finalRequested.push({
+          type: 'budget',
+          amount: amt,
+          label: `$${amt} Draft Budget`
+        });
+      }
+    }
+
+    if (finalOffered.length === 0 || finalRequested.length === 0) {
+      alert('A trade proposal must include at least one offered asset and one requested asset (pick, player, or budget).');
       return;
     }
 
     setSubmittingTrade(true);
     try {
-      const offeredAssets = [];
-      if (offeredPickRound) {
-        const r = parseInt(offeredPickRound);
-        const p = senderAvailablePicks.find(item => item.round === r);
-        offeredAssets.push({
-          type: 'pick',
-          round: r,
-          original_owner: p?.originalOwner || propSender,
-          label: `Round ${r} Draft Pick (Orig: ${p?.originalOwner || propSender})`
-        });
-      }
-      if (offeredBudget && parseFloat(offeredBudget) > 0) {
-        offeredAssets.push({
-          type: 'budget',
-          amount: parseFloat(offeredBudget),
-          label: `$${offeredBudget} Draft Budget`
-        });
-      }
-
-      const requestedAssets = [];
-      if (requestedPickRound) {
-        const r = parseInt(requestedPickRound);
-        const p = targetAvailablePicks.find(item => item.round === r);
-        requestedAssets.push({
-          type: 'pick',
-          round: r,
-          original_owner: p?.originalOwner || propTarget,
-          label: `Round ${r} Draft Pick (Orig: ${p?.originalOwner || propTarget})`
-        });
-      }
-      if (requestedBudget && parseFloat(requestedBudget) > 0) {
-        requestedAssets.push({
-          type: 'budget',
-          amount: parseFloat(requestedBudget),
-          label: `$${requestedBudget} Draft Budget`
-        });
-      }
-
-      const senderTeamId = LEAGUE_OWNERS.find(o => o.name.toLowerCase() === propSender.toLowerCase())?.id || 0;
-      const targetTeamId = LEAGUE_OWNERS.find(o => o.name.toLowerCase() === propTarget.toLowerCase())?.id || 0;
+      const senderTeamId = getTeamId(propSender);
+      const targetTeamId = getTeamId(propTarget);
 
       const { error } = await supabase
         .from('league_trade_proposals')
@@ -218,8 +468,8 @@ export default function DraftCapitalView({
           proposing_owner: propSender,
           target_team_id: targetTeamId,
           target_owner: propTarget,
-          offered_assets: offeredAssets,
-          requested_assets: requestedAssets,
+          offered_assets: finalOffered,
+          requested_assets: finalRequested,
           notes: tradeNotes || null,
           status: 'pending',
           proposed_at: new Date().toISOString()
@@ -228,11 +478,16 @@ export default function DraftCapitalView({
       if (error) throw error;
 
       alert(`Official trade proposal sent to ${propTarget}! 🤝`);
-      setOfferedPickRound('');
-      setOfferedBudget('');
-      setRequestedPickRound('');
-      setRequestedBudget('');
+      setOfferedAssets([]);
+      setRequestedAssets([]);
+      setSelectedOfferedPickRound('');
+      setSelectedOfferedPlayerId('');
+      setSelectedOfferedBudget('');
+      setSelectedRequestedPickRound('');
+      setSelectedRequestedPlayerId('');
+      setSelectedRequestedBudget('');
       setTradeNotes('');
+      setProposeModalOpen(false);
       await loadData();
     } catch (err) {
       console.error('Failed to submit proposal:', err);
@@ -240,6 +495,23 @@ export default function DraftCapitalView({
     } finally {
       setSubmittingTrade(false);
     }
+  };
+
+  // Counter Offer Handler: Flips sender/target, inverts assets, and opens the proposal form
+  const handleCounterOffer = (prop) => {
+    setPropSender(prop.target_owner);
+    setPropTarget(prop.proposing_owner);
+    setOfferedAssets([...(prop.requested_assets || [])]);
+    setRequestedAssets([...(prop.offered_assets || [])]);
+    setSelectedOfferedPickRound('');
+    setSelectedOfferedPlayerId('');
+    setSelectedOfferedBudget('');
+    setSelectedRequestedPickRound('');
+    setSelectedRequestedPlayerId('');
+    setSelectedRequestedBudget('');
+    setTradeNotes(`Counter-offer to proposal from ${prop.proposing_owner}`);
+    setProposeModalOpen(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Partner Accept: Moves trade from 'pending' to 'accepted_by_partner' (ready for commish)
@@ -281,7 +553,7 @@ export default function DraftCapitalView({
     }
   };
 
-  // Commissioner Approval: Dan or Adrian officially executes the trade into draft_asset_trades!
+  // Commissioner Approval: Officially executes the trade into draft_asset_trades!
   const handleCommissionerApprove = async (proposal) => {
     if (!isCommissioner) {
       alert('Only league commissioners (Dan & Adrian) can execute official trade approval.');
@@ -303,9 +575,9 @@ export default function DraftCapitalView({
             season_year: 2026,
             target_draft_year: 2027,
             sending_owner: proposal.proposing_owner,
-            from_team_id: proposal.proposing_team_id,
+            from_team_id: proposal.proposing_team_id || getTeamId(proposal.proposing_owner),
             receiving_owner: proposal.target_owner,
-            to_team_id: proposal.target_team_id,
+            to_team_id: proposal.target_team_id || getTeamId(proposal.target_owner),
             asset_type: 'Overall Pick',
             asset_name: `Round ${asset.round}`,
             round_num: asset.round,
@@ -319,14 +591,30 @@ export default function DraftCapitalView({
             season_year: 2026,
             target_draft_year: 2027,
             sending_owner: proposal.proposing_owner,
-            from_team_id: proposal.proposing_team_id,
+            from_team_id: proposal.proposing_team_id || getTeamId(proposal.proposing_owner),
             receiving_owner: proposal.target_owner,
-            to_team_id: proposal.target_team_id,
+            to_team_id: proposal.target_team_id || getTeamId(proposal.target_owner),
             asset_type: 'Budget',
             asset_name: `$${asset.amount} Budget`,
             round_num: null,
             original_owner: proposal.proposing_owner,
             notes: proposal.notes || `Budget transfer`
+          });
+        } else if (asset.type === 'player') {
+          newAssetTrades.push({
+            trade_id: tradeId,
+            trade_date: tradeDate,
+            season_year: 2026,
+            target_draft_year: 2027,
+            sending_owner: proposal.proposing_owner,
+            from_team_id: proposal.proposing_team_id || getTeamId(proposal.proposing_owner),
+            receiving_owner: proposal.target_owner,
+            to_team_id: proposal.target_team_id || getTeamId(proposal.target_owner),
+            asset_type: 'Player',
+            asset_name: asset.name || asset.label,
+            round_num: null,
+            original_owner: proposal.proposing_owner,
+            notes: proposal.notes || `Player trade: ${asset.name || asset.label}`
           });
         }
       });
@@ -340,9 +628,9 @@ export default function DraftCapitalView({
             season_year: 2026,
             target_draft_year: 2027,
             sending_owner: proposal.target_owner,
-            from_team_id: proposal.target_team_id,
+            from_team_id: proposal.target_team_id || getTeamId(proposal.target_owner),
             receiving_owner: proposal.proposing_owner,
-            to_team_id: proposal.proposing_team_id,
+            to_team_id: proposal.proposing_team_id || getTeamId(proposal.proposing_owner),
             asset_type: 'Overall Pick',
             asset_name: `Round ${asset.round}`,
             round_num: asset.round,
@@ -356,14 +644,30 @@ export default function DraftCapitalView({
             season_year: 2026,
             target_draft_year: 2027,
             sending_owner: proposal.target_owner,
-            from_team_id: proposal.target_team_id,
+            from_team_id: proposal.target_team_id || getTeamId(proposal.target_owner),
             receiving_owner: proposal.proposing_owner,
-            to_team_id: proposal.proposing_team_id,
+            to_team_id: proposal.proposing_team_id || getTeamId(proposal.proposing_owner),
             asset_type: 'Budget',
             asset_name: `$${asset.amount} Budget`,
             round_num: null,
             original_owner: proposal.target_owner,
             notes: proposal.notes || `Budget transfer`
+          });
+        } else if (asset.type === 'player') {
+          newAssetTrades.push({
+            trade_id: tradeId,
+            trade_date: tradeDate,
+            season_year: 2026,
+            target_draft_year: 2027,
+            sending_owner: proposal.target_owner,
+            from_team_id: proposal.target_team_id || getTeamId(proposal.target_owner),
+            receiving_owner: proposal.proposing_owner,
+            to_team_id: proposal.proposing_team_id || getTeamId(proposal.proposing_owner),
+            asset_type: 'Player',
+            asset_name: asset.name || asset.label,
+            round_num: null,
+            original_owner: proposal.target_owner,
+            notes: proposal.notes || `Player trade: ${asset.name || asset.label}`
           });
         }
       });
@@ -388,7 +692,7 @@ export default function DraftCapitalView({
 
       if (propErr) throw propErr;
 
-      alert(`Trade officially APPROVED and EXECUTED! 👑 The 2027 draft board and team ledgers have been updated.`);
+      alert(`Trade officially APPROVED and EXECUTED! 👑 The 2027 draft board, players, and team ledgers have been updated.`);
       await loadData();
     } catch (err) {
       console.error('Approval failed:', err);
@@ -428,6 +732,76 @@ export default function DraftCapitalView({
     }
   };
 
+  // Commissioner Edit Modal Handlers
+  const handleOpenEditModal = (prop) => {
+    setEditingProposal({
+      ...prop,
+      offered_assets: [...(prop.offered_assets || [])],
+      requested_assets: [...(prop.requested_assets || [])],
+      notes: prop.notes || ''
+    });
+    setEditOfferedPickRound('');
+    setEditOfferedPlayerId('');
+    setEditOfferedBudget('');
+    setEditRequestedPickRound('');
+    setEditRequestedPlayerId('');
+    setEditRequestedBudget('');
+  };
+
+  const handleSaveProposalEdit = async () => {
+    if (!editingProposal) return;
+    setSavingEdit(true);
+    try {
+      const pTeamId = getTeamId(editingProposal.proposing_owner);
+      const tTeamId = getTeamId(editingProposal.target_owner);
+
+      const { error } = await supabase
+        .from('league_trade_proposals')
+        .update({
+          proposing_owner: editingProposal.proposing_owner,
+          proposing_team_id: pTeamId,
+          target_owner: editingProposal.target_owner,
+          target_team_id: tTeamId,
+          offered_assets: editingProposal.offered_assets,
+          requested_assets: editingProposal.requested_assets,
+          notes: editingProposal.notes,
+          status: editingProposal.status,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', editingProposal.id);
+
+      if (error) throw error;
+
+      alert('Proposal updated successfully by Commissioner. 👑');
+      setEditingProposal(null);
+      await loadData();
+    } catch (err) {
+      console.error('Failed to update proposal:', err);
+      alert('Error updating proposal: ' + err.message);
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  // Commissioner Delete Executed Trade from draft_asset_trades
+  const handleDeleteExecutedTrade = async (tradeRow) => {
+    if (!isCommissioner) return;
+    if (!window.confirm(`Are you sure you want to delete this executed trade record?\n\nAsset: ${tradeRow.asset_name}\nFrom: ${tradeRow.sending_owner} ➔ To: ${tradeRow.receiving_owner}`)) {
+      return;
+    }
+    try {
+      const { error } = await supabase
+        .from('draft_asset_trades')
+        .delete()
+        .eq('id', tradeRow.id);
+      if (error) throw error;
+      alert('Executed trade record deleted from draft_asset_trades.');
+      await loadData();
+    } catch (err) {
+      alert('Failed to delete trade record: ' + err.message);
+    }
+  };
+
   // Compute owner statistics
   const ownerStats = useMemo(() => {
     const stats = {};
@@ -447,10 +821,10 @@ export default function DraftCapitalView({
     return stats;
   }, [computedPicks]);
 
-  // Distinct trades involving draft assets
+  // Distinct trades involving draft assets (Picks, Budgets, and Players)
   const assetTradesList = useMemo(() => {
     return (draftTrades || []).filter(t =>
-      t.asset_type === 'Overall Pick' || t.asset_type === 'Draft Pick' || t.asset_type === 'Budget'
+      t.asset_type === 'Overall Pick' || t.asset_type === 'Draft Pick' || t.asset_type === 'Budget' || t.asset_type === 'Player'
     );
   }, [draftTrades]);
 
@@ -464,6 +838,82 @@ export default function DraftCapitalView({
     if (roundFilter === 'LATE') return list.filter(r => r >= 24);
     return list;
   }, [roundFilter]);
+
+  // Proposal Lists Filtered by Inbox Tabs
+  const myNormPerspective = useMemo(() => {
+    const norm = viewPerspectiveOwner === 'Dan' ? 'Daniel' : viewPerspectiveOwner;
+    return (norm || '').toLowerCase();
+  }, [viewPerspectiveOwner]);
+
+  const incomingProposals = useMemo(() => {
+    return proposals.filter(p => {
+      if (p.status !== 'pending') return false;
+      const targetNorm = (p.target_owner === 'Dan' ? 'Daniel' : p.target_owner)?.toLowerCase();
+      return targetNorm === myNormPerspective;
+    });
+  }, [proposals, myNormPerspective]);
+
+  const outgoingProposals = useMemo(() => {
+    return proposals.filter(p => {
+      if (p.status !== 'pending') return false;
+      const propNorm = (p.proposing_owner === 'Dan' ? 'Daniel' : p.proposing_owner)?.toLowerCase();
+      return propNorm === myNormPerspective;
+    });
+  }, [proposals, myNormPerspective]);
+
+  const commishQueueProposals = useMemo(() => {
+    return proposals.filter(p => p.status === 'accepted_by_partner');
+  }, [proposals]);
+
+  const allPendingProposals = useMemo(() => {
+    return proposals.filter(p => p.status === 'pending' || p.status === 'accepted_by_partner');
+  }, [proposals]);
+
+  const archivedProposals = useMemo(() => {
+    return proposals.filter(p => p.status === 'approved' || p.status === 'declined' || p.status === 'cancelled');
+  }, [proposals]);
+
+  const pendingCount = useMemo(() => {
+    return proposals.filter(p => p.status === 'pending' || p.status === 'accepted_by_partner').length;
+  }, [proposals]);
+
+  // Helper to render asset pills
+  const renderAssetBadge = (asset, onRemove = null) => {
+    const isPick = asset.type === 'pick';
+    const isPlayer = asset.type === 'player';
+    const isBudget = asset.type === 'budget';
+
+    let colorClasses = 'bg-slate-800 border-slate-700 text-slate-200';
+    let icon = '📦';
+
+    if (isPick) {
+      colorClasses = 'bg-amber-500/15 border-amber-500/40 text-amber-300';
+      icon = '🎟️';
+    } else if (isPlayer) {
+      colorClasses = 'bg-sky-500/15 border-sky-500/40 text-sky-300';
+      icon = '👤';
+    } else if (isBudget) {
+      colorClasses = 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300';
+      icon = '💵';
+    }
+
+    return (
+      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border ${colorClasses}`}>
+        <span>{icon}</span>
+        <span>{asset.label || asset.name}</span>
+        {onRemove && (
+          <button
+            type="button"
+            onClick={onRemove}
+            className="ml-1 text-slate-400 hover:text-rose-400 font-black cursor-pointer leading-none"
+            title="Remove asset"
+          >
+            ✕
+          </button>
+        )}
+      </span>
+    );
+  };
 
   if (loading) {
     return (
@@ -549,11 +999,15 @@ export default function DraftCapitalView({
               }`}
             >
               <span>🤝 Trade Proposals</span>
-              {pendingCount > 0 && (
-                <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-amber-400 text-slate-950 animate-pulse">
+              {incomingProposals.length > 0 ? (
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-emerald-400 text-slate-950 animate-pulse">
+                  📥 {incomingProposals.length}
+                </span>
+              ) : pendingCount > 0 ? (
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-amber-400 text-slate-950">
                   {pendingCount}
                 </span>
-              )}
+              ) : null}
             </button>
           </div>
         </div>
@@ -649,152 +1103,139 @@ export default function DraftCapitalView({
                     </td>
                     {DRAFT_OWNERS.map(slotOwner => {
                       const pick = computedPicks.find(p => p.round === roundNum && p.originalOwner === slotOwner);
-                      const isTraded = pick?.isTraded;
-                      const currentOwner = pick?.currentOwner || slotOwner;
+                      if (!pick) return <td key={slotOwner} className="py-2.5 px-2 text-center text-slate-600">-</td>;
 
+                      const isTraded = pick.isTraded;
                       return (
-                        <td key={slotOwner} className="py-2 px-2 text-center">
-                          {isTraded ? (
-                            <div
-                              title={`Acquired by ${currentOwner} from ${slotOwner} (Trade #${pick?.tradeDetails?.trade_id || ''})`}
-                              className="bg-amber-500/15 border border-amber-500/40 text-amber-300 rounded-lg p-1.5 transition-all shadow-xs"
-                            >
-                              <div className="font-black text-xs text-amber-200 flex items-center justify-center gap-1">
-                                <span>🎟️</span>
-                                <span>{currentOwner}</span>
-                              </div>
-                              <div className="text-[9px] text-amber-400/80 font-bold tracking-tight">
-                                ex-{slotOwner} #{pick?.tradeDetails?.trade_id}
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="bg-slate-950/70 border border-slate-800/80 text-slate-400 rounded-lg p-1.5">
-                              <span className="font-semibold text-slate-400">{currentOwner}</span>
-                            </div>
-                          )}
+                        <td
+                          key={slotOwner}
+                          className={`py-2 px-2 text-center transition-colors ${
+                            isTraded
+                              ? 'bg-amber-500/10 hover:bg-amber-500/20'
+                              : 'hover:bg-slate-800/30'
+                          }`}
+                        >
+                          <div className="inline-flex flex-col items-center">
+                            <span className={`px-2 py-0.5 rounded-md text-xs font-bold ${
+                              isTraded
+                                ? 'bg-amber-500/30 text-amber-300 border border-amber-500/40 shadow-xs'
+                                : 'text-slate-300'
+                            }`}>
+                              {pick.currentOwner}
+                            </span>
+                            {isTraded && (
+                              <span className="text-[9px] text-amber-400/80 font-medium mt-0.5">
+                                via #{pick.tradeDetails?.trade_id || 'Trade'}
+                              </span>
+                            )}
+                          </div>
                         </td>
                       );
                     })}
                   </tr>
                 ))}
               </tbody>
-              <tfoot>
-                <tr className="bg-slate-950 border-t-2 border-slate-800 font-black text-xs">
-                  <td className="py-3 px-3 text-center text-slate-400">Total</td>
-                  {DRAFT_OWNERS.map(owner => {
-                    const count = ownerStats[owner]?.total || 27;
-                    const diff = ownerStats[owner]?.diff || 0;
-                    return (
-                      <td key={owner} className="py-3 px-3 text-center">
-                        <span className="text-white font-black">{count}</span>{' '}
-                        <span className={`text-[10px] ${diff > 0 ? 'text-emerald-400' : diff < 0 ? 'text-rose-400' : 'text-slate-500'}`}>
-                          ({diff > 0 ? `+${diff}` : diff})
-                        </span>
-                      </td>
-                    );
-                  })}
-                </tr>
-              </tfoot>
             </table>
           </div>
         </div>
       )}
 
-      {/* SUBTAB 2: OWNER PICK LEDGERS */}
+      {/* SUBTAB 2: OWNER LEDGERS */}
       {activeSubTab === 'ledgers' && (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-black uppercase tracking-wider text-slate-400">Select Manager:</span>
-              <select
-                value={selectedOwner}
-                onChange={e => setSelectedOwner(e.target.value)}
-                className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm font-bold text-white focus:outline-none focus:border-amber-500 cursor-pointer"
+        <div className="space-y-6">
+          {/* Owner Selector Pills */}
+          <div className="flex flex-wrap items-center gap-2">
+            {DRAFT_OWNERS.map(owner => (
+              <button
+                key={owner}
+                onClick={() => setSelectedOwner(owner)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                  selectedOwner === owner
+                    ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md font-black'
+                    : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white hover:border-slate-700'
+                }`}
               >
-                {DRAFT_OWNERS.map(o => (
-                  <option key={o} value={o}>
-                    {o} ({ownerStats[o]?.total || 27} picks • {ownerStats[o]?.diff >= 0 ? `+${ownerStats[o]?.diff}` : ownerStats[o]?.diff})
-                  </option>
-                ))}
-              </select>
-            </div>
+                {owner} ({ownerStats[owner]?.total ?? 27})
+              </button>
+            ))}
+          </div>
 
-            <div className="text-xs text-amber-400 font-bold bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-lg">
-              {selectedOwner} holds <strong className="text-white">{ownerStats[selectedOwner]?.total}</strong> total picks for 2027
+          {/* Ledger Breakdown Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl">
+              <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Owned 2027 Picks</div>
+              <div className="text-3xl font-black text-white mt-1">{ownerStats[selectedOwner]?.total ?? 27}</div>
+              <div className="text-xs text-slate-500 mt-1">27 base rounds in draft</div>
+            </div>
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl">
+              <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Acquired from Others</div>
+              <div className="text-3xl font-black text-emerald-400 mt-1">{ownerStats[selectedOwner]?.acquired.length ?? 0}</div>
+              <div className="text-xs text-slate-500 mt-1">Incoming pick assets</div>
+            </div>
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl">
+              <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Traded Away to Others</div>
+              <div className="text-3xl font-black text-rose-400 mt-1">{ownerStats[selectedOwner]?.tradedAway.length ?? 0}</div>
+              <div className="text-xs text-slate-500 mt-1">Outgoing pick assets</div>
             </div>
           </div>
 
-          {/* Currently Owned Picks */}
-          <div>
-            <div className="text-xs font-black uppercase tracking-wider text-slate-400 mb-2">
-              Currently Owned 2027 Picks ({ownerStats[selectedOwner]?.ownedPicks?.length || 0})
-            </div>
+          {/* Complete Pick Inventory Table */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
+            <h3 className="text-sm font-black uppercase tracking-wider text-slate-300">
+              {selectedOwner}'s 2027 Draft Pick Inventory
+            </h3>
             <div className="overflow-x-auto rounded-xl border border-slate-800">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="bg-slate-950 text-slate-400 border-b border-slate-800 uppercase tracking-wider font-black">
-                    <th className="py-3 px-4 w-28">Round</th>
-                    <th className="py-3 px-4 w-32">Status</th>
-                    <th className="py-3 px-4 w-36">Original Owner</th>
-                    <th className="py-3 px-4">Trade Details & Rationale</th>
+                    <th className="py-2.5 px-4 w-24">Round</th>
+                    <th className="py-2.5 px-4 w-32">Status</th>
+                    <th className="py-2.5 px-4 w-40">Original Owner</th>
+                    <th className="py-2.5 px-4">Trade Context</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60 font-medium text-slate-200">
-                  {ownerStats[selectedOwner]?.ownedPicks.map((pick, idx) => {
-                    const isAcquired = pick.originalOwner !== selectedOwner;
-                    return (
-                      <tr key={`ledger-${selectedOwner}-${idx}`} className="hover:bg-slate-800/40 transition-colors">
-                        <td className="py-2.5 px-4 font-black">
-                          <span className={isAcquired ? 'text-amber-400' : 'text-teal-400'}>
-                            Round {pick.round}
+                  {ownerStats[selectedOwner]?.ownedPicks.map((pick, idx) => (
+                    <tr key={idx} className="hover:bg-slate-800/40 transition-colors">
+                      <td className="py-2.5 px-4 font-black text-slate-300">Round {pick.round}</td>
+                      <td className="py-2.5 px-4">
+                        {pick.originalOwner === selectedOwner ? (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700">
+                            ORIGINAL
                           </span>
-                        </td>
-                        <td className="py-2.5 px-4">
-                          <span
-                            className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
-                              isAcquired
-                                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                                : 'bg-teal-500/20 text-teal-300 border border-teal-500/40'
-                            }`}
-                          >
-                            {isAcquired ? '✓ ACQUIRED' : 'ORIGINAL'}
+                        ) : (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                            ACQUIRED
                           </span>
-                        </td>
-                        <td className="py-2.5 px-4 font-bold text-white">
-                          {pick.originalOwner}
-                        </td>
-                        <td className="py-2.5 px-4 text-slate-300">
-                          {isAcquired ? (
-                            <span className="text-amber-300/90">
-                              Acquired from <strong>{pick.originalOwner}</strong> via Trade #{pick.tradeDetails?.trade_id} ({pick.tradeDetails?.trade_date})
-                              {pick.tradeDetails?.notes && ` • ${pick.tradeDetails.notes}`}
-                            </span>
-                          ) : (
-                            <span className="text-slate-500">Original slot selection</span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
+                        )}
+                      </td>
+                      <td className="py-2.5 px-4 font-bold text-white">{pick.originalOwner}</td>
+                      <td className="py-2.5 px-4 text-slate-400">
+                        {pick.isTraded
+                          ? `Acquired via Trade #${pick.tradeDetails?.trade_id} (${pick.tradeDetails?.trade_date})${pick.tradeDetails?.notes ? ' • ' + pick.tradeDetails.notes : ''}`
+                          : 'Own natural slot'}
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
           </div>
 
-          {/* Traded Away Picks */}
-          {ownerStats[selectedOwner]?.tradedAway.length > 0 && (
-            <div>
-              <div className="text-xs font-black uppercase tracking-wider text-rose-400 mb-2">
-                Original Picks Traded Away by {selectedOwner} ({ownerStats[selectedOwner]?.tradedAway.length})
-              </div>
-              <div className="overflow-x-auto rounded-xl border border-rose-900/40">
+          {/* Traded Away Table if any */}
+          {(ownerStats[selectedOwner]?.tradedAway.length ?? 0) > 0 && (
+            <div className="bg-slate-900 border border-rose-900/40 rounded-2xl p-5 shadow-xl space-y-4">
+              <h3 className="text-sm font-black uppercase tracking-wider text-rose-400">
+                Picks {selectedOwner} Has Traded Away
+              </h3>
+              <div className="overflow-x-auto rounded-xl border border-slate-800">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="bg-slate-950 text-slate-400 border-b border-rose-900/40 uppercase tracking-wider font-black">
-                      <th className="py-3 px-4 w-28">Round</th>
-                      <th className="py-3 px-4 w-32">Status</th>
-                      <th className="py-3 px-4 w-36">Current Owner</th>
-                      <th className="py-3 px-4">Trade Details</th>
+                    <tr className="bg-slate-950 text-slate-400 border-b border-slate-800 uppercase tracking-wider font-black">
+                      <th className="py-2.5 px-4 w-24">Round</th>
+                      <th className="py-2.5 px-4 w-32">Status</th>
+                      <th className="py-2.5 px-4 w-40">Now Owned By</th>
+                      <th className="py-2.5 px-4">Trade Context</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-rose-900/30 font-medium text-slate-200">
@@ -828,13 +1269,20 @@ export default function DraftCapitalView({
       {/* SUBTAB 3: TRADE HISTORY LOG */}
       {activeSubTab === 'history' && (
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-black uppercase tracking-wider text-slate-300">
-              Draft Asset Trades ({assetTradesList.length} Transactions)
-            </h2>
-            <span className="text-xs text-slate-500">
-              Source: Google Sheets Trade Log synced to Supabase
-            </span>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h2 className="text-sm font-black uppercase tracking-wider text-slate-300">
+                Draft Asset & Player Trades ({assetTradesList.length} Transactions)
+              </h2>
+              <span className="text-xs text-slate-500">
+                Synchronized historical ledger from Supabase (draft_asset_trades)
+              </span>
+            </div>
+            {isCommissioner && (
+              <span className="text-[10px] font-bold px-2.5 py-1 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                👑 Commissioner Mode: Delete & Modify Actions Enabled
+              </span>
+            )}
           </div>
 
           <div className="overflow-x-auto rounded-xl border border-slate-800">
@@ -845,8 +1293,9 @@ export default function DraftCapitalView({
                   <th className="py-3 px-3 text-center w-20">Trade #</th>
                   <th className="py-3 px-4 w-32">Sending Owner</th>
                   <th className="py-3 px-4 w-32">Receiving Owner</th>
-                  <th className="py-3 px-4 w-52">Draft Asset Traded</th>
-                  <th className="py-3 px-4">Notes & Associated Player Moves</th>
+                  <th className="py-3 px-4 w-52">Asset Traded</th>
+                  <th className="py-3 px-4">Notes & Package Details</th>
+                  {isCommissioner && <th className="py-3 px-3 text-right w-24">Commish</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60 font-medium text-slate-200">
@@ -867,15 +1316,41 @@ export default function DraftCapitalView({
                       {t.receiving_owner}
                     </td>
                     <td className="py-3 px-4">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-500/40 text-amber-300 font-bold text-xs">
-                        <span>🎟️</span>
-                        <span>{t.asset_name}</span>
-                        {t.round_num && <span className="text-[10px] text-amber-400/80">(R{t.round_num})</span>}
-                      </span>
+                      {t.asset_type === 'Player' ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sky-500/15 border border-sky-500/40 text-sky-300 font-bold text-xs">
+                          <span>👤</span>
+                          <span>{t.asset_name}</span>
+                          <span className="text-[10px] text-sky-400/80">(Player)</span>
+                        </span>
+                      ) : t.asset_type === 'Budget' ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 font-bold text-xs">
+                          <span>💵</span>
+                          <span>{t.asset_name}</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-500/40 text-amber-300 font-bold text-xs">
+                          <span>🎟️</span>
+                          <span>{t.asset_name}</span>
+                          {t.round_num && <span className="text-[10px] text-amber-400/80">(R{t.round_num})</span>}
+                        </span>
+                      )}
                     </td>
                     <td className="py-3 px-4 text-slate-300">
                       {t.notes || `Trade #${t.trade_id}`}
                     </td>
+                    {isCommissioner && (
+                      <td className="py-3 px-3 text-right">
+                        {t.id && (
+                          <button
+                            onClick={() => handleDeleteExecutedTrade(t)}
+                            className="px-2 py-1 rounded bg-rose-950/60 border border-rose-500/40 text-rose-300 hover:bg-rose-900 text-[10px] font-bold cursor-pointer transition-all"
+                            title="Delete this record from draft_asset_trades"
+                          >
+                            🗑️ Delete
+                          </button>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -952,64 +1427,41 @@ export default function DraftCapitalView({
                         {DRAFT_OWNERS.map(owner => {
                           if (isKeeperRound) {
                             const keeperObj = (keepers || []).find(
-                              k => k.owner === owner && k.keeper_slot === rNum &&
-                                (!k.season_year || k.season_year === 2026 || k.season_year === '2026')
+                              k => k.round_num === rNum &&
+                                (k.manager === owner || (owner === 'Daniel' && k.manager === 'Dan'))
                             );
                             return (
-                              <td key={owner} className="py-2 px-2 text-center">
+                              <td key={owner} className="py-2 px-2 text-center bg-amber-950/10">
                                 {keeperObj ? (
-                                  <div className="bg-amber-500/15 border border-amber-500/30 rounded-lg p-1 text-center">
-                                    <div className="font-bold text-[11px] text-amber-200 truncate">
-                                      {keeperObj.player_name}
-                                    </div>
-                                    <div className="text-[9px] text-amber-400/90 font-semibold">
-                                      ${keeperObj.cost} • #{keeperObj.rank}
-                                    </div>
+                                  <div className="text-[11px] font-bold text-amber-300">
+                                    {keeperObj.player_name || keeperObj.player}
                                   </div>
                                 ) : (
-                                  <span className="text-slate-600">-</span>
+                                  <span className="text-slate-600 text-[10px]">Keeper Slot</span>
                                 )}
                               </td>
                             );
                           }
-
-                          const isOffset = (compPicks || []).some(
-                            cp => cp.owner === owner && cp.round_num === rNum &&
-                              cp.action_type === 'OFFSET_LOST' &&
-                              (!cp.season_year || cp.season_year === 2026 || cp.season_year === '2026')
-                          );
-
                           return (
-                            <td key={owner} className="py-2 px-2 text-center">
-                              {isOffset ? (
-                                <div className="bg-rose-500/15 border border-rose-500/40 rounded-lg p-1 text-center">
-                                  <div className="text-[10px] font-bold text-rose-400 line-through">Pick Slot</div>
-                                  <div className="text-[9px] text-rose-300 font-black">🚫 Offset</div>
-                                </div>
-                              ) : (
-                                <div className="bg-slate-950/70 border border-slate-800 rounded-lg p-1 text-center">
-                                  <span className="text-[11px] text-slate-400">Standard</span>
-                                </div>
-                              )}
+                            <td key={owner} className="py-2 px-2 text-center text-slate-300 text-xs">
+                              {owner}
                             </td>
                           );
                         })}
-
-                        {/* End of round compensation picks */}
-                        <td className="py-2 px-2 text-center">
+                        <td className="py-2 px-3 text-center bg-emerald-950/10">
                           {compPicksThisRound.length > 0 ? (
-                            <div className="flex flex-col gap-1">
-                              {compPicksThisRound.map(cp => (
+                            <div className="flex flex-col gap-1 items-center">
+                              {compPicksThisRound.map((cp, idx) => (
                                 <span
-                                  key={cp.id || `${cp.owner}-${cp.round_num}`}
-                                  className="px-1.5 py-0.5 rounded bg-purple-500/20 border border-purple-500/40 text-purple-300 font-bold text-[10px]"
+                                  key={idx}
+                                  className="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
                                 >
-                                  🎟️ {cp.owner} (${cp.cost_or_income})
+                                  {cp.owner_name || cp.manager} (+Comp)
                                 </span>
                               ))}
                             </div>
                           ) : (
-                            <span className="text-slate-600 text-[11px]">-</span>
+                            <span className="text-slate-700 text-[11px]">-</span>
                           )}
                         </td>
                       </tr>
@@ -1025,22 +1477,44 @@ export default function DraftCapitalView({
       {activeSubTab === 'proposals' && (
         <div className="space-y-6">
           {/* Hub Header & New Proposal Toggle */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h2 className="text-lg font-black text-white flex items-center gap-2">
-                <span>🤝</span> 2027 Offseason Draft Asset & Budget Trading Hub
-              </h2>
-              <p className="text-xs text-slate-400 mt-1 max-w-2xl leading-relaxed">
-                Propose pick swaps and budget transfers between league managers. Once both parties agree, trades enter the queue for <strong>Commissioner Approval (Dan & Adrian)</strong> before final execution into the 2027 draft board.
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">🤝</span>
+                <h2 className="text-lg font-black text-white">
+                  2027 Offseason Draft Asset, Budget & Player Trading Hub
+                </h2>
+              </div>
+              <p className="text-xs text-slate-400 mt-1 max-w-3xl leading-relaxed">
+                Propose trades consisting of <strong>2027 draft picks</strong>, <strong>active rostered players</strong>, and <strong>draft budget cash</strong>. Offers wait in the partner's inbox for agreement before routing to <strong>Commissioners (Dan & Adrian)</strong> for final league execution.
               </p>
             </div>
 
-            <button
-              onClick={() => setProposeModalOpen(!proposeModalOpen)}
-              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-bold text-xs shadow-lg transition-all flex items-center gap-2 cursor-pointer w-fit"
-            >
-              <span>{proposeModalOpen ? '✕ Close Proposal Form' : '➕ Propose New Trade'}</span>
-            </button>
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Perspective Owner Selector */}
+              <div className="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800 text-xs">
+                <span className="text-slate-400 font-semibold">Inbox Perspective:</span>
+                <select
+                  value={viewPerspectiveOwner}
+                  onChange={e => {
+                    setViewPerspectiveOwner(e.target.value);
+                    setPropSender(e.target.value);
+                  }}
+                  className="bg-transparent text-amber-300 font-bold focus:outline-none cursor-pointer"
+                >
+                  {DRAFT_OWNERS.map(o => (
+                    <option key={o} value={o} className="bg-slate-900 text-white">{o}</option>
+                  ))}
+                </select>
+              </div>
+
+              <button
+                onClick={() => setProposeModalOpen(!proposeModalOpen)}
+                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-bold text-xs shadow-lg transition-all flex items-center gap-2 cursor-pointer w-fit"
+              >
+                <span>{proposeModalOpen ? '✕ Close Proposal Form' : '➕ Propose New Trade'}</span>
+              </button>
+            </div>
           </div>
 
           {/* Collapsible Proposal Form */}
@@ -1052,7 +1526,7 @@ export default function DraftCapitalView({
                 </h3>
                 {isCommissioner && (
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">
-                    👑 Commissioner Override: Any Manager
+                    👑 Commissioner Override: Send on behalf of any team
                   </span>
                 )}
               </div>
@@ -1074,11 +1548,11 @@ export default function DraftCapitalView({
                     {isCommissioner ? (
                       <select
                         value={propSender}
-                        onChange={e => setPropSender(e.target.value)}
+                        onChange={e => handlePropSenderChange(e.target.value)}
                         className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-white focus:ring-2 focus:ring-rose-500 cursor-pointer"
                       >
                         {DRAFT_OWNERS.map(o => (
-                          <option key={o} value={o}>{o} (Team {LEAGUE_OWNERS.find(lo => lo.name === o)?.id})</option>
+                          <option key={o} value={o}>{o} (Team {getTeamId(o)})</option>
                         ))}
                       </select>
                     ) : (
@@ -1094,11 +1568,11 @@ export default function DraftCapitalView({
                     </label>
                     <select
                       value={propTarget}
-                      onChange={e => setPropTarget(e.target.value)}
+                      onChange={e => handlePropTargetChange(e.target.value)}
                       className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-white focus:ring-2 focus:ring-rose-500 cursor-pointer"
                     >
                       {DRAFT_OWNERS.filter(o => o !== propSender).map(o => (
-                        <option key={o} value={o}>{o} (Team {LEAGUE_OWNERS.find(lo => lo.name === o)?.id})</option>
+                        <option key={o} value={o}>{o} (Team {getTeamId(o)})</option>
                       ))}
                     </select>
                   </div>
@@ -1110,40 +1584,112 @@ export default function DraftCapitalView({
                   <div className="space-y-4">
                     <div className="text-xs font-black uppercase tracking-wider text-rose-400 border-b border-slate-800 pb-2 flex items-center justify-between">
                       <span>📤 {propSender} Offers:</span>
-                      <span className="text-[10px] text-slate-400 lowercase">{senderAvailablePicks.length} picks owned</span>
+                      <span className="text-[10px] text-slate-400 lowercase">{senderAvailablePicks.length} picks • {(teamRosters[propSender] || []).length} players</span>
                     </div>
 
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-400 mb-1">
-                        Select 2027 Draft Pick to Send:
-                      </label>
-                      <select
-                        value={offeredPickRound}
-                        onChange={e => setOfferedPickRound(e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white"
-                      >
-                        <option value="">-- No pick selected --</option>
-                        {senderAvailablePicks.map(p => (
-                          <option key={p.round} value={p.round}>
-                            Round {p.round} Pick {p.originalOwner !== propSender ? `(Orig: ${p.originalOwner})` : ''}
-                          </option>
+                    {/* Staged Offered Assets Tags */}
+                    {offeredAssets.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 p-2 bg-slate-900/80 rounded-lg border border-slate-800 min-h-[38px] items-center">
+                        {offeredAssets.map((asset, idx) => (
+                          <span key={idx}>
+                            {renderAssetBadge(asset, () => handleRemoveOfferedAsset(idx))}
+                          </span>
                         ))}
-                      </select>
+                      </div>
+                    )}
+
+                    {/* 1. Pick Dropdown */}
+                    <div className="space-y-1">
+                      <label className="block text-[11px] font-bold text-slate-400">
+                        Add 2027 Draft Pick to Offer:
+                      </label>
+                      <div className="flex gap-2">
+                        <select
+                          value={selectedOfferedPickRound}
+                          onChange={e => {
+                            setSelectedOfferedPickRound(e.target.value);
+                            if (e.target.value) handleAddOfferedPick(e.target.value);
+                          }}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white"
+                        >
+                          <option value="">-- Select draft pick --</option>
+                          {senderAvailablePicks
+                            .filter(p => !offeredAssets.some(a => a.type === 'pick' && a.round === p.round))
+                            .map(p => (
+                              <option key={p.round} value={p.round}>
+                                Round {p.round} Pick {p.originalOwner !== propSender ? `(Orig: ${p.originalOwner})` : ''}
+                              </option>
+                            ))}
+                        </select>
+                        <button
+                          type="button"
+                          onClick={() => handleAddOfferedPick(selectedOfferedPickRound)}
+                          disabled={!selectedOfferedPickRound}
+                          className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold disabled:opacity-40 cursor-pointer whitespace-nowrap"
+                        >
+                          + Add Pick
+                        </button>
+                      </div>
                     </div>
 
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-400 mb-1">
-                        And / Or Draft Budget Cash ($):
+                    {/* 2. Player Dropdown */}
+                    <div className="space-y-1">
+                      <label className="block text-[11px] font-bold text-slate-400">
+                        Add Rostered Player to Offer:
                       </label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        placeholder="$0"
-                        value={offeredBudget}
-                        onChange={e => setOfferedBudget(e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white"
-                      />
+                      <div className="flex gap-2">
+                        <select
+                          value={selectedOfferedPlayerId}
+                          onChange={e => {
+                            setSelectedOfferedPlayerId(e.target.value);
+                            if (e.target.value) handleAddOfferedPlayer(e.target.value);
+                          }}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white"
+                        >
+                          <option value="">-- Select rostered player --</option>
+                          {(teamRosters[propSender] || [])
+                            .filter(p => !offeredAssets.some(a => a.type === 'player' && a.player_id === p.player_id))
+                            .map(p => (
+                              <option key={p.player_id} value={p.player_id}>
+                                {p.name} ({p.position}{p.team ? ' - ' + p.team : ''})
+                              </option>
+                            ))}
+                        </select>
+                        <button
+                          type="button"
+                          onClick={() => handleAddOfferedPlayer(selectedOfferedPlayerId)}
+                          disabled={!selectedOfferedPlayerId}
+                          className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold disabled:opacity-40 cursor-pointer whitespace-nowrap"
+                        >
+                          + Add Player
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* 3. Budget Cash */}
+                    <div className="space-y-1">
+                      <label className="block text-[11px] font-bold text-slate-400">
+                        Add Draft Budget Cash ($):
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          placeholder="$ Amount"
+                          value={selectedOfferedBudget}
+                          onChange={e => setSelectedOfferedBudget(e.target.value)}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleAddOfferedBudget(selectedOfferedBudget)}
+                          disabled={!selectedOfferedBudget || parseFloat(selectedOfferedBudget) <= 0}
+                          className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold disabled:opacity-40 cursor-pointer whitespace-nowrap"
+                        >
+                          + Add Budget
+                        </button>
+                      </div>
                     </div>
                   </div>
 
@@ -1151,43 +1697,130 @@ export default function DraftCapitalView({
                   <div className="space-y-4">
                     <div className="text-xs font-black uppercase tracking-wider text-teal-400 border-b border-slate-800 pb-2 flex items-center justify-between">
                       <span>📥 {propSender} Receives (from {propTarget}):</span>
-                      <span className="text-[10px] text-slate-400 lowercase">{targetAvailablePicks.length} picks owned</span>
+                      <span className="text-[10px] text-slate-400 lowercase">{targetAvailablePicks.length} picks • {(teamRosters[propTarget] || []).length} players</span>
                     </div>
 
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-400 mb-1">
-                        Select 2027 Draft Pick to Request:
-                      </label>
-                      <select
-                        value={requestedPickRound}
-                        onChange={e => setRequestedPickRound(e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white"
-                      >
-                        <option value="">-- No pick selected --</option>
-                        {targetAvailablePicks.map(p => (
-                          <option key={p.round} value={p.round}>
-                            Round {p.round} Pick {p.originalOwner !== propTarget ? `(Orig: ${p.originalOwner})` : ''}
-                          </option>
+                    {/* Staged Requested Assets Tags */}
+                    {requestedAssets.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 p-2 bg-slate-900/80 rounded-lg border border-slate-800 min-h-[38px] items-center">
+                        {requestedAssets.map((asset, idx) => (
+                          <span key={idx}>
+                            {renderAssetBadge(asset, () => handleRemoveRequestedAsset(idx))}
+                          </span>
                         ))}
-                      </select>
+                      </div>
+                    )}
+
+                    {/* 1. Pick Dropdown */}
+                    <div className="space-y-1">
+                      <label className="block text-[11px] font-bold text-slate-400">
+                        Request 2027 Draft Pick:
+                      </label>
+                      <div className="flex gap-2">
+                        <select
+                          value={selectedRequestedPickRound}
+                          onChange={e => {
+                            setSelectedRequestedPickRound(e.target.value);
+                            if (e.target.value) handleAddRequestedPick(e.target.value);
+                          }}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white"
+                        >
+                          <option value="">-- Select draft pick --</option>
+                          {targetAvailablePicks
+                            .filter(p => !requestedAssets.some(a => a.type === 'pick' && a.round === p.round))
+                            .map(p => (
+                              <option key={p.round} value={p.round}>
+                                Round {p.round} Pick {p.originalOwner !== propTarget ? `(Orig: ${p.originalOwner})` : ''}
+                              </option>
+                            ))}
+                        </select>
+                        <button
+                          type="button"
+                          onClick={() => handleAddRequestedPick(selectedRequestedPickRound)}
+                          disabled={!selectedRequestedPickRound}
+                          className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold disabled:opacity-40 cursor-pointer whitespace-nowrap"
+                        >
+                          + Add Pick
+                        </button>
+                      </div>
                     </div>
 
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-400 mb-1">
-                        And / Or Draft Budget Cash ($):
+                    {/* 2. Player Dropdown */}
+                    <div className="space-y-1">
+                      <label className="block text-[11px] font-bold text-slate-400">
+                        Request Rostered Player:
                       </label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        placeholder="$0"
-                        value={requestedBudget}
-                        onChange={e => setRequestedBudget(e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white"
-                      />
+                      <div className="flex gap-2">
+                        <select
+                          value={selectedRequestedPlayerId}
+                          onChange={e => {
+                            setSelectedRequestedPlayerId(e.target.value);
+                            if (e.target.value) handleAddRequestedPlayer(e.target.value);
+                          }}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white"
+                        >
+                          <option value="">-- Select rostered player --</option>
+                          {(teamRosters[propTarget] || [])
+                            .filter(p => !requestedAssets.some(a => a.type === 'player' && a.player_id === p.player_id))
+                            .map(p => (
+                              <option key={p.player_id} value={p.player_id}>
+                                {p.name} ({p.position}{p.team ? ' - ' + p.team : ''})
+                              </option>
+                            ))}
+                        </select>
+                        <button
+                          type="button"
+                          onClick={() => handleAddRequestedPlayer(selectedRequestedPlayerId)}
+                          disabled={!selectedRequestedPlayerId}
+                          className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold disabled:opacity-40 cursor-pointer whitespace-nowrap"
+                        >
+                          + Add Player
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* 3. Budget Cash */}
+                    <div className="space-y-1">
+                      <label className="block text-[11px] font-bold text-slate-400">
+                        Request Draft Budget Cash ($):
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          placeholder="$ Amount"
+                          value={selectedRequestedBudget}
+                          onChange={e => setSelectedRequestedBudget(e.target.value)}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleAddRequestedBudget(selectedRequestedBudget)}
+                          disabled={!selectedRequestedBudget || parseFloat(selectedRequestedBudget) <= 0}
+                          className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold disabled:opacity-40 cursor-pointer whitespace-nowrap"
+                        >
+                          + Add Budget
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
+
+                {/* Pick Imbalance Warning Alert */}
+                {hasFormPickDisparity && (
+                  <div className="p-4 rounded-xl bg-amber-950/40 border border-amber-500/60 flex items-start gap-3 animate-fade-in">
+                    <span className="text-xl">⚠️</span>
+                    <div className="space-y-1">
+                      <div className="text-xs font-black text-amber-300 uppercase tracking-wide">
+                        Pick Imbalance Warning: Unequal Draft Picks ({builderOfferedPicksCount} offered vs {builderRequestedPicksCount} requested)
+                      </div>
+                      <p className="text-[11px] text-amber-200/90 leading-relaxed">
+                        In our 27-round draft format (Rounds 6 through 32), trading an unequal number of draft picks leaves teams with unequal roster sizes unless an offsetting pick (such as a late-round Round 32 pick swap) is included. You may still proceed if this disparity is intentional.
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {/* Notes */}
                 <div>
@@ -1196,7 +1829,7 @@ export default function DraftCapitalView({
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. Conditional swap or draft order swap..."
+                    placeholder="e.g. Multi-player swap, conditional pick exchange, or draft strategy..."
                     value={tradeNotes}
                     onChange={e => setTradeNotes(e.target.value)}
                     className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-600"
@@ -1207,14 +1840,14 @@ export default function DraftCapitalView({
                   <button
                     type="button"
                     onClick={() => setProposeModalOpen(false)}
-                    className="px-4 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white"
+                    className="px-4 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={submittingTrade || !user}
-                    className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md cursor-pointer disabled:opacity-50"
+                    className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md cursor-pointer disabled:opacity-50 transition-all"
                   >
                     {submittingTrade ? 'Submitting...' : '📤 Send Official Trade Proposal'}
                   </button>
@@ -1223,212 +1856,341 @@ export default function DraftCapitalView({
             </div>
           )}
 
-          {/* Active Proposals Board */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-black uppercase tracking-wider text-slate-300 flex items-center gap-2">
-              <span>⏳</span> Pending Trade Proposals & Approvals
-            </h3>
+          {/* Proposals Inbox / Outbox / Commish Filter Sub-Navigation */}
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900 border border-slate-800 p-3 rounded-2xl shadow-lg">
+            <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
+              <button
+                onClick={() => setInboxTab('inbox')}
+                className={`px-3.5 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
+                  inboxTab === 'inbox'
+                    ? 'bg-indigo-600 text-white shadow-md font-black'
+                    : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
+                }`}
+              >
+                <span>📥 Incoming Offers</span>
+                {incomingProposals.length > 0 && (
+                  <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-rose-500 text-white animate-pulse">
+                    {incomingProposals.length}
+                  </span>
+                )}
+              </button>
 
-            {proposals.filter(p => p.status === 'pending' || p.status === 'accepted_by_partner').length === 0 ? (
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center text-slate-500 text-xs">
-                No active proposals pending agreement or commissioner review right now.
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 gap-4">
-                {proposals
-                  .filter(p => p.status === 'pending' || p.status === 'accepted_by_partner')
-                  .map(prop => {
-                    const isSender = profile?.owner_name?.toLowerCase() === prop.proposing_owner?.toLowerCase();
-                    const isTarget = profile?.owner_name?.toLowerCase() === prop.target_owner?.toLowerCase();
-                    const isAwaitingCommish = prop.status === 'accepted_by_partner';
-                    const isLoading = actionLoadingId === prop.id;
+              <button
+                onClick={() => setInboxTab('outbox')}
+                className={`px-3.5 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
+                  inboxTab === 'outbox'
+                    ? 'bg-indigo-600 text-white shadow-md font-black'
+                    : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
+                }`}
+              >
+                <span>📤 Sent Proposals</span>
+                {outgoingProposals.length > 0 && (
+                  <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-slate-800 text-slate-300">
+                    {outgoingProposals.length}
+                  </span>
+                )}
+              </button>
 
-                    return (
-                      <div
-                        key={prop.id}
-                        className={`rounded-2xl p-5 border shadow-xl transition-all ${
-                          isAwaitingCommish
-                            ? 'bg-amber-950/20 border-amber-500/50'
-                            : 'bg-slate-900 border-slate-800'
-                        }`}
-                      >
-                        {/* Header */}
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
-                          <div className="flex items-center gap-2">
-                            <span className="text-lg">🤝</span>
-                            <div>
-                              <div className="text-sm font-bold text-white">
-                                {prop.proposing_owner} ⇄ {prop.target_owner}
-                              </div>
-                              <div className="text-[10px] text-slate-400">
-                                Proposed: {new Date(prop.proposed_at || prop.created_at).toLocaleDateString()}
-                              </div>
-                            </div>
-                          </div>
+              <button
+                onClick={() => setInboxTab('commish')}
+                className={`px-3.5 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
+                  inboxTab === 'commish'
+                    ? 'bg-amber-500 text-slate-950 shadow-md font-black'
+                    : 'bg-slate-950 text-amber-300 hover:text-amber-200 border border-slate-800'
+                }`}
+              >
+                <span>👑 Commish Review</span>
+                {commishQueueProposals.length > 0 && (
+                  <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-amber-400 text-slate-950 animate-pulse">
+                    {commishQueueProposals.length}
+                  </span>
+                )}
+              </button>
 
-                          <div>
-                            {isAwaitingCommish ? (
-                              <span className="px-2.5 py-1 rounded-full text-xs font-black bg-amber-400/20 border border-amber-400/60 text-amber-300 animate-pulse flex items-center gap-1.5">
-                                <span>👑</span> Awaiting Commissioner Approval
-                              </span>
-                            ) : (
-                              <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-500/20 border border-indigo-500/40 text-indigo-300">
-                                ⏳ Pending Partner Agreement ({prop.target_owner})
-                              </span>
-                            )}
-                          </div>
-                        </div>
+              <button
+                onClick={() => setInboxTab('all')}
+                className={`px-3.5 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
+                  inboxTab === 'all'
+                    ? 'bg-slate-800 text-white shadow-md font-black'
+                    : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
+                }`}
+              >
+                <span>🌐 League All ({allPendingProposals.length})</span>
+              </button>
 
-                        {/* Assets Details */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4 text-xs">
-                          {/* Left: What Proposing Owner Sends */}
-                          <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
-                            <div className="text-[11px] font-bold text-slate-400 mb-2">
-                              {prop.proposing_owner} Sends:
-                            </div>
-                            <div className="flex flex-wrap gap-1.5">
-                              {(prop.offered_assets || []).map((a, i) => (
-                                <span
-                                  key={i}
-                                  className="px-2 py-1 rounded-lg text-xs font-bold bg-rose-500/20 border border-rose-500/40 text-rose-300"
-                                >
-                                  {a.type === 'pick' ? `🎟️ ${a.label}` : `💵 ${a.label}`}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
+              <button
+                onClick={() => setInboxTab('archive')}
+                className={`px-3.5 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
+                  inboxTab === 'archive'
+                    ? 'bg-slate-800 text-white shadow-md font-black'
+                    : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
+                }`}
+              >
+                <span>📜 Archive ({archivedProposals.length})</span>
+              </button>
+            </div>
 
-                          {/* Right: What Target Owner Sends */}
-                          <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
-                            <div className="text-[11px] font-bold text-slate-400 mb-2">
-                              {prop.target_owner} Sends:
-                            </div>
-                            <div className="flex flex-wrap gap-1.5">
-                              {(prop.requested_assets || []).map((a, i) => (
-                                <span
-                                  key={i}
-                                  className="px-2 py-1 rounded-lg text-xs font-bold bg-teal-500/20 border border-teal-500/40 text-teal-300"
-                                >
-                                  {a.type === 'pick' ? `🎟️ ${a.label}` : `💵 ${a.label}`}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-
-                        {prop.notes && (
-                          <div className="text-xs text-slate-400 italic mb-3">
-                            "{prop.notes}"
-                          </div>
-                        )}
-
-                        {/* Action Buttons */}
-                        <div className="pt-2 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
-                          <div className="text-[11px] text-slate-500">
-                            {isAwaitingCommish
-                              ? `Agreed by ${prop.target_owner}. Dan or Adrian must officially approve.`
-                              : `Awaiting response from ${prop.target_owner}.`}
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            {/* Stage 1 Actions */}
-                            {!isAwaitingCommish && (
-                              <>
-                                {(isTarget || isCommissioner) && (
-                                  <>
-                                    <button
-                                      onClick={() => handlePartnerAccept(prop)}
-                                      disabled={isLoading}
-                                      className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-xs cursor-pointer"
-                                    >
-                                      {isLoading ? 'Processing...' : '✅ Accept Trade'}
-                                    </button>
-                                    <button
-                                      onClick={() => handleDeclineOrCancel(prop, 'declined')}
-                                      disabled={isLoading}
-                                      className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-rose-950 text-rose-400 border border-rose-500/40 font-bold text-xs cursor-pointer"
-                                    >
-                                      Decline
-                                    </button>
-                                  </>
-                                )}
-
-                                {(isSender || isCommissioner) && !isTarget && (
-                                  <button
-                                    onClick={() => handleDeclineOrCancel(prop, 'cancelled')}
-                                    disabled={isLoading}
-                                    className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 font-bold text-xs cursor-pointer"
-                                  >
-                                    Cancel Proposal
-                                  </button>
-                                )}
-                              </>
-                            )}
-
-                            {/* Stage 2 Actions (Commissioner Approval) */}
-                            {isAwaitingCommish && (
-                              <>
-                                {isCommissioner ? (
-                                  <div className="flex items-center gap-2 bg-amber-950/40 border border-amber-500/50 p-1.5 px-3 rounded-xl">
-                                    <span className="text-xs font-bold text-amber-300">👑 Commish Action:</span>
-                                    <button
-                                      onClick={() => handleCommissionerApprove(prop)}
-                                      disabled={isLoading}
-                                      className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs shadow-md cursor-pointer"
-                                    >
-                                      {isLoading ? 'Executing...' : '✅ Approve & Execute Trade'}
-                                    </button>
-                                    <button
-                                      onClick={() => handleDeclineOrCancel(prop, 'declined')}
-                                      disabled={isLoading}
-                                      className="px-3 py-1.5 rounded-lg bg-rose-950/80 text-rose-300 border border-rose-500/50 font-bold text-xs hover:bg-rose-900 cursor-pointer"
-                                    >
-                                      Veto
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <span className="text-xs font-bold text-amber-300 flex items-center gap-1">
-                                    <span>⏳</span> Pending Dan / Adrian Approval
-                                  </span>
-                                )}
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-              </div>
-            )}
+            <div className="text-xs text-slate-400">
+              {inboxTab === 'inbox' && `Showing offers waiting for ${viewPerspectiveOwner}'s decision`}
+              {inboxTab === 'outbox' && `Showing offers sent by ${viewPerspectiveOwner} awaiting response`}
+              {inboxTab === 'commish' && 'Agreed by both parties • Pending commissioner execution'}
+              {inboxTab === 'all' && 'All active proposals across the entire league'}
+              {inboxTab === 'archive' && 'Historical approved, declined, and cancelled proposals'}
+            </div>
           </div>
 
-          {/* Historical Proposals Table */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-3">
-            <h3 className="text-sm font-black uppercase tracking-wider text-slate-300 flex items-center gap-2">
-              <span>📜</span> Completed Trade Proposals Archive
-            </h3>
+          {/* Proposal List Rendering */}
+          {inboxTab !== 'archive' ? (
+            <div className="space-y-4">
+              {(() => {
+                let listToRender = [];
+                if (inboxTab === 'inbox') listToRender = incomingProposals;
+                else if (inboxTab === 'outbox') listToRender = outgoingProposals;
+                else if (inboxTab === 'commish') listToRender = commishQueueProposals;
+                else if (inboxTab === 'all') listToRender = allPendingProposals;
 
-            {proposals.filter(p => p.status === 'approved' || p.status === 'declined' || p.status === 'cancelled').length === 0 ? (
-              <div className="text-xs text-slate-500 py-3 text-center">
-                No past proposals recorded yet.
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="border-b border-slate-800 text-slate-500 text-[11px] font-bold">
-                      <th className="py-2.5 px-3">Date</th>
-                      <th className="py-2.5 px-3">Proposing</th>
-                      <th className="py-2.5 px-3">Target</th>
-                      <th className="py-2.5 px-3">Assets Exchanged</th>
-                      <th className="py-2.5 px-3 text-center">Status</th>
-                      <th className="py-2.5 px-3 text-right">Resolved By</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {proposals
-                      .filter(p => p.status === 'approved' || p.status === 'declined' || p.status === 'cancelled')
-                      .map(p => (
+                if (listToRender.length === 0) {
+                  return (
+                    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-10 text-center space-y-2">
+                      <div className="text-3xl">
+                        {inboxTab === 'inbox' ? '📭' : inboxTab === 'outbox' ? '📤' : inboxTab === 'commish' ? '👑' : '🤝'}
+                      </div>
+                      <div className="text-slate-400 text-sm font-bold">
+                        {inboxTab === 'inbox' && `No pending incoming trade offers for ${viewPerspectiveOwner}.`}
+                        {inboxTab === 'outbox' && `No active proposals sent by ${viewPerspectiveOwner}.`}
+                        {inboxTab === 'commish' && 'No proposals currently waiting in the Commissioner queue.'}
+                        {inboxTab === 'all' && 'No active proposals in the league right now.'}
+                      </div>
+                      <div className="text-slate-500 text-xs">
+                        Use the "➕ Propose New Trade" button above to initiate a pick, player, or budget proposal.
+                      </div>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="grid grid-cols-1 gap-4">
+                    {listToRender.map(prop => {
+                      const isSender = profile?.owner_name?.toLowerCase() === prop.proposing_owner?.toLowerCase() ||
+                        (profile?.owner_name === 'Dan' && prop.proposing_owner === 'Daniel') ||
+                        (profile?.owner_name === 'Daniel' && prop.proposing_owner === 'Dan');
+
+                      const isTarget = profile?.owner_name?.toLowerCase() === prop.target_owner?.toLowerCase() ||
+                        (profile?.owner_name === 'Dan' && prop.target_owner === 'Daniel') ||
+                        (profile?.owner_name === 'Daniel' && prop.target_owner === 'Dan');
+
+                      const isAwaitingCommish = prop.status === 'accepted_by_partner';
+                      const isLoading = actionLoadingId === prop.id;
+
+                      // Check pick imbalance
+                      const offeredPicks = (prop.offered_assets || []).filter(a => a.type === 'pick').length;
+                      const requestedPicks = (prop.requested_assets || []).filter(a => a.type === 'pick').length;
+                      const hasDisparity = (offeredPicks > 0 || requestedPicks > 0) && offeredPicks !== requestedPicks;
+
+                      return (
+                        <div
+                          key={prop.id}
+                          className={`rounded-2xl p-5 border shadow-xl transition-all ${
+                            isAwaitingCommish
+                              ? 'bg-amber-950/20 border-amber-500/50'
+                              : 'bg-slate-900 border-slate-800'
+                          }`}
+                        >
+                          {/* Card Header */}
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                            <div className="flex items-center gap-3">
+                              <span className="text-xl">🤝</span>
+                              <div>
+                                <div className="text-sm font-bold text-white flex items-center gap-2">
+                                  <span>{prop.proposing_owner} ⇄ {prop.target_owner}</span>
+                                  {hasDisparity && (
+                                    <span
+                                      className="px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-500/20 border border-amber-500/50 text-amber-300 flex items-center gap-1"
+                                      title="Unequal number of draft picks involved"
+                                    >
+                                      <span>⚠️</span> Pick Disparity ({offeredPicks} vs {requestedPicks})
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="text-[10px] text-slate-400">
+                                  Proposed: {new Date(prop.proposed_at || prop.created_at).toLocaleDateString()}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              {isAwaitingCommish ? (
+                                <span className="px-2.5 py-1 rounded-full text-xs font-black bg-amber-400/20 border border-amber-400/60 text-amber-300 animate-pulse flex items-center gap-1.5">
+                                  <span>👑</span> Awaiting Commissioner Approval
+                                </span>
+                              ) : (
+                                <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-500/20 border border-indigo-500/40 text-indigo-300">
+                                  ⏳ Pending Partner Agreement ({prop.target_owner})
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Assets Details */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4 text-xs">
+                            {/* Left: What Proposing Owner Sends */}
+                            <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
+                              <div className="text-[11px] font-bold text-slate-400 mb-2 flex items-center justify-between">
+                                <span>📤 {prop.proposing_owner} Sends:</span>
+                                <span className="text-[10px] text-slate-500">{(prop.offered_assets || []).length} assets</span>
+                              </div>
+                              <div className="flex flex-wrap gap-1.5">
+                                {(prop.offered_assets || []).map((a, i) => (
+                                  <span key={i}>{renderAssetBadge(a)}</span>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Right: What Target Owner Sends */}
+                            <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
+                              <div className="text-[11px] font-bold text-slate-400 mb-2 flex items-center justify-between">
+                                <span>📥 {prop.target_owner} Sends:</span>
+                                <span className="text-[10px] text-slate-500">{(prop.requested_assets || []).length} assets</span>
+                              </div>
+                              <div className="flex flex-wrap gap-1.5">
+                                {(prop.requested_assets || []).map((a, i) => (
+                                  <span key={i}>{renderAssetBadge(a)}</span>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+
+                          {prop.notes && (
+                            <div className="text-xs text-slate-400 italic mb-3 bg-slate-950/40 p-2.5 rounded-lg border border-slate-800/50">
+                              "{prop.notes}"
+                            </div>
+                          )}
+
+                          {/* Action Buttons */}
+                          <div className="pt-2 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
+                            <div className="text-[11px] text-slate-500">
+                              {isAwaitingCommish
+                                ? `Agreed by both parties. Dan or Adrian must officially approve.`
+                                : `Awaiting agreement from ${prop.target_owner}.`}
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-2">
+                              {/* Stage 1 Actions (Partner Acceptance / Decline / Counter) */}
+                              {!isAwaitingCommish && (
+                                <>
+                                  {(isTarget || isCommissioner) && (
+                                    <>
+                                      <button
+                                        onClick={() => handlePartnerAccept(prop)}
+                                        disabled={isLoading}
+                                        className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-xs cursor-pointer transition-all"
+                                      >
+                                        {isLoading ? 'Processing...' : '✅ Accept Trade'}
+                                      </button>
+                                      <button
+                                        onClick={() => handleCounterOffer(prop)}
+                                        disabled={isLoading}
+                                        className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-xs cursor-pointer transition-all"
+                                      >
+                                        💬 Counter Offer
+                                      </button>
+                                      <button
+                                        onClick={() => handleDeclineOrCancel(prop, 'declined')}
+                                        disabled={isLoading}
+                                        className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-rose-950 text-rose-400 border border-rose-500/40 font-bold text-xs cursor-pointer transition-all"
+                                      >
+                                        Decline
+                                      </button>
+                                    </>
+                                  )}
+
+                                  {(isSender || isCommissioner) && !isTarget && (
+                                    <button
+                                      onClick={() => handleDeclineOrCancel(prop, 'cancelled')}
+                                      disabled={isLoading}
+                                      className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 font-bold text-xs cursor-pointer transition-all"
+                                    >
+                                      Cancel Proposal
+                                    </button>
+                                  )}
+                                </>
+                              )}
+
+                              {/* Stage 2 Actions (Commissioner Approval) */}
+                              {isAwaitingCommish && (
+                                <>
+                                  {isCommissioner ? (
+                                    <div className="flex flex-wrap items-center gap-2 bg-amber-950/40 border border-amber-500/50 p-1.5 px-3 rounded-xl">
+                                      <span className="text-xs font-bold text-amber-300">👑 Commish Action:</span>
+                                      <button
+                                        onClick={() => handleCommissionerApprove(prop)}
+                                        disabled={isLoading}
+                                        className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs shadow-md cursor-pointer transition-all"
+                                      >
+                                        {isLoading ? 'Executing...' : '✅ Approve & Execute Trade'}
+                                      </button>
+                                      <button
+                                        onClick={() => handleDeclineOrCancel(prop, 'declined')}
+                                        disabled={isLoading}
+                                        className="px-3 py-1.5 rounded-lg bg-rose-950/80 text-rose-300 border border-rose-500/50 font-bold text-xs hover:bg-rose-900 cursor-pointer transition-all"
+                                      >
+                                        Veto
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <span className="text-xs font-bold text-amber-300 flex items-center gap-1">
+                                      <span>⏳</span> Pending Dan / Adrian Approval
+                                    </span>
+                                  )}
+                                </>
+                              )}
+
+                              {/* Commissioner Manual Edit Button */}
+                              {isCommissioner && (
+                                <button
+                                  onClick={() => handleOpenEditModal(prop)}
+                                  className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-amber-950/60 text-amber-300 border border-amber-500/40 font-bold text-xs cursor-pointer transition-all"
+                                  title="Commissioner Manual Edit: adjust assets, owners, notes"
+                                >
+                                  ✏️ Edit (Commish)
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+            </div>
+          ) : (
+            /* Historical Proposals Archive */
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-3">
+              <h3 className="text-sm font-black uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                <span>📜</span> Completed Trade Proposals Archive
+              </h3>
+
+              {archivedProposals.length === 0 ? (
+                <div className="text-xs text-slate-500 py-3 text-center">
+                  No past proposals recorded yet.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b border-slate-800 text-slate-500 text-[11px] font-bold">
+                        <th className="py-2.5 px-3">Date</th>
+                        <th className="py-2.5 px-3">Proposing</th>
+                        <th className="py-2.5 px-3">Target</th>
+                        <th className="py-2.5 px-3">Assets Exchanged</th>
+                        <th className="py-2.5 px-3 text-center">Status</th>
+                        <th className="py-2.5 px-3 text-right">Resolved By</th>
+                        {isCommissioner && <th className="py-2.5 px-3 text-right">Commish</th>}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {archivedProposals.map(p => (
                         <tr key={p.id} className="border-b border-slate-800/60 hover:bg-slate-800/30">
                           <td className="py-2.5 px-3 text-slate-400 font-mono text-[11px]">
                             {new Date(p.proposed_at || p.created_at).toLocaleDateString()}
@@ -1436,7 +2198,16 @@ export default function DraftCapitalView({
                           <td className="py-2.5 px-3 font-bold text-white">{p.proposing_owner}</td>
                           <td className="py-2.5 px-3 font-bold text-white">{p.target_owner}</td>
                           <td className="py-2.5 px-3 text-slate-300">
-                            {(p.offered_assets || []).map(a => a.label).join(', ')} ⇄ {(p.requested_assets || []).map(a => a.label).join(', ')}
+                            <div className="flex flex-col gap-1">
+                              <div>
+                                <span className="text-rose-400 font-bold">{p.proposing_owner}:</span>{' '}
+                                {(p.offered_assets || []).map(a => a.label || a.name).join(', ')}
+                              </div>
+                              <div>
+                                <span className="text-teal-400 font-bold">{p.target_owner}:</span>{' '}
+                                {(p.requested_assets || []).map(a => a.label || a.name).join(', ')}
+                              </div>
+                            </div>
                           </td>
                           <td className="py-2.5 px-3 text-center">
                             {p.status === 'approved' && (
@@ -1458,13 +2229,428 @@ export default function DraftCapitalView({
                           <td className="py-2.5 px-3 text-right text-slate-400 text-[11px]">
                             {p.responded_by || '-'}
                           </td>
+                          {isCommissioner && (
+                            <td className="py-2.5 px-3 text-right">
+                              <button
+                                onClick={() => handleOpenEditModal(p)}
+                                className="px-2 py-1 rounded bg-slate-800 text-amber-300 hover:bg-amber-950/60 text-[10px] font-bold border border-amber-500/30 cursor-pointer"
+                              >
+                                ✏️ Edit
+                              </button>
+                            </td>
+                          )}
                         </tr>
                       ))}
-                  </tbody>
-                </table>
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* COMMISSIONER EDIT MODAL */}
+          {editingProposal && (
+            <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+              <div className="bg-slate-900 border border-amber-500/50 rounded-2xl p-6 shadow-2xl max-w-3xl w-full space-y-5 my-8 max-h-[90vh] overflow-y-auto">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">👑</span>
+                    <h3 className="text-base font-black text-amber-300">
+                      Commissioner Manual Trade Editor
+                    </h3>
+                  </div>
+                  <button
+                    onClick={() => setEditingProposal(null)}
+                    className="text-slate-400 hover:text-white font-black text-sm cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 mb-1">
+                      Proposing Team:
+                    </label>
+                    <select
+                      value={editingProposal.proposing_owner}
+                      onChange={e => setEditingProposal(prev => ({ ...prev, proposing_owner: e.target.value }))}
+                      className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-white"
+                    >
+                      {DRAFT_OWNERS.map(o => (
+                        <option key={o} value={o}>{o} (Team {getTeamId(o)})</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 mb-1">
+                      Target Team:
+                    </label>
+                    <select
+                      value={editingProposal.target_owner}
+                      onChange={e => setEditingProposal(prev => ({ ...prev, target_owner: e.target.value }))}
+                      className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-white"
+                    >
+                      {DRAFT_OWNERS.map(o => (
+                        <option key={o} value={o}>{o} (Team {getTeamId(o)})</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Edit Assets Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 rounded-xl bg-slate-950/60 border border-slate-800">
+                  {/* Offered Assets */}
+                  <div className="space-y-3">
+                    <div className="text-xs font-black uppercase text-rose-400 border-b border-slate-800 pb-1 flex items-center justify-between">
+                      <span>📤 {editingProposal.proposing_owner} Assets</span>
+                      <span className="text-[10px] text-slate-500">{(editingProposal.offered_assets || []).length} items</span>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1.5 min-h-[40px] items-center p-2 bg-slate-900 rounded-lg border border-slate-800">
+                      {(editingProposal.offered_assets || []).map((a, i) => (
+                        <span key={i}>
+                          {renderAssetBadge(a, () => {
+                            setEditingProposal(prev => ({
+                              ...prev,
+                              offered_assets: prev.offered_assets.filter((_, idx) => idx !== i)
+                            }));
+                          })}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Quick Add Pick */}
+                    <div className="flex gap-2">
+                      <select
+                        value={editOfferedPickRound}
+                        onChange={e => setEditOfferedPickRound(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white"
+                      >
+                        <option value="">+ Add Pick...</option>
+                        {editSenderAvailablePicks.map(p => (
+                          <option key={p.round} value={p.round}>
+                            Round {p.round} (Orig: {p.originalOwner})
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const r = parseInt(editOfferedPickRound);
+                          if (!r) return;
+                          const p = editSenderAvailablePicks.find(item => item.round === r);
+                          setEditingProposal(prev => ({
+                            ...prev,
+                            offered_assets: [
+                              ...prev.offered_assets,
+                              {
+                                type: 'pick',
+                                round: r,
+                                original_owner: p?.originalOwner || prev.proposing_owner,
+                                label: `Round ${r} Pick (Orig: ${p?.originalOwner || prev.proposing_owner})`
+                              }
+                            ]
+                          }));
+                          setEditOfferedPickRound('');
+                        }}
+                        disabled={!editOfferedPickRound}
+                        className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-xs font-bold rounded-lg text-slate-200 disabled:opacity-40 cursor-pointer"
+                      >
+                        Add
+                      </button>
+                    </div>
+
+                    {/* Quick Add Player */}
+                    <div className="flex gap-2">
+                      <select
+                        value={editOfferedPlayerId}
+                        onChange={e => setEditOfferedPlayerId(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white"
+                      >
+                        <option value="">+ Add Player...</option>
+                        {(teamRosters[editingProposal.proposing_owner] || []).map(p => (
+                          <option key={p.player_id} value={p.player_id}>
+                            {p.name} ({p.position})
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const pid = parseInt(editOfferedPlayerId);
+                          if (!pid) return;
+                          const p = (teamRosters[editingProposal.proposing_owner] || []).find(item => item.player_id === pid);
+                          if (!p) return;
+                          setEditingProposal(prev => ({
+                            ...prev,
+                            offered_assets: [
+                              ...prev.offered_assets,
+                              {
+                                type: 'player',
+                                player_id: p.player_id,
+                                name: p.name,
+                                position: p.position,
+                                team: p.team,
+                                label: p.label
+                              }
+                            ]
+                          }));
+                          setEditOfferedPlayerId('');
+                        }}
+                        disabled={!editOfferedPlayerId}
+                        className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-xs font-bold rounded-lg text-slate-200 disabled:opacity-40 cursor-pointer"
+                      >
+                        Add
+                      </button>
+                    </div>
+
+                    {/* Quick Add Budget */}
+                    <div className="flex gap-2">
+                      <input
+                        type="number"
+                        placeholder="$ Budget"
+                        value={editOfferedBudget}
+                        onChange={e => setEditOfferedBudget(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const amt = parseFloat(editOfferedBudget);
+                          if (!amt || amt <= 0) return;
+                          setEditingProposal(prev => ({
+                            ...prev,
+                            offered_assets: [
+                              ...prev.offered_assets.filter(a => a.type !== 'budget'),
+                              {
+                                type: 'budget',
+                                amount: amt,
+                                label: `$${amt} Draft Budget`
+                              }
+                            ]
+                          }));
+                          setEditOfferedBudget('');
+                        }}
+                        disabled={!editOfferedBudget || parseFloat(editOfferedBudget) <= 0}
+                        className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-xs font-bold rounded-lg text-slate-200 disabled:opacity-40 cursor-pointer"
+                      >
+                        Add
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Requested Assets */}
+                  <div className="space-y-3">
+                    <div className="text-xs font-black uppercase text-teal-400 border-b border-slate-800 pb-1 flex items-center justify-between">
+                      <span>📥 {editingProposal.target_owner} Assets</span>
+                      <span className="text-[10px] text-slate-500">{(editingProposal.requested_assets || []).length} items</span>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1.5 min-h-[40px] items-center p-2 bg-slate-900 rounded-lg border border-slate-800">
+                      {(editingProposal.requested_assets || []).map((a, i) => (
+                        <span key={i}>
+                          {renderAssetBadge(a, () => {
+                            setEditingProposal(prev => ({
+                              ...prev,
+                              requested_assets: prev.requested_assets.filter((_, idx) => idx !== i)
+                            }));
+                          })}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Quick Add Pick */}
+                    <div className="flex gap-2">
+                      <select
+                        value={editRequestedPickRound}
+                        onChange={e => setEditRequestedPickRound(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white"
+                      >
+                        <option value="">+ Add Pick...</option>
+                        {editTargetAvailablePicks.map(p => (
+                          <option key={p.round} value={p.round}>
+                            Round {p.round} (Orig: {p.originalOwner})
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const r = parseInt(editRequestedPickRound);
+                          if (!r) return;
+                          const p = editTargetAvailablePicks.find(item => item.round === r);
+                          setEditingProposal(prev => ({
+                            ...prev,
+                            requested_assets: [
+                              ...prev.requested_assets,
+                              {
+                                type: 'pick',
+                                round: r,
+                                original_owner: p?.originalOwner || prev.target_owner,
+                                label: `Round ${r} Pick (Orig: ${p?.originalOwner || prev.target_owner})`
+                              }
+                            ]
+                          }));
+                          setEditRequestedPickRound('');
+                        }}
+                        disabled={!editRequestedPickRound}
+                        className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-xs font-bold rounded-lg text-slate-200 disabled:opacity-40 cursor-pointer"
+                      >
+                        Add
+                      </button>
+                    </div>
+
+                    {/* Quick Add Player */}
+                    <div className="flex gap-2">
+                      <select
+                        value={editRequestedPlayerId}
+                        onChange={e => setEditRequestedPlayerId(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white"
+                      >
+                        <option value="">+ Add Player...</option>
+                        {(teamRosters[editingProposal.target_owner] || []).map(p => (
+                          <option key={p.player_id} value={p.player_id}>
+                            {p.name} ({p.position})
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const pid = parseInt(editRequestedPlayerId);
+                          if (!pid) return;
+                          const p = (teamRosters[editingProposal.target_owner] || []).find(item => item.player_id === pid);
+                          if (!p) return;
+                          setEditingProposal(prev => ({
+                            ...prev,
+                            requested_assets: [
+                              ...prev.requested_assets,
+                              {
+                                type: 'player',
+                                player_id: p.player_id,
+                                name: p.name,
+                                position: p.position,
+                                team: p.team,
+                                label: p.label
+                              }
+                            ]
+                          }));
+                          setEditRequestedPlayerId('');
+                        }}
+                        disabled={!editRequestedPlayerId}
+                        className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-xs font-bold rounded-lg text-slate-200 disabled:opacity-40 cursor-pointer"
+                      >
+                        Add
+                      </button>
+                    </div>
+
+                    {/* Quick Add Budget */}
+                    <div className="flex gap-2">
+                      <input
+                        type="number"
+                        placeholder="$ Budget"
+                        value={editRequestedBudget}
+                        onChange={e => setEditRequestedBudget(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const amt = parseFloat(editRequestedBudget);
+                          if (!amt || amt <= 0) return;
+                          setEditingProposal(prev => ({
+                            ...prev,
+                            requested_assets: [
+                              ...prev.requested_assets.filter(a => a.type !== 'budget'),
+                              {
+                                type: 'budget',
+                                amount: amt,
+                                label: `$${amt} Draft Budget`
+                              }
+                            ]
+                          }));
+                          setEditRequestedBudget('');
+                        }}
+                        disabled={!editRequestedBudget || parseFloat(editRequestedBudget) <= 0}
+                        className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-xs font-bold rounded-lg text-slate-200 disabled:opacity-40 cursor-pointer"
+                      >
+                        Add
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Status & Notes */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 mb-1">
+                      Proposal Status:
+                    </label>
+                    <select
+                      value={editingProposal.status}
+                      onChange={e => setEditingProposal(prev => ({ ...prev, status: e.target.value }))}
+                      className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-amber-300"
+                    >
+                      <option value="pending">pending (awaiting partner)</option>
+                      <option value="accepted_by_partner">accepted_by_partner (ready for commish execution)</option>
+                      <option value="approved">approved (executed)</option>
+                      <option value="declined">declined</option>
+                      <option value="cancelled">cancelled</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 mb-1">
+                      Notes / Terms:
+                    </label>
+                    <input
+                      type="text"
+                      value={editingProposal.notes || ''}
+                      onChange={e => setEditingProposal(prev => ({ ...prev, notes: e.target.value }))}
+                      className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white"
+                    />
+                  </div>
+                </div>
+
+                {/* Pick Disparity Warning inside Commish Editor */}
+                {(() => {
+                  const oPicks = (editingProposal.offered_assets || []).filter(a => a.type === 'pick').length;
+                  const rPicks = (editingProposal.requested_assets || []).filter(a => a.type === 'pick').length;
+                  if ((oPicks > 0 || rPicks > 0) && oPicks !== rPicks) {
+                    return (
+                      <div className="p-3 bg-amber-950/40 border border-amber-500/50 rounded-xl text-xs text-amber-200 flex items-center gap-2">
+                        <span>⚠️</span>
+                        <span>
+                          <strong>Pick Disparity:</strong> This trade involves {oPicks} offered pick(s) vs {rPicks} requested pick(s). Unequal picks will cause uneven roster sizes at the 27-round draft.
+                        </span>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+
+                {/* Modal Footer */}
+                <div className="flex justify-end gap-3 pt-3 border-t border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setEditingProposal(null)}
+                    className="px-4 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveProposalEdit}
+                    disabled={savingEdit}
+                    className="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-black text-xs shadow-md cursor-pointer disabled:opacity-50"
+                  >
+                    {savingEdit ? 'Saving...' : '💾 Save Changes to Proposal'}
+                  </button>
+                </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       )}
     </div>
