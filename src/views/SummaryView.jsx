@@ -36,9 +36,21 @@ function StandingsTable({ title, data, showRank = true, onOwnerClick }) {
                     <div className="transform group-hover:scale-110 transition-transform duration-200">
                       <TeamAvatar team={team} size="sm" />
                     </div>
-                    <div className="ml-3">
-                      <div className="text-sm font-bold text-gray-900 group-hover:text-blue-700 group-hover:underline">{team.name}</div>
-                      <div className="text-xs text-gray-500">{team.owner}</div>
+                    <div className="ml-3 flex items-center gap-2">
+                      <div>
+                        <div className="text-sm font-bold text-gray-900 group-hover:text-blue-700 group-hover:underline">{team.name}</div>
+                        <div className="text-xs text-gray-500">{team.owner}</div>
+                      </div>
+                      {title.includes('Consolation') && index === 4 && (
+                        <span className="text-[10px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded bg-red-100 text-red-700 border border-red-200">
+                          Eliminated (9th)
+                        </span>
+                      )}
+                      {title.includes('Consolation') && index < 4 && (
+                        <span className="text-[10px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
+                          Knockouts
+                        </span>
+                      )}
                     </div>
                   </div>
                 </td>
@@ -183,6 +195,13 @@ export default function SummaryView({ processedWeeks, onOwnerClick }) {
   const c2 = getPlayoffMatchup('c2');
   const final = getPlayoffMatchup('final');
   const third = getPlayoffMatchup('3rd');
+  const cFinal = getPlayoffMatchup('c_final');
+  const cThird = getPlayoffMatchup('c_3rd');
+
+  const eliminatedConsolTeam = useMemo(() => {
+    if (!consolationStandings || consolationStandings.length < 5) return null;
+    return consolationStandings[consolationStandings.length - 1];
+  }, [consolationStandings]);
 
 
   return (
@@ -224,13 +243,59 @@ export default function SummaryView({ processedWeeks, onOwnerClick }) {
 
         {/* Consolation Playoff Matchups */}
         {(c1 || c2) && (
-          <div className="bg-slate-900/60 rounded-xl p-6 border border-slate-700/60">
-            <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider mb-4 flex items-center gap-2">
-              <span>🛡️</span> Consolation Playoffs (Week 24)
-            </h3>
-            <div className="flex flex-wrap gap-6 justify-center">
-              <BracketMatch title="Consolation Semi 1" m={c1} />
-              <BracketMatch title="Consolation Semi 2" m={c2} />
+          <div className="space-y-4 pt-4 border-t border-gray-200">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="text-xl font-black text-gray-900 flex items-center gap-2">
+                  <span className="bg-slate-700 text-white text-sm px-3 py-1 rounded-full font-bold">Phase 4</span>
+                  <span>🛡️ Consolation Bracket (5th–8th Place)</span>
+                </h3>
+                <p className="text-xs text-gray-500 mt-1">
+                  Single-elimination knockouts for top 4 Consolation League teams. The 5th place team is eliminated and excluded from the knockouts.
+                </p>
+              </div>
+
+              {eliminatedConsolTeam && (
+                <div className="flex items-center gap-2.5 bg-red-50 border border-red-200 px-3.5 py-2 rounded-xl text-xs self-start sm:self-auto">
+                  <span className="px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-black bg-red-600 text-white">
+                    Eliminated
+                  </span>
+                  <div className="font-bold text-gray-900">
+                    {eliminatedConsolTeam.name} <span className="text-gray-500 font-normal">({eliminatedConsolTeam.owner})</span>
+                  </div>
+                  <span className="text-[11px] font-mono text-red-700 bg-red-100/80 px-2 py-0.5 rounded font-semibold">
+                    Finished 9th
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div className="bg-slate-800 rounded-xl p-8 overflow-x-auto">
+              <div className="flex items-center justify-center gap-12 min-w-[800px]">
+                {/* SEMIS COLUMN */}
+                <div className="flex flex-col gap-12">
+                  <BracketMatch title="Consolation Semi 1" m={c1} />
+                  <BracketMatch title="Consolation Semi 2" m={c2} />
+                </div>
+
+                {/* CONNECTOR */}
+                <div className="flex flex-col justify-center h-48">
+                  <div className="w-8 border-t-2 border-r-2 border-b-2 border-slate-600 h-24 rounded-r-xl"></div>
+                </div>
+
+                {/* FINALS COLUMN */}
+                <div className="flex flex-col gap-12">
+                  <div className="relative">
+                    <div className="absolute -top-8 left-0 right-0 text-center text-indigo-300 font-bold text-xs tracking-widest uppercase mb-2">
+                      🛡️ 5th Place Match
+                    </div>
+                    <BracketMatch title="Consolation Final" m={cFinal} />
+                  </div>
+                  <div className="opacity-75 scale-90">
+                    <BracketMatch title="7th Place Match" m={cThird} />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}

@@ -536,7 +536,9 @@ function App() {
 
       const finalMatchups = [
         { id: 'final', homeTeamId: getWinner('sf1'), awayTeamId: getWinner('sf2'), label: "🏆 Championship" },
-        { id: '3rd', homeTeamId: getLoser('sf1'), awayTeamId: getLoser('sf2'), label: "3rd Place Match" }
+        { id: '3rd', homeTeamId: getLoser('sf1'), awayTeamId: getLoser('sf2'), label: "3rd Place Match" },
+        { id: 'c_final', homeTeamId: getWinner('c1'), awayTeamId: getWinner('c2'), label: "Consolation Final (5th Place)" },
+        { id: 'c_3rd', homeTeamId: getLoser('c1'), awayTeamId: getLoser('c2'), label: "7th Place Match" }
       ];
 
       const resolvedFinals = finalMatchups.map(m => resolveMatchupStats(m, week25));

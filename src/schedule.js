@@ -176,8 +176,10 @@ export const generateSchedule = () => {
     name: "Championship Week",
     phase: 4,
     matchups: [
-      { id: 'final', type: 'h2h', homeTeamId: 'WINNER_SF1', awayTeamId: 'WINNER_SF2', label: "🏆 Championship" },
-      { id: '3rd',   type: 'h2h', homeTeamId: 'LOSER_SF1', awayTeamId: 'LOSER_SF2', label: "3rd Place Match" }
+      { id: 'final',   type: 'h2h', homeTeamId: 'WINNER_SF1', awayTeamId: 'WINNER_SF2', label: "🏆 Championship" },
+      { id: '3rd',     type: 'h2h', homeTeamId: 'LOSER_SF1',  awayTeamId: 'LOSER_SF2',  label: "3rd Place Match" },
+      { id: 'c_final', type: 'h2h', homeTeamId: 'WINNER_C1',  awayTeamId: 'WINNER_C2',  label: "Consolation Championship" },
+      { id: 'c_3rd',   type: 'h2h', homeTeamId: 'LOSER_C1',   awayTeamId: 'LOSER_C2',   label: "7th Place Match" }
     ]
   });
 
