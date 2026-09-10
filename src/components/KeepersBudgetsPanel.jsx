@@ -1,4 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useAuth } from '../context/useAuth';
+import { supabase } from '../supabaseClient';
 
 // Price schedule constants matching Google Sheet 'Compensation Picks' (tab 904314503)
 const COMP_BUY_PRICES = {
@@ -57,9 +59,14 @@ export default function KeepersBudgetsPanel({
   keepers = [],
   players = [],
   currentUser = 'Daniel',
-  onPlayerClick
+  isCommissioner: propIsCommissioner = false,
+  onPlayerClick,
+  onRefresh
 }) {
-  const [activeTab, setActiveTab] = useState('matrix'); // 'matrix' | 'rosters' | 'simulator' | 'planner'
+  const { user, profile, isCommissioner: authIsCommissioner, effectiveOwner } = useAuth();
+  const isCommissioner = propIsCommissioner || authIsCommissioner;
+
+  const [activeTab, setActiveTab] = useState('matrix'); // 'matrix' | 'rosters' | 'simulator' | 'planner' | 'settings'
   const [selectedOwner, setSelectedOwner] = useState(currentUser || 'Daniel');
   const [keeperOwnerFilter, setKeeperOwnerFilter] = useState('ALL');
 
@@ -72,6 +79,67 @@ export default function KeepersBudgetsPanel({
   const [plannerOwner, setPlannerOwner] = useState(currentUser || 'Daniel');
   const [plannerSearch, setPlannerSearch] = useState('');
   const [replacedKeepers, setReplacedKeepers] = useState({}); // { slot: newPlayerObj }
+
+  // Offseason settings & Commissioner controls state
+  const [leagueSettings, setLeagueSettings] = useState(null);
+  const [deadlineInput, setDeadlineInput] = useState('');
+  const [baselineBudgetInput, setBaselineBudgetInput] = useState(100);
+  const [adjustmentsForm, setAdjustmentsForm] = useState({});
+  const [savingKeepers, setSavingKeepers] = useState(false);
+  const [savingCompPicks, setSavingCompPicks] = useState(false);
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [savingAdjustments, setSavingAdjustments] = useState(false);
+
+  // Sync owners when effectiveOwner changes (e.g. via Commish Switcher)
+  useEffect(() => {
+    if (effectiveOwner) {
+      setSelectedOwner(effectiveOwner);
+      setSimulatedOwner(effectiveOwner);
+      setPlannerOwner(effectiveOwner);
+    }
+  }, [effectiveOwner]);
+
+  // Load league settings (Deadline & Base Budget)
+  useEffect(() => {
+    async function loadSettings() {
+      try {
+        const { data } = await supabase.from('league_settings').select('*').eq('league_id', 130215).single();
+        if (data) {
+          setLeagueSettings(data);
+          if (data.keeper_lock_deadline) {
+            const dt = new Date(data.keeper_lock_deadline);
+            const localIso = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+            setDeadlineInput(localIso);
+          }
+          if (data.base_budget) {
+            setBaselineBudgetInput(data.base_budget);
+          }
+        }
+      } catch (err) {
+        console.warn('Could not load league settings:', err);
+      }
+    }
+    loadSettings();
+  }, []);
+
+  // Initialize adjustments form when teamBudgets load
+  useEffect(() => {
+    if (teamBudgets?.length > 0) {
+      const initial = {};
+      teamBudgets.forEach(b => {
+        initial[b.owner] = {
+          adjustment: b.manual_adjustment || 0,
+          notes: b.adjustment_notes || ''
+        };
+      });
+      setAdjustmentsForm(initial);
+    }
+  }, [teamBudgets]);
+
+  const isDeadlinePassed = useMemo(() => {
+    if (!leagueSettings?.keeper_lock_deadline) return false;
+    return new Date() > new Date(leagueSettings.keeper_lock_deadline);
+  }, [leagueSettings]);
 
   // Load active owner's real-world comp picks into simulator when owner changes
   const activeRealBudgets = useMemo(() => {
@@ -222,6 +290,287 @@ export default function KeepersBudgetsPanel({
     };
   }, [keepersByOwner, plannerOwner, replacedKeepers, teamBudgets]);
 
+  // Handle Save Keepers to Supabase
+  const handleSaveKeepers = async () => {
+    if (!user) {
+      alert('Please log in with Discord in the top navigation bar to save official keepers.');
+      return;
+    }
+
+    const isTargetMe = profile?.owner_name?.toLowerCase() === plannerOwner?.toLowerCase() ||
+      (profile?.owner_name === 'Dan' && plannerOwner === 'Daniel') ||
+      (profile?.owner_name === 'Daniel' && plannerOwner === 'Dan');
+
+    if (isDeadlinePassed && !isCommissioner) {
+      alert('The keeper selection deadline has passed. Only league commissioners (Dan and Adrian) can submit keeper changes now.');
+      return;
+    }
+
+    if (!isCommissioner && !isTargetMe) {
+      alert(`You are logged in as ${profile?.owner_name}. You can only set official keepers for your own team.`);
+      return;
+    }
+
+    if (plannerData.remainingBudget < 0) {
+      if (!window.confirm(`⚠️ Warning: Total keeper spend ($${plannerData.totalCost}) exceeds the base budget ($${plannerData.baseBudget}). Do you still want to proceed?`)) {
+        return;
+      }
+    }
+
+    setSavingKeepers(true);
+    try {
+      const targetTeamId = (teamBudgets.find(b => b.owner === plannerOwner)?.team_id) || 0;
+      const keeperRows = plannerData.keepers.map(k => ({
+        season_year: 2026,
+        owner: plannerOwner,
+        team_id: targetTeamId,
+        keeper_slot: k.keeper_slot,
+        player_name: k.player_name,
+        espn_player_id: k.espn_player_id ? String(k.espn_player_id) : null,
+        position: k.position,
+        mlb_team: k.mlb_team,
+        rank: k.rank,
+        cost: k.cost,
+        updated_at: new Date().toISOString()
+      }));
+
+      const { error: keepersErr } = await supabase
+        .from('draft_keepers')
+        .upsert(keeperRows, { onConflict: 'season_year,owner,keeper_slot' });
+
+      if (keepersErr) throw keepersErr;
+
+      // Update draft_team_budgets
+      const existingBudget = teamBudgets.find(b => b.owner === plannerOwner);
+      const base = existingBudget?.base_budget || 100;
+      const compSpend = existingBudget?.comp_pick_spend || 0;
+      const compIncome = existingBudget?.comp_pick_income || 0;
+      const manualAdj = existingBudget?.manual_adjustment || 0;
+      const newKeeperSpend = plannerData.totalCost;
+      const newFinalBudget = base - newKeeperSpend - compSpend + compIncome + manualAdj;
+
+      await supabase
+        .from('draft_team_budgets')
+        .upsert({
+          season_year: 2026,
+          owner: plannerOwner,
+          team_id: targetTeamId,
+          base_budget: base,
+          keeper_spend: newKeeperSpend,
+          comp_pick_spend: compSpend,
+          comp_pick_income: compIncome,
+          final_budget: newFinalBudget,
+          manual_adjustment: manualAdj,
+          adjustment_notes: existingBudget?.adjustment_notes || null,
+          net_picks: existingBudget?.net_picks || 0,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'season_year,owner' });
+
+      alert(`Official keepers for ${plannerOwner} successfully saved to the league database! 🎉`);
+      setReplacedKeepers({});
+      if (onRefresh) onRefresh();
+    } catch (err) {
+      console.error('Error saving keepers:', err);
+      alert('Failed to save keepers: ' + err.message);
+    } finally {
+      setSavingKeepers(false);
+    }
+  };
+
+  // Handle Save Comp Picks to Supabase
+  const handleSaveCompPicks = async () => {
+    if (!user) {
+      alert('Please log in with Discord in the top navigation bar to save consolation pick purchases.');
+      return;
+    }
+
+    const isTargetMe = profile?.owner_name?.toLowerCase() === simulatedOwner?.toLowerCase() ||
+      (profile?.owner_name === 'Dan' && simulatedOwner === 'Daniel') ||
+      (profile?.owner_name === 'Daniel' && simulatedOwner === 'Dan');
+
+    if (!isCommissioner && !isTargetMe) {
+      alert(`You are logged in as ${profile?.owner_name}. You can only submit consolation picks for your own team.`);
+      return;
+    }
+
+    if (simCalculations.simulatedRemaining < 0) {
+      alert('Error: Purchases exceed remaining budget. You cannot submit an over-budget draft plan.');
+      return;
+    }
+
+    setSavingCompPicks(true);
+    try {
+      const targetTeamId = (teamBudgets.find(b => b.owner === simulatedOwner)?.team_id) || 0;
+
+      // 1. Delete existing BOUGHT and OFFSET_LOST picks for this owner in 2026
+      await supabase
+        .from('draft_compensation_picks')
+        .delete()
+        .eq('season_year', 2026)
+        .eq('owner', simulatedOwner)
+        .in('action_type', ['BOUGHT', 'OFFSET_LOST']);
+
+      // 2. Insert new bought & offset picks
+      const newRows = [];
+      simCalculations.boughtList.forEach(b => {
+        newRows.push({
+          season_year: 2026,
+          owner: simulatedOwner,
+          team_id: targetTeamId,
+          action_type: 'BOUGHT',
+          round_num: b.round,
+          cost_or_income: -b.cost,
+          notes: `Purchased via Consolation Portal (-$${b.cost})`,
+          updated_at: new Date().toISOString()
+        });
+      });
+
+      simCalculations.offsetRounds.forEach(r => {
+        newRows.push({
+          season_year: 2026,
+          owner: simulatedOwner,
+          team_id: targetTeamId,
+          action_type: 'OFFSET_LOST',
+          round_num: r,
+          cost_or_income: 0,
+          notes: `Roster size offset: Round ${r} forfeited`,
+          updated_at: new Date().toISOString()
+        });
+      });
+
+      if (newRows.length > 0) {
+        const { error: insErr } = await supabase
+          .from('draft_compensation_picks')
+          .insert(newRows);
+        if (insErr) throw insErr;
+      }
+
+      // 3. Update draft_team_budgets
+      const existingBudget = teamBudgets.find(b => b.owner === simulatedOwner);
+      const base = existingBudget?.base_budget || 100;
+      const kSpend = existingBudget?.keeper_spend || 0;
+      const manualAdj = existingBudget?.manual_adjustment || 0;
+      const newCompSpend = simCalculations.spend;
+      const newCompIncome = simCalculations.income;
+      const newFinalBudget = base - kSpend - newCompSpend + newCompIncome + manualAdj;
+      const newNetPicks = simCalculations.boughtList.length - simCalculations.offsetRounds.length;
+
+      await supabase
+        .from('draft_team_budgets')
+        .upsert({
+          season_year: 2026,
+          owner: simulatedOwner,
+          team_id: targetTeamId,
+          base_budget: base,
+          keeper_spend: kSpend,
+          comp_pick_spend: newCompSpend,
+          comp_pick_income: newCompIncome,
+          final_budget: newFinalBudget,
+          manual_adjustment: manualAdj,
+          adjustment_notes: existingBudget?.adjustment_notes || null,
+          net_picks: newNetPicks,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'season_year,owner' });
+
+      alert(`Consolation pick purchases for ${simulatedOwner} successfully saved to league records! 🎟️`);
+      if (onRefresh) onRefresh();
+    } catch (err) {
+      console.error('Error saving comp picks:', err);
+      alert('Failed to save compensation picks: ' + err.message);
+    } finally {
+      setSavingCompPicks(false);
+    }
+  };
+
+  // Commissioner: Handle Save League Settings (Deadline & Base Budget)
+  const handleSaveLeagueSettings = async () => {
+    if (!isCommissioner) {
+      alert('Only commissioners (Dan & Adrian) can modify league settings.');
+      return;
+    }
+
+    setSavingSettings(true);
+    try {
+      const deadlineIso = deadlineInput ? new Date(deadlineInput).toISOString() : null;
+      const baseVal = parseFloat(baselineBudgetInput) || 100;
+
+      const { error } = await supabase
+        .from('league_settings')
+        .update({
+          keeper_lock_deadline: deadlineIso,
+          base_budget: baseVal,
+          updated_by: profile?.owner_name || 'Commissioner',
+          updated_at: new Date().toISOString()
+        })
+        .eq('league_id', 130215);
+
+      if (error) throw error;
+
+      setLeagueSettings(prev => ({
+        ...prev,
+        keeper_lock_deadline: deadlineIso,
+        base_budget: baseVal
+      }));
+
+      alert('League settings (Keeper Deadline & Base Budget) successfully updated! 👑');
+    } catch (err) {
+      console.error('Error updating league settings:', err);
+      alert('Failed to update league settings: ' + err.message);
+    } finally {
+      setSavingSettings(false);
+    }
+  };
+
+  // Commissioner: Handle Save Manual Punitive / Award Adjustments
+  const handleSaveManualAdjustments = async () => {
+    if (!isCommissioner) {
+      alert('Only commissioners (Dan & Adrian) can modify owner budget adjustments.');
+      return;
+    }
+
+    setSavingAdjustments(true);
+    try {
+      const updates = [];
+      for (const b of teamBudgets) {
+        const formVal = adjustmentsForm[b.owner];
+        const manualAdj = formVal !== undefined && formVal.adjustment !== '' ? parseFloat(formVal.adjustment) || 0 : (b.manual_adjustment || 0);
+        const notes = formVal ? formVal.notes : (b.adjustment_notes || '');
+
+        const newFinal = b.base_budget - (b.keeper_spend || 0) - (b.comp_pick_spend || 0) + (b.comp_pick_income || 0) + manualAdj;
+
+        updates.push({
+          season_year: 2026,
+          owner: b.owner,
+          team_id: b.team_id,
+          finish_rank: b.finish_rank,
+          base_budget: b.base_budget,
+          keeper_spend: b.keeper_spend,
+          comp_pick_spend: b.comp_pick_spend,
+          comp_pick_income: b.comp_pick_income,
+          final_budget: newFinal,
+          manual_adjustment: manualAdj,
+          adjustment_notes: notes,
+          net_picks: b.net_picks,
+          updated_at: new Date().toISOString()
+        });
+      }
+
+      const { error } = await supabase
+        .from('draft_team_budgets')
+        .upsert(updates, { onConflict: 'season_year,owner' });
+
+      if (error) throw error;
+
+      alert('All owner manual budget adjustments (punitive/awards) successfully saved! ⚖️');
+      if (onRefresh) onRefresh();
+    } catch (err) {
+      console.error('Error saving manual adjustments:', err);
+      alert('Failed to save manual adjustments: ' + err.message);
+    } finally {
+      setSavingAdjustments(false);
+    }
+  };
+
   return (
     <div style={{ width: '100%', gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '15px' }}>
       {/* Top Header & Sub-Tab Bar */}
@@ -319,8 +668,62 @@ export default function KeepersBudgetsPanel({
           >
             📋 Keeper What-If Planner
           </button>
+          <button
+            onClick={() => setActiveTab('settings')}
+            style={{
+              background: activeTab === 'settings' ? '#f59e0b' : 'transparent',
+              color: activeTab === 'settings' ? '#000' : '#888',
+              border: 'none',
+              borderRadius: '4px',
+              padding: '6px 12px',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            👑 Commish Settings
+          </button>
         </div>
       </div>
+
+      {/* Official Keeper Deadline Notification Banner */}
+      {leagueSettings?.keeper_lock_deadline && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '10px 16px',
+          borderRadius: '8px',
+          fontSize: '12px',
+          background: isDeadlinePassed ? 'rgba(239, 68, 68, 0.12)' : 'rgba(59, 130, 246, 0.12)',
+          border: isDeadlinePassed ? '1px solid rgba(239, 68, 68, 0.35)' : '1px solid rgba(59, 130, 246, 0.35)',
+          color: isDeadlinePassed ? '#fca5a5' : '#93c5fd',
+          flexWrap: 'wrap',
+          gap: '8px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '16px' }}>{isDeadlinePassed ? '🔒' : '⏰'}</span>
+            <span>
+              <strong>Official Keeper Deadline:</strong> {new Date(leagueSettings.keeper_lock_deadline).toLocaleString()}
+              {isDeadlinePassed ? ' (Deadline has passed — keeper rosters are locked)' : ' (All keeper selections lock at this time)'}
+            </span>
+          </div>
+          {isCommissioner && (
+            <span style={{
+              background: 'rgba(245, 158, 11, 0.2)',
+              color: '#fbbf24',
+              border: '1px solid rgba(245, 158, 11, 0.4)',
+              padding: '2px 8px',
+              borderRadius: '4px',
+              fontSize: '10px',
+              fontWeight: 'bold'
+            }}>
+              👑 Commissioner Override Rights Active
+            </span>
+          )}
+        </div>
+      )}
 
       {/* SUB-TAB 1: BUDGET & COMP PICK MATRIX */}
       {activeTab === 'matrix' && (
@@ -682,20 +1085,52 @@ export default function KeepersBudgetsPanel({
               </select>
             </div>
 
-            <button
-              onClick={resetSimulatorToReal}
-              style={{
-                background: '#333',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '4px',
-                padding: '6px 12px',
-                fontSize: '11px',
-                cursor: 'pointer'
-              }}
-            >
-              🔄 Reset to Actual 2026 Selections
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button
+                onClick={resetSimulatorToReal}
+                style={{
+                  background: '#333',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '4px',
+                  padding: '6px 12px',
+                  fontSize: '11px',
+                  cursor: 'pointer'
+                }}
+              >
+                🔄 Reset Picks
+              </button>
+
+              <button
+                onClick={handleSaveCompPicks}
+                disabled={savingCompPicks || simCalculations.simulatedRemaining < 0}
+                style={{
+                  background: simCalculations.simulatedRemaining < 0
+                    ? '#444'
+                    : isCommissioner && simulatedOwner !== profile?.owner_name
+                      ? '#d97706'
+                      : '#7c3aed',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '4px',
+                  padding: '6px 14px',
+                  fontSize: '11px',
+                  fontWeight: 'bold',
+                  cursor: (savingCompPicks || simCalculations.simulatedRemaining < 0) ? 'not-allowed' : 'pointer',
+                  opacity: (savingCompPicks || simCalculations.simulatedRemaining < 0) ? 0.6 : 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                }}
+              >
+                {savingCompPicks
+                  ? 'Saving...'
+                  : isCommissioner && simulatedOwner !== profile?.owner_name
+                    ? `👑 Commish Save for ${simulatedOwner}`
+                    : '💾 Save & Submit Consolation Picks'}
+              </button>
+            </div>
           </div>
 
           {/* Real-time Calculation Dashboard */}
@@ -952,20 +1387,54 @@ export default function KeepersBudgetsPanel({
               </select>
             </div>
 
-            <button
-              onClick={() => setReplacedKeepers({})}
-              style={{
-                background: '#333',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '4px',
-                padding: '6px 12px',
-                fontSize: '11px',
-                cursor: 'pointer'
-              }}
-            >
-              🔄 Reset to Confirmed Keepers
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button
+                onClick={() => setReplacedKeepers({})}
+                style={{
+                  background: '#333',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '4px',
+                  padding: '6px 12px',
+                  fontSize: '11px',
+                  cursor: 'pointer'
+                }}
+              >
+                🔄 Reset Keepers
+              </button>
+
+              <button
+                onClick={handleSaveKeepers}
+                disabled={savingKeepers || (isDeadlinePassed && !isCommissioner)}
+                style={{
+                  background: (isDeadlinePassed && !isCommissioner)
+                    ? '#444'
+                    : isCommissioner && plannerOwner !== profile?.owner_name
+                      ? '#d97706'
+                      : '#059669',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '4px',
+                  padding: '6px 14px',
+                  fontSize: '11px',
+                  fontWeight: 'bold',
+                  cursor: (isDeadlinePassed && !isCommissioner || savingKeepers) ? 'not-allowed' : 'pointer',
+                  opacity: (isDeadlinePassed && !isCommissioner || savingKeepers) ? 0.6 : 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                }}
+              >
+                {savingKeepers
+                  ? 'Saving...'
+                  : isDeadlinePassed && !isCommissioner
+                    ? '🔒 Keepers Locked'
+                    : isCommissioner && plannerOwner !== profile?.owner_name
+                      ? `👑 Commish Save for ${plannerOwner}`
+                      : '💾 Save & Submit Official Keepers'}
+              </button>
+            </div>
           </div>
 
           {/* Real-time What-If Keeper Dashboard */}
@@ -1173,6 +1642,322 @@ export default function KeepersBudgetsPanel({
             )}
           </div>
         </div>
+      )}
+
+      {/* SUB-TAB 5: COMMISSIONER SETTINGS & MANUAL ADJUSTMENTS (DAN & ADRIAN ONLY) */}
+      {activeTab === 'settings' && (
+        !isCommissioner ? (
+          <div style={{
+            background: '#1a1a1a',
+            borderRadius: '8px',
+            border: '1px solid #333',
+            padding: '40px 20px',
+            textAlign: 'center',
+            maxWidth: '500px',
+            margin: '20px auto'
+          }}>
+            <div style={{ fontSize: '36px', marginBottom: '12px' }}>🔒</div>
+            <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#fff' }}>Commissioner Access Only</div>
+            <div style={{ fontSize: '12px', color: '#888', marginTop: '8px', lineHeight: '1.5' }}>
+              Setting the official keeper deadline, base budget, and applying punitive or award adjustments to individual owners is restricted to league commissioners (<strong>Dan</strong> and <strong>Adrian</strong>).
+            </div>
+            {user ? (
+              <div style={{ fontSize: '11px', color: '#818cf8', marginTop: '16px', paddingTop: '12px', borderTop: '1px solid #282828' }}>
+                Logged in as <strong>{profile?.owner_name || user.email}</strong> (Owner)
+              </div>
+            ) : (
+              <div style={{ fontSize: '11px', color: '#666', marginTop: '16px', paddingTop: '12px', borderTop: '1px solid #282828' }}>
+                Log in with Discord via the top menu to verify commissioner status.
+              </div>
+            )}
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {/* Header banner */}
+            <div style={{
+              background: 'rgba(245, 158, 11, 0.12)',
+              border: '1px solid rgba(245, 158, 11, 0.35)',
+              borderRadius: '8px',
+              padding: '14px 18px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '12px',
+              flexWrap: 'wrap'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '20px' }}>👑</span>
+                <div>
+                  <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#fbbf24' }}>
+                    Commissioner Offseason Control Suite
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#cbd5e1' }}>
+                    Authorized for <strong>Dan</strong> and <strong>Adrian</strong>. Changes take effect across the entire league.
+                  </div>
+                </div>
+              </div>
+              <span style={{
+                background: '#f59e0b',
+                color: '#000',
+                padding: '3px 8px',
+                borderRadius: '4px',
+                fontSize: '11px',
+                fontWeight: '900',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px'
+              }}>
+                Full Admin Rights
+              </span>
+            </div>
+
+            {/* Section 1: Global Settings (Deadline & Base Budget) */}
+            <div style={{
+              background: '#181818',
+              borderRadius: '8px',
+              border: '1px solid #2a2a2a',
+              padding: '18px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '16px'
+            }}>
+              <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#fff', borderBottom: '1px solid #282828', paddingBottom: '8px' }}>
+                ⏱️ Offseason Schedule & Budget Baseline
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#aaa', marginBottom: '6px' }}>
+                    Official Keeper Locking Deadline:
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={deadlineInput}
+                    onChange={e => setDeadlineInput(e.target.value)}
+                    style={{
+                      width: '100%',
+                      background: '#111',
+                      border: '1px solid #444',
+                      borderRadius: '6px',
+                      padding: '8px 12px',
+                      color: '#fff',
+                      fontSize: '13px'
+                    }}
+                  />
+                  <div style={{ fontSize: '11px', color: '#666', marginTop: '4px' }}>
+                    After this timestamp, all non-commissioner keeper selections are locked.
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#aaa', marginBottom: '6px' }}>
+                    League Baseline Draft Budget ($):
+                  </label>
+                  <input
+                    type="number"
+                    value={baselineBudgetInput}
+                    onChange={e => setBaselineBudgetInput(e.target.value)}
+                    style={{
+                      width: '100%',
+                      background: '#111',
+                      border: '1px solid #444',
+                      borderRadius: '6px',
+                      padding: '8px 12px',
+                      color: '#fff',
+                      fontSize: '13px'
+                    }}
+                  />
+                  <div style={{ fontSize: '11px', color: '#666', marginTop: '4px' }}>
+                    Standard draft budget baseline allocated to all 9 managers (default: $100).
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '8px' }}>
+                <button
+                  onClick={handleSaveLeagueSettings}
+                  disabled={savingSettings}
+                  style={{
+                    background: '#f59e0b',
+                    color: '#000',
+                    border: 'none',
+                    borderRadius: '6px',
+                    padding: '8px 16px',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    cursor: savingSettings ? 'not-allowed' : 'pointer',
+                    opacity: savingSettings ? 0.6 : 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  {savingSettings ? 'Saving...' : '💾 Save Global Settings'}
+                </button>
+              </div>
+            </div>
+
+            {/* Section 2: Owner Manual Adjustments (Punitive Penalties & Awards) */}
+            <div style={{
+              background: '#181818',
+              borderRadius: '8px',
+              border: '1px solid #2a2a2a',
+              overflow: 'hidden'
+            }}>
+              <div style={{
+                padding: '16px 18px',
+                borderBottom: '1px solid #282828',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '10px'
+              }}>
+                <div>
+                  <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#fff' }}>
+                    ⚖️ Owner Punitive & Award Manual Budget Adjustments
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#888', marginTop: '2px' }}>
+                    Specify positive adjustments (awards/bonuses) or negative adjustments (fines/penalties) for each owner.
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleSaveManualAdjustments}
+                  disabled={savingAdjustments}
+                  style={{
+                    background: '#059669',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '6px',
+                    padding: '8px 18px',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    cursor: savingAdjustments ? 'not-allowed' : 'pointer',
+                    opacity: savingAdjustments ? 0.6 : 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                  }}
+                >
+                  {savingAdjustments ? 'Saving...' : '💾 Save All Budget Adjustments'}
+                </button>
+              </div>
+
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left' }}>
+                  <thead>
+                    <tr style={{ background: '#111', color: '#888', borderBottom: '1px solid #333' }}>
+                      <th style={{ padding: '10px 14px' }}>Owner</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'center' }}>Base</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'center' }}>Keepers</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'center' }}>Comp Net</th>
+                      <th style={{ padding: '10px 12px', minWidth: '130px' }}>Manual Adj ($)</th>
+                      <th style={{ padding: '10px 12px', minWidth: '220px' }}>Adjustment Reason / Notes</th>
+                      <th style={{ padding: '10px 14px', textAlign: 'right' }}>Calculated Final</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {teamBudgets.map((b, idx) => {
+                      const formVal = adjustmentsForm[b.owner] || { adjustment: b.manual_adjustment || 0, notes: b.adjustment_notes || '' };
+                      const adjNum = parseFloat(formVal.adjustment) || 0;
+                      const calculatedFinal = b.base_budget - (b.keeper_spend || 0) - (b.comp_pick_spend || 0) + (b.comp_pick_income || 0) + adjNum;
+
+                      return (
+                        <tr key={b.owner} style={{
+                          borderBottom: '1px solid #222',
+                          background: idx % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)'
+                        }}>
+                          <td style={{ padding: '10px 14px', fontWeight: 'bold', color: '#fff' }}>
+                            {b.owner}
+                            <span style={{ fontSize: '10px', color: '#666', marginLeft: '6px' }}>Team {b.team_id}</span>
+                          </td>
+                          <td style={{ padding: '10px 12px', textAlign: 'center', color: '#aaa' }}>
+                            ${b.base_budget}
+                          </td>
+                          <td style={{ padding: '10px 12px', textAlign: 'center', color: '#ffb74d' }}>
+                            ${b.keeper_spend || 0}
+                          </td>
+                          <td style={{ padding: '10px 12px', textAlign: 'center', color: '#bb86fc' }}>
+                            ${((b.comp_pick_income || 0) - (b.comp_pick_spend || 0))}
+                          </td>
+                          <td style={{ padding: '10px 12px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <span style={{ color: adjNum > 0 ? '#4caf50' : adjNum < 0 ? '#f44336' : '#666', fontWeight: 'bold' }}>$</span>
+                              <input
+                                type="number"
+                                value={formVal.adjustment}
+                                onChange={e => {
+                                  const val = e.target.value;
+                                  setAdjustmentsForm(prev => ({
+                                    ...prev,
+                                    [b.owner]: {
+                                      ...prev[b.owner],
+                                      adjustment: val
+                                    }
+                                  }));
+                                }}
+                                placeholder="0"
+                                style={{
+                                  width: '80px',
+                                  background: '#111',
+                                  border: adjNum !== 0 ? (adjNum > 0 ? '1px solid #4caf50' : '1px solid #f44336') : '1px solid #333',
+                                  borderRadius: '4px',
+                                  padding: '4px 8px',
+                                  color: adjNum > 0 ? '#4caf50' : adjNum < 0 ? '#f44336' : '#fff',
+                                  fontSize: '12px',
+                                  fontWeight: 'bold'
+                                }}
+                              />
+                            </div>
+                          </td>
+                          <td style={{ padding: '10px 12px' }}>
+                            <input
+                              type="text"
+                              value={formVal.notes}
+                              onChange={e => {
+                                const val = e.target.value;
+                                setAdjustmentsForm(prev => ({
+                                  ...prev,
+                                  [b.owner]: {
+                                    ...prev[b.owner],
+                                    notes: val
+                                  }
+                                }));
+                              }}
+                              placeholder="e.g. Late fee fine (-$5) or Toilet bowl prize (+$5)"
+                              style={{
+                                width: '100%',
+                                background: '#111',
+                                border: '1px solid #333',
+                                borderRadius: '4px',
+                                padding: '4px 8px',
+                                color: '#ddd',
+                                fontSize: '11px'
+                              }}
+                            />
+                          </td>
+                          <td style={{ padding: '10px 14px', textAlign: 'right' }}>
+                            <span style={{
+                              fontWeight: 'bold',
+                              fontSize: '13px',
+                              color: calculatedFinal < 0 ? '#f44336' : '#4caf50',
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                              background: calculatedFinal < 0 ? 'rgba(244, 67, 54, 0.15)' : 'rgba(76, 175, 80, 0.15)'
+                            }}>
+                              ${calculatedFinal}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )
       )}
     </div>
   );

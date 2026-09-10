@@ -4,8 +4,12 @@ import './index.css'
 import App from './App.jsx'
 import './index.css' // <--- THIS IS MANDATORY
 
+import { AuthProvider } from './context/AuthContext'
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <App />
+    <AuthProvider>
+      <App />
+    </AuthProvider>
   </StrictMode>,
 )

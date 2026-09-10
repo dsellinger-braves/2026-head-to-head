@@ -4,6 +4,8 @@ import { supabase } from '../supabaseClient';
 import defaultDraftAssetTrades from '../data/draftAssetTrades2026.json';
 import defaultCompPicks from '../data/compensationPicks2026.json';
 import defaultKeepers from '../data/keeperInput2026.json';
+import { useAuth } from '../context/useAuth';
+import { LEAGUE_OWNERS } from '../utils/mlbTeams';
 
 const DRAFT_OWNERS = ["Adrian", "Alex", "Anil", "Daniel", "Garrett", "Mark", "Preston", "Tim", "Will"];
 
@@ -47,41 +49,370 @@ function compute2027DraftPicks(draftTrades = []) {
   return picks;
 }
 
-export default function DraftCapitalView({ currentUser = 'Daniel' }) {
+export default function DraftCapitalView({ currentUser = 'Daniel', isCommissioner: propIsCommissioner = false }) {
+  const { user, profile, isCommissioner: authIsCommissioner, effectiveOwner } = useAuth();
+  const isCommissioner = propIsCommissioner || authIsCommissioner;
+
   const [draftTrades, setDraftTrades] = useState(defaultDraftAssetTrades);
   const [compPicks, setCompPicks] = useState(defaultCompPicks);
   const [keepers, setKeepers] = useState(defaultKeepers);
+  const [proposals, setProposals] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [activeSubTab, setActiveSubTab] = useState('board'); // 'board' | 'ledgers' | 'history' | '2026board'
+  const [activeSubTab, setActiveSubTab] = useState('board'); // 'board' | 'ledgers' | 'history' | '2026board' | 'proposals'
   const [selectedOwner, setSelectedOwner] = useState(currentUser);
   const [roundFilter, setRoundFilter] = useState('ALL');
 
-  useEffect(() => {
-    async function loadData() {
-      setLoading(true);
-      try {
-        const [tradesRes, compRes, keepersRes] = await Promise.all([
-          supabase.from('draft_asset_trades').select('*').order('trade_id', { ascending: true }),
-          supabase.from('draft_compensation_picks').select('*').order('round_num', { ascending: true }),
-          supabase.from('draft_keepers').select('*').order('team_id', { ascending: true }),
-        ]);
+  // Trade Proposal Form State
+  const [propSender, setPropSender] = useState(effectiveOwner || currentUser);
+  const [propTarget, setPropTarget] = useState(DRAFT_OWNERS.find(o => o !== (effectiveOwner || currentUser)) || 'Adrian');
+  const [offeredPickRound, setOfferedPickRound] = useState('');
+  const [offeredBudget, setOfferedBudget] = useState('');
+  const [requestedPickRound, setRequestedPickRound] = useState('');
+  const [requestedBudget, setRequestedBudget] = useState('');
+  const [tradeNotes, setTradeNotes] = useState('');
+  const [submittingTrade, setSubmittingTrade] = useState(false);
+  const [actionLoadingId, setActionLoadingId] = useState(null);
+  const [proposeModalOpen, setProposeModalOpen] = useState(false);
 
-        if (tradesRes.data?.length > 0) setDraftTrades(tradesRes.data);
-        if (compRes.data?.length > 0) setCompPicks(compRes.data);
-        if (keepersRes.data?.length > 0) setKeepers(keepersRes.data);
-      } catch (err) {
-        console.warn('Using local fallback for draft assets:', err);
-      } finally {
-        setLoading(false);
+  // Sync propSender when effectiveOwner updates
+  useEffect(() => {
+    if (effectiveOwner) {
+      setPropSender(effectiveOwner);
+      setSelectedOwner(effectiveOwner);
+      if (propTarget === effectiveOwner) {
+        setPropTarget(DRAFT_OWNERS.find(o => o !== effectiveOwner) || 'Adrian');
       }
     }
-    loadData();
+  }, [effectiveOwner, propTarget]);
+
+  const loadData = React.useCallback(async () => {
+    setLoading(true);
+    try {
+      const [tradesRes, compRes, keepersRes, proposalsRes] = await Promise.all([
+        supabase.from('draft_asset_trades').select('*').order('trade_id', { ascending: true }),
+        supabase.from('draft_compensation_picks').select('*').order('round_num', { ascending: true }),
+        supabase.from('draft_keepers').select('*').order('team_id', { ascending: true }),
+        supabase.from('league_trade_proposals').select('*').order('created_at', { ascending: false })
+      ]);
+
+      if (tradesRes.data?.length > 0) setDraftTrades(tradesRes.data);
+      if (compRes.data?.length > 0) setCompPicks(compRes.data);
+      if (keepersRes.data?.length > 0) setKeepers(keepersRes.data);
+      if (proposalsRes.data) setProposals(proposalsRes.data);
+    } catch (err) {
+      console.warn('Using local fallback for draft assets:', err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const computedPicks = useMemo(() => {
     return compute2027DraftPicks(draftTrades);
   }, [draftTrades]);
+
+  const senderAvailablePicks = useMemo(() => {
+    return computedPicks.filter(p => p.currentOwner === propSender).sort((a, b) => a.round - b.round);
+  }, [computedPicks, propSender]);
+
+  const targetAvailablePicks = useMemo(() => {
+    return computedPicks.filter(p => p.currentOwner === propTarget).sort((a, b) => a.round - b.round);
+  }, [computedPicks, propTarget]);
+
+  const pendingCount = useMemo(() => {
+    return proposals.filter(p => p.status === 'pending' || p.status === 'accepted_by_partner').length;
+  }, [proposals]);
+
+  // Handle Propose Trade
+  const handleSendProposal = async (e) => {
+    if (e) e.preventDefault();
+    if (!user) {
+      alert('Please log in with Discord in the top navigation bar to propose trades.');
+      return;
+    }
+
+    if (!isCommissioner && profile?.owner_name?.toLowerCase() !== propSender?.toLowerCase()) {
+      alert(`You are logged in as ${profile?.owner_name}. You can only propose trades from your own team.`);
+      return;
+    }
+
+    if (propSender === propTarget) {
+      alert('Sender and receiving manager cannot be the same team.');
+      return;
+    }
+
+    const hasOffered = offeredPickRound || (offeredBudget && parseFloat(offeredBudget) > 0);
+    const hasRequested = requestedPickRound || (requestedBudget && parseFloat(requestedBudget) > 0);
+
+    if (!hasOffered || !hasRequested) {
+      alert('A trade proposal must include at least one offered asset and one requested asset.');
+      return;
+    }
+
+    setSubmittingTrade(true);
+    try {
+      const offeredAssets = [];
+      if (offeredPickRound) {
+        const r = parseInt(offeredPickRound);
+        const p = senderAvailablePicks.find(item => item.round === r);
+        offeredAssets.push({
+          type: 'pick',
+          round: r,
+          original_owner: p?.originalOwner || propSender,
+          label: `Round ${r} Draft Pick (Orig: ${p?.originalOwner || propSender})`
+        });
+      }
+      if (offeredBudget && parseFloat(offeredBudget) > 0) {
+        offeredAssets.push({
+          type: 'budget',
+          amount: parseFloat(offeredBudget),
+          label: `$${offeredBudget} Draft Budget`
+        });
+      }
+
+      const requestedAssets = [];
+      if (requestedPickRound) {
+        const r = parseInt(requestedPickRound);
+        const p = targetAvailablePicks.find(item => item.round === r);
+        requestedAssets.push({
+          type: 'pick',
+          round: r,
+          original_owner: p?.originalOwner || propTarget,
+          label: `Round ${r} Draft Pick (Orig: ${p?.originalOwner || propTarget})`
+        });
+      }
+      if (requestedBudget && parseFloat(requestedBudget) > 0) {
+        requestedAssets.push({
+          type: 'budget',
+          amount: parseFloat(requestedBudget),
+          label: `$${requestedBudget} Draft Budget`
+        });
+      }
+
+      const senderTeamId = LEAGUE_OWNERS.find(o => o.name.toLowerCase() === propSender.toLowerCase())?.id || 0;
+      const targetTeamId = LEAGUE_OWNERS.find(o => o.name.toLowerCase() === propTarget.toLowerCase())?.id || 0;
+
+      const { error } = await supabase
+        .from('league_trade_proposals')
+        .insert({
+          season_year: 2026,
+          proposing_team_id: senderTeamId,
+          proposing_owner: propSender,
+          target_team_id: targetTeamId,
+          target_owner: propTarget,
+          offered_assets: offeredAssets,
+          requested_assets: requestedAssets,
+          notes: tradeNotes || null,
+          status: 'pending',
+          proposed_at: new Date().toISOString()
+        });
+
+      if (error) throw error;
+
+      alert(`Official trade proposal sent to ${propTarget}! 🤝`);
+      setOfferedPickRound('');
+      setOfferedBudget('');
+      setRequestedPickRound('');
+      setRequestedBudget('');
+      setTradeNotes('');
+      await loadData();
+    } catch (err) {
+      console.error('Failed to submit proposal:', err);
+      alert('Error submitting proposal: ' + err.message);
+    } finally {
+      setSubmittingTrade(false);
+    }
+  };
+
+  // Partner Accept: Moves trade from 'pending' to 'accepted_by_partner' (ready for commish)
+  const handlePartnerAccept = async (proposal) => {
+    if (!user) {
+      alert('Please log in with Discord to accept trades.');
+      return;
+    }
+
+    const isMe = profile?.owner_name?.toLowerCase() === proposal.target_owner?.toLowerCase() ||
+      (profile?.owner_name === 'Dan' && proposal.target_owner === 'Daniel') ||
+      (profile?.owner_name === 'Daniel' && proposal.target_owner === 'Dan');
+
+    if (!isCommissioner && !isMe) {
+      alert(`Only ${proposal.target_owner} or league commissioners can accept this proposal.`);
+      return;
+    }
+
+    setActionLoadingId(proposal.id);
+    try {
+      const { error } = await supabase
+        .from('league_trade_proposals')
+        .update({
+          status: 'accepted_by_partner',
+          responded_at: new Date().toISOString(),
+          responded_by: profile?.owner_name || 'Owner'
+        })
+        .eq('id', proposal.id);
+
+      if (error) throw error;
+
+      alert(`Trade accepted! 🎉 It has been sent to Commissioners (Dan & Adrian) for final league approval.`);
+      await loadData();
+    } catch (err) {
+      console.error('Accept failed:', err);
+      alert('Failed to accept proposal: ' + err.message);
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  // Commissioner Approval: Dan or Adrian officially executes the trade into draft_asset_trades!
+  const handleCommissionerApprove = async (proposal) => {
+    if (!isCommissioner) {
+      alert('Only league commissioners (Dan & Adrian) can execute official trade approval.');
+      return;
+    }
+
+    setActionLoadingId(proposal.id);
+    try {
+      const tradeId = 'TR-2027-' + Date.now().toString().slice(-6);
+      const tradeDate = new Date().toISOString().split('T')[0];
+      const newAssetTrades = [];
+
+      // 1. Offered assets move from proposing_owner to target_owner
+      (proposal.offered_assets || []).forEach(asset => {
+        if (asset.type === 'pick') {
+          newAssetTrades.push({
+            trade_id: tradeId,
+            trade_date: tradeDate,
+            season_year: 2026,
+            target_draft_year: 2027,
+            sending_owner: proposal.proposing_owner,
+            from_team_id: proposal.proposing_team_id,
+            receiving_owner: proposal.target_owner,
+            to_team_id: proposal.target_team_id,
+            asset_type: 'Overall Pick',
+            asset_name: `Round ${asset.round}`,
+            round_num: asset.round,
+            original_owner: asset.original_owner || proposal.proposing_owner,
+            notes: proposal.notes || `Trade between ${proposal.proposing_owner} and ${proposal.target_owner}`
+          });
+        } else if (asset.type === 'budget') {
+          newAssetTrades.push({
+            trade_id: tradeId,
+            trade_date: tradeDate,
+            season_year: 2026,
+            target_draft_year: 2027,
+            sending_owner: proposal.proposing_owner,
+            from_team_id: proposal.proposing_team_id,
+            receiving_owner: proposal.target_owner,
+            to_team_id: proposal.target_team_id,
+            asset_type: 'Budget',
+            asset_name: `$${asset.amount} Budget`,
+            round_num: null,
+            original_owner: proposal.proposing_owner,
+            notes: proposal.notes || `Budget transfer`
+          });
+        }
+      });
+
+      // 2. Requested assets move from target_owner to proposing_owner
+      (proposal.requested_assets || []).forEach(asset => {
+        if (asset.type === 'pick') {
+          newAssetTrades.push({
+            trade_id: tradeId,
+            trade_date: tradeDate,
+            season_year: 2026,
+            target_draft_year: 2027,
+            sending_owner: proposal.target_owner,
+            from_team_id: proposal.target_team_id,
+            receiving_owner: proposal.proposing_owner,
+            to_team_id: proposal.proposing_team_id,
+            asset_type: 'Overall Pick',
+            asset_name: `Round ${asset.round}`,
+            round_num: asset.round,
+            original_owner: asset.original_owner || proposal.target_owner,
+            notes: proposal.notes || `Trade between ${proposal.proposing_owner} and ${proposal.target_owner}`
+          });
+        } else if (asset.type === 'budget') {
+          newAssetTrades.push({
+            trade_id: tradeId,
+            trade_date: tradeDate,
+            season_year: 2026,
+            target_draft_year: 2027,
+            sending_owner: proposal.target_owner,
+            from_team_id: proposal.target_team_id,
+            receiving_owner: proposal.proposing_owner,
+            to_team_id: proposal.proposing_team_id,
+            asset_type: 'Budget',
+            asset_name: `$${asset.amount} Budget`,
+            round_num: null,
+            original_owner: proposal.target_owner,
+            notes: proposal.notes || `Budget transfer`
+          });
+        }
+      });
+
+      // Insert assets into draft_asset_trades
+      if (newAssetTrades.length > 0) {
+        const { error: insErr } = await supabase
+          .from('draft_asset_trades')
+          .insert(newAssetTrades);
+        if (insErr) throw insErr;
+      }
+
+      // Update proposal status to 'approved'
+      const { error: propErr } = await supabase
+        .from('league_trade_proposals')
+        .update({
+          status: 'approved',
+          responded_at: new Date().toISOString(),
+          responded_by: `${profile?.owner_name || 'Commissioner'} (Approved)`
+        })
+        .eq('id', proposal.id);
+
+      if (propErr) throw propErr;
+
+      alert(`Trade officially APPROVED and EXECUTED! 👑 The 2027 draft board and team ledgers have been updated.`);
+      await loadData();
+    } catch (err) {
+      console.error('Approval failed:', err);
+      alert('Failed to approve trade: ' + err.message);
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  // Decline or Cancel Proposal
+  const handleDeclineOrCancel = async (proposal, newStatus) => {
+    if (!user) {
+      alert('Please log in with Discord.');
+      return;
+    }
+
+    setActionLoadingId(proposal.id);
+    try {
+      const { error } = await supabase
+        .from('league_trade_proposals')
+        .update({
+          status: newStatus,
+          responded_at: new Date().toISOString(),
+          responded_by: profile?.owner_name || 'User'
+        })
+        .eq('id', proposal.id);
+
+      if (error) throw error;
+
+      alert(`Trade proposal ${newStatus}.`);
+      await loadData();
+    } catch (err) {
+      console.error('Update failed:', err);
+      alert('Error: ' + err.message);
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
 
   // Compute owner statistics
   const ownerStats = useMemo(() => {
@@ -188,6 +519,21 @@ export default function DraftCapitalView({ currentUser = 'Daniel' }) {
               }`}
             >
               🏛️ 2026 Ground Truth
+            </button>
+            <button
+              onClick={() => setActiveSubTab('proposals')}
+              className={`px-3.5 py-2 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 ${
+                activeSubTab === 'proposals'
+                  ? 'bg-rose-600 text-white shadow-md font-black ring-1 ring-rose-400'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <span>🤝 Trade Proposals</span>
+              {pendingCount > 0 && (
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-amber-400 text-slate-950 animate-pulse">
+                  {pendingCount}
+                </span>
+              )}
             </button>
           </div>
         </div>
@@ -646,6 +992,453 @@ export default function DraftCapitalView({ currentUser = 'Daniel' }) {
                   })}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* SUBTAB 5: TRADE PROPOSALS & COMMISSIONER APPROVALS */}
+      {activeSubTab === 'proposals' && (
+        <div className="space-y-6">
+          {/* Hub Header & New Proposal Toggle */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-black text-white flex items-center gap-2">
+                <span>🤝</span> 2027 Offseason Draft Asset & Budget Trading Hub
+              </h2>
+              <p className="text-xs text-slate-400 mt-1 max-w-2xl leading-relaxed">
+                Propose pick swaps and budget transfers between league managers. Once both parties agree, trades enter the queue for <strong>Commissioner Approval (Dan & Adrian)</strong> before final execution into the 2027 draft board.
+              </p>
+            </div>
+
+            <button
+              onClick={() => setProposeModalOpen(!proposeModalOpen)}
+              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-bold text-xs shadow-lg transition-all flex items-center gap-2 cursor-pointer w-fit"
+            >
+              <span>{proposeModalOpen ? '✕ Close Proposal Form' : '➕ Propose New Trade'}</span>
+            </button>
+          </div>
+
+          {/* Collapsible Proposal Form */}
+          {proposeModalOpen && (
+            <div className="bg-slate-900/95 border border-rose-500/40 rounded-2xl p-6 shadow-2xl space-y-6 animate-fade-in-up">
+              <div className="border-b border-slate-800 pb-3 flex items-center justify-between">
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <span>📝</span> Submit New Trade Proposal
+                </h3>
+                {isCommissioner && (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                    👑 Commissioner Override: Any Manager
+                  </span>
+                )}
+              </div>
+
+              {!user && (
+                <div className="p-3 bg-indigo-950/40 border border-indigo-500/40 rounded-xl text-xs text-indigo-200 flex items-center gap-2">
+                  <span>🔒</span>
+                  <span>Please log in with Discord via the top menu to propose official trades.</span>
+                </div>
+              )}
+
+              <form onSubmit={handleSendProposal} className="space-y-6">
+                {/* Manager Selection */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 mb-1">
+                      Proposing Team (Sending Assets):
+                    </label>
+                    {isCommissioner ? (
+                      <select
+                        value={propSender}
+                        onChange={e => setPropSender(e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-white focus:ring-2 focus:ring-rose-500 cursor-pointer"
+                      >
+                        {DRAFT_OWNERS.map(o => (
+                          <option key={o} value={o}>{o} (Team {LEAGUE_OWNERS.find(lo => lo.name === o)?.id})</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <div className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs font-bold text-indigo-300">
+                        {propSender} (My Team)
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 mb-1">
+                      Target Trading Partner:
+                    </label>
+                    <select
+                      value={propTarget}
+                      onChange={e => setPropTarget(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-white focus:ring-2 focus:ring-rose-500 cursor-pointer"
+                    >
+                      {DRAFT_OWNERS.filter(o => o !== propSender).map(o => (
+                        <option key={o} value={o}>{o} (Team {LEAGUE_OWNERS.find(lo => lo.name === o)?.id})</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* 2-Column Asset Exchange */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 rounded-xl bg-slate-950/60 border border-slate-800">
+                  {/* Left: What Proposer Sends */}
+                  <div className="space-y-4">
+                    <div className="text-xs font-black uppercase tracking-wider text-rose-400 border-b border-slate-800 pb-2 flex items-center justify-between">
+                      <span>📤 {propSender} Offers:</span>
+                      <span className="text-[10px] text-slate-400 lowercase">{senderAvailablePicks.length} picks owned</span>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-400 mb-1">
+                        Select 2027 Draft Pick to Send:
+                      </label>
+                      <select
+                        value={offeredPickRound}
+                        onChange={e => setOfferedPickRound(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white"
+                      >
+                        <option value="">-- No pick selected --</option>
+                        {senderAvailablePicks.map(p => (
+                          <option key={p.round} value={p.round}>
+                            Round {p.round} Pick {p.originalOwner !== propSender ? `(Orig: ${p.originalOwner})` : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-400 mb-1">
+                        And / Or Draft Budget Cash ($):
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        placeholder="$0"
+                        value={offeredBudget}
+                        onChange={e => setOfferedBudget(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Right: What Proposer Requests */}
+                  <div className="space-y-4">
+                    <div className="text-xs font-black uppercase tracking-wider text-teal-400 border-b border-slate-800 pb-2 flex items-center justify-between">
+                      <span>📥 {propSender} Receives (from {propTarget}):</span>
+                      <span className="text-[10px] text-slate-400 lowercase">{targetAvailablePicks.length} picks owned</span>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-400 mb-1">
+                        Select 2027 Draft Pick to Request:
+                      </label>
+                      <select
+                        value={requestedPickRound}
+                        onChange={e => setRequestedPickRound(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white"
+                      >
+                        <option value="">-- No pick selected --</option>
+                        {targetAvailablePicks.map(p => (
+                          <option key={p.round} value={p.round}>
+                            Round {p.round} Pick {p.originalOwner !== propTarget ? `(Orig: ${p.originalOwner})` : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-400 mb-1">
+                        And / Or Draft Budget Cash ($):
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        placeholder="$0"
+                        value={requestedBudget}
+                        onChange={e => setRequestedBudget(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Notes */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">
+                    Trade Rationale & Conditions (Optional):
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Conditional swap or draft order swap..."
+                    value={tradeNotes}
+                    onChange={e => setTradeNotes(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-600"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setProposeModalOpen(false)}
+                    className="px-4 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submittingTrade || !user}
+                    className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md cursor-pointer disabled:opacity-50"
+                  >
+                    {submittingTrade ? 'Submitting...' : '📤 Send Official Trade Proposal'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Active Proposals Board */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-black uppercase tracking-wider text-slate-300 flex items-center gap-2">
+              <span>⏳</span> Pending Trade Proposals & Approvals
+            </h3>
+
+            {proposals.filter(p => p.status === 'pending' || p.status === 'accepted_by_partner').length === 0 ? (
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center text-slate-500 text-xs">
+                No active proposals pending agreement or commissioner review right now.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4">
+                {proposals
+                  .filter(p => p.status === 'pending' || p.status === 'accepted_by_partner')
+                  .map(prop => {
+                    const isSender = profile?.owner_name?.toLowerCase() === prop.proposing_owner?.toLowerCase();
+                    const isTarget = profile?.owner_name?.toLowerCase() === prop.target_owner?.toLowerCase();
+                    const isAwaitingCommish = prop.status === 'accepted_by_partner';
+                    const isLoading = actionLoadingId === prop.id;
+
+                    return (
+                      <div
+                        key={prop.id}
+                        className={`rounded-2xl p-5 border shadow-xl transition-all ${
+                          isAwaitingCommish
+                            ? 'bg-amber-950/20 border-amber-500/50'
+                            : 'bg-slate-900 border-slate-800'
+                        }`}
+                      >
+                        {/* Header */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">🤝</span>
+                            <div>
+                              <div className="text-sm font-bold text-white">
+                                {prop.proposing_owner} ⇄ {prop.target_owner}
+                              </div>
+                              <div className="text-[10px] text-slate-400">
+                                Proposed: {new Date(prop.proposed_at || prop.created_at).toLocaleDateString()}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div>
+                            {isAwaitingCommish ? (
+                              <span className="px-2.5 py-1 rounded-full text-xs font-black bg-amber-400/20 border border-amber-400/60 text-amber-300 animate-pulse flex items-center gap-1.5">
+                                <span>👑</span> Awaiting Commissioner Approval
+                              </span>
+                            ) : (
+                              <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-500/20 border border-indigo-500/40 text-indigo-300">
+                                ⏳ Pending Partner Agreement ({prop.target_owner})
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Assets Details */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4 text-xs">
+                          {/* Left: What Proposing Owner Sends */}
+                          <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
+                            <div className="text-[11px] font-bold text-slate-400 mb-2">
+                              {prop.proposing_owner} Sends:
+                            </div>
+                            <div className="flex flex-wrap gap-1.5">
+                              {(prop.offered_assets || []).map((a, i) => (
+                                <span
+                                  key={i}
+                                  className="px-2 py-1 rounded-lg text-xs font-bold bg-rose-500/20 border border-rose-500/40 text-rose-300"
+                                >
+                                  {a.type === 'pick' ? `🎟️ ${a.label}` : `💵 ${a.label}`}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Right: What Target Owner Sends */}
+                          <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
+                            <div className="text-[11px] font-bold text-slate-400 mb-2">
+                              {prop.target_owner} Sends:
+                            </div>
+                            <div className="flex flex-wrap gap-1.5">
+                              {(prop.requested_assets || []).map((a, i) => (
+                                <span
+                                  key={i}
+                                  className="px-2 py-1 rounded-lg text-xs font-bold bg-teal-500/20 border border-teal-500/40 text-teal-300"
+                                >
+                                  {a.type === 'pick' ? `🎟️ ${a.label}` : `💵 ${a.label}`}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        {prop.notes && (
+                          <div className="text-xs text-slate-400 italic mb-3">
+                            "{prop.notes}"
+                          </div>
+                        )}
+
+                        {/* Action Buttons */}
+                        <div className="pt-2 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
+                          <div className="text-[11px] text-slate-500">
+                            {isAwaitingCommish
+                              ? `Agreed by ${prop.target_owner}. Dan or Adrian must officially approve.`
+                              : `Awaiting response from ${prop.target_owner}.`}
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            {/* Stage 1 Actions */}
+                            {!isAwaitingCommish && (
+                              <>
+                                {(isTarget || isCommissioner) && (
+                                  <>
+                                    <button
+                                      onClick={() => handlePartnerAccept(prop)}
+                                      disabled={isLoading}
+                                      className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-xs cursor-pointer"
+                                    >
+                                      {isLoading ? 'Processing...' : '✅ Accept Trade'}
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeclineOrCancel(prop, 'declined')}
+                                      disabled={isLoading}
+                                      className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-rose-950 text-rose-400 border border-rose-500/40 font-bold text-xs cursor-pointer"
+                                    >
+                                      Decline
+                                    </button>
+                                  </>
+                                )}
+
+                                {(isSender || isCommissioner) && !isTarget && (
+                                  <button
+                                    onClick={() => handleDeclineOrCancel(prop, 'cancelled')}
+                                    disabled={isLoading}
+                                    className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 font-bold text-xs cursor-pointer"
+                                  >
+                                    Cancel Proposal
+                                  </button>
+                                )}
+                              </>
+                            )}
+
+                            {/* Stage 2 Actions (Commissioner Approval) */}
+                            {isAwaitingCommish && (
+                              <>
+                                {isCommissioner ? (
+                                  <div className="flex items-center gap-2 bg-amber-950/40 border border-amber-500/50 p-1.5 px-3 rounded-xl">
+                                    <span className="text-xs font-bold text-amber-300">👑 Commish Action:</span>
+                                    <button
+                                      onClick={() => handleCommissionerApprove(prop)}
+                                      disabled={isLoading}
+                                      className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs shadow-md cursor-pointer"
+                                    >
+                                      {isLoading ? 'Executing...' : '✅ Approve & Execute Trade'}
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeclineOrCancel(prop, 'declined')}
+                                      disabled={isLoading}
+                                      className="px-3 py-1.5 rounded-lg bg-rose-950/80 text-rose-300 border border-rose-500/50 font-bold text-xs hover:bg-rose-900 cursor-pointer"
+                                    >
+                                      Veto
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <span className="text-xs font-bold text-amber-300 flex items-center gap-1">
+                                    <span>⏳</span> Pending Dan / Adrian Approval
+                                  </span>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+          </div>
+
+          {/* Historical Proposals Table */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-3">
+            <h3 className="text-sm font-black uppercase tracking-wider text-slate-300 flex items-center gap-2">
+              <span>📜</span> Completed Trade Proposals Archive
+            </h3>
+
+            {proposals.filter(p => p.status === 'approved' || p.status === 'declined' || p.status === 'cancelled').length === 0 ? (
+              <div className="text-xs text-slate-500 py-3 text-center">
+                No past proposals recorded yet.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-800 text-slate-500 text-[11px] font-bold">
+                      <th className="py-2.5 px-3">Date</th>
+                      <th className="py-2.5 px-3">Proposing</th>
+                      <th className="py-2.5 px-3">Target</th>
+                      <th className="py-2.5 px-3">Assets Exchanged</th>
+                      <th className="py-2.5 px-3 text-center">Status</th>
+                      <th className="py-2.5 px-3 text-right">Resolved By</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {proposals
+                      .filter(p => p.status === 'approved' || p.status === 'declined' || p.status === 'cancelled')
+                      .map(p => (
+                        <tr key={p.id} className="border-b border-slate-800/60 hover:bg-slate-800/30">
+                          <td className="py-2.5 px-3 text-slate-400 font-mono text-[11px]">
+                            {new Date(p.proposed_at || p.created_at).toLocaleDateString()}
+                          </td>
+                          <td className="py-2.5 px-3 font-bold text-white">{p.proposing_owner}</td>
+                          <td className="py-2.5 px-3 font-bold text-white">{p.target_owner}</td>
+                          <td className="py-2.5 px-3 text-slate-300">
+                            {(p.offered_assets || []).map(a => a.label).join(', ')} ⇄ {(p.requested_assets || []).map(a => a.label).join(', ')}
+                          </td>
+                          <td className="py-2.5 px-3 text-center">
+                            {p.status === 'approved' && (
+                              <span className="px-2 py-0.5 rounded bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 font-black text-[10px]">
+                                APPROVED
+                              </span>
+                            )}
+                            {p.status === 'declined' && (
+                              <span className="px-2 py-0.5 rounded bg-rose-950/80 border border-rose-500/50 text-rose-300 font-black text-[10px]">
+                                DECLINED
+                              </span>
+                            )}
+                            {p.status === 'cancelled' && (
+                              <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-400 font-black text-[10px]">
+                                CANCELLED
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-2.5 px-3 text-right text-slate-400 text-[11px]">
+                            {p.responded_by || '-'}
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -2,8 +2,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../supabaseClient';
 import { MLB_TEAMS, LEAGUE_OWNERS, PROMINENT_AWARD_CANDIDATES, teamsMatch, PICKEM_RULES } from '../utils/mlbTeams';
+import { useAuth } from '../context/useAuth';
 
 export default function PickemView() {
+  const { user, profile, isCommissioner, effectiveOwner, effectiveTeamId } = useAuth();
   const [seasons, setSeasons] = useState([]);
   const [selectedSeason, setSelectedSeason] = useState(2026);
   const [activeTab, setActiveTab] = useState('board'); // 'board', 'entry', 'history', 'admin'
@@ -37,8 +39,15 @@ export default function PickemView() {
   const [allTimeScores, setAllTimeScores] = useState([]);
 
   // Pick Submission / Edit Form State
-  const [entryOwner, setEntryOwner] = useState(LEAGUE_OWNERS[3].name); // default Daniel
+  const [entryOwner, setEntryOwner] = useState(effectiveOwner || LEAGUE_OWNERS[3].name); // default Daniel
   const [entryPicks, setEntryPicks] = useState({});
+
+  // Sync entryOwner when effectiveOwner changes
+  useEffect(() => {
+    if (effectiveOwner) {
+      setEntryOwner(effectiveOwner);
+    }
+  }, [effectiveOwner]);
 
   // Admin / Grading State
   const [gradingAnswers, setGradingAnswers] = useState({});
@@ -230,6 +239,16 @@ export default function PickemView() {
     if (e) e.preventDefault();
     if (!entryOwner) {
       alert('Please select or specify an owner name');
+      return;
+    }
+
+    if (!user) {
+      setErrorMessage('Please log in with Discord via the top menu to submit or save official picks.');
+      return;
+    }
+
+    if (!isCommissioner && profile?.owner_name?.toLowerCase() !== entryOwner?.toLowerCase()) {
+      setErrorMessage(`You are logged in as ${profile?.owner_name || 'an owner'}. You can only submit picks for your own team.`);
       return;
     }
 
@@ -1316,19 +1335,58 @@ export default function PickemView() {
                 {/* Owner selector for entry */}
                 <div className="flex items-center gap-2">
                   <label className="text-xs font-bold text-slate-300">Owner:</label>
-                  <select
-                    value={entryOwner}
-                    onChange={(e) => setEntryOwner(e.target.value)}
-                    className="bg-slate-800 text-white font-bold text-sm px-3 py-1.5 rounded-lg border border-indigo-700/60 focus:ring-2 focus:ring-indigo-400 cursor-pointer"
-                  >
-                    {LEAGUE_OWNERS.map(o => (
-                      <option key={o.id} value={o.name}>
-                        {o.name} (Team {o.id})
-                      </option>
-                    ))}
-                  </select>
+                  {isCommissioner ? (
+                    <select
+                      value={entryOwner}
+                      onChange={(e) => setEntryOwner(e.target.value)}
+                      className="bg-slate-800 text-amber-300 font-bold text-sm px-3 py-1.5 rounded-lg border border-amber-500/60 focus:ring-2 focus:ring-amber-400 cursor-pointer shadow-sm"
+                    >
+                      {LEAGUE_OWNERS.map(o => (
+                        <option key={o.id} value={o.name}>
+                          {o.name} (Team {o.id}) {o.id === 5 || o.id === 2 ? '👑' : ''}
+                        </option>
+                      ))}
+                    </select>
+                  ) : user ? (
+                    <div className="bg-slate-800 text-indigo-300 font-bold text-sm px-3 py-1.5 rounded-lg border border-indigo-700/60 flex items-center gap-2">
+                      <span>{entryOwner} (Team {effectiveTeamId})</span>
+                      <span className="text-[10px] text-emerald-400 font-semibold bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-500/30">Verified</span>
+                    </div>
+                  ) : (
+                    <select
+                      value={entryOwner}
+                      disabled
+                      className="bg-slate-800/50 text-slate-400 font-bold text-sm px-3 py-1.5 rounded-lg border border-slate-700 cursor-not-allowed"
+                    >
+                      <option value={entryOwner}>{entryOwner} (Log in to Submit)</option>
+                    </select>
+                  )}
                 </div>
               </div>
+
+              {/* Auth / Commissioner status alerts */}
+              {!user && (
+                <div className="bg-indigo-950/40 border border-indigo-500/40 rounded-xl p-3.5 flex items-center gap-3 text-indigo-200 text-xs shadow-sm">
+                  <span className="text-xl">🔒</span>
+                  <div>
+                    <span className="font-bold text-white">Discord Login Required:</span> Please log in with Discord via the top navigation bar to submit or save your official predictions for {selectedSeason}.
+                  </div>
+                </div>
+              )}
+
+              {isCommissioner && (
+                <div className="bg-amber-950/40 border border-amber-500/50 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-amber-200 shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">👑</span>
+                    <span>
+                      <strong>Commissioner Mode Active:</strong> You have commissioner privileges to submit or edit official picks on behalf of <strong>{entryOwner}</strong>.
+                    </span>
+                  </div>
+                  <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40 uppercase tracking-wider text-[10px] w-fit">
+                    Admin Override Enabled
+                  </span>
+                </div>
+              )}
 
               <form onSubmit={handleSavePicks} className="space-y-8">
                 {/* 1. DIVISION CHAMPIONS */}
@@ -1632,9 +1690,31 @@ export default function PickemView() {
           {/* TAB 4: COMMISSIONER TOOLS & SCORING / BOOTSTRAP          */}
           {/* ========================================================= */}
           {activeTab === 'admin' && (
-            <div className="space-y-6">
-              {/* BOOTSTRAP FUTURE SEASON */}
-              <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
+            !isCommissioner ? (
+              <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-10 text-center max-w-md mx-auto shadow-2xl space-y-4 my-8">
+                <div className="w-16 h-16 rounded-2xl bg-amber-950/40 border border-amber-500/30 flex items-center justify-center text-3xl mx-auto shadow-inner">
+                  🔒
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Commissioner Access Only</h3>
+                  <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                    Official grading, answer resolution, and bootstrapping new Pick'em seasons are restricted to league commissioners (<strong>Dan</strong> and <strong>Adrian</strong>).
+                  </p>
+                </div>
+                {user ? (
+                  <div className="pt-2 border-t border-slate-800 text-xs text-slate-400">
+                    Logged in as <span className="text-indigo-300 font-bold">{profile?.owner_name || user.email}</span> (Owner)
+                  </div>
+                ) : (
+                  <div className="pt-2 border-t border-slate-800 text-xs text-slate-400">
+                    Please log in with Discord via the top navigation bar to verify commissioner permissions.
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {/* BOOTSTRAP FUTURE SEASON */}
+                <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
                   <span>🚀</span> Bootstrap Upcoming Season
                 </h2>
@@ -1706,7 +1786,7 @@ export default function PickemView() {
                 </div>
               </div>
             </div>
-          )}
+          ))}
         </>
       )}
     </div>

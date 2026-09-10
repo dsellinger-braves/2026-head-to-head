@@ -13,24 +13,10 @@ const supabaseKey = (rawKey && !rawKey.startsWith('sb_secret_')) ? rawKey : DEFA
 export const supabaseUrl = rawUrl || DEFAULT_SUPABASE_URL;
 
 
-// Clear any stale supabase auth tokens from localStorage that trigger 401 JWT validation failures
-if (typeof window !== 'undefined' && window.localStorage) {
-  try {
-    for (let i = window.localStorage.length - 1; i >= 0; i--) {
-      const key = window.localStorage.key(i);
-      if (key && (key.startsWith('sb-') || key.includes('supabase.auth.token'))) {
-        window.localStorage.removeItem(key);
-      }
-    }
-  } catch {
-    // Ignore storage access errors
-  }
-}
-
 export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
-    persistSession: false,
-    autoRefreshToken: false,
-    detectSessionInUrl: false,
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
   },
 });

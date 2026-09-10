@@ -23,6 +23,8 @@ import PlayerValuationsView from './views/PlayerValuationsView';
 import PickemView from './views/PickemView';
 import DraftCapitalView from './views/DraftCapitalView';
 import KeepersBudgetsView from './views/KeepersBudgetsView';
+import UserNavWidget from './components/UserNavWidget';
+import { useAuth } from './context/useAuth';
 
 const AVAILABLE_SEASONS = Array.from({ length: 2026 - 2012 + 1 }, (_, i) => 2026 - i);
 
@@ -78,6 +80,7 @@ function getViewFromHash() {
 }
 
 function App() {
+  const { effectiveOwner, isCommissioner } = useAuth();
   const [loading, setLoading] = useState(true);
   const [currentView, setCurrentView] = useState(getViewFromHash);
   const [rawData, setRawData] = useState([]);
@@ -623,6 +626,8 @@ function App() {
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                 </button>
+                <div className="h-6 w-px bg-blue-700/60 mx-1 hidden sm:block"></div>
+                <UserNavWidget />
               </div>
             </div>
 
@@ -844,11 +849,12 @@ function App() {
             <PickemView />
           )}
           {currentView === 'capital' && (
-            <DraftCapitalView currentUser="Daniel" />
+            <DraftCapitalView currentUser={effectiveOwner || 'Daniel'} isCommissioner={isCommissioner} />
           )}
           {currentView === 'keepers' && (
             <KeepersBudgetsView
-              currentUser="Daniel"
+              currentUser={effectiveOwner || 'Daniel'}
+              isCommissioner={isCommissioner}
               onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
             />
           )}
