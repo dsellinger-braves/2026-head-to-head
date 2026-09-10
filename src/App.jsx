@@ -74,7 +74,23 @@ const OFFSEASON_VIEWS = new Set(['valuations', 'draft', 'pickem', 'capital', 'ke
 
 function getViewFromHash() {
   if (typeof window === 'undefined') return 'weekly';
-  const hash = window.location.hash.replace(/^#\/?/, '').trim().toLowerCase();
+  const rawHash = window.location.hash || '';
+  // If the URL contains OAuth return tokens (access_token=, refresh_token=, error=),
+  // don't treat the token string as a view slug. Restore saved pre-login route if available.
+  if (rawHash.includes('access_token=') || rawHash.includes('refresh_token=') || rawHash.includes('error=')) {
+    try {
+      const saved = sessionStorage.getItem('oauth_pre_login_hash');
+      if (saved) {
+        const cleanSaved = saved.replace(/^#\/?/, '').trim().toLowerCase();
+        const route = cleanSaved.split('?')[0].split('/')[0];
+        if (HASH_TO_VIEW[route]) return HASH_TO_VIEW[route];
+      }
+    } catch {
+      // ignore
+    }
+    return 'keepers';
+  }
+  const hash = rawHash.replace(/^#\/?/, '').trim().toLowerCase();
   const route = hash.split('?')[0].split('/')[0];
   return HASH_TO_VIEW[route] || 'weekly';
 }
@@ -98,6 +114,10 @@ function App() {
 
   // Synchronize browser URL hash with currentView
   useEffect(() => {
+    // If the hash contains OAuth tokens, do not overwrite it immediately; wait for Supabase to parse it
+    if (window.location.hash && (window.location.hash.includes('access_token=') || window.location.hash.includes('error='))) {
+      return;
+    }
     const slug = VIEW_TO_HASH[currentView] || currentView;
     const targetHash = `#/${slug}`;
     if (window.location.hash !== targetHash) {

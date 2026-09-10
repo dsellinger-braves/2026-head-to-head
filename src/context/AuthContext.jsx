@@ -40,30 +40,48 @@ export function AuthProvider({ children }) {
 
     const profiles = profilesList && profilesList.length > 0 ? profilesList : await fetchProfiles();
     const meta = authUser.user_metadata || {};
-    const discordUsername = (meta.user_name || meta.preferred_username || meta.name || '').toLowerCase().trim();
-    const discordId = authUser.identities?.[0]?.id || meta.provider_id || null;
-    const avatarUrl = meta.avatar_url || null;
+    
+    // Normalized Discord username from custom_claims or profile data, stripping #discriminator (#0, #1234) if present
+    const rawName = (
+      meta.custom_claims?.global_name ||
+      meta.full_name ||
+      meta.user_name ||
+      meta.preferred_username ||
+      meta.name ||
+      ''
+    );
+    const discordUsername = rawName.replace(/#\d+$/, '').toLowerCase().trim();
+    const discordId = authUser.identities?.[0]?.id || meta.provider_id || authUser.identities?.[0]?.identity_data?.provider_id || null;
+    const avatarUrl = meta.avatar_url || meta.picture || null;
 
-    // Match profile by discord_username or linked user_id
+    // Match profile: 1. by linked user_id, 2. by discord_id, 3. by normalized discord_username
     let matched = profiles.find(p => p.user_id === authUser.id);
+    if (!matched && discordId) {
+      matched = profiles.find(p => p.discord_id && String(p.discord_id) === String(discordId));
+    }
     if (!matched && discordUsername) {
-      matched = profiles.find(p => (p.discord_username || '').toLowerCase() === discordUsername);
+      matched = profiles.find(p => (p.discord_username || '').toLowerCase().trim() === discordUsername);
     }
 
     if (matched) {
-      // Link user_id and update avatar in Supabase if not yet linked
-      if (matched.user_id !== authUser.id || matched.avatar_url !== avatarUrl) {
+      // Link user_id, discord_id, and update avatar in Supabase if not yet linked
+      if (matched.user_id !== authUser.id || (discordId && matched.discord_id !== String(discordId)) || matched.avatar_url !== avatarUrl) {
         try {
           await supabase
             .from('league_profiles')
             .update({
               user_id: authUser.id,
-              discord_id: discordId || matched.discord_id,
+              discord_id: discordId ? String(discordId) : matched.discord_id,
               avatar_url: avatarUrl || matched.avatar_url,
               updated_at: new Date().toISOString()
             })
             .eq('id', matched.id);
-          matched = { ...matched, user_id: authUser.id, avatar_url: avatarUrl || matched.avatar_url };
+          matched = { 
+            ...matched, 
+            user_id: authUser.id, 
+            discord_id: discordId ? String(discordId) : matched.discord_id, 
+            avatar_url: avatarUrl || matched.avatar_url 
+          };
         } catch (e) {
           console.warn('Profile link update notice:', e);
         }
@@ -92,6 +110,16 @@ export function AuthProvider({ children }) {
         setUser(session?.user || null);
         if (session?.user) {
           await syncUserProfile(session.user, profiles);
+          // Restore user's previous hash/view if returning from OAuth redirect
+          try {
+            const preHash = sessionStorage.getItem('oauth_pre_login_hash');
+            if (preHash && window.location.hash && (window.location.hash.includes('access_token=') || window.location.hash.includes('error='))) {
+              sessionStorage.removeItem('oauth_pre_login_hash');
+              window.location.hash = preHash;
+            }
+          } catch {
+            // ignore
+          }
         }
         setLoading(false);
       }
@@ -104,6 +132,15 @@ export function AuthProvider({ children }) {
       setUser(session?.user || null);
       if (session?.user) {
         await syncUserProfile(session.user);
+        try {
+          const preHash = sessionStorage.getItem('oauth_pre_login_hash');
+          if (preHash && window.location.hash && (window.location.hash.includes('access_token=') || window.location.hash.includes('error='))) {
+            sessionStorage.removeItem('oauth_pre_login_hash');
+            window.location.hash = preHash;
+          }
+        } catch {
+          // ignore
+        }
       } else {
         setProfile(null);
         setOverrideTeamId(null);
@@ -118,7 +155,21 @@ export function AuthProvider({ children }) {
   }, [fetchProfiles, syncUserProfile]);
 
   const signInWithDiscord = useCallback(async () => {
-    const redirectTo = window.location.origin + window.location.pathname;
+    try {
+      if (typeof window !== 'undefined') {
+        const currentHash = window.location.hash || '#/keepers';
+        if (!currentHash.includes('access_token=') && !currentHash.includes('refresh_token=')) {
+          sessionStorage.setItem('oauth_pre_login_hash', currentHash);
+        }
+      }
+    } catch (e) {
+      console.warn('Could not save pre-login hash:', e);
+    }
+
+    const origin = window.location.origin;
+    const pathname = window.location.pathname.endsWith('/') ? window.location.pathname : window.location.pathname + '/';
+    const redirectTo = `${origin}${pathname}`;
+
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'discord',
       options: {
