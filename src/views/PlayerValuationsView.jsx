@@ -232,7 +232,7 @@ export default function PlayerValuationsView({ allStats = [], onPlayerClick, onO
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
               }`}
             >
-              👑 3-Year Keeper Model
+              3-Year Keeper Model
             </button>
             <button
               onClick={() => setModelType('SINGLE_SEASON')}
@@ -242,7 +242,7 @@ export default function PlayerValuationsView({ allStats = [], onPlayerClick, onO
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
               }`}
             >
-              ⚡ Single-Year Redraft
+              Single-Year Redraft
             </button>
           </div>
         </div>
@@ -445,7 +445,6 @@ export default function PlayerValuationsView({ allStats = [], onPlayerClick, onO
                               }`}
                               title={ownership.isKeeper ? `${ownerName} (Official Keeper)` : `${ownerName}'s Roster`}
                             >
-                              <span>{ownership.isKeeper ? '👑' : '⚾'}</span>
                               <span>{ownerName}</span>
                             </button>
                           ) : (
@@ -456,22 +455,8 @@ export default function PlayerValuationsView({ allStats = [], onPlayerClick, onO
                         </td>
 
                         {/* Hefty Price */}
-                        <td className="py-3 px-4 text-right">
-                          <span
-                            className={`inline-block px-2.5 py-1 rounded-lg font-black text-xs ${
-                              player.model_price >= 30
-                                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                                : player.model_price >= 20
-                                ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
-                                : player.model_price >= 10
-                                ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
-                                : player.model_price >= 1
-                                ? 'bg-slate-800 text-slate-300 border border-slate-700'
-                                : 'text-slate-500'
-                            }`}
-                          >
-                            ${player.model_price}
-                          </span>
+                        <td className="py-3 px-4 text-right font-black text-xs text-white">
+                          ${player.model_price}
                         </td>
 
                         {/* ESPN Price */}
