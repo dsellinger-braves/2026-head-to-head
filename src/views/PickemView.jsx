@@ -23,6 +23,16 @@ export default function PickemView() {
   const [refreshingLive, setRefreshingLive] = useState(false);
   const [showMethodologyModal, setShowMethodologyModal] = useState(false);
 
+  // Close methodology modal on ESC key press
+  useEffect(() => {
+    if (!showMethodologyModal) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setShowMethodologyModal(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showMethodologyModal]);
+
   // All-time scores for Hall of Fame
   const [allTimeScores, setAllTimeScores] = useState([]);
 
@@ -727,7 +737,10 @@ export default function PickemView() {
 
       {/* METHODOLOGY MODAL */}
       {showMethodologyModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-xs p-4">
+        <div 
+          onClick={(e) => e.target === e.currentTarget && setShowMethodologyModal(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-xs p-4"
+        >
           <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-xl w-full p-6 shadow-2xl relative space-y-4">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <h3 className="text-lg font-bold text-white flex items-center gap-2">

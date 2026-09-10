@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { SCORING_CATS, aggregateStats, LINEUP_SLOTS } from '../utils/scoring';
 import TeamAvatar from './TeamAvatar';
 
@@ -48,6 +48,15 @@ function TotalRow({ totals, cats, highlightStat }) {
 
 export default function DayRosterModal({ teamDayRecord, highlightStat, onClose }) {
   const { teamId, teamName, date, records } = teamDayRecord;
+
+  // Close modal on ESC key press
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   const { batters, pitchers, batterTotals, pitcherTotals } = useMemo(() => {
     const players = records.map(r => {

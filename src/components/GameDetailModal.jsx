@@ -28,6 +28,15 @@ export default function GameDetailModal({ game, rosterDict, onClose }) {
     loadBoxscore();
   }, [game.gamePk]);
 
+  // Close modal on ESC key press
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   // Handle click outside to close
   const handleOverlayClick = (e) => {
     if (e.target === e.currentTarget) onClose();

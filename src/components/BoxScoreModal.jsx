@@ -1,7 +1,17 @@
+import { useEffect } from 'react';
 import { CATEGORIES } from '../utils/scoring';
 import TeamAvatar from './TeamAvatar';
 
 export default function BoxScoreModal({ matchup, onClose }) {
+  // Close modal on ESC key press
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   if (!matchup) return null;
 
   const handleOverlayClick = (e) => {

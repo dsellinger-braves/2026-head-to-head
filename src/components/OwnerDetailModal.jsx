@@ -1,9 +1,18 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { SCORING_CATS, aggregateStats } from '../utils/scoring';
 import TeamAvatar from './TeamAvatar';
 
 export default function OwnerDetailModal({ team, allStats, onClose, onPlayerClick }) {
   const [activeTab, setActiveTab] = useState('batters');
+
+  // Close modal on ESC key press
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   // 1. Filter Data for this Team ONLY
   const teamRoster = useMemo(() => {
@@ -76,7 +85,10 @@ export default function OwnerDetailModal({ team, allStats, onClose, onPlayerClic
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[70] p-4 backdrop-blur-sm animate-fade-in">
+    <div 
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+      className="fixed inset-0 bg-black/70 flex items-center justify-center z-[70] p-4 backdrop-blur-sm animate-fade-in"
+    >
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden">
         
         {/* HEADER */}

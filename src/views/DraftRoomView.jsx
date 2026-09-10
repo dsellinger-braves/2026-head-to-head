@@ -598,6 +598,15 @@ function PlayerModal({ player, onClose, onOpenInDepthModal }) {
     fetchPlayerData();
   }, [player]);
 
+  // Close modal on ESC key press
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   if (!player) return null;
 
   const getInjuryColor = (status) => {
