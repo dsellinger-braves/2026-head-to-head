@@ -17,6 +17,13 @@ const DRAFT_MANAGERS = [
   'Tim', 'Daniel', 'Will', 'Adrian', 'Garrett', 'Alex', 'Mark', 'Preston', 'Anil'
 ];
 
+function normalizeManager(mgr) {
+  if (!mgr) return '';
+  const s = String(mgr).trim();
+  if (s.toLowerCase() === 'dan') return 'Daniel';
+  return s;
+}
+
 // Helper to compute keeper cost from rank based on Keeper Costs tab
 function calculateKeeperCostFromRank(rank) {
   if (!rank || rank > 150) return 0;
@@ -79,6 +86,7 @@ export default function KeepersBudgetsPanel({
 
   // Planner state for keeper what-if planning
   const [plannerOwner, setPlannerOwner] = useState(currentUser || 'Daniel');
+  const [plannerScope, setPlannerScope] = useState('roster'); // 'roster' | 'roster_fa' | 'all'
   const [plannerSearch, setPlannerSearch] = useState('');
   const [replacedKeepers, setReplacedKeepers] = useState({}); // { slot: newPlayerObj }
 
@@ -145,7 +153,8 @@ export default function KeepersBudgetsPanel({
 
   // Load active owner's real-world comp picks into simulator when owner changes
   const activeRealBudgets = useMemo(() => {
-    return teamBudgets.find(b => b.owner === simulatedOwner) || {
+    const list = Array.isArray(teamBudgets) ? teamBudgets : (teamBudgets?.budgets || []);
+    return list.find(b => normalizeManager(b.owner) === normalizeManager(simulatedOwner)) || {
       base_budget: 100,
       keeper_spend: 0,
       comp_pick_spend: 0,
@@ -157,7 +166,8 @@ export default function KeepersBudgetsPanel({
 
   // Real-world picks for the simulated owner
   const realOwnerCompPicks = useMemo(() => {
-    return compPicks.filter(p => p.owner === simulatedOwner);
+    const list = Array.isArray(compPicks) ? compPicks : (compPicks?.comp_picks || []);
+    return list.filter(p => normalizeManager(p.owner) === normalizeManager(simulatedOwner));
   }, [compPicks, simulatedOwner]);
 
   // Sync simulator defaults from real world when owner changes
@@ -176,9 +186,14 @@ export default function KeepersBudgetsPanel({
   const keepersByOwner = useMemo(() => {
     const map = {};
     DRAFT_MANAGERS.forEach(mgr => { map[mgr] = []; });
-    (keepers || []).forEach(k => {
-      if (!map[k.owner]) map[k.owner] = [];
-      map[k.owner].push(k);
+    const list = Array.isArray(keepers) ? keepers : (keepers?.keepers || []);
+    list.forEach(k => {
+      const owner = normalizeManager(k.owner);
+      if (!map[owner]) map[owner] = [];
+      map[owner].push({
+        ...k,
+        owner
+      });
     });
     // Sort each owner's keepers by slot
     Object.keys(map).forEach(mgr => {
@@ -193,11 +208,13 @@ export default function KeepersBudgetsPanel({
     DRAFT_MANAGERS.forEach(mgr => {
       map[mgr] = { bought: [], lost: [], sold: [] };
     });
-    (compPicks || []).forEach(p => {
-      if (!map[p.owner]) map[p.owner] = { bought: [], lost: [], sold: [] };
-      if (p.action_type === 'BOUGHT') map[p.owner].bought.push(p);
-      else if (p.action_type === 'OFFSET_LOST') map[p.owner].lost.push(p);
-      else if (p.action_type === 'SOLD') map[p.owner].sold.push(p);
+    const list = Array.isArray(compPicks) ? compPicks : (compPicks?.comp_picks || []);
+    list.forEach(p => {
+      const owner = normalizeManager(p.owner);
+      if (!map[owner]) map[owner] = { bought: [], lost: [], sold: [] };
+      if (p.action_type === 'BOUGHT') map[owner].bought.push(p);
+      else if (p.action_type === 'OFFSET_LOST') map[owner].lost.push(p);
+      else if (p.action_type === 'SOLD') map[owner].sold.push(p);
     });
     return map;
   }, [compPicks]);
@@ -263,14 +280,14 @@ export default function KeepersBudgetsPanel({
       const existing = originalKeepers.find(k => k.keeper_slot === slotNum);
       if (replacedKeepers[slotNum]) {
         const rep = replacedKeepers[slotNum];
-        const rank = rep['Hefty Single Season Rank'] || rep['Dynasty Rank'] || 150;
-        const cost = calculateKeeperCostFromRank(rank);
+        const rank = rep.rank || rep['Hefty Keeper Rank'] || rep['Hefty Single Season Rank'] || rep['Dynasty Rank'] || 150;
+        const cost = (rep.cost !== undefined && rep.cost !== null) ? rep.cost : calculateKeeperCostFromRank(rank);
         return {
           keeper_slot: slotNum,
-          player_name: rep.Player || rep.full_name || 'Selected Player',
-          espn_player_id: rep['ESPN PlayerID'] || rep.id,
-          position: rep.Position,
-          mlb_team: rep.Team,
+          player_name: rep.name || rep.Player || rep.full_name || 'Selected Player',
+          espn_player_id: rep.id || rep.espn_player_id || rep['ESPN PlayerID'],
+          position: rep.position || rep.Position || '---',
+          mlb_team: rep.team || rep.Team || '---',
           rank: rank,
           cost: cost,
           isReplaced: true,
@@ -296,7 +313,7 @@ export default function KeepersBudgetsPanel({
     const totalCost = currentKeepers.reduce((sum, k) => sum + (k.cost || 0), 0);
     const validRanks = currentKeepers.map(k => k.rank).filter(Boolean);
     const avgRank = validRanks.length ? (validRanks.reduce((s, r) => s + r, 0) / validRanks.length).toFixed(1) : 0;
-    const baseBudget = (teamBudgets.find(b => b.owner === plannerOwner)?.base_budget) || 100;
+    const baseBudget = (teamBudgets.find(b => normalizeManager(b.owner) === normalizeManager(plannerOwner))?.base_budget) || 100;
     const remainingBudget = baseBudget - totalCost;
 
     return {
@@ -307,6 +324,53 @@ export default function KeepersBudgetsPanel({
       remainingBudget
     };
   }, [keepersByOwner, plannerOwner, replacedKeepers, teamBudgets]);
+
+  // Selected owner's total roster count
+  const plannerOwnerRosterCount = useMemo(() => {
+    return (players || []).filter(p => normalizeManager(p.rosterOwner) === normalizeManager(plannerOwner)).length;
+  }, [players, plannerOwner]);
+
+  // Candidates for What-If planner based on scope and search
+  const plannerCandidates = useMemo(() => {
+    if (!players || players.length === 0) return [];
+    const q = plannerSearch.trim().toLowerCase();
+
+    let list = [];
+    if (plannerScope === 'roster') {
+      list = players.filter(p => normalizeManager(p.rosterOwner) === normalizeManager(plannerOwner));
+    } else if (plannerScope === 'roster_fa') {
+      list = players.filter(p => {
+        const isMyRoster = normalizeManager(p.rosterOwner) === normalizeManager(plannerOwner);
+        const isFA = !p.rosterOwner || p.rosterOwner === 'Available' || p.rosterOwner === 'Free Agent' || p.isFreeAgent;
+        return isMyRoster || isFA;
+      });
+    } else {
+      list = players;
+    }
+
+    if (q) {
+      list = list.filter(p => {
+        const name = (p.name || p.Player || p.full_name || '').toLowerCase();
+        const pos = (p.position || p.Position || '').toLowerCase();
+        const team = (p.team || p.Team || '').toLowerCase();
+        return name.includes(q) || pos.includes(q) || team.includes(q);
+      });
+    }
+
+    return [...list].sort((a, b) => {
+      const aIsMyRoster = normalizeManager(a.rosterOwner) === normalizeManager(plannerOwner) ? 1 : 0;
+      const bIsMyRoster = normalizeManager(b.rosterOwner) === normalizeManager(plannerOwner) ? 1 : 0;
+      if (aIsMyRoster !== bIsMyRoster) return bIsMyRoster - aIsMyRoster;
+
+      const rankA = (a.rank && a.rank > 0) ? a.rank : 999;
+      const rankB = (b.rank && b.rank > 0) ? b.rank : 999;
+      if (rankA !== rankB) return rankA - rankB;
+
+      const nameA = a.name || a.Player || '';
+      const nameB = b.name || b.Player || '';
+      return nameA.localeCompare(nameB);
+    });
+  }, [players, plannerScope, plannerSearch, plannerOwner]);
 
   // Handle Save Keepers to Supabase
   const handleSaveKeepers = async () => {
@@ -1602,72 +1666,304 @@ export default function KeepersBudgetsPanel({
             ))}
           </div>
 
-          {/* Search Player Pool to Swap */}
+          {/* Search & Select Player Pool to Swap */}
           <div style={{
             background: '#181818',
             borderRadius: '8px',
             border: '1px solid #2a2a2a',
-            padding: '14px',
+            padding: '16px',
             display: 'flex',
             flexDirection: 'column',
-            gap: '10px'
+            gap: '12px'
           }}>
-            <div style={{ fontWeight: 'bold', fontSize: '13px', color: '#fff' }}>
-              🔍 Search Player Pool to Test Swapping into Keepers:
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+              <div>
+                <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span>🎯</span>
+                  <span>Swap Into Keepers: Select From Roster or Search Pool</span>
+                </div>
+                <div style={{ fontSize: '11px', color: '#888', marginTop: '2px' }}>
+                  Defaulting to <strong>{plannerOwner}</strong>'s current roster. Pick any player and click [Slot 1] – [Slot 5] to test swapping them into your keepers.
+                </div>
+              </div>
+
+              {/* Scope filter pills */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                <button
+                  type="button"
+                  onClick={() => setPlannerScope('roster')}
+                  style={{
+                    background: plannerScope === 'roster' ? '#059669' : '#262626',
+                    color: plannerScope === 'roster' ? '#fff' : '#aaa',
+                    border: plannerScope === 'roster' ? '1px solid #10b981' : '1px solid #3e3e3e',
+                    borderRadius: '6px',
+                    padding: '5px 10px',
+                    fontSize: '11px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  <span>👤</span>
+                  <span>{plannerOwner}'s Current Roster ({plannerOwnerRosterCount})</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPlannerScope('roster_fa')}
+                  style={{
+                    background: plannerScope === 'roster_fa' ? '#0284c7' : '#262626',
+                    color: plannerScope === 'roster_fa' ? '#fff' : '#aaa',
+                    border: plannerScope === 'roster_fa' ? '1px solid #38bdf8' : '1px solid #3e3e3e',
+                    borderRadius: '6px',
+                    padding: '5px 10px',
+                    fontSize: '11px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  <span>🆓</span>
+                  <span>Roster + Free Agents</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPlannerScope('all')}
+                  style={{
+                    background: plannerScope === 'all' ? '#7c3aed' : '#262626',
+                    color: plannerScope === 'all' ? '#fff' : '#aaa',
+                    border: plannerScope === 'all' ? '1px solid #a78bfa' : '1px solid #3e3e3e',
+                    borderRadius: '6px',
+                    padding: '5px 10px',
+                    fontSize: '11px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  <span>🌐</span>
+                  <span>All Players ({players.length})</span>
+                </button>
+              </div>
             </div>
-            <input
-              type="text"
-              placeholder="Search by player name or position (e.g. Bobby Witt, Soto, SP)..."
-              value={plannerSearch}
-              onChange={e => setPlannerSearch(e.target.value)}
-              style={{
-                background: '#111',
-                color: '#fff',
-                border: '1px solid #444',
-                borderRadius: '6px',
-                padding: '8px 12px',
-                fontSize: '13px'
-              }}
-            />
 
-            {plannerSearch.trim().length >= 2 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '240px', overflowY: 'auto' }}>
-                {players
-                  .filter(p => {
-                    const name = (p.Player || p.full_name || '').toLowerCase();
-                    const pos = (p.Position || '').toLowerCase();
-                    const q = plannerSearch.toLowerCase();
-                    return name.includes(q) || pos.includes(q);
-                  })
-                  .slice(0, 8)
-                  .map(p => {
-                    const rank = p['Hefty Single Season Rank'] || p['Dynasty Rank'] || 150;
-                    const cost = calculateKeeperCostFromRank(rank);
+            {/* Filter Search Input */}
+            <div style={{ position: 'relative', width: '100%' }}>
+              <input
+                type="text"
+                placeholder={
+                  plannerScope === 'roster'
+                    ? `Filter ${plannerOwner}'s roster by player name, position (SP, OF, SS), or MLB team...`
+                    : 'Search player pool by name, position (e.g. SP, OF, C), or MLB team (e.g. LAD, NYY)...'
+                }
+                value={plannerSearch}
+                onChange={e => setPlannerSearch(e.target.value)}
+                style={{
+                  width: '100%',
+                  background: '#111',
+                  color: '#fff',
+                  border: '1px solid #444',
+                  borderRadius: '6px',
+                  padding: '9px 36px 9px 12px',
+                  fontSize: '13px',
+                  boxSizing: 'border-box',
+                  outline: 'none'
+                }}
+              />
+              {plannerSearch && (
+                <button
+                  type="button"
+                  onClick={() => setPlannerSearch('')}
+                  style={{
+                    position: 'absolute',
+                    right: '10px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#888',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    padding: '2px 6px'
+                  }}
+                  title="Clear search filter"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
 
-                    return (
-                      <div
-                        key={p['ESPN PlayerID'] || p.id}
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          background: '#222',
-                          padding: '8px 12px',
-                          borderRadius: '6px',
-                          border: '1px solid #333'
-                        }}
-                      >
-                        <div>
-                          <strong style={{ color: '#fff', fontSize: '13px' }}>{p.Player || p.full_name}</strong>
-                          <span style={{ color: '#888', fontSize: '11px', marginLeft: '8px' }}>
-                            {p.Position} • {p.Team} • Rank #{rank} • Cost: ${cost}
+            {/* Candidate List Counter & Status */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: '#888', px: '2px' }}>
+              <span>
+                {plannerCandidates.length === 0
+                  ? 'No matching players found'
+                  : `Showing ${Math.min(plannerCandidates.length, 60)} of ${plannerCandidates.length} ${plannerScope === 'roster' ? `${plannerOwner} rostered` : ''} players`}
+              </span>
+              <span style={{ color: '#666' }}>
+                💡 Click any slot button to preview keeper budget impact
+              </span>
+            </div>
+
+            {/* Candidate List */}
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '6px',
+              maxHeight: '360px',
+              overflowY: 'auto',
+              paddingRight: '4px'
+            }}>
+              {plannerCandidates.length === 0 ? (
+                <div style={{
+                  padding: '30px 16px',
+                  textAlign: 'center',
+                  color: '#777',
+                  fontSize: '13px',
+                  background: '#141414',
+                  borderRadius: '6px',
+                  border: '1px dashed #333'
+                }}>
+                  {plannerSearch.trim()
+                    ? `No players found matching "${plannerSearch}" in ${plannerScope === 'roster' ? `${plannerOwner}'s roster` : plannerScope === 'roster_fa' ? 'roster + free agents' : 'player pool'}.`
+                    : `No players available in selected scope.`}
+                </div>
+              ) : (
+                plannerCandidates.slice(0, 60).map(p => {
+                  const pid = String(p.id || p.espn_player_id || p['ESPN PlayerID'] || '');
+                  const pName = p.name || p.Player || p.full_name || 'Player';
+                  const rank = p.rank || 999;
+                  const cost = p.cost !== undefined ? p.cost : calculateKeeperCostFromRank(rank);
+                  const isCurrentManagerRoster = normalizeManager(p.rosterOwner) === normalizeManager(plannerOwner);
+                  const isFreeAgent = !p.rosterOwner || p.rosterOwner === 'Available' || p.rosterOwner === 'Free Agent' || p.isFreeAgent;
+
+                  // Check if player is currently in one of the keeper slots
+                  const currentKeeperSlot = [1, 2, 3, 4, 5].find(slotNum => {
+                    const slotKeeper = plannerData.keepers.find(k => k.keeper_slot === slotNum);
+                    if (!slotKeeper || slotKeeper.isEmpty) return false;
+                    const skId = String(slotKeeper.espn_player_id || '');
+                    const skName = (slotKeeper.player_name || '').toLowerCase().trim();
+                    return (pid && pid === skId) || (skName && skName === pName.toLowerCase().trim());
+                  });
+
+                  return (
+                    <div
+                      key={`${pid || pName}_${p.position}`}
+                      style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        background: currentKeeperSlot ? '#1c261e' : '#202020',
+                        padding: '8px 12px',
+                        borderRadius: '6px',
+                        border: currentKeeperSlot ? '1px solid #059669' : '1px solid #303030',
+                        gap: '8px',
+                        transition: 'background 0.15s ease'
+                      }}
+                    >
+                      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px' }}>
+                        <strong style={{ color: '#fff', fontSize: '13px' }}>
+                          {pName}
+                        </strong>
+
+                        {/* Position & Team badge */}
+                        <span style={{
+                          background: '#2d2d2d',
+                          color: '#ccc',
+                          fontSize: '10px',
+                          padding: '2px 6px',
+                          borderRadius: '4px',
+                          fontWeight: '600'
+                        }}>
+                          {p.position || p.Position || 'UTIL'} • {p.team || p.Team || 'MLB'}
+                        </span>
+
+                        {/* Rank & Cost badge */}
+                        <span style={{
+                          background: '#332914',
+                          color: '#fbbf24',
+                          border: '1px solid #78350f',
+                          fontSize: '10px',
+                          padding: '2px 6px',
+                          borderRadius: '4px',
+                          fontWeight: 'bold'
+                        }}>
+                          Rank #{rank} • ${cost}
+                        </span>
+
+                        {/* Ownership badge */}
+                        {isCurrentManagerRoster ? (
+                          <span style={{
+                            background: '#064e3b',
+                            color: '#6ee7b7',
+                            border: '1px solid #047857',
+                            fontSize: '10px',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            fontWeight: '600'
+                          }}>
+                            👤 {plannerOwner}'s Roster
                           </span>
-                        </div>
+                        ) : isFreeAgent ? (
+                          <span style={{
+                            background: '#0c4a6e',
+                            color: '#7dd3fc',
+                            border: '1px solid #0284c7',
+                            fontSize: '10px',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            fontWeight: '600'
+                          }}>
+                            🆓 Free Agent
+                          </span>
+                        ) : (
+                          <span style={{
+                            background: '#1e293b',
+                            color: '#94a3b8',
+                            border: '1px solid #334155',
+                            fontSize: '10px',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            fontWeight: '600'
+                          }}>
+                            🔒 {p.rosterOwner}
+                          </span>
+                        )}
 
-                        <div style={{ display: 'flex', gap: '4px' }}>
-                          {[1, 2, 3, 4, 5].map(slot => (
+                        {/* Already Kept Indicator */}
+                        {currentKeeperSlot && (
+                          <span style={{
+                            background: '#059669',
+                            color: '#fff',
+                            fontSize: '10px',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            fontWeight: 'bold'
+                          }}>
+                            ✓ Slot {currentKeeperSlot}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Swap Buttons */}
+                      <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                        {[1, 2, 3, 4, 5].map(slot => {
+                          const isThisSlot = currentKeeperSlot === slot;
+                          return (
                             <button
                               key={slot}
+                              type="button"
                               onClick={() => {
                                 setReplacedKeepers(prev => ({
                                   ...prev,
@@ -1675,26 +1971,28 @@ export default function KeepersBudgetsPanel({
                                 }));
                               }}
                               style={{
-                                background: '#333',
-                                color: '#03dac6',
-                                border: '1px solid #444',
-                                borderRadius: '3px',
-                                padding: '3px 6px',
-                                fontSize: '10px',
+                                background: isThisSlot ? '#059669' : '#2b2b2b',
+                                color: isThisSlot ? '#ffffff' : '#38bdf8',
+                                border: isThisSlot ? '1px solid #10b981' : '1px solid #444',
+                                borderRadius: '4px',
+                                padding: '4px 8px',
+                                fontSize: '11px',
                                 fontWeight: 'bold',
-                                cursor: 'pointer'
+                                cursor: 'pointer',
+                                transition: 'all 0.15s ease'
                               }}
-                              title={`Swap into Keeper Slot ${slot}`}
+                              title={`Swap ${pName} into Keeper Slot ${slot}`}
                             >
-                              Slot {slot}
+                              {isThisSlot ? `✓ Slot ${slot}` : `Slot ${slot}`}
                             </button>
-                          ))}
-                        </div>
+                          );
+                        })}
                       </div>
-                    );
-                  })}
-              </div>
-            )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
           </div>
         </div>
       )}
