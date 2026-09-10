@@ -6,10 +6,18 @@ import { TEAMS } from '../schedule';
 
 const FANTASY_MANAGERS = ["Adrian", "Alex", "Anil", "Daniel", "Garrett", "Mark", "Preston", "Tim", "Will"];
 
-export default function PlayerValuationsView({ allStats = [], onPlayerClick, onOwnerClick }) {
+export default function PlayerValuationsView({
+  allStats = [],
+  onPlayerClick,
+  onOwnerClick,
+  seasonYear = 2027,
+  onSeasonYearChange
+}) {
   const [modelType, setModelType] = useState('3_YEAR_KEEPER'); // '3_YEAR_KEEPER' or 'SINGLE_SEASON'
   const [valuations, setValuations] = useState([]);
+  const [keepers, setKeepers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isUsingBaseline, setIsUsingBaseline] = useState(false);
   const [error, setError] = useState(null);
 
   // Filters
@@ -22,18 +30,51 @@ export default function PlayerValuationsView({ allStats = [], onPlayerClick, onO
   // Sorting
   const [sortConfig, setSortConfig] = useState({ key: 'model_rank', direction: 'asc' });
 
+  // Fetch keepers for current seasonYear
+  useEffect(() => {
+    async function fetchKeepers() {
+      try {
+        const { data, error: kErr } = await supabase
+          .from('draft_keepers')
+          .select('*')
+          .eq('season_year', seasonYear);
+
+        if (kErr) throw kErr;
+
+        if (data && data.length > 0) {
+          setKeepers(data);
+        } else if (seasonYear === 2026) {
+          setKeepers(defaultKeepers?.keepers || defaultKeepers || []);
+        } else {
+          setKeepers([]);
+        }
+      } catch (err) {
+        console.warn('Could not fetch keepers from Supabase, using fallback:', err);
+        if (seasonYear === 2026) {
+          setKeepers(defaultKeepers?.keepers || defaultKeepers || []);
+        } else {
+          setKeepers([]);
+        }
+      }
+    }
+    fetchKeepers();
+  }, [seasonYear]);
+
   // Compute Fantasy Team Ownership Map
   const playerOwnershipMap = useMemo(() => {
-    const map = {}; // playerId -> { owner, teamId, isKeeper }
+    const map = {}; // playerId -> { owner, teamId, isKeeper, cost, rank }
 
-    // 1. Ingest declared 2026 keepers (45 players)
-    (defaultKeepers?.keepers || defaultKeepers || []).forEach(k => {
+    // 1. Ingest keepers for the active seasonYear
+    (keepers || []).forEach(k => {
       const pid = parseInt(k.espn_player_id || k.player_id);
       if (pid) {
         map[pid] = {
           owner: k.owner === 'Dan' ? 'Daniel' : k.owner,
           teamId: k.team_id,
           isKeeper: true,
+          cost: k.cost,
+          rank: k.rank,
+          keeperSlot: k.keeper_slot
         };
       }
     });
@@ -57,27 +98,46 @@ export default function PlayerValuationsView({ allStats = [], onPlayerClick, onO
             owner: teamInfo.name === 'Dan' ? 'Daniel' : teamInfo.name,
             teamId: obj.teamId,
             isKeeper: map[pid]?.isKeeper || false,
+            cost: map[pid]?.cost,
+            rank: map[pid]?.rank,
+            keeperSlot: map[pid]?.keeperSlot
           };
         }
       });
     }
 
     return map;
-  }, [allStats]);
+  }, [allStats, keepers]);
 
-  // Fetch valuations from Supabase on mount
+  // Fetch valuations from Supabase on mount / season change
   useEffect(() => {
     async function fetchValuations() {
       setLoading(true);
       setError(null);
+      setIsUsingBaseline(false);
       try {
-        const { data, error: fetchErr } = await supabase
+        let { data, error: fetchErr } = await supabase
           .from('player_valuations')
           .select('*')
+          .eq('season_year', seasonYear)
           .order('model_rank', { ascending: true })
           .limit(3000);
 
         if (fetchErr) throw fetchErr;
+
+        if (!data || data.length === 0) {
+          // If no valuations yet for this year (e.g. 2027), fall back to 2026 valuations as baseline
+          const { data: baseData } = await supabase
+            .from('player_valuations')
+            .select('*')
+            .eq('season_year', 2026)
+            .order('model_rank', { ascending: true })
+            .limit(3000);
+          data = baseData;
+          if (seasonYear !== 2026) {
+            setIsUsingBaseline(true);
+          }
+        }
 
         if (data && data.length > 0) {
           setValuations(data);
@@ -122,7 +182,7 @@ export default function PlayerValuationsView({ allStats = [], onPlayerClick, onO
     }
 
     fetchValuations();
-  }, []);
+  }, [seasonYear]);
 
   // Filter current valuations by selected model
   const currentModelData = useMemo(() => {
@@ -222,28 +282,55 @@ export default function PlayerValuationsView({ allStats = [], onPlayerClick, onO
             </p>
           </div>
 
-          {/* Model Toggle */}
-          <div className="inline-flex bg-slate-950 p-1.5 rounded-xl border border-slate-800 shadow-inner">
-            <button
-              onClick={() => setModelType('3_YEAR_KEEPER')}
-              className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
-                modelType === '3_YEAR_KEEPER'
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-              }`}
-            >
-              3-Year Keeper Model
-            </button>
-            <button
-              onClick={() => setModelType('SINGLE_SEASON')}
-              className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
-                modelType === 'SINGLE_SEASON'
-                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-              }`}
-            >
-              Single-Year Redraft
-            </button>
+          {/* Controls: Season Toggle & Model Toggle */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            {/* Season Selector */}
+            <div className="inline-flex bg-slate-950 p-1.5 rounded-xl border border-slate-800 shadow-inner gap-1">
+              <button
+                onClick={() => onSeasonYearChange && onSeasonYearChange(2027)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  seasonYear === 2027
+                    ? 'bg-teal-500 text-slate-950 shadow-md font-black'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                🚀 2027 Projections
+              </button>
+              <button
+                onClick={() => onSeasonYearChange && onSeasonYearChange(2026)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  seasonYear === 2026
+                    ? 'bg-purple-600 text-white shadow-md font-black'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                🏛️ 2026 Archive
+              </button>
+            </div>
+
+            {/* Model Toggle */}
+            <div className="inline-flex bg-slate-950 p-1.5 rounded-xl border border-slate-800 shadow-inner">
+              <button
+                onClick={() => setModelType('3_YEAR_KEEPER')}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
+                  modelType === '3_YEAR_KEEPER'
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                }`}
+              >
+                3-Year Keeper Model
+              </button>
+              <button
+                onClick={() => setModelType('SINGLE_SEASON')}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
+                  modelType === 'SINGLE_SEASON'
+                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                }`}
+              >
+                Single-Year Redraft
+              </button>
+            </div>
           </div>
         </div>
 
@@ -262,6 +349,23 @@ export default function PlayerValuationsView({ allStats = [], onPlayerClick, onO
             )}
           </div>
         </div>
+
+        {isUsingBaseline && (
+          <div className="mt-3 py-2 px-3 bg-teal-500/10 border border-teal-500/30 rounded-xl text-xs text-teal-300 flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <span>ℹ️</span>
+              <span><strong>2027 Draft Prep Active:</strong> Using multi-year keeper valuations benchmarked against 2026 season data. Fresh 2027 draft projection batches will automatically update here when generated.</span>
+            </span>
+          </div>
+        )}
+        {seasonYear === 2026 && (
+          <div className="mt-3 py-2 px-3 bg-purple-500/10 border border-purple-500/30 rounded-xl text-xs text-purple-300 flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <span>🏛️</span>
+              <span><strong>2026 Historical Archive:</strong> Viewing original 2026 preseason keeper prices and 3-year model ranks.</span>
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Filter Toolbar */}
@@ -438,14 +542,19 @@ export default function PlayerValuationsView({ allStats = [], onPlayerClick, onO
                                   onOwnerClick(TEAMS[ownership.teamId]);
                                 }
                               }}
-                              className={`px-2.5 py-0.5 rounded-full text-[11px] font-black tracking-tight inline-flex items-center gap-1 transition-all ${
+                              className={`px-2.5 py-0.5 rounded-full text-[11px] font-black tracking-tight inline-flex items-center gap-1.5 transition-all ${
                                 ownership.isKeeper
                                   ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30'
                                   : 'bg-blue-500/20 text-blue-300 border border-blue-500/40 hover:bg-blue-500/30'
                               }`}
-                              title={ownership.isKeeper ? `${ownerName} (Official Keeper)` : `${ownerName}'s Roster`}
+                              title={ownership.isKeeper ? `${ownerName} (${seasonYear} Keeper: $${ownership.cost || 0})` : `${ownerName}'s Roster`}
                             >
                               <span>{ownerName}</span>
+                              {ownership.isKeeper && (
+                                <span className="text-[9px] bg-amber-500/30 px-1 py-0.2 rounded text-amber-200 font-extrabold">
+                                  ${ownership.cost || 0}
+                                </span>
+                              )}
                             </button>
                           ) : (
                             <span className="text-slate-600 text-[11px] font-medium">

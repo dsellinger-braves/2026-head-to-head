@@ -49,7 +49,12 @@ function compute2027DraftPicks(draftTrades = []) {
   return picks;
 }
 
-export default function DraftCapitalView({ currentUser = 'Daniel', isCommissioner: propIsCommissioner = false }) {
+export default function DraftCapitalView({
+  currentUser = 'Daniel',
+  isCommissioner: propIsCommissioner = false,
+  draftYear = 2027,
+  onDraftYearChange
+}) {
   const { user, profile, isCommissioner: authIsCommissioner, effectiveOwner } = useAuth();
   const isCommissioner = propIsCommissioner || authIsCommissioner;
 
@@ -59,9 +64,18 @@ export default function DraftCapitalView({ currentUser = 'Daniel', isCommissione
   const [proposals, setProposals] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [activeSubTab, setActiveSubTab] = useState('board'); // 'board' | 'ledgers' | 'history' | '2026board' | 'proposals'
+  const [activeSubTab, setActiveSubTab] = useState(draftYear === 2026 ? '2026board' : 'board'); // 'board' | 'ledgers' | 'history' | '2026board' | 'proposals'
   const [selectedOwner, setSelectedOwner] = useState(currentUser);
   const [roundFilter, setRoundFilter] = useState('ALL');
+
+  // Sync activeSubTab when draftYear prop changes
+  useEffect(() => {
+    if (draftYear === 2026 && activeSubTab === 'board') {
+      setActiveSubTab('2026board');
+    } else if (draftYear === 2027 && activeSubTab === '2026board') {
+      setActiveSubTab('board');
+    }
+  }, [draftYear, activeSubTab]);
 
   // Trade Proposal Form State
   const [propSender, setPropSender] = useState(effectiveOwner || currentUser);
@@ -481,14 +495,17 @@ export default function DraftCapitalView({ currentUser = 'Daniel', isCommissione
           {/* Subtabs */}
           <div className="flex flex-wrap items-center bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-bold">
             <button
-              onClick={() => setActiveSubTab('board')}
+              onClick={() => {
+                setActiveSubTab('board');
+                if (onDraftYearChange) onDraftYearChange(2027);
+              }}
               className={`px-3.5 py-2 rounded-lg transition-colors cursor-pointer ${
                 activeSubTab === 'board'
                   ? 'bg-teal-500 text-slate-950 shadow-md font-black'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              📊 2027 Traded Board
+              🚀 2027 Traded Board
             </button>
             <button
               onClick={() => setActiveSubTab('ledgers')}
@@ -511,7 +528,10 @@ export default function DraftCapitalView({ currentUser = 'Daniel', isCommissione
               📜 Trade History ({assetTradesList.length})
             </button>
             <button
-              onClick={() => setActiveSubTab('2026board')}
+              onClick={() => {
+                setActiveSubTab('2026board');
+                if (onDraftYearChange) onDraftYearChange(2026);
+              }}
               className={`px-3.5 py-2 rounded-lg transition-colors cursor-pointer ${
                 activeSubTab === '2026board'
                   ? 'bg-blue-600 text-white shadow-md font-black'
@@ -918,7 +938,9 @@ export default function DraftCapitalView({ currentUser = 'Daniel', isCommissione
                   .map(rNum => {
                     const isKeeperRound = rNum <= 5;
                     const compPicksThisRound = (compPicks || []).filter(
-                      cp => cp.round_num === rNum && cp.action_type === 'COMP_BOUGHT'
+                      cp => cp.round_num === rNum &&
+                        (cp.action_type === 'COMP_BOUGHT' || cp.action_type === 'BOUGHT') &&
+                        (!cp.season_year || cp.season_year === 2026 || cp.season_year === '2026')
                     );
 
                     return (
@@ -930,7 +952,8 @@ export default function DraftCapitalView({ currentUser = 'Daniel', isCommissione
                         {DRAFT_OWNERS.map(owner => {
                           if (isKeeperRound) {
                             const keeperObj = (keepers || []).find(
-                              k => k.owner === owner && k.keeper_slot === rNum
+                              k => k.owner === owner && k.keeper_slot === rNum &&
+                                (!k.season_year || k.season_year === 2026 || k.season_year === '2026')
                             );
                             return (
                               <td key={owner} className="py-2 px-2 text-center">
@@ -951,7 +974,9 @@ export default function DraftCapitalView({ currentUser = 'Daniel', isCommissione
                           }
 
                           const isOffset = (compPicks || []).some(
-                            cp => cp.owner === owner && cp.round_num === rNum && cp.action_type === 'OFFSET_LOST'
+                            cp => cp.owner === owner && cp.round_num === rNum &&
+                              cp.action_type === 'OFFSET_LOST' &&
+                              (!cp.season_year || cp.season_year === 2026 || cp.season_year === '2026')
                           );
 
                           return (

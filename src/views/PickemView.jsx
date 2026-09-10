@@ -4,15 +4,22 @@ import { supabase } from '../supabaseClient';
 import { MLB_TEAMS, LEAGUE_OWNERS, PROMINENT_AWARD_CANDIDATES, teamsMatch, PICKEM_RULES } from '../utils/mlbTeams';
 import { useAuth } from '../context/useAuth';
 
-export default function PickemView() {
+export default function PickemView({ initialSeason = 2027, onSeasonChange }) {
   const { user, profile, isCommissioner, effectiveOwner, effectiveTeamId } = useAuth();
   const [seasons, setSeasons] = useState([]);
-  const [selectedSeason, setSelectedSeason] = useState(2026);
+  const [selectedSeason, setSelectedSeason] = useState(initialSeason || 2027);
   const [activeTab, setActiveTab] = useState('board'); // 'board', 'entry', 'history', 'admin'
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
+
+  // Sync selectedSeason when initialSeason prop changes
+  useEffect(() => {
+    if (initialSeason && initialSeason !== selectedSeason) {
+      setSelectedSeason(initialSeason);
+    }
+  }, [initialSeason, selectedSeason]);
 
   // Current Season Data
   const [questions, setQuestions] = useState([]);
@@ -112,7 +119,7 @@ export default function PickemView() {
       if (sErr) throw sErr;
       if (sData && sData.length > 0) {
         setSeasons(sData);
-        const currentActive = sData.find(s => s.season_year === 2026) || sData[0];
+        const currentActive = sData.find(s => s.season_year === initialSeason) || sData.find(s => s.season_year === 2027) || sData.find(s => s.season_year === 2026) || sData[0];
         setSelectedSeason(currentActive.season_year);
         if (currentActive.live_projections) {
           setLiveProjectionsData(currentActive.live_projections);
@@ -688,7 +695,11 @@ export default function PickemView() {
               <span className="text-xs font-bold uppercase tracking-wider text-indigo-300 pl-2">Season:</span>
               <select
                 value={selectedSeason}
-                onChange={(e) => setSelectedSeason(parseInt(e.target.value))}
+                onChange={(e) => {
+                  const yr = parseInt(e.target.value);
+                  setSelectedSeason(yr);
+                  if (onSeasonChange) onSeasonChange(yr);
+                }}
                 className="bg-indigo-950 text-white font-bold text-sm px-3 py-1.5 rounded-lg border border-indigo-700/60 focus:outline-none focus:ring-2 focus:ring-indigo-400 cursor-pointer"
               >
                 {seasons.map(s => (

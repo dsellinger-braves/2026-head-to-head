@@ -60,6 +60,8 @@ export default function KeepersBudgetsPanel({
   players = [],
   currentUser = 'Daniel',
   isCommissioner: propIsCommissioner = false,
+  seasonYear = 2027,
+  onSeasonYearChange,
   onPlayerClick,
   onRefresh
 }) {
@@ -256,23 +258,39 @@ export default function KeepersBudgetsPanel({
   // Planner calculations for keeper replacements
   const plannerData = useMemo(() => {
     const originalKeepers = keepersByOwner[plannerOwner] || [];
-    const currentKeepers = originalKeepers.map(k => {
-      if (replacedKeepers[k.keeper_slot]) {
-        const rep = replacedKeepers[k.keeper_slot];
+    // Ensure all 5 keeper slots (1 through 5) are present for planning
+    const currentKeepers = [1, 2, 3, 4, 5].map(slotNum => {
+      const existing = originalKeepers.find(k => k.keeper_slot === slotNum);
+      if (replacedKeepers[slotNum]) {
+        const rep = replacedKeepers[slotNum];
         const rank = rep['Hefty Single Season Rank'] || rep['Dynasty Rank'] || 150;
         const cost = calculateKeeperCostFromRank(rank);
         return {
-          ...k,
+          keeper_slot: slotNum,
           player_name: rep.Player || rep.full_name || 'Selected Player',
           espn_player_id: rep['ESPN PlayerID'] || rep.id,
           position: rep.Position,
           mlb_team: rep.Team,
           rank: rank,
           cost: cost,
-          isReplaced: true
+          isReplaced: true,
+          isEmpty: false
         };
       }
-      return { ...k, isReplaced: false };
+      if (existing) {
+        return { ...existing, isReplaced: false, isEmpty: false };
+      }
+      return {
+        keeper_slot: slotNum,
+        player_name: 'Empty Slot - Click Replace to Pick',
+        espn_player_id: null,
+        position: '---',
+        mlb_team: '---',
+        rank: null,
+        cost: 0,
+        isReplaced: false,
+        isEmpty: true
+      };
     });
 
     const totalCost = currentKeepers.reduce((sum, k) => sum + (k.cost || 0), 0);
@@ -320,8 +338,15 @@ export default function KeepersBudgetsPanel({
     setSavingKeepers(true);
     try {
       const targetTeamId = (teamBudgets.find(b => b.owner === plannerOwner)?.team_id) || 0;
-      const keeperRows = plannerData.keepers.map(k => ({
-        season_year: 2026,
+      const validKeepers = plannerData.keepers.filter(k => k.espn_player_id && !k.isEmpty);
+      if (validKeepers.length === 0) {
+        alert('Please select at least one keeper before saving.');
+        setSavingKeepers(false);
+        return;
+      }
+
+      const keeperRows = validKeepers.map(k => ({
+        season_year: seasonYear,
         owner: plannerOwner,
         team_id: targetTeamId,
         keeper_slot: k.keeper_slot,
@@ -334,9 +359,16 @@ export default function KeepersBudgetsPanel({
         updated_at: new Date().toISOString()
       }));
 
+      // Clean existing keepers for this owner in this season to avoid orphaned slots
+      await supabase
+        .from('draft_keepers')
+        .delete()
+        .eq('season_year', seasonYear)
+        .eq('owner', plannerOwner);
+
       const { error: keepersErr } = await supabase
         .from('draft_keepers')
-        .upsert(keeperRows, { onConflict: 'season_year,owner,keeper_slot' });
+        .insert(keeperRows);
 
       if (keepersErr) throw keepersErr;
 
@@ -352,7 +384,7 @@ export default function KeepersBudgetsPanel({
       await supabase
         .from('draft_team_budgets')
         .upsert({
-          season_year: 2026,
+          season_year: seasonYear,
           owner: plannerOwner,
           team_id: targetTeamId,
           base_budget: base,
@@ -366,7 +398,7 @@ export default function KeepersBudgetsPanel({
           updated_at: new Date().toISOString()
         }, { onConflict: 'season_year,owner' });
 
-      alert(`Official keepers for ${plannerOwner} successfully saved to the league database! 🎉`);
+      alert(`Official ${seasonYear} keepers for ${plannerOwner} successfully saved to the league database! 🎉`);
       setReplacedKeepers({});
       if (onRefresh) onRefresh();
     } catch (err) {
@@ -402,11 +434,11 @@ export default function KeepersBudgetsPanel({
     try {
       const targetTeamId = (teamBudgets.find(b => b.owner === simulatedOwner)?.team_id) || 0;
 
-      // 1. Delete existing BOUGHT and OFFSET_LOST picks for this owner in 2026
+      // 1. Delete existing BOUGHT and OFFSET_LOST picks for this owner in this season
       await supabase
         .from('draft_compensation_picks')
         .delete()
-        .eq('season_year', 2026)
+        .eq('season_year', seasonYear)
         .eq('owner', simulatedOwner)
         .in('action_type', ['BOUGHT', 'OFFSET_LOST']);
 
@@ -414,7 +446,7 @@ export default function KeepersBudgetsPanel({
       const newRows = [];
       simCalculations.boughtList.forEach(b => {
         newRows.push({
-          season_year: 2026,
+          season_year: seasonYear,
           owner: simulatedOwner,
           team_id: targetTeamId,
           action_type: 'BOUGHT',
@@ -427,7 +459,7 @@ export default function KeepersBudgetsPanel({
 
       simCalculations.offsetRounds.forEach(r => {
         newRows.push({
-          season_year: 2026,
+          season_year: seasonYear,
           owner: simulatedOwner,
           team_id: targetTeamId,
           action_type: 'OFFSET_LOST',
@@ -458,7 +490,7 @@ export default function KeepersBudgetsPanel({
       await supabase
         .from('draft_team_budgets')
         .upsert({
-          season_year: 2026,
+          season_year: seasonYear,
           owner: simulatedOwner,
           team_id: targetTeamId,
           base_budget: base,
@@ -472,7 +504,7 @@ export default function KeepersBudgetsPanel({
           updated_at: new Date().toISOString()
         }, { onConflict: 'season_year,owner' });
 
-      alert(`Consolation pick purchases for ${simulatedOwner} successfully saved to league records! 🎟️`);
+      alert(`Consolation pick purchases for ${simulatedOwner} (${seasonYear}) successfully saved to league records! 🎟️`);
       if (onRefresh) onRefresh();
     } catch (err) {
       console.error('Error saving comp picks:', err);
@@ -539,7 +571,7 @@ export default function KeepersBudgetsPanel({
         const newFinal = b.base_budget - (b.keeper_spend || 0) - (b.comp_pick_spend || 0) + (b.comp_pick_income || 0) + manualAdj;
 
         updates.push({
-          season_year: 2026,
+          season_year: seasonYear,
           owner: b.owner,
           team_id: b.team_id,
           finish_rank: b.finish_rank,
@@ -561,7 +593,7 @@ export default function KeepersBudgetsPanel({
 
       if (error) throw error;
 
-      alert('All owner manual budget adjustments (punitive/awards) successfully saved! ⚖️');
+      alert(`All owner manual budget adjustments for ${seasonYear} successfully saved! ⚖️`);
       if (onRefresh) onRefresh();
     } catch (err) {
       console.error('Error saving manual adjustments:', err);
@@ -589,17 +621,40 @@ export default function KeepersBudgetsPanel({
           <span style={{ fontSize: '16px', fontWeight: 'bold', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span>💎</span> Keepers, Compensation Picks & Budgets
           </span>
-          <span style={{
-            background: 'rgba(3, 218, 198, 0.15)',
-            color: '#03dac6',
-            padding: '2px 8px',
-            borderRadius: '12px',
-            fontSize: '11px',
-            fontWeight: '600',
-            border: '1px solid rgba(3, 218, 198, 0.3)'
-          }}>
-            2026 Season Ground Truth
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <button
+              onClick={() => onSeasonYearChange && onSeasonYearChange(2027)}
+              style={{
+                background: seasonYear === 2027 ? '#03dac6' : 'rgba(255, 255, 255, 0.05)',
+                color: seasonYear === 2027 ? '#000' : '#888',
+                border: `1px solid ${seasonYear === 2027 ? '#03dac6' : '#333'}`,
+                borderRadius: '6px',
+                padding: '3px 8px',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              🚀 2027 Prep
+            </button>
+            <button
+              onClick={() => onSeasonYearChange && onSeasonYearChange(2026)}
+              style={{
+                background: seasonYear === 2026 ? '#bb86fc' : 'rgba(255, 255, 255, 0.05)',
+                color: seasonYear === 2026 ? '#000' : '#888',
+                border: `1px solid ${seasonYear === 2026 ? '#bb86fc' : '#333'}`,
+                borderRadius: '6px',
+                padding: '3px 8px',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              🏛️ 2026 Archive
+            </button>
+          </div>
         </div>
 
         {/* Sub-Tab Buttons */}
@@ -634,7 +689,7 @@ export default function KeepersBudgetsPanel({
               transition: 'all 0.15s ease'
             }}
           >
-            💎 Keeper Rosters (45)
+            💎 Keeper Rosters ({keepers.length})
           </button>
           <button
             onClick={() => { setActiveTab('simulator'); resetSimulatorToReal(); }}
@@ -744,19 +799,19 @@ export default function KeepersBudgetsPanel({
               <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#ffb74d', marginTop: '4px' }}>
                 ${teamBudgets.reduce((s, b) => s + (b.keeper_spend || 0), 0)}
               </div>
-              <div style={{ fontSize: '11px', color: '#666', marginTop: '2px' }}>Across 45 Keepers</div>
+              <div style={{ fontSize: '11px', color: '#666', marginTop: '2px' }}>Across {keepers.length} Keepers</div>
             </div>
             <div style={{ background: '#1c1c1c', padding: '12px', borderRadius: '6px', border: '1px solid #333' }}>
               <div style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase' }}>Comp Pick Spend</div>
               <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#bb86fc', marginTop: '4px' }}>
                 ${teamBudgets.reduce((s, b) => s + (b.comp_pick_spend || 0), 0)}
               </div>
-              <div style={{ fontSize: '11px', color: '#666', marginTop: '2px' }}>11 Compensations Added</div>
+              <div style={{ fontSize: '11px', color: '#666', marginTop: '2px' }}>{compPicks.filter(p => p.action_type === 'BOUGHT').length} Compensations Added</div>
             </div>
             <div style={{ background: '#1c1c1c', padding: '12px', borderRadius: '6px', border: '1px solid #333' }}>
               <div style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase' }}>Net Late Picks Offset</div>
               <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#f44336', marginTop: '4px' }}>
-                -11 Picks
+                {compPicks.filter(p => p.action_type === 'OFFSET_LOST').length > 0 ? `-${compPicks.filter(p => p.action_type === 'OFFSET_LOST').length}` : '0'} Picks
               </div>
               <div style={{ fontSize: '11px', color: '#666', marginTop: '2px' }}>Forfeited from Rds 27-32</div>
             </div>
@@ -857,7 +912,7 @@ export default function KeepersBudgetsPanel({
             overflow: 'hidden'
           }}>
             <div style={{ padding: '12px 16px', borderBottom: '1px solid #2a2a2a', fontWeight: 'bold', color: '#fff', fontSize: '13px' }}>
-              📊 Complete 2026 Budget & Compensation Pick Ledger
+              📊 Complete {seasonYear} Budget & Compensation Pick Ledger
             </div>
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left' }}>
