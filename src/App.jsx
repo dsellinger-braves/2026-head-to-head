@@ -825,6 +825,8 @@ function App() {
         <DraftRoomView
           onOpenPlayerModal={(id, name) => setSelectedPlayer({ id, name })}
           onSwitchView={(view) => setCurrentView(view)}
+          seasonYear={offseasonYear}
+          onSeasonYearChange={setOffseasonYear}
         />
       ) : (
         <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">

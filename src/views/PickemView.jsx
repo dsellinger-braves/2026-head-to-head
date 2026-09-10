@@ -66,6 +66,7 @@ export default function PickemView({ initialSeason = 2027, onSeasonChange }) {
   // Load Seasons & All-time Scores on Mount
   useEffect(() => {
     fetchInitialData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // When selectedSeason changes, fetch that season's details

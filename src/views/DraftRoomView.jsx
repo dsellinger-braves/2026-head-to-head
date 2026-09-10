@@ -876,7 +876,7 @@ const DEFAULT_OWNER_PROFILES = {
 };
 
 // --- MODE SELECTION MODAL ---
-function ModeSelectionModal({ onSelectMode }) {
+function ModeSelectionModal({ onSelectMode, roomSeason = 2027, onSeasonChange }) {
   const modes = [
     {
       id: 'live',
@@ -938,11 +938,48 @@ function ModeSelectionModal({ onSelectMode }) {
         maxWidth: '720px'
       }}>
         <div style={{ fontSize: '38px', marginBottom: '6px' }}>⚾</div>
+        
+        {/* Quick season toggle */}
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#111', padding: '4px 10px', borderRadius: '20px', border: '1px solid #333', marginBottom: '14px' }}>
+          <button
+            onClick={() => onSeasonChange && onSeasonChange(2027)}
+            style={{
+              background: roomSeason === 2027 ? '#bb86fc' : 'transparent',
+              color: roomSeason === 2027 ? '#000' : '#888',
+              border: 'none',
+              borderRadius: '14px',
+              padding: '4px 12px',
+              fontSize: '12px',
+              fontWeight: 800,
+              cursor: 'pointer'
+            }}
+          >
+            🚀 2027 Draft (Active Prep)
+          </button>
+          <button
+            onClick={() => onSeasonChange && onSeasonChange(2026)}
+            style={{
+              background: roomSeason === 2026 ? '#03dac6' : 'transparent',
+              color: roomSeason === 2026 ? '#000' : '#888',
+              border: 'none',
+              borderRadius: '14px',
+              padding: '4px 12px',
+              fontSize: '12px',
+              fontWeight: 800,
+              cursor: 'pointer'
+            }}
+          >
+            🏛️ 2026 Draft (Archive)
+          </button>
+        </div>
+
         <h1 style={{ fontSize: '28px', color: '#bb86fc', margin: '0 0 6px', fontWeight: 800, letterSpacing: '1px' }}>
-          Hefty War Room 2026
+          Hefty War Room {roomSeason}
         </h1>
         <p style={{ color: '#888', fontSize: '14px', margin: '0 0 28px' }}>
-          Select a mode to continue
+          {roomSeason === 2027 
+            ? '2027 Draft Prep & War Room with 2026 trade continuity'
+            : '2026 Official Completed Draft Archive & Historical Rosters'}
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
           {modes.map(mode => (
@@ -987,14 +1024,14 @@ function ModeSelectionModal({ onSelectMode }) {
 }
 
 // --- LOGIN MODAL ---
-function LoginModal({ owners, onLogin }) {
+function LoginModal({ owners, onLogin, roomSeason = 2027 }) {
   const [selectedOwner, setSelectedOwner] = useState(owners[0] || "");
 
   return (
     <div style={styles.loginOverlay}>
       <div style={styles.loginBox}>
         <h1 style={{ fontSize: '36px', marginBottom: '10px', color: 'var(--accent)' }}>
-          ⚾ Hefty War Room 2026
+          ⚾ Hefty War Room {roomSeason}
         </h1>
         <p style={{ marginBottom: '30px', color: '#888' }}>Select your team to enter the draft</p>
         <div>
@@ -1660,9 +1697,104 @@ function compute2027DraftPicks(draftTrades = []) {
   return picks;
 }
 
+// --- 2027 DRAFT ORDER GENERATOR ---
+function generate2027DraftOrder(draftTrades = [], keepers2027 = [], compPicks2027 = []) {
+  const fullOrder = [];
+  let overall = 1;
+
+  // Rounds 1-5: Keepers (45 picks across 9 owners)
+  for (let r = 1; r <= 5; r++) {
+    const roundOwners = r % 2 === 1 ? [...DRAFT_OWNERS] : [...DRAFT_OWNERS].reverse();
+    roundOwners.forEach((owner, idx) => {
+      // Find keeper assigned to this owner and slot if submitted
+      const keeper = (keepers2027 || []).find(k => {
+        const oName = (k.owner_name === 'Dan' ? 'Daniel' : k.owner_name) || k.team_owner;
+        return oName === owner && (k.keeper_slot === r || (!k.keeper_slot && idx === 0));
+      });
+
+      fullOrder.push({
+        'Overall Pick': overall,
+        Round: r,
+        Pick: idx + 1,
+        'Raw Pick Number': overall,
+        'Original Owner': owner,
+        Owner: owner,
+        'Pick Traded?': 'N',
+        'Comp Pick?': null,
+        'Number Pick for Owner': `${owner}${r - 1}`,
+        'ESPN PlayerID': keeper ? String(keeper.player_id) : null,
+        Selection: keeper ? (keeper.player_name || keeper.Player) : null,
+        isKeeper: true
+      });
+      overall++;
+    });
+  }
+
+  // Rounds 6-32: Drafted rounds with 2026 trades applied
+  const basePicks = compute2027DraftPicks(draftTrades);
+  const ownerPickCounters = {};
+  DRAFT_OWNERS.forEach(o => { ownerPickCounters[o] = 1; });
+
+  for (let r = 6; r <= 32; r++) {
+    const roundPicks = basePicks.filter(p => p.round === r);
+    const roundCompPicks = (compPicks2027 || []).filter(cp => cp.round_num === r);
+
+    let pickInRound = 1;
+    roundPicks.forEach(p => {
+      const owner = p.currentOwner;
+      const count = ownerPickCounters[owner] || 1;
+      ownerPickCounters[owner] = count + 1;
+
+      fullOrder.push({
+        'Overall Pick': overall,
+        Round: r,
+        Pick: pickInRound,
+        'Raw Pick Number': overall,
+        'Original Owner': p.originalOwner,
+        Owner: p.currentOwner,
+        'Pick Traded?': p.isTraded ? 'Y' : 'N',
+        'Comp Pick?': null,
+        'Number Pick for Owner': `${owner}${count}`,
+        'ESPN PlayerID': null,
+        Selection: null,
+        tradeDetails: p.tradeDetails
+      });
+      pickInRound++;
+      overall++;
+    });
+
+    roundCompPicks.forEach(cp => {
+      const owner = cp.owner_name === 'Dan' ? 'Daniel' : cp.owner_name;
+      const count = ownerPickCounters[owner] || 1;
+      ownerPickCounters[owner] = count + 1;
+
+      fullOrder.push({
+        'Overall Pick': overall,
+        Round: r,
+        Pick: pickInRound,
+        'Raw Pick Number': overall,
+        'Original Owner': 'Comp Pick',
+        Owner: owner,
+        'Pick Traded?': 'N',
+        'Comp Pick?': cp.comp_type || 'Y - Awarded',
+        'Number Pick for Owner': `${owner}${count}`,
+        'ESPN PlayerID': null,
+        Selection: null
+      });
+      pickInRound++;
+      overall++;
+    });
+  }
+
+  return fullOrder;
+}
+
 // --- MY PICKS PANEL ---
-function MyPicksPanel({ allPicks, players, currentUser, draftTrades = [] }) {
-  const [seasonView, setSeasonView] = useState('2026'); // '2026' | '2027'
+function MyPicksPanel({ allPicks, players, currentUser, draftTrades = [], roomSeason = 2027 }) {
+  const [localSeasonView, setLocalSeasonView] = useState(null);
+  const seasonView = localSeasonView || String(roomSeason || '2027');
+  const setSeasonView = setLocalSeasonView;
+
   const userPicks = allPicks.filter(p => p.Owner === currentUser);
   const filledPicks = userPicks.filter(p => p['ESPN PlayerID']);
 
@@ -2867,7 +2999,13 @@ function StandingsPanel({ allPicks, players }) {
 }
 
 // --- MAIN DRAFT ROOM VIEW ---
-export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
+export default function DraftRoomView({ 
+  onOpenPlayerModal, 
+  onSwitchView, 
+  seasonYear = 2027, 
+  onSeasonYearChange 
+}) {
+  const [roomSeason, setRoomSeason] = useState(seasonYear || 2027);
   const [draftMode, setDraftMode] = useState(() => localStorage.getItem('draftMode') || null);
   const [currentUser, setCurrentUser] = useState(() => localStorage.getItem('draftUser') || null);
   const [players, setPlayers] = useState([]);
@@ -2923,13 +3061,35 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
   const [mockSpeed, setMockSpeed] = useState(1000);
   const [resetting, setResetting] = useState(false);
 
+  // Sync roomSeason when parent seasonYear prop changes
+  useEffect(() => {
+    if (seasonYear && seasonYear !== roomSeason) {
+      setRoomSeason(seasonYear);
+      setTestModePicks([]);
+      setAnalysisHistory([]);
+      setLastPickCommentary(seasonYear === 2026 ? "Viewing 2026 completed draft archive." : "Draft has not started.");
+    }
+  }, [seasonYear, roomSeason]);
+
+  const handleSeasonChange = (newYear) => {
+    setRoomSeason(newYear);
+    setTestModePicks([]);
+    setAnalysisHistory([]);
+    setLastPickCommentary(newYear === 2026 ? "Viewing 2026 completed draft archive." : "Draft has not started.");
+    if (onSeasonYearChange) onSeasonYearChange(newYear);
+  };
+
   const displayPicks = useMemo(() => {
     return (draftMode === 'test' || draftMode === 'mockdraft') && testModePicks.length > 0 ? testModePicks : picks;
   }, [draftMode, testModePicks, picks]);
 
   const currentPick = useMemo(() => {
+    if (roomSeason === 2027) {
+      // In 2027 draft prep, live drafting begins at pick 46 (picks 1-45 are 5 keeper rounds)
+      return displayPicks.find(p => p['Overall Pick'] >= 46 && !p['ESPN PlayerID']);
+    }
     return displayPicks.find(p => !p['ESPN PlayerID']);
-  }, [displayPicks]);
+  }, [displayPicks, roomSeason]);
 
   const currentPickId = currentPick?.['Overall Pick'];
   const currentPickOwner = currentPick?.Owner;
@@ -2977,48 +3137,93 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
 
   const fetchDraftOrder = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from('draft-order')
-        .select('*')
-        .order('Overall Pick', { ascending: true });
-      if (error) throw error;
-      if (data && data.length > 0) {
-        setPicks(data);
+      if (roomSeason === 2027) {
+        let trades = draftTrades;
+        let keepers2027 = [];
+        let compPicks2027 = [];
+        let livePicks2027 = [];
+
+        try {
+          const [tradesRes, keepersRes, cpRes, liveRes] = await Promise.all([
+            supabase.from('draft_asset_trades').select('*').order('trade_date', { ascending: true }),
+            supabase.from('draft_keepers').select('*').eq('season_year', 2027).order('keeper_slot', { ascending: true }),
+            supabase.from('draft_compensation_picks').select('*').eq('season_year', 2027).order('round_num', { ascending: true }),
+            supabase.from('draft_picks').select('*').eq('season_year', 2027).order('overall_pick', { ascending: true })
+          ]);
+          if (tradesRes?.data) {
+            trades = tradesRes.data;
+            setDraftTrades(tradesRes.data);
+          }
+          if (keepersRes?.data) {
+            keepers2027 = keepersRes.data;
+            setKeepers(keepersRes.data);
+          }
+          if (cpRes?.data) {
+            compPicks2027 = cpRes.data;
+            setCompPicks(cpRes.data);
+          }
+          if (liveRes?.data) {
+            livePicks2027 = liveRes.data;
+          }
+        } catch (e) {
+          console.warn('Supabase 2027 data fetch notice:', e);
+        }
+
+        const generated = generate2027DraftOrder(trades, keepers2027, compPicks2027);
+
+        if (livePicks2027.length > 0) {
+          const liveMap = new Map(livePicks2027.map(lp => [lp.overall_pick, lp]));
+          const merged = generated.map(p => {
+            const lp = liveMap.get(p['Overall Pick']);
+            if (lp) {
+              return {
+                ...p,
+                'ESPN PlayerID': lp.player_id,
+                Selection: lp.player_name
+              };
+            }
+            return p;
+          });
+          setPicks(merged);
+        } else {
+          setPicks(generated);
+        }
+      } else {
+        const { data, error } = await supabase
+          .from('draft-order')
+          .select('*')
+          .order('Overall Pick', { ascending: true });
+        if (error) throw error;
+        if (data && data.length > 0) {
+          setPicks(data);
+        } else {
+          setPicks(generateDefaultDraftOrder());
+        }
+
+        try {
+          const [dtData, budgetsRes, cpRes, keepersRes] = await Promise.all([
+            supabase.from('draft_asset_trades').select('*').order('trade_date', { ascending: true }),
+            supabase.from('draft_team_budgets').select('*').order('finish_rank', { ascending: true }),
+            supabase.from('draft_compensation_picks').select('*').order('round_num', { ascending: true }),
+            supabase.from('draft_keepers').select('*').order('keeper_slot', { ascending: true })
+          ]);
+          if (dtData?.data && dtData.data.length > 0) setDraftTrades(dtData.data);
+          if (budgetsRes?.data && budgetsRes.data.length > 0) setTeamBudgets(budgetsRes.data);
+          if (cpRes?.data && cpRes.data.length > 0) setCompPicks(cpRes.data);
+          if (keepersRes?.data && keepersRes.data.length > 0) setKeepers(keepersRes.data);
+        } catch (e) {
+          console.warn('Supabase supporting data fetch notice:', e);
+        }
+      }
+    } catch (err) {
+      console.warn('Draft order fetch error, fallback:', err);
+      if (roomSeason === 2027) {
+        setPicks(generate2027DraftOrder(draftTrades, [], []));
       } else {
         setPicks(generateDefaultDraftOrder());
       }
-
-      // Also refresh draft_asset_trades from Supabase if available
-      try {
-        const { data: dtData } = await supabase
-          .from('draft_asset_trades')
-          .select('*')
-          .order('trade_date', { ascending: true });
-        if (dtData && dtData.length > 0) {
-          setDraftTrades(dtData);
-        }
-      } catch (e) {
-        console.warn('Supabase draft_asset_trades fetch error:', e);
-      }
-
-      // Refresh draft team budgets, compensation picks, and keepers from Supabase
-      try {
-        const [budgetsRes, cpRes, keepersRes] = await Promise.all([
-          supabase.from('draft_team_budgets').select('*').order('finish_rank', { ascending: true }),
-          supabase.from('draft_compensation_picks').select('*').order('round_num', { ascending: true }),
-          supabase.from('draft_keepers').select('*').order('keeper_slot', { ascending: true })
-        ]);
-        if (budgetsRes?.data && budgetsRes.data.length > 0) setTeamBudgets(budgetsRes.data);
-        if (cpRes?.data && cpRes.data.length > 0) setCompPicks(cpRes.data);
-        if (keepersRes?.data && keepersRes.data.length > 0) setKeepers(keepersRes.data);
-      } catch (e) {
-        console.warn('Supabase draft budgets/keepers fetch notice:', e);
-      }
-    } catch (err) {
-      console.warn('Supabase draft-order fetch error, using default:', err);
-      setPicks(generateDefaultDraftOrder());
     }
-  }, []);
+  }, [roomSeason, draftTrades]);
 
   const fetchStaticData = useCallback(async () => {
     console.log(`📦 Fetching static data...`);
@@ -3157,27 +3362,56 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
     fetchStaticData();
 
     if (draftMode === 'live' || draftMode === 'multitest' || draftMode === 'mobile' || draftMode === 'host') {
-      console.log(`🟢 Starting Polling for ${draftMode} mode (Every 2s)...`);
+      console.log(`🟢 Starting Polling for ${draftMode} mode (${roomSeason}) (Every 2s)...`);
       const poll = async () => {
         try {
-          const { data, error } = await supabase
-            .from('draft-order')
-            .select('*')
-            .order('Overall Pick', { ascending: true });
-          if (error) throw error;
-          if (data && data.length > 0) {
-            setPicks(curr => {
-              const currPicked = curr.filter(p => p['ESPN PlayerID']).length;
-              const newPicked = data.filter(p => p['ESPN PlayerID']).length;
-              if (currPicked !== newPicked) {
-                const latestNewPick = data.filter(p => p['ESPN PlayerID']).slice(-1)[0];
-                if (latestNewPick) {
-                  handleNewPick(latestNewPick);
+          if (roomSeason === 2027) {
+            const { data, error } = await supabase
+              .from('draft_picks')
+              .select('*')
+              .eq('season_year', 2027)
+              .order('overall_pick', { ascending: true });
+            if (error) throw error;
+            if (data) {
+              setPicks(curr => {
+                const liveMap = new Map(data.map(lp => [lp.overall_pick, lp]));
+                const updated = curr.map(p => {
+                  const lp = liveMap.get(p['Overall Pick']);
+                  if (lp && !p['ESPN PlayerID']) {
+                    return { ...p, 'ESPN PlayerID': lp.player_id, Selection: lp.player_name };
+                  }
+                  return p;
+                });
+                const currCount = curr.filter(p => p['ESPN PlayerID']).length;
+                const newCount = updated.filter(p => p['ESPN PlayerID']).length;
+                if (newCount > currCount) {
+                  const latestNewPick = updated.filter(p => p['ESPN PlayerID']).slice(-1)[0];
+                  if (latestNewPick) handleNewPick(latestNewPick);
+                  return updated;
                 }
-                return data;
-              }
-              return curr;
-            });
+                return curr;
+              });
+            }
+          } else {
+            const { data, error } = await supabase
+              .from('draft-order')
+              .select('*')
+              .order('Overall Pick', { ascending: true });
+            if (error) throw error;
+            if (data && data.length > 0) {
+              setPicks(curr => {
+                const currPicked = curr.filter(p => p['ESPN PlayerID']).length;
+                const newPicked = data.filter(p => p['ESPN PlayerID']).length;
+                if (currPicked !== newPicked) {
+                  const latestNewPick = data.filter(p => p['ESPN PlayerID']).slice(-1)[0];
+                  if (latestNewPick) {
+                    handleNewPick(latestNewPick);
+                  }
+                  return data;
+                }
+                return curr;
+              });
+            }
           }
         } catch (err) {
           console.error(`🔴 Polling Error:`, err.message);
@@ -3192,18 +3426,22 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
     } else if (draftMode === 'test' || draftMode === 'mockdraft') {
       fetchDraftOrder();
     }
-  }, [draftMode, fetchStaticData, fetchDraftOrder, handleNewPick]);
+  }, [draftMode, roomSeason, fetchStaticData, fetchDraftOrder, handleNewPick]);
 
   useEffect(() => {
     if (picks.length > 0) {
       if (draftMode === 'test' && testModePicks.length === 0) {
-        setTestModePicks(picks.map(p => ({
+        setTestModePicks(picks.map(p => p['Overall Pick'] >= 46 ? {
           ...p,
           'ESPN PlayerID': null,
           Selection: null
-        })));
+        } : { ...p }));
       } else if (draftMode === 'mockdraft' && testModePicks.length === 0) {
-        setTestModePicks([...picks]);
+        setTestModePicks(picks.map(p => p['Overall Pick'] >= 46 ? {
+          ...p,
+          'ESPN PlayerID': null,
+          Selection: null
+        } : { ...p }));
       }
     }
   }, [draftMode, picks, testModePicks.length]);
@@ -3212,7 +3450,11 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
     localStorage.setItem('draftMode', mode);
     setDraftMode(mode);
     if ((mode === 'test' || mode === 'mockdraft') && testModePicks.length === 0) {
-      setTestModePicks([...picks]);
+      setTestModePicks(picks.map(p => p['Overall Pick'] >= 46 ? {
+        ...p,
+        'ESPN PlayerID': null,
+        Selection: null
+      } : { ...p }));
     }
   };
 
@@ -3232,7 +3474,7 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
   };
 
   const stepMockPick = useCallback(() => {
-    const current = displayPicks.find(p => !p['ESPN PlayerID']);
+    const current = currentPick;
     if (!current || current.Owner === currentUser) {
       setIsRunningMock(false);
       return;
@@ -3326,13 +3568,12 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
       'ESPN PlayerID': chosen['ESPN PlayerID'],
       Round: current.Round
     });
-  }, [displayPicks, currentUser, handleNewPick]);
+  }, [currentPick, displayPicks, currentUser, handleNewPick]);
 
   useEffect(() => {
     if (draftMode !== 'mockdraft' || !isRunningMock) return;
 
-    const current = displayPicks.find(p => !p['ESPN PlayerID']);
-    if (!current || current.Owner === currentUser) {
+    if (!currentPick || currentPick.Owner === currentUser) {
       setIsRunningMock(false);
       return;
     }
@@ -3342,20 +3583,29 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
     }, mockSpeed);
 
     return () => clearTimeout(timer);
-  }, [draftMode, isRunningMock, mockSpeed, displayPicks, currentUser, stepMockPick]);
+  }, [draftMode, isRunningMock, mockSpeed, currentPick, currentUser, stepMockPick]);
 
   const handleResetDraft = async () => {
-    if (!window.confirm("Are you sure you want to reset all draft picks? This will clear selections from pick 46 onwards.")) return;
+    if (!window.confirm(`Are you sure you want to reset all ${roomSeason} draft picks? This will clear selections from pick 46 onwards.`)) return;
     setResetting(true);
     try {
-      const { error } = await supabase
-        .from('draft-order')
-        .update({ 'ESPN PlayerID': null, 'Selection': null })
-        .gte('Overall Pick', 46);
-      if (error) throw error;
+      if (roomSeason === 2027) {
+        const { error } = await supabase
+          .from('draft_picks')
+          .delete()
+          .eq('season_year', 2027)
+          .gte('overall_pick', 46);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('draft-order')
+          .update({ 'ESPN PlayerID': null, 'Selection': null })
+          .gte('Overall Pick', 46);
+        if (error) throw error;
+      }
       setTestModePicks(prev => prev.map(p => p['Overall Pick'] >= 46 ? { ...p, 'ESPN PlayerID': null, Selection: null } : p));
       setPicks(prev => prev.map(p => p['Overall Pick'] >= 46 ? { ...p, 'ESPN PlayerID': null, Selection: null } : p));
-      setLastPickCommentary("Draft has not started.");
+      setLastPickCommentary(roomSeason === 2026 ? "Viewing 2026 completed draft archive." : "Draft has not started.");
       setAnalysisHistory([]);
       alert("Draft reset successfully!");
     } catch (e) {
@@ -3372,10 +3622,14 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
   const isMyTurn = (currentPick && currentUser && currentPick.Owner === currentUser) || draftMode === 'test' || draftMode === 'multitest';
 
   const upcomingPicks = useMemo(() => {
-    const currentIdx = displayPicks.findIndex(p => !p['ESPN PlayerID']);
+    const currentIdx = displayPicks.findIndex(p => 
+      roomSeason === 2027
+        ? (p['Overall Pick'] >= 46 && !p['ESPN PlayerID'])
+        : !p['ESPN PlayerID']
+    );
     if (currentIdx === -1) return [];
     return displayPicks.slice(currentIdx + 1, currentIdx + 21);
-  }, [displayPicks]);
+  }, [displayPicks, roomSeason]);
 
   const handleDraft = async (player) => {
     if (!isMyTurn && draftMode !== 'test' && draftMode !== 'mockdraft') return alert("Not your turn!");
@@ -3403,20 +3657,44 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
       
       await handleNewPick({ ...currentPick, 'ESPN PlayerID': player['ESPN PlayerID'], Round: currentPick.Round });
     } else {
-      const { error } = await supabase
-        .from('draft-order')
-        .update({ 
-          'ESPN PlayerID': player['ESPN PlayerID'],
-          'Selection': player.Player 
-        })
-        .eq('Overall Pick', currentPick['Overall Pick']);
+      if (roomSeason === 2027) {
+        const { error } = await supabase
+          .from('draft_picks')
+          .upsert({
+            season_year: 2027,
+            round: currentPick.Round,
+            pick: currentPick.Pick,
+            overall_pick: currentPick['Overall Pick'],
+            team_owner: currentPick.Owner,
+            player_id: player['ESPN PlayerID'],
+            player_name: player.Player,
+            player_position: player.Position,
+            player_team: player.Team,
+            is_keeper: false,
+            picked_at: new Date().toISOString()
+          }, { onConflict: 'season_year,overall_pick' });
+          
+        if (error) {
+          alert('Database Update Error: ' + error.message);
+          return;
+        }
+        fetchDraftOrder();
+      } else {
+        const { error } = await supabase
+          .from('draft-order')
+          .update({ 
+            'ESPN PlayerID': player['ESPN PlayerID'],
+            'Selection': player.Player 
+          })
+          .eq('Overall Pick', currentPick['Overall Pick']);
+          
+        if (error) {
+          alert('Database Update Error: ' + error.message);
+          return;
+        }
         
-      if (error) {
-        alert('Database Update Error: ' + error.message);
-        return;
+        fetchDraftOrder();
       }
-      
-      fetchDraftOrder();
     }
     
     setShowDashboard(false);
@@ -3435,11 +3713,17 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
   };
 
   if (!draftMode) {
-    return <ModeSelectionModal onSelectMode={handleModeSelect} />;
+    return (
+      <ModeSelectionModal 
+        onSelectMode={handleModeSelect} 
+        roomSeason={roomSeason} 
+        onSeasonChange={handleSeasonChange} 
+      />
+    );
   }
 
   if (!currentUser) {
-    return <LoginModal owners={DRAFT_OWNERS} onLogin={handleLogin} />;
+    return <LoginModal owners={DRAFT_OWNERS} onLogin={handleLogin} roomSeason={roomSeason} />;
   }
 
   const myPicks = displayPicks.filter(p => p.Owner === currentUser && p['ESPN PlayerID']);
@@ -3514,7 +3798,7 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
             <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#fff', letterSpacing: '2px' }}>
-              ⚾ HEFTY WAR ROOM
+              ⚾ HEFTY WAR ROOM {roomSeason}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '10px', paddingLeft: '15px', borderLeft: '2px solid #444', overflow: 'hidden' }}>
               {[currentPick, ...upcomingPicks].filter(Boolean).slice(0, 10).map((p, idx) => {
@@ -3780,7 +4064,7 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
           zIndex: 10
         }}>
           <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#bb86fc' }}>
-            HWR '26
+            HWR '{String(roomSeason).slice(-2)}
           </div>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
             <div style={{
@@ -3960,7 +4244,41 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
         <div style={styles.header}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
             <div style={styles.leagueLogo}>
-              ⚾ Hefty War Room 2026
+              ⚾ Hefty War Room {roomSeason}
+            </div>
+
+            {/* In-Room Season Switcher */}
+            <div style={{ display: 'flex', background: '#111', borderRadius: '6px', padding: '2px', border: '1px solid #333' }}>
+              <button
+                onClick={() => handleSeasonChange(2027)}
+                style={{
+                  background: roomSeason === 2027 ? '#bb86fc' : 'transparent',
+                  color: roomSeason === 2027 ? '#000' : '#888',
+                  border: 'none',
+                  borderRadius: '4px',
+                  padding: '3px 9px',
+                  fontSize: '11px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer'
+                }}
+              >
+                🚀 2027 Draft
+              </button>
+              <button
+                onClick={() => handleSeasonChange(2026)}
+                style={{
+                  background: roomSeason === 2026 ? '#03dac6' : 'transparent',
+                  color: roomSeason === 2026 ? '#000' : '#888',
+                  border: 'none',
+                  borderRadius: '4px',
+                  padding: '3px 9px',
+                  fontSize: '11px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer'
+                }}
+              >
+                🏛️ 2026 Archive
+              </button>
             </div>
             {draftMode === 'test' && (
               <span style={{ 
@@ -4302,6 +4620,7 @@ export default function DraftRoomView({ onOpenPlayerModal, onSwitchView }) {
                 players={players}
                 currentUser={currentUser}
                 draftTrades={draftTrades}
+                roomSeason={roomSeason}
               />
             </div>
 
