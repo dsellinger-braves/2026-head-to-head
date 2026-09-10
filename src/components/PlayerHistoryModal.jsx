@@ -7,8 +7,8 @@ import TeamAvatar from './TeamAvatar';
 // In-memory cache for full MLB season stats to avoid redundant network calls
 const overallStatsCache = new Map();
 
-async function fetchPlayerOverallStats(playerName, isPitcher, seasonYear = 2026) {
-  const cacheKey = `${playerName}__${isPitcher ? 'P' : 'B'}__${seasonYear}`;
+async function fetchPlayerOverallStats(playerName, isPitcher, seasonYear = 2026, cutoffDate = null) {
+  const cacheKey = `${playerName}__${isPitcher ? 'P' : 'B'}__${seasonYear}__${cutoffDate || 'full'}`;
   if (overallStatsCache.has(cacheKey)) {
     return overallStatsCache.get(cacheKey);
   }
@@ -21,14 +21,18 @@ async function fetchPlayerOverallStats(playerName, isPitcher, seasonYear = 2026)
       const person = searchJson.people?.[0];
       if (person?.id) {
         const group = isPitcher ? 'pitching' : 'hitting';
-        const statsRes = await fetch(`https://statsapi.mlb.com/api/v1/people/${person.id}/stats?stats=season&season=${seasonYear}&group=${group}`);
+        const statsUrl = cutoffDate
+          ? `https://statsapi.mlb.com/api/v1/people/${person.id}/stats?stats=byDateRange&season=${seasonYear}&startDate=2026-03-25&endDate=${cutoffDate}&group=${group}`
+          : `https://statsapi.mlb.com/api/v1/people/${person.id}/stats?stats=season&season=${seasonYear}&group=${group}`;
+        const statsRes = await fetch(statsUrl);
         if (statsRes.ok) {
           const statsJson = await statsRes.json();
           const stat = statsJson.stats?.[0]?.splits?.[0]?.stat;
           if (stat) {
             let res;
             if (isPitcher) {
-              const ipFloat = stat.outs ? stat.outs / 3 : (parseFloat(stat.inningsPitched) || 0);
+              const outs = stat.outs || stat.outsPitched || 0;
+              const ipFloat = outs ? outs / 3 : (parseFloat(stat.inningsPitched) || 0);
               res = {
                 source: 'MLB Stats API',
                 games: stat.gamesPlayed || 0,
@@ -57,6 +61,7 @@ async function fetchPlayerOverallStats(playerName, isPitcher, seasonYear = 2026)
                 RBI: stat.rbi || 0,
                 SB: stat.stolenBases || 0,
                 BB: stat.baseOnBalls || 0,
+                HBP: stat.hitByPitch || 0,
                 OBP: parseFloat(stat.obp) || 0,
                 AVG: parseFloat(stat.avg) || 0,
               };
@@ -183,13 +188,22 @@ export default function PlayerHistoryModal({ playerId, playerName, allStats, sel
 
   const seasonYear = selectedSeason || fullGameLog[0]?.season_year || 2026;
 
+  // Completed games cutoff: For active 2026 season, synchronize through yesterday's completed games
+  // to avoid attributing in-progress or same-day unfinalized games to unrostered performance.
+  const cutoffDate = useMemo(() => {
+    if (seasonYear < 2026) return null;
+    const now = new Date();
+    const y = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+    return `${y.getFullYear()}-${String(y.getMonth() + 1).padStart(2, '0')}-${String(y.getDate()).padStart(2, '0')}`;
+  }, [seasonYear]);
+
   // Fetch full-season MLB stats (FanGraphs / MLB Stats API) to calculate unrostered production
   useEffect(() => {
     let isCancelled = false;
     async function loadOverall() {
       if (!playerName) return;
       setLoadingOverall(true);
-      const res = await fetchPlayerOverallStats(playerName, isPitcher, seasonYear);
+      const res = await fetchPlayerOverallStats(playerName, isPitcher, seasonYear, cutoffDate);
       if (!isCancelled) {
         setOverallStats(res);
         setLoadingOverall(false);
@@ -197,7 +211,7 @@ export default function PlayerHistoryModal({ playerId, playerName, allStats, sel
     }
     loadOverall();
     return () => { isCancelled = true; };
-  }, [playerName, isPitcher, seasonYear]);
+  }, [playerName, isPitcher, seasonYear, cutoffDate]);
 
   // 4. Build Owner Summary with Starter vs Bench Splits
   const ownerSummary = useMemo(() => {
@@ -259,9 +273,14 @@ export default function PlayerHistoryModal({ playerId, playerName, allStats, sel
   const unrosteredRow = useMemo(() => {
     if (!overallStats) return null;
 
+    // Filter fullGameLog to completed games up to cutoffDate
+    const completedLog = (seasonYear === 2026 && cutoffDate)
+      ? fullGameLog.filter(r => getDateFromPeriodId(r.scoring_period_id, seasonYear) <= cutoffDate)
+      : fullGameLog;
+
     // Total rostered stats across all fantasy teams (active + bench)
-    const totalRostered = aggregateStats(fullGameLog, { includeAll: true });
-    const rosteredGames = fullGameLog.length;
+    const totalRostered = aggregateStats(completedLog, { includeAll: true });
+    const rosteredGames = completedLog.length;
 
     const unrosteredGames = Math.max(0, (overallStats.games || 0) - rosteredGames);
 
@@ -304,10 +323,12 @@ export default function PlayerHistoryModal({ playerId, playerName, allStats, sel
       const unrosteredSb = Math.max(0, (overallStats.SB || 0) - (totalRostered.SB || 0));
       const unrosteredH = Math.max(0, (overallStats.H || 0) - (totalRostered.H || 0));
       const unrosteredBb = Math.max(0, (overallStats.BB || 0) - (totalRostered.BB || 0));
+      const unrosteredHbp = Math.max(0, (overallStats.HBP || 0) - (totalRostered.HBP || 0));
 
       let obp = '-';
       if (unrosteredPa > 0) {
-        obp = ((unrosteredH + unrosteredBb) / unrosteredPa).toFixed(3).replace(/^0/, '');
+        const rawObp = Math.min(1.0, (unrosteredH + unrosteredBb + unrosteredHbp) / unrosteredPa);
+        obp = rawObp.toFixed(3).replace(/^0/, '');
       }
 
       return {
@@ -322,7 +343,7 @@ export default function PlayerHistoryModal({ playerId, playerName, allStats, sel
         },
       };
     }
-  }, [overallStats, fullGameLog, isPitcher]);
+  }, [overallStats, fullGameLog, isPitcher, seasonYear, cutoffDate]);
 
   // 6. Helper for formatting
   const formatStat = (val, catKey, games = 1, statsObj = null) => {
@@ -556,7 +577,7 @@ export default function PlayerHistoryModal({ playerId, playerName, allStats, sel
                             </span>
                           </div>
                           <div className="text-[11px] text-gray-400">
-                            Production while not on any fantasy roster ({overallStats?.source || 'MLB/FanGraphs'})
+                            Production while not on any fantasy roster ({overallStats?.source || 'MLB/FanGraphs'}{cutoffDate ? ` through ${cutoffDate}` : ''})
                           </div>
                         </div>
                       </div>

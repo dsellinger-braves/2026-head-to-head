@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { TEAMS } from '../schedule';
+import { TEAMS, getDateFromPeriodId } from '../schedule';
 import { aggregateStats, calculateBatterValue, calculatePitcherValue } from '../utils/scoring';
 import TeamAvatar from '../components/TeamAvatar';
 
@@ -32,6 +32,15 @@ export default function OwnerDisparitiesView({ allStats, selectedSeason = 2026, 
   // 'disparity_desc' | 'disparity_asc' | 'unrostered_vol' | 'unrostered_stat' | 'rostered_vol'
   const [requireBothStates, setRequireBothStates] = useState(true);
 
+  // Completed games cutoff: For active 2026 season, synchronize through yesterday's completed games
+  // to avoid attributing in-progress or same-day unfinalized games to unrostered performance.
+  const cutoffDate = useMemo(() => {
+    if (selectedSeason < 2026) return null;
+    const now = new Date();
+    const y = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+    return `${y.getFullYear()}-${String(y.getMonth() + 1).padStart(2, '0')}-${String(y.getDate()).padStart(2, '0')}`;
+  }, [selectedSeason]);
+
   // MLB Season Stats state
   const [mlbSplits, setMlbSplits] = useState({ batters: [], pitchers: [] });
   const [loadingMlb, setLoadingMlb] = useState(false);
@@ -42,7 +51,7 @@ export default function OwnerDisparitiesView({ allStats, selectedSeason = 2026, 
     let isCancelled = false;
 
     async function loadMlbSeason() {
-      const cacheKey = `mlb_season_${selectedSeason}`;
+      const cacheKey = `mlb_season_${selectedSeason}_${cutoffDate || 'full'}`;
       if (mlbSeasonDataCache.has(cacheKey)) {
         setMlbSplits(mlbSeasonDataCache.get(cacheKey));
         return;
@@ -52,9 +61,16 @@ export default function OwnerDisparitiesView({ allStats, selectedSeason = 2026, 
       setMlbError(null);
 
       try {
+        const hittingUrl = cutoffDate
+          ? `https://statsapi.mlb.com/api/v1/stats?stats=byDateRange&season=${selectedSeason}&startDate=2026-03-25&endDate=${cutoffDate}&group=hitting&limit=1500&playerPool=all`
+          : `https://statsapi.mlb.com/api/v1/stats?stats=season&season=${selectedSeason}&group=hitting&limit=1500&playerPool=all`;
+        const pitchingUrl = cutoffDate
+          ? `https://statsapi.mlb.com/api/v1/stats?stats=byDateRange&season=${selectedSeason}&startDate=2026-03-25&endDate=${cutoffDate}&group=pitching&limit=1500&playerPool=all`
+          : `https://statsapi.mlb.com/api/v1/stats?stats=season&season=${selectedSeason}&group=pitching&limit=1500&playerPool=all`;
+
         const [batRes, pitRes] = await Promise.all([
-          fetch(`https://statsapi.mlb.com/api/v1/stats?stats=season&season=${selectedSeason}&group=hitting&limit=1500&playerPool=all`),
-          fetch(`https://statsapi.mlb.com/api/v1/stats?stats=season&season=${selectedSeason}&group=pitching&limit=1500&playerPool=all`)
+          fetch(hittingUrl),
+          fetch(pitchingUrl)
         ]);
 
         if (!batRes.ok || !pitRes.ok) {
@@ -83,7 +99,7 @@ export default function OwnerDisparitiesView({ allStats, selectedSeason = 2026, 
 
     loadMlbSeason();
     return () => { isCancelled = true; };
-  }, [selectedSeason]);
+  }, [selectedSeason, cutoffDate]);
 
   const handleTabChange = (newTab) => {
     setTab(newTab);
@@ -99,6 +115,12 @@ export default function OwnerDisparitiesView({ allStats, selectedSeason = 2026, 
     allStats.forEach(r => {
       // Ignore Ghost Team (99)
       if (r.team_id === 99 || r.team_id === '99') return;
+
+      // In Rostered vs. Unrostered mode, exclude in-progress games from today
+      if (disparityMode === 'rostered_vs_unrostered' && cutoffDate) {
+        const gameDate = getDateFromPeriodId(r.scoring_period_id, selectedSeason);
+        if (gameDate > cutoffDate) return;
+      }
 
       const mapKey = r.player_id || r.full_name;
       if (!map[mapKey]) {
@@ -130,7 +152,7 @@ export default function OwnerDisparitiesView({ allStats, selectedSeason = 2026, 
     });
 
     return Object.values(map);
-  }, [allStats]);
+  }, [allStats, cutoffDate, disparityMode, selectedSeason]);
 
   // -------------------------------------------------------------
   // 2. Rostered vs Unrostered Disparity Engine
@@ -200,7 +222,8 @@ export default function OwnerDisparitiesView({ allStats, selectedSeason = 2026, 
         const unrosSb = Math.max(0, (mlbStat?.stolenBases || 0) - rosSb);
         const unrosH = Math.max(0, (mlbStat?.hits || 0) - (parseFloat(rosStats.H) || 0));
         const unrosBb = Math.max(0, (mlbStat?.baseOnBalls || 0) - (parseFloat(rosStats.BB) || 0));
-        const unrosObp = unrosPa > 0 ? (unrosH + unrosBb) / unrosPa : 0;
+        const unrosHbp = Math.max(0, (mlbStat?.hitByPitch || 0) - (parseFloat(rosStats.HBP) || 0));
+        const unrosObp = unrosPa > 0 ? Math.min(1.0, (unrosH + unrosBb + unrosHbp) / unrosPa) : 0;
         const unrosGames = Math.max(0, (mlbStat?.gamesPlayed || 0) - rosGames);
 
         const unrosStats = {
@@ -251,7 +274,7 @@ export default function OwnerDisparitiesView({ allStats, selectedSeason = 2026, 
         });
       } else {
         // Pitchers
-        const mlbOuts = mlbStat?.outs;
+        const mlbOuts = mlbStat?.outs || mlbStat?.outsPitched;
         const mlbIp = mlbOuts ? mlbOuts / 3.0 : (parseFloat(mlbStat?.inningsPitched) || 0);
         const rosIp = parseFloat(rosStats.IP) || 0;
         const rosEr = parseFloat(rosStats.ER) || 0;
@@ -442,6 +465,14 @@ export default function OwnerDisparitiesView({ allStats, selectedSeason = 2026, 
             <span className="px-2.5 py-0.5 text-xs font-bold bg-blue-100 text-blue-800 rounded-full border border-blue-200">
               {selectedSeason} Season
             </span>
+            {cutoffDate && disparityMode === 'rostered_vs_unrostered' && (
+              <span 
+                className="px-2.5 py-0.5 text-xs font-semibold bg-emerald-50 text-emerald-800 rounded-full border border-emerald-200"
+                title="Synchronized with completed MLB games through yesterday to prevent in-progress games from skewing unrostered stats"
+              >
+                Synced through {cutoffDate}
+              </span>
+            )}
           </div>
           <p className="text-sm text-gray-500 mt-1">
             {disparityMode === 'rostered_vs_unrostered' 

@@ -182,7 +182,7 @@ export function aggregateStats(dailyRecords, options = {}) {
     const espnStats = record.stats || {};
 
     const slot = record.lineup_slot_id;
-    const isPitcher = (slot >= 13 && slot <= 15) || (options.includeBenchOnly && (
+    const isPitcher = (slot >= 13 && slot <= 15) || ((options.includeBenchOnly || options.includeAll) && (
       (parseFloat(s.IP_raw ?? s.IP) || 0) > 0 ||
       parseFloat(espnStats['34']) > 0 ||
       parseFloat(s.K ?? espnStats['48']) > 0 ||
@@ -191,7 +191,7 @@ export function aggregateStats(dailyRecords, options = {}) {
       parseFloat(s.HD ?? espnStats['60']) > 0
     ));
 
-    const isBatter = (slot >= 0 && slot <= 12) || (options.includeBenchOnly && (
+    const isBatter = (slot >= 0 && slot <= 12) || ((options.includeBenchOnly || options.includeAll) && (
       parseFloat(s.PA ?? espnStats['16']) > 0 ||
       parseFloat(s.AB ?? espnStats['0']) > 0 ||
       parseFloat(s.H ?? espnStats['1']) > 0 ||
