@@ -1,0 +1,42 @@
+name: Discord Weekly Recap
+
+on:
+  schedule:
+    # Weekly recap: runs Monday at 12:23 PM UTC (8:23 AM ET)
+    # Uses an off-peak minute (:23) to avoid GitHub Actions queue delays.
+    # Fires about 1 hour after the Monday daily recap, summarizing the previous week (Mon-Sun).
+    - cron: "23 12 * * 1"
+
+  workflow_dispatch:
+    inputs:
+      week_end_date:
+        description: "Week Ending Date (Sunday) for Recap (YYYY-MM-DD, defaults to most recent Sunday)"
+        required: false
+        default: ""
+        type: string
+
+jobs:
+  weekly-recap:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install supabase google-genai requests
+
+      - name: Run Discord Weekly Recap
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          python discord-daily-recap.py weekly ${{ inputs.week_end_date }}

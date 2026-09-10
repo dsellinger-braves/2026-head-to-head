@@ -1,0 +1,42 @@
+name: Discord Daily Recap
+
+on:
+  schedule:
+    # Daily recap: runs at 11:17 AM UTC (7:17 AM ET)
+    # Uses an off-peak minute (:17) to avoid GitHub Actions queue delays.
+    # Runs after morning ESPN scraper has updated Supabase.
+    - cron: "17 11 * * *"
+
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "Target Date for Daily Recap (YYYY-MM-DD, defaults to yesterday)"
+        required: false
+        default: ""
+        type: string
+
+jobs:
+  daily-recap:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install supabase google-genai requests
+
+      - name: Run Discord Daily Recap
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          python discord-daily-recap.py daily ${{ inputs.date }}

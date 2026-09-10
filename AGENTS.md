@@ -102,8 +102,8 @@ ESPN Fantasy Baseball encodes statistics as numeric string keys:
   - Slash commands: `/live`, `/standings`, `/roster`, `/projections`, `/transactions`, `/matchup`.
   - Uses `discord.py` and queries Supabase + ESPN APIs live.
 - `discord-daily-recap.py`:
-  - Runs daily via GitHub Actions scheduled workflow (`.github/workflows/discord-recap.yml`).
-  - Fetches the day's box scores and top performers, uses Google Gemini (`google-genai`) to generate editorial commentary, and posts embeds to Discord.
+  - Runs daily and weekly via GitHub Actions scheduled workflows (`.github/workflows/discord-daily-recap.yml` and `.github/workflows/discord-weekly-recap.yml`).
+  - Fetches box scores, top weekly/daily performers, and roto standings shifts, uses Google Gemini (`google-genai`) to generate commentary, and posts embeds to Discord.
 
 ---
 
