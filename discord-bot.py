@@ -1316,10 +1316,41 @@ class HEFTYBot(discord.Client):
         except Exception as e:
             print(f"Supabase FAILED — {e}")
 
+        # Instant guild sync so slash commands appear immediately in all servers
+        for guild in self.guilds:
+            try:
+                self.tree.copy_global_to(guild=guild)
+                synced = await self.tree.sync(guild=guild)
+                print(f"Synced {len(synced)} command(s) instantly to {guild.name} ({guild.id})")
+            except Exception as e:
+                print(f"Failed to sync to guild {guild.id}: {e}")
+
         # Start trade notifications background worker loop
         if not check_trade_notifications.is_running():
             check_trade_notifications.start()
             print("Trade notifications background worker started.")
+
+    async def on_message(self, message: discord.Message):
+        if message.author.bot:
+            return
+        # If user mentions the bot in a channel or DMs the bot:
+        if self.user in message.mentions or isinstance(message.channel, discord.DMChannel):
+            clean_content = message.content.replace(f"<@{self.user.id}>", "").strip()
+            if not clean_content:
+                await message.channel.send(f"👋 Hey {message.author.display_name}! You can ask me questions about the league (e.g. `Who leads in HR?`), or use slash commands like `/live`, `/check_trades`, or `/standings`!")
+                return
+            async with message.channel.typing():
+                try:
+                    period = current_scoring_period()
+                    discord_username = str(message.author.name).lower()
+                    asking_owner = DISCORD_TO_OWNER.get(discord_username)
+                    context = await asyncio.to_thread(build_context, clean_content, period, asking_owner)
+                    answer = await asyncio.to_thread(generate_answer, clean_content, context, asking_owner)
+                    if len(answer) > 1900:
+                        answer = answer[:1897] + "..."
+                    await message.reply(answer)
+                except Exception as e:
+                    await message.reply(f"⚠️ Sorry, I encountered an error: `{e}`")
 
 
 bot = HEFTYBot()
