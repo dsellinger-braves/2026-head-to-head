@@ -96,7 +96,7 @@ function getViewFromHash() {
 }
 
 function App() {
-  const { effectiveOwner, isCommissioner } = useAuth();
+  const { user, signOut, effectiveOwner, isCommissioner } = useAuth();
   const [loading, setLoading] = useState(true);
   const [currentView, setCurrentView] = useState(getViewFromHash);
   const [rawData, setRawData] = useState([]);
@@ -175,10 +175,14 @@ function App() {
   const fetchRawSeason = async (season, onProgress) => {
     const cacheKey = `fantasy_data_${season}`;
     try {
-      const cached = await get(cacheKey);
+      const cachePromise = get(cacheKey);
+      const cacheTimeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('IndexedDB read timeout')), 2500)
+      );
+      const cached = await Promise.race([cachePromise, cacheTimeout]);
       if (cached?.length > 0) return cached;
     } catch (cacheErr) {
-      console.warn('Local cache read notice:', cacheErr);
+      console.warn('Local cache read notice or timeout:', cacheErr);
     }
 
     const isHistorical = season < 2026;
@@ -262,7 +266,11 @@ function App() {
     } catch (err) {
       console.error("App Error:", err);
       try {
-        const cached = await get(`fantasy_data_${season}`);
+        const cachePromise = get(`fantasy_data_${season}`);
+        const cacheTimeout = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('IndexedDB recovery timeout')), 2000)
+        );
+        const cached = await Promise.race([cachePromise, cacheTimeout]);
         if (cached?.length > 0) {
           console.warn(`Recovered ${cached.length} records from local cache following server error`);
           setRawData(cached);
@@ -271,7 +279,7 @@ function App() {
       } catch (cacheErr) {
         console.error("Cache recovery failed:", cacheErr);
       }
-      setLoadStatus("Error loading data from server.");
+      setLoadStatus("Notice: In-season statistics could not be loaded.");
     } finally {
       fetchingRef.current = false;
       setLoading(false);
@@ -610,16 +618,6 @@ function App() {
   }, [rawData, baseSchedule]);
 
   // --- RENDER ---
-  // Do not block Offseason views (Keepers, Capital, Pick'em, Draft Room, Valuations) on in-season data loading
-  if (loading && !OFFSEASON_VIEWS.has(currentView)) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 text-gray-500 gap-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-900"></div>
-        <div className="font-bold animate-pulse">{loadStatus}</div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gray-100 font-sans text-gray-800">
       {/* League site header - hidden in Draft Room for clean, full-screen war room layout */}
@@ -866,13 +864,53 @@ function App() {
         />
       ) : (
         <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-          {currentView === 'weekly' && (
-            <WeeklyView
-              processedWeeks={processedWeeks}
-              allStats={rawData}
-              onOwnerClick={(team) => setSelectedOwner(team)}
-            />
-          )}
+          {loading && !OFFSEASON_VIEWS.has(currentView) ? (
+            <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center shadow-md max-w-lg mx-auto space-y-4 my-12">
+              <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-blue-900 mb-2"></div>
+              <div className="font-extrabold text-gray-800 text-lg">{loadStatus}</div>
+              <p className="text-gray-500 text-xs">
+                Synchronizing in-season player statistics and schedule records...
+              </p>
+              
+              {/* Recovery Action Controls */}
+              <div className="pt-4 border-t border-gray-100 flex flex-col sm:flex-row gap-2 justify-center text-xs font-bold">
+                <button
+                  type="button"
+                  onClick={handleRefresh}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition cursor-pointer shadow-xs"
+                >
+                  🧹 Clear Cache & Reload
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveGroup('offseason');
+                    setCurrentView('keepers');
+                  }}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition cursor-pointer shadow-xs"
+                >
+                  🚀 2027 Offseason Prep
+                </button>
+                {user && (
+                  <button
+                    type="button"
+                    onClick={signOut}
+                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition cursor-pointer"
+                  >
+                    🚪 Sign Out
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : (
+            <>
+              {currentView === 'weekly' && (
+                <WeeklyView
+                  processedWeeks={processedWeeks}
+                  allStats={rawData}
+                  onOwnerClick={(team) => setSelectedOwner(team)}
+                />
+              )}
           {currentView === 'summary' && (
             <SummaryView
               processedWeeks={processedWeeks}
@@ -949,14 +987,16 @@ function App() {
               onDraftYearChange={setOffseasonYear}
             />
           )}
-          {currentView === 'keepers' && (
-            <KeepersBudgetsView
-              currentUser={effectiveOwner || 'Daniel'}
-              isCommissioner={isCommissioner}
-              seasonYear={offseasonYear}
-              onSeasonYearChange={setOffseasonYear}
-              onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
-            />
+              {currentView === 'keepers' && (
+                <KeepersBudgetsView
+                  currentUser={effectiveOwner || 'Daniel'}
+                  isCommissioner={isCommissioner}
+                  seasonYear={offseasonYear}
+                  onSeasonYearChange={setOffseasonYear}
+                  onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
+                />
+              )}
+            </>
           )}
         </main>
       )}

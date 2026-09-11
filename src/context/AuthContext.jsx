@@ -4,6 +4,31 @@ import { supabase } from '../supabaseClient';
 import { LEAGUE_OWNERS } from '../utils/mlbTeams';
 import { AuthContext } from './authContextDef';
 
+// Utility to immediately clean sensitive or stale OAuth tokens from the browser URL hash
+function cleanupOAuthHash() {
+  if (typeof window === 'undefined') return;
+  const rawHash = window.location.hash || '';
+  if (rawHash.includes('access_token=') || rawHash.includes('refresh_token=') || rawHash.includes('error=')) {
+    let target = '#/keepers';
+    try {
+      const saved = sessionStorage.getItem('oauth_pre_login_hash');
+      if (saved) {
+        sessionStorage.removeItem('oauth_pre_login_hash');
+        target = saved.startsWith('#') ? saved : `#/${saved}`;
+      }
+    } catch {
+      // ignore
+    }
+    try {
+      const cleanPath = window.location.pathname + window.location.search + target;
+      window.history.replaceState(null, '', cleanPath);
+    } catch {
+      window.location.hash = target;
+    }
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+  }
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
@@ -13,13 +38,17 @@ export function AuthProvider({ children }) {
   // Commissioner override: allows Dan (Team 5) and Adrian (Team 2) to manage any team
   const [overrideTeamId, setOverrideTeamId] = useState(null);
 
-  // Fetch all profiles from Supabase
+  // Fetch all profiles from Supabase with safe 4s timeout
   const fetchProfiles = useCallback(async () => {
     try {
-      const { data, error } = await supabase
+      const queryPromise = supabase
         .from('league_profiles')
         .select('*')
         .order('team_id', { ascending: true });
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('fetchProfiles timeout')), 4000)
+      );
+      const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
       if (!error && data) {
         setAllProfiles(data);
         return data;
@@ -104,24 +133,28 @@ export function AuthProvider({ children }) {
     let mounted = true;
 
     async function initAuth() {
-      const profiles = await fetchProfiles();
-      const { data: { session } } = await supabase.auth.getSession();
-      if (mounted) {
-        setUser(session?.user || null);
-        if (session?.user) {
-          await syncUserProfile(session.user, profiles);
-          // Restore user's previous hash/view if returning from OAuth redirect
-          try {
-            const preHash = sessionStorage.getItem('oauth_pre_login_hash');
-            if (preHash && window.location.hash && (window.location.hash.includes('access_token=') || window.location.hash.includes('error='))) {
-              sessionStorage.removeItem('oauth_pre_login_hash');
-              window.location.hash = preHash;
-            }
-          } catch {
-            // ignore
+      try {
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise(resolve =>
+          setTimeout(() => resolve({ data: { session: null } }), 3500)
+        );
+        const [profiles, { data: sessionData }] = await Promise.all([
+          fetchProfiles(),
+          Promise.race([sessionPromise, timeoutPromise])
+        ]);
+        const session = sessionData?.session;
+        if (mounted) {
+          setUser(session?.user || null);
+          if (session?.user) {
+            await syncUserProfile(session.user, profiles);
           }
+          cleanupOAuthHash();
+          setLoading(false);
         }
-        setLoading(false);
+      } catch (err) {
+        console.warn('initAuth notice:', err);
+        cleanupOAuthHash();
+        if (mounted) setLoading(false);
       }
     }
 
@@ -132,15 +165,7 @@ export function AuthProvider({ children }) {
       setUser(session?.user || null);
       if (session?.user) {
         await syncUserProfile(session.user);
-        try {
-          const preHash = sessionStorage.getItem('oauth_pre_login_hash');
-          if (preHash && window.location.hash && (window.location.hash.includes('access_token=') || window.location.hash.includes('error='))) {
-            sessionStorage.removeItem('oauth_pre_login_hash');
-            window.location.hash = preHash;
-          }
-        } catch {
-          // ignore
-        }
+        cleanupOAuthHash();
       } else {
         setProfile(null);
         setOverrideTeamId(null);
