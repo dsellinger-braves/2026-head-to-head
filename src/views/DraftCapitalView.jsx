@@ -98,7 +98,7 @@ export default function DraftCapitalView({
   draftYear = 2027,
   onDraftYearChange
 }) {
-  const { user, profile, isCommissioner: authIsCommissioner, effectiveOwner } = useAuth();
+  const { user, profile, isCommissioner: authIsCommissioner, effectiveOwner, logCommissionerAction } = useAuth();
   const isCommissioner = propIsCommissioner || authIsCommissioner;
 
   const [draftTrades, setDraftTrades] = useState(defaultDraftAssetTrades);
@@ -802,6 +802,20 @@ export default function DraftCapitalView({
         notes: `Trade approved & executed by Commissioner ${profile?.owner_name || 'Commish'}`,
       });
 
+      if (logCommissionerAction) {
+        await logCommissionerAction({
+          actionType: 'approve_trade',
+          actionDescription: `Approved & executed trade ${proposal.id} between ${proposal.proposing_owner} and ${proposal.target_owner}`,
+          targetOwner: proposal.target_owner,
+          targetTeamId: proposal.target_team_id,
+          details: {
+            proposal_id: proposal.id,
+            offered_assets: proposal.offered_assets,
+            requested_assets: proposal.requested_assets
+          }
+        });
+      }
+
       alert(`Trade officially APPROVED and EXECUTED! 👑 The 2027 draft board, players, and team ledgers have been updated.`);
       await loadData();
     } catch (err) {
@@ -897,6 +911,22 @@ export default function DraftCapitalView({
 
       if (error) throw error;
 
+      if (logCommissionerAction) {
+        await logCommissionerAction({
+          actionType: 'edit_trade',
+          actionDescription: `Commissioner edited trade proposal ${editingProposal.id} (${editingProposal.proposing_owner} <-> ${editingProposal.target_owner})`,
+          targetOwner: editingProposal.target_owner,
+          targetTeamId: tTeamId,
+          details: {
+            proposal_id: editingProposal.id,
+            status: editingProposal.status,
+            offered_assets: editingProposal.offered_assets,
+            requested_assets: editingProposal.requested_assets,
+            notes: editingProposal.notes
+          }
+        });
+      }
+
       alert('Proposal updated successfully by Commissioner. 👑');
       setEditingProposal(null);
       await loadData();
@@ -920,6 +950,17 @@ export default function DraftCapitalView({
         .delete()
         .eq('id', tradeRow.id);
       if (error) throw error;
+
+      if (logCommissionerAction) {
+        await logCommissionerAction({
+          actionType: 'delete_trade',
+          actionDescription: `Deleted executed trade record ${tradeRow.trade_id || tradeRow.id} (${tradeRow.asset_name})`,
+          targetOwner: tradeRow.receiving_owner,
+          targetTeamId: tradeRow.to_team_id,
+          details: { trade: tradeRow }
+        });
+      }
+
       alert('Executed trade record deleted from draft_asset_trades.');
       await loadData();
     } catch (err) {
@@ -1261,7 +1302,10 @@ export default function DraftCapitalView({
                             </span>
                             {isTraded && (
                               <span className="text-[9px] text-amber-400/80 font-medium mt-0.5">
-                                via #{pick.tradeDetails?.trade_id || 'Trade'}
+                                via {(() => {
+                                  const s = pick.tradeDetails?.sending_owner || pick.originalOwner;
+                                  return s === 'Dan' ? 'Daniel' : s || 'Trade';
+                                })()}
                               </span>
                             )}
                           </div>

@@ -2,13 +2,17 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/useAuth';
 import { LEAGUE_OWNERS } from '../utils/mlbTeams';
+import CommishCheckoutModal from './CommishCheckoutModal';
 
 export default function UserNavWidget() {
   const {
     user,
     profile,
     loading,
+    isCommishEligible,
+    isCommishCheckedOut,
     isCommissioner,
+    relinquishCommissionerPowers,
     effectiveTeamId,
     effectiveOwner,
     isActingAsOther,
@@ -18,6 +22,7 @@ export default function UserNavWidget() {
   } = useAuth();
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
   const [loggingIn, setLoggingIn] = useState(false);
   const menuRef = useRef(null);
 
@@ -75,141 +80,192 @@ export default function UserNavWidget() {
 
   // LOGGED IN STATE
   return (
-    <div className="relative" ref={menuRef}>
-      <div className="flex items-center gap-2">
-        {/* If Commissioner is acting as another team */}
-        {isActingAsOther && (
-          <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-950/80 border border-amber-500/60 text-amber-200 text-xs font-bold animate-pulse shadow-sm">
-            <span>⚠️ Acting As:</span>
-            <span className="text-white underline">{effectiveOwner} (T{effectiveTeamId})</span>
+    <>
+      <div className="relative" ref={menuRef}>
+        <div className="flex items-center gap-2">
+          {/* If Commissioner powers are dormant, show quick checkout button */}
+          {isCommishEligible && !isCommishCheckedOut && (
             <button
-              onClick={() => setEffectiveTeamId(profile.team_id)}
-              className="ml-1 text-[10px] text-amber-400 hover:text-white cursor-pointer"
-              title="Reset to My Team"
+              onClick={() => setCheckoutModalOpen(true)}
+              className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-xs font-bold transition-all cursor-pointer shadow-xs"
+              title="Click to check out commissioner powers (action will be posted to #league-news)"
             >
-              ✕ Reset
+              <span>🛡️</span>
+              <span>Commish Checkout</span>
             </button>
-          </div>
-        )}
+          )}
 
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          className="flex items-center gap-2.5 p-1.5 pr-3 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 text-white transition-all cursor-pointer shadow-sm"
-        >
-          {profile.avatar_url ? (
-            <img
-              src={profile.avatar_url}
-              alt={profile.owner_name}
-              className="w-7 h-7 rounded-lg object-cover ring-1 ring-indigo-500/50"
-            />
-          ) : (
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-xs font-black text-white shadow-xs">
-              {(profile.owner_name || 'U')[0]}
+          {/* If Commissioner is acting as another team */}
+          {isActingAsOther && (
+            <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-950/80 border border-amber-500/60 text-amber-200 text-xs font-bold animate-pulse shadow-sm">
+              <span>⚠️ Acting As:</span>
+              <span className="text-white underline">{effectiveOwner} (T{effectiveTeamId})</span>
+              <button
+                onClick={() => setEffectiveTeamId(profile.team_id)}
+                className="ml-1 text-[10px] text-amber-400 hover:text-white cursor-pointer"
+                title="Reset to My Team"
+              >
+                ✕ Reset
+              </button>
             </div>
           )}
 
-          <div className="text-left leading-tight hidden sm:block">
-            <div className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
-              <span>{profile.owner_name}</span>
-              {isCommissioner && (
-                <span className="text-[10px] font-black px-1.5 py-0.2 rounded bg-amber-400/20 text-amber-300 border border-amber-400/40">
-                  COMMISH
-                </span>
-              )}
-            </div>
-            <div className="text-[10px] text-slate-400">
-              {profile.team_id ? `Team ${profile.team_id}` : `@${profile.discord_username}`}
-            </div>
-          </div>
-
-          <span className="text-slate-400 text-xs">▼</span>
-        </button>
-      </div>
-
-      {/* DROPDOWN MENU */}
-      {menuOpen && (
-        <div className="absolute right-0 mt-2 w-72 bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl z-50 p-3 space-y-3 animate-fade-in-up backdrop-blur-md">
-          {/* User Header */}
-          <div className="flex items-center gap-3 pb-3 border-b border-slate-800">
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="flex items-center gap-2.5 p-1.5 pr-3 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 text-white transition-all cursor-pointer shadow-sm"
+          >
             {profile.avatar_url ? (
               <img
                 src={profile.avatar_url}
                 alt={profile.owner_name}
-                className="w-10 h-10 rounded-xl object-cover ring-2 ring-indigo-500/50"
+                className="w-7 h-7 rounded-lg object-cover ring-1 ring-indigo-500/50"
               />
             ) : (
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center font-bold text-white text-base">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-xs font-black text-white shadow-xs">
                 {(profile.owner_name || 'U')[0]}
               </div>
             )}
-            <div className="overflow-hidden">
-              <div className="text-sm font-bold text-white truncate flex items-center gap-1.5">
+
+            <div className="text-left leading-tight hidden sm:block">
+              <div className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
                 <span>{profile.owner_name}</span>
                 {isCommissioner && (
-                  <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-amber-400 text-slate-950">
-                    👑 COMMISH
+                  <span className="text-[10px] font-black px-1.5 py-0.2 rounded bg-amber-400 text-slate-950 shadow-xs">
+                    COMMISH ACTIVE
                   </span>
                 )}
               </div>
-              <div className="text-xs text-slate-400 truncate">
-                Discord: @{profile.discord_username}
+              <div className="text-[10px] text-slate-400">
+                {profile.team_id ? `Team ${profile.team_id}` : `@${profile.discord_username}`}
               </div>
-              {profile.team_id && (
-                <div className="text-[11px] font-semibold text-indigo-400">
-                  Team {profile.team_id}
+            </div>
+
+            <span className="text-slate-400 text-xs">▼</span>
+          </button>
+        </div>
+
+        {/* DROPDOWN MENU */}
+        {menuOpen && (
+          <div className="absolute right-0 mt-2 w-72 bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl z-50 p-3 space-y-3 animate-fade-in-up backdrop-blur-md">
+            {/* User Header */}
+            <div className="flex items-center gap-3 pb-3 border-b border-slate-800">
+              {profile.avatar_url ? (
+                <img
+                  src={profile.avatar_url}
+                  alt={profile.owner_name}
+                  className="w-10 h-10 rounded-xl object-cover ring-2 ring-indigo-500/50"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center font-bold text-white text-base">
+                  {(profile.owner_name || 'U')[0]}
                 </div>
               )}
-            </div>
-          </div>
-
-          {/* COMMISSIONER OVERRIDE SECTION (DAN & ADRIAN ONLY) */}
-          {isCommissioner && (
-            <div className="bg-amber-950/30 border border-amber-500/40 rounded-xl p-2.5 space-y-2">
-              <div className="flex items-center justify-between text-[11px] font-bold text-amber-300">
-                <span className="flex items-center gap-1">
-                  <span>👑</span> Commissioner Settings
-                </span>
-                {isActingAsOther && (
-                  <button
-                    onClick={() => setEffectiveTeamId(profile.team_id)}
-                    className="text-[10px] text-amber-400 hover:text-white underline cursor-pointer"
-                  >
-                    Reset
-                  </button>
+              <div className="overflow-hidden">
+                <div className="text-sm font-bold text-white truncate flex items-center gap-1.5">
+                  <span>{profile.owner_name}</span>
+                  {isCommissioner ? (
+                    <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-amber-400 text-slate-950">
+                      👑 COMMISH ACTIVE
+                    </span>
+                  ) : isCommishEligible ? (
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                      Commish Dormant
+                    </span>
+                  ) : null}
+                </div>
+                <div className="text-xs text-slate-400 truncate">
+                  Discord: @{profile.discord_username}
+                </div>
+                {profile.team_id && (
+                  <div className="text-[11px] font-semibold text-indigo-400">
+                    Team {profile.team_id}
+                  </div>
                 )}
               </div>
-              <div className="text-[10px] text-slate-400">
-                Act on behalf of another owner to adjust keepers, picks, or trades:
-              </div>
-              <select
-                value={effectiveTeamId || ''}
-                onChange={(e) => setEffectiveTeamId(e.target.value ? parseInt(e.target.value) : null)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white font-semibold focus:outline-hidden focus:border-amber-400 cursor-pointer"
-              >
-                <option value={profile.team_id}>👑 My Team ({profile.owner_name} - T{profile.team_id})</option>
-                {LEAGUE_OWNERS.filter(o => o.id !== profile.team_id).map((o) => (
-                  <option key={o.id} value={o.id}>
-                    {o.id === 5 || o.id === 2 ? '👑 ' : ''}Team {o.id} - {o.name}
-                  </option>
-                ))}
-              </select>
             </div>
-          )}
 
-          {/* Action Links */}
-          <div className="space-y-1 text-xs">
-            <button
-              onClick={() => {
-                setMenuOpen(false);
-                signOut();
-              }}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-rose-400 hover:bg-rose-950/40 hover:text-rose-300 transition-colors font-medium text-left cursor-pointer"
-            >
-              <span>🚪</span> Log Out
-            </button>
+            {/* COMMISSIONER BREAK-GLASS CONTROLS (DAN & ADRIAN ONLY) */}
+            {isCommishEligible && (
+              <div className="bg-amber-950/30 border border-amber-500/40 rounded-xl p-3 space-y-2.5">
+                <div className="flex items-center justify-between text-xs font-bold text-amber-300">
+                  <span className="flex items-center gap-1.5">
+                    <span>🛡️</span>
+                    <span>Governance Powers</span>
+                  </span>
+                  {isCommissioner && (
+                    <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded font-black">
+                      ACTIVE
+                    </span>
+                  )}
+                </div>
+
+                {!isCommishCheckedOut ? (
+                  <div className="space-y-2">
+                    <p className="text-[11px] text-slate-400 leading-relaxed">
+                      Commish access is dormant by default. Check out powers to edit trades, manage rosters, or approve league actions.
+                    </p>
+                    <button
+                      onClick={() => {
+                        setMenuOpen(false);
+                        setCheckoutModalOpen(true);
+                      }}
+                      className="w-full py-1.5 px-3 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black transition-all cursor-pointer shadow-sm flex items-center justify-center gap-1.5"
+                    >
+                      <span>🛡️ Check Out Commish Powers</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-[11px] text-amber-200">
+                      <span>Acting as:</span>
+                      <select
+                        value={effectiveTeamId || ''}
+                        onChange={(e) => setEffectiveTeamId(e.target.value ? parseInt(e.target.value) : null)}
+                        className="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-white font-semibold focus:outline-hidden focus:border-amber-400 cursor-pointer"
+                      >
+                        <option value={profile.team_id}>My Team ({profile.owner_name})</option>
+                        {LEAGUE_OWNERS.filter(o => o.id !== profile.team_id).map((o) => (
+                          <option key={o.id} value={o.id}>
+                            Team {o.id} - {o.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <button
+                      onClick={async () => {
+                        await relinquishCommissionerPowers();
+                        setMenuOpen(false);
+                      }}
+                      className="w-full py-1 px-3 rounded-lg bg-slate-950 hover:bg-slate-800 text-amber-300 hover:text-white text-xs font-bold transition-all border border-amber-500/40 cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      <span>🔒 Relinquish Powers (Check In)</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Action Links */}
+            <div className="space-y-1 text-xs">
+              <button
+                onClick={() => {
+                  setMenuOpen(false);
+                  signOut();
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-rose-400 hover:bg-rose-950/40 hover:text-rose-300 transition-colors font-medium text-left cursor-pointer"
+              >
+                <span>🚪</span> Log Out
+              </button>
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+
+      <CommishCheckoutModal
+        isOpen={checkoutModalOpen}
+        onClose={() => setCheckoutModalOpen(false)}
+      />
+    </>
   );
 }
+

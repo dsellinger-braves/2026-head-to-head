@@ -209,17 +209,165 @@ export function AuthProvider({ children }) {
     return data;
   }, []);
 
+  // Break-glass Commissioner Checkout State:
+  // Dan (Team 5) and Adrian (Team 2) default to REGULAR owners until explicitly checking out powers!
+  const [isCommishCheckedOut, setIsCommishCheckedOut] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      return sessionStorage.getItem('commish_powers_checked_out') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const [commishCheckoutReason, setCommishCheckoutReason] = useState(() => {
+    if (typeof window === 'undefined') return '';
+    try {
+      return sessionStorage.getItem('commish_checkout_reason') || '';
+    } catch {
+      return '';
+    }
+  });
+
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
     setUser(null);
     setProfile(null);
     setOverrideTeamId(null);
+    setIsCommishCheckedOut(false);
+    setCommishCheckoutReason('');
+    try {
+      sessionStorage.removeItem('commish_powers_checked_out');
+      sessionStorage.removeItem('commish_checkout_reason');
+    } catch {
+      // ignore
+    }
   }, []);
 
-  // Commissioner validation: strictly Dan (Team 5) and Adrian (Team 2)
-  const isCommissioner = useMemo(() => {
+  // Commissioner eligibility: strictly Dan (Team 5) and Adrian (Team 2)
+  const isCommishEligible = useMemo(() => {
     if (!profile) return false;
     return profile.role === 'commissioner' || profile.team_id === 5 || profile.team_id === 2;
+  }, [profile]);
+
+  // Active commissioner status: requires BOTH eligibility AND explicit checkout!
+  const isCommissioner = useMemo(() => {
+    return Boolean(isCommishEligible && isCommishCheckedOut);
+  }, [isCommishEligible, isCommishCheckedOut]);
+
+  // Audit logging helper
+  const logCommissionerAction = useCallback(async ({
+    actionType,
+    actionDescription,
+    targetTeamId = null,
+    targetOwner = null,
+    details = {}
+  }) => {
+    if (!profile) return;
+    try {
+      await supabase.from('commissioner_audit_logs').insert({
+        season_year: 2026,
+        commissioner_name: profile.owner_name,
+        commissioner_team_id: profile.team_id || 0,
+        commissioner_discord_id: profile.discord_id || null,
+        action_type: actionType,
+        action_description: actionDescription,
+        target_team_id: targetTeamId,
+        target_owner: targetOwner,
+        details: {
+          ...details,
+          checkout_reason: commishCheckoutReason,
+          timestamp: new Date().toISOString()
+        }
+      });
+    } catch (err) {
+      console.warn('Failed to log commissioner action:', err);
+    }
+  }, [profile, commishCheckoutReason]);
+
+  // Check out commissioner powers with reason and post to #league-news
+  const checkoutCommissionerPowers = useCallback(async (reason = '') => {
+    if (!isCommishEligible || !profile) return false;
+    const finalReason = reason?.trim() || 'Administrative maintenance & trade management';
+    setIsCommishCheckedOut(true);
+    setCommishCheckoutReason(finalReason);
+    try {
+      sessionStorage.setItem('commish_powers_checked_out', 'true');
+      sessionStorage.setItem('commish_checkout_reason', finalReason);
+    } catch {
+      // ignore
+    }
+
+    // 1. Log to commissioner_audit_logs table
+    try {
+      await supabase.from('commissioner_audit_logs').insert({
+        season_year: 2026,
+        commissioner_name: profile.owner_name,
+        commissioner_team_id: profile.team_id || 0,
+        commissioner_discord_id: profile.discord_id || null,
+        action_type: 'checkout_powers',
+        action_description: `${profile.owner_name} checked out commissioner powers`,
+        details: {
+          reason: finalReason,
+          activated_at: new Date().toISOString()
+        }
+      });
+    } catch (e) {
+      console.warn('Audit log insert error:', e);
+    }
+
+    // 2. Dispatch announcement for Discord #league-news channel delivery
+    try {
+      await supabase.from('trade_notifications').insert({
+        trade_proposal_id: null,
+        event_type: 'commish_checkout',
+        sender_team_id: profile.team_id || 0,
+        sender_owner: profile.owner_name,
+        recipient_team_id: 0,
+        recipient_owner: 'League',
+        details: {
+          reason: finalReason,
+          channel: 'league-news',
+          activated_at: new Date().toISOString()
+        },
+        status: 'pending'
+      });
+    } catch (e) {
+      console.warn('Announcement queue error:', e);
+    }
+
+    return true;
+  }, [isCommishEligible, profile]);
+
+  // Relinquish commissioner powers back to standard owner view
+  const relinquishCommissionerPowers = useCallback(async () => {
+    if (!profile) return;
+    setIsCommishCheckedOut(false);
+    setCommishCheckoutReason('');
+    setOverrideTeamId(null);
+    try {
+      sessionStorage.removeItem('commish_powers_checked_out');
+      sessionStorage.removeItem('commish_checkout_reason');
+    } catch {
+      // ignore
+    }
+
+    // Log to audit log
+    try {
+      await supabase.from('commissioner_audit_logs').insert({
+        season_year: 2026,
+        commissioner_name: profile.owner_name,
+        commissioner_team_id: profile.team_id || 0,
+        commissioner_discord_id: profile.discord_id || null,
+        action_type: 'relinquish_powers',
+        action_description: `${profile.owner_name} checked in / relinquished commissioner powers`,
+        details: {
+          relinquished_at: new Date().toISOString()
+        }
+      });
+    } catch (e) {
+      console.warn('Audit log insert error:', e);
+    }
   }, [profile]);
 
   // The team currently being acted as (either own team or commissioner override)
@@ -246,7 +394,13 @@ export function AuthProvider({ children }) {
     profile,
     allProfiles,
     loading,
+    isCommishEligible,
+    isCommishCheckedOut,
+    commishCheckoutReason,
     isCommissioner,
+    checkoutCommissionerPowers,
+    relinquishCommissionerPowers,
+    logCommissionerAction,
     effectiveTeamId,
     effectiveOwner,
     isActingAsOther: isCommissioner && overrideTeamId !== null && overrideTeamId !== profile?.team_id,
@@ -259,7 +413,13 @@ export function AuthProvider({ children }) {
     profile,
     allProfiles,
     loading,
+    isCommishEligible,
+    isCommishCheckedOut,
+    commishCheckoutReason,
     isCommissioner,
+    checkoutCommissionerPowers,
+    relinquishCommissionerPowers,
+    logCommissionerAction,
     effectiveTeamId,
     effectiveOwner,
     overrideTeamId,

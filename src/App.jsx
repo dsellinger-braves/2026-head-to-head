@@ -24,9 +24,10 @@ import PickemView from './views/PickemView';
 import DraftCapitalView from './views/DraftCapitalView';
 import KeepersBudgetsView from './views/KeepersBudgetsView';
 import UserNavWidget from './components/UserNavWidget';
+import CommishActiveBanner from './components/CommishActiveBanner';
 import { useAuth } from './context/useAuth';
 
-const AVAILABLE_SEASONS = Array.from({ length: 2026 - 2012 + 1 }, (_, i) => 2026 - i);
+const AVAILABLE_SEASONS = [2027, ...Array.from({ length: 2026 - 2012 + 1 }, (_, i) => 2026 - i)];
 
 const VIEW_TO_HASH = {
   weekly: 'matchups',
@@ -173,6 +174,9 @@ function App() {
 
   // Core fetch: check cache → Supabase. Returns normalized records, touches no state.
   const fetchRawSeason = async (season, onProgress) => {
+    if (season > 2026) {
+      return [];
+    }
     const cacheKey = `fantasy_data_${season}`;
     try {
       const cachePromise = get(cacheKey);
@@ -290,7 +294,7 @@ function App() {
   const [downloadAllProgress, setDownloadAllProgress] = useState(null);
 
   const downloadAllSeasons = async () => {
-    const missing = AVAILABLE_SEASONS.filter(y => !allSeasonData[y]?.length);
+    const missing = AVAILABLE_SEASONS.filter(y => y <= 2026 && !allSeasonData[y]?.length);
     if (!missing.length) return;
     setDownloadAllProgress({ done: 0, total: missing.length, current: null });
     for (let i = 0; i < missing.length; i++) {
@@ -339,6 +343,12 @@ function App() {
 
   const handleSeasonChange = (year) => {
     setRawData([]);
+    setSelectedSeason(year);
+    setOffseasonYear(year);
+  };
+
+  const handleOffseasonYearChange = (year) => {
+    setOffseasonYear(year);
     setSelectedSeason(year);
   };
 
@@ -620,6 +630,9 @@ function App() {
   // --- RENDER ---
   return (
     <div className="min-h-screen bg-gray-100 font-sans text-gray-800">
+      {/* Commissioner Break-Glass Active Banner */}
+      <CommishActiveBanner />
+
       {/* League site header - hidden in Draft Room for clean, full-screen war room layout */}
       {currentView !== 'draft' && (
         <nav className="bg-blue-900 text-white shadow-lg sticky top-0 z-50">
@@ -663,46 +676,24 @@ function App() {
                 </div>
               </div>
 
-              {/* Right Side: Season Selector & Refresh */}
+              {/* Right Side: Universal Season Dropdown & Controls */}
               <div className="flex items-center space-x-2">
-                {activeGroup === 'season' ? (
+                <div className="flex items-center gap-1.5 bg-blue-950/90 px-2.5 py-1 rounded-xl border border-blue-700/80 shadow-inner">
+                  <span className="text-[11px] font-black text-blue-300 uppercase tracking-wider hidden sm:inline">Season</span>
                   <select
-                    value={selectedSeason}
-                    onChange={e => handleSeasonChange(parseInt(e.target.value))}
-                    className="bg-blue-800 text-white text-xs font-bold rounded-lg px-2.5 py-1.5 border border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer"
+                    id="universal-season-dropdown"
+                    value={activeGroup === 'offseason' ? offseasonYear : selectedSeason}
+                    onChange={e => handleSeasonChange(parseInt(e.target.value, 10))}
+                    className="bg-blue-900 hover:bg-blue-800 text-white text-xs font-bold rounded-lg px-2.5 py-1 border border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer shadow-xs"
+                    title="Select League Season"
                   >
                     {AVAILABLE_SEASONS.map(y => (
-                      <option key={y} value={y}>{y}</option>
+                      <option key={y} value={y}>
+                        {y === 2027 ? '🚀 2027 (Upcoming)' : y === 2026 ? '⚾ 2026 (Active)' : `🏛️ ${y}`}
+                      </option>
                     ))}
                   </select>
-                ) : (
-                  <div className="flex items-center bg-blue-950/90 p-0.5 rounded-xl border border-blue-700/80 shadow-inner">
-                    <button
-                      onClick={() => setOffseasonYear(2027)}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-1 transition-all cursor-pointer ${
-                        offseasonYear === 2027
-                          ? 'bg-emerald-600 text-white shadow-sm ring-1 ring-emerald-400'
-                          : 'text-emerald-300 hover:text-white hover:bg-blue-800/50'
-                      }`}
-                      title="Upcoming 2027 Offseason Prep (Fresh Keepers, Comp Picks & Budgets)"
-                    >
-                      <span>🚀</span>
-                      <span>2027 Prep</span>
-                    </button>
-                    <button
-                      onClick={() => setOffseasonYear(2026)}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-1 transition-all cursor-pointer ${
-                        offseasonYear === 2026
-                          ? 'bg-amber-600 text-white shadow-sm ring-1 ring-amber-400'
-                          : 'text-amber-300 hover:text-white hover:bg-blue-800/50'
-                      }`}
-                      title="Historical 2026 Draft Archive (Official Keepers, Comp Picks & Final Budgets)"
-                    >
-                      <span>🏛️</span>
-                      <span>2026 Archive</span>
-                    </button>
-                  </div>
-                )}
+                </div>
                 <button
                   onClick={handleRefresh}
                   className="p-1.5 text-blue-200 hover:text-white cursor-pointer rounded-lg hover:bg-blue-800 transition-colors"
@@ -860,7 +851,7 @@ function App() {
           onOpenPlayerModal={(id, name) => setSelectedPlayer({ id, name })}
           onSwitchView={(view) => setCurrentView(view)}
           seasonYear={offseasonYear}
-          onSeasonYearChange={setOffseasonYear}
+          onSeasonYearChange={handleOffseasonYearChange}
         />
       ) : (
         <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -900,6 +891,58 @@ function App() {
                     🚪 Sign Out
                   </button>
                 )}
+              </div>
+            </div>
+          ) : selectedSeason > 2026 && activeGroup === 'season' ? (
+            <div className="bg-white border border-blue-200 rounded-3xl p-8 sm:p-12 text-center shadow-lg max-w-2xl mx-auto space-y-6 my-8">
+              <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center text-4xl shadow-md ring-8 ring-blue-50">
+                🚀
+              </div>
+              <div>
+                <span className="inline-block px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-black uppercase tracking-wider mb-2">
+                  Upcoming Season
+                </span>
+                <h2 className="text-3xl font-black text-slate-900 tracking-tight">2027 Season In Progress</h2>
+                <p className="text-sm text-slate-600 mt-2 max-w-md mx-auto leading-relaxed">
+                  Regular season matchups, standings, and live scoring will activate with the 2027 MLB Opening Day. 
+                  Off-season draft preparation, trade negotiations, keeper selections, and draft capital ledgers are currently live!
+                </p>
+              </div>
+              
+              <div className="pt-2 flex flex-wrap items-center justify-center gap-3 text-xs font-black">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveGroup('offseason');
+                    setCurrentView('capital');
+                  }}
+                  className="px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl shadow-md transition cursor-pointer flex items-center gap-1.5"
+                >
+                  <span>🎟️</span>
+                  <span>2027 Draft Capital & Trades</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveGroup('offseason');
+                    setCurrentView('keepers');
+                  }}
+                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md transition cursor-pointer flex items-center gap-1.5"
+                >
+                  <span>💎</span>
+                  <span>Keepers & Budget Simulator</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveGroup('offseason');
+                    setCurrentView('draft');
+                  }}
+                  className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl shadow-md transition cursor-pointer flex items-center gap-1.5"
+                >
+                  <span>🎯</span>
+                  <span>Draft War Room</span>
+                </button>
               </div>
             </div>
           ) : (
@@ -968,7 +1011,7 @@ function App() {
             <PlayerValuationsView
               allStats={rawData}
               seasonYear={offseasonYear}
-              onSeasonYearChange={setOffseasonYear}
+              onSeasonYearChange={handleOffseasonYearChange}
               onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
               onOwnerClick={(team) => setSelectedOwner(team)}
             />
@@ -976,7 +1019,7 @@ function App() {
           {currentView === 'pickem' && (
             <PickemView
               initialSeason={offseasonYear}
-              onSeasonChange={setOffseasonYear}
+              onSeasonChange={handleOffseasonYearChange}
             />
           )}
           {currentView === 'capital' && (
@@ -984,7 +1027,7 @@ function App() {
               currentUser={effectiveOwner || 'Daniel'}
               isCommissioner={isCommissioner}
               draftYear={offseasonYear}
-              onDraftYearChange={setOffseasonYear}
+              onDraftYearChange={handleOffseasonYearChange}
             />
           )}
               {currentView === 'keepers' && (
@@ -992,7 +1035,7 @@ function App() {
                   currentUser={effectiveOwner || 'Daniel'}
                   isCommissioner={isCommissioner}
                   seasonYear={offseasonYear}
-                  onSeasonYearChange={setOffseasonYear}
+                  onSeasonYearChange={handleOffseasonYearChange}
                   onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
                 />
               )}

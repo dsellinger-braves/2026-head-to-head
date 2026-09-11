@@ -1335,6 +1335,65 @@ async def check_trade_notifications():
             requested = details.get("requested_assets") or []
             notes = details.get("notes") or ""
 
+            # Check for Commissioner Powers Checkout broadcast to #league-news
+            if event_type == "commish_checkout":
+                reason = details.get("reason") or "Administrative maintenance & trade management"
+                embed = discord.Embed(
+                    title="🛡️ Commissioner Powers Activated",
+                    description=f"**{sender_owner}** has checked out **Commissioner Powers** in the HEFTYSTRONG Dashboard.",
+                    color=0xF59E0B,  # Amber / Warning Gold
+                    timestamp=datetime.now(timezone.utc)
+                )
+                embed.add_field(name="📋 Stated Purpose", value=f"> {reason}", inline=False)
+                embed.add_field(
+                    name="📜 Audit Registry",
+                    value="All administrative actions and overrides are recorded in the league audit log.",
+                    inline=False
+                )
+                embed.set_footer(text="HEFTYSTRONG Fantasy Baseball • Commissioner Governance")
+
+                channel = None
+                news_channel_id = os.environ.get("DISCORD_LEAGUE_NEWS_CHANNEL_ID")
+                if news_channel_id:
+                    try:
+                        channel = bot.get_channel(int(news_channel_id))
+                    except Exception:
+                        pass
+
+                if not channel:
+                    for guild in bot.guilds:
+                        channel = discord.utils.find(
+                            lambda c: c.name.lower() in ["league-news", "league_news", "news", "announcements"],
+                            guild.text_channels
+                        )
+                        if channel:
+                            break
+
+                if not channel and bot.guilds and bot.guilds[0].text_channels:
+                    channel = bot.guilds[0].text_channels[0]
+
+                if channel:
+                    try:
+                        await channel.send(embed=embed)
+                        sb.table("trade_notifications").update({
+                            "status": "sent",
+                            "sent_at": datetime.now(timezone.utc).isoformat()
+                        }).eq("id", notif_id).execute()
+                        print(f"[CommishNotice] Broadcasted commish checkout by {sender_owner} to #{channel.name}")
+                    except Exception as post_err:
+                        print(f"[CommishNotice] Failed to post to channel: {post_err}")
+                        sb.table("trade_notifications").update({
+                            "status": "failed",
+                            "error_message": str(post_err)[:400]
+                        }).eq("id", notif_id).execute()
+                else:
+                    print("[CommishNotice] No suitable channel found to broadcast.")
+                    sb.table("trade_notifications").update({
+                        "status": "failed",
+                        "error_message": "No #league-news text channel found"
+                    }).eq("id", notif_id).execute()
+                continue
+
             # Attempt to resolve recipient discord user
             recipient_prof = prof_by_team.get(recipient_team_id)
             discord_id_str = recipient_prof.get("discord_id") if recipient_prof else None
