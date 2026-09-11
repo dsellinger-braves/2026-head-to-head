@@ -85,6 +85,29 @@ async function enqueueTradeNotification({
   }
 }
 
+function isPickInAssets(pick, assets = []) {
+  if (!pick || !assets || assets.length === 0) return false;
+  const pRound = Number(pick.round);
+  const pOrig = canonicalOwnerName(pick.originalOwner);
+  const pId = pick.id || `pick-${pRound}-${pOrig}`;
+
+  return assets.some(a => {
+    if (a.type !== 'pick') return false;
+    if (a.pick_id && a.pick_id === pId) return true;
+    const aRound = Number(a.round);
+    if (aRound !== pRound) return false;
+    const aOrig = canonicalOwnerName(a.original_owner || a.originalOwner);
+    if (aOrig && pOrig) return aOrig === pOrig;
+    return true;
+  });
+}
+
+function isPlayerInAssets(player, assets = []) {
+  if (!player || !assets || assets.length === 0) return false;
+  const pId = Number(player.player_id);
+  return assets.some(a => a.type === 'player' && Number(a.player_id) === pId);
+}
+
 function compute2027DraftPicks(draftTrades = []) {
   const owners = [...DRAFT_OWNERS].sort();
   const picks = [];
@@ -93,7 +116,8 @@ function compute2027DraftPicks(draftTrades = []) {
   for (let round = 6; round <= 32; round++) {
     owners.forEach(owner => {
       picks.push({
-        round,
+        id: `pick-${round}-${owner}`,
+        round: Number(round),
         originalOwner: owner,
         currentOwner: owner,
         isTraded: false,
@@ -108,7 +132,7 @@ function compute2027DraftPicks(draftTrades = []) {
   );
 
   assetTrades.forEach(trade => {
-    const round = trade.round_num;
+    const round = parseInt(trade.round_num, 10);
     if (!round) return;
     const sending = trade.sending_owner === 'Dan' ? 'Daniel' : trade.sending_owner;
     const receiving = trade.receiving_owner === 'Dan' ? 'Daniel' : trade.receiving_owner;
@@ -295,28 +319,31 @@ export default function DraftCapitalView({
   }, [computedPicks, editingProposal]);
 
   // Asset helpers for proposal creation form
-  const handleAddOfferedPick = (roundVal) => {
-    const r = parseInt(roundVal);
-    if (!r) return;
-    const p = senderAvailablePicks.find(item => item.round === r);
-    if (offeredAssets.some(a => a.type === 'pick' && a.round === r)) return;
+  const handleAddOfferedPick = (pickVal) => {
+    if (!pickVal) return;
+    const p = senderAvailablePicks.find(item => {
+      const itemKey = `${item.round}:${item.originalOwner}`;
+      return item.id === pickVal || itemKey === pickVal || String(item.round) === String(pickVal);
+    });
+    if (!p || isPickInAssets(p, offeredAssets)) return;
     setOfferedAssets(prev => [...prev, {
       type: 'pick',
-      round: r,
+      pick_id: p.id || `pick-${p.round}-${p.originalOwner}`,
+      round: Number(p.round),
       original_owner: p?.originalOwner || propSender,
-      label: `Round ${r} Pick (Orig: ${p?.originalOwner || propSender})`
+      label: `Round ${p.round} Pick ${p?.originalOwner !== propSender ? `(Orig: ${p.originalOwner})` : ''}`
     }]);
     setSelectedOfferedPickRound('');
   };
 
   const handleAddOfferedPlayer = (playerIdVal) => {
-    const pid = parseInt(playerIdVal);
+    const pid = parseInt(playerIdVal, 10);
     if (!pid) return;
-    const p = (teamRosters[propSender] || []).find(item => item.player_id === pid);
-    if (!p || offeredAssets.some(a => a.type === 'player' && a.player_id === pid)) return;
+    const p = (teamRosters[propSender] || []).find(item => Number(item.player_id) === pid);
+    if (!p || isPlayerInAssets(p, offeredAssets)) return;
     setOfferedAssets(prev => [...prev, {
       type: 'player',
-      player_id: p.player_id,
+      player_id: Number(p.player_id),
       name: p.name,
       position: p.position,
       team: p.team,
@@ -340,28 +367,31 @@ export default function DraftCapitalView({
     setOfferedAssets(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleAddRequestedPick = (roundVal) => {
-    const r = parseInt(roundVal);
-    if (!r) return;
-    const p = targetAvailablePicks.find(item => item.round === r);
-    if (requestedAssets.some(a => a.type === 'pick' && a.round === r)) return;
+  const handleAddRequestedPick = (pickVal) => {
+    if (!pickVal) return;
+    const p = targetAvailablePicks.find(item => {
+      const itemKey = `${item.round}:${item.originalOwner}`;
+      return item.id === pickVal || itemKey === pickVal || String(item.round) === String(pickVal);
+    });
+    if (!p || isPickInAssets(p, requestedAssets)) return;
     setRequestedAssets(prev => [...prev, {
       type: 'pick',
-      round: r,
+      pick_id: p.id || `pick-${p.round}-${p.originalOwner}`,
+      round: Number(p.round),
       original_owner: p?.originalOwner || propTarget,
-      label: `Round ${r} Pick (Orig: ${p?.originalOwner || propTarget})`
+      label: `Round ${p.round} Pick ${p?.originalOwner !== propTarget ? `(Orig: ${p.originalOwner})` : ''}`
     }]);
     setSelectedRequestedPickRound('');
   };
 
   const handleAddRequestedPlayer = (playerIdVal) => {
-    const pid = parseInt(playerIdVal);
+    const pid = parseInt(playerIdVal, 10);
     if (!pid) return;
-    const p = (teamRosters[propTarget] || []).find(item => item.player_id === pid);
-    if (!p || requestedAssets.some(a => a.type === 'player' && a.player_id === pid)) return;
+    const p = (teamRosters[propTarget] || []).find(item => Number(item.player_id) === pid);
+    if (!p || isPlayerInAssets(p, requestedAssets)) return;
     setRequestedAssets(prev => [...prev, {
       type: 'player',
-      player_id: p.player_id,
+      player_id: Number(p.player_id),
       name: p.name,
       position: p.position,
       team: p.team,
@@ -450,24 +480,27 @@ export default function DraftCapitalView({
     // Flush any pending selections into asset arrays
     const finalOffered = [...offeredAssets];
     if (selectedOfferedPickRound) {
-      const r = parseInt(selectedOfferedPickRound);
-      const p = senderAvailablePicks.find(item => item.round === r);
-      if (!finalOffered.some(a => a.type === 'pick' && a.round === r)) {
+      const p = senderAvailablePicks.find(item => {
+        const itemKey = `${item.round}:${item.originalOwner}`;
+        return item.id === selectedOfferedPickRound || itemKey === selectedOfferedPickRound || String(item.round) === String(selectedOfferedPickRound);
+      });
+      if (p && !isPickInAssets(p, finalOffered)) {
         finalOffered.push({
           type: 'pick',
-          round: r,
+          pick_id: p.id || `pick-${p.round}-${p.originalOwner}`,
+          round: Number(p.round),
           original_owner: p?.originalOwner || propSender,
-          label: `Round ${r} Pick (Orig: ${p?.originalOwner || propSender})`
+          label: `Round ${p.round} Pick ${p?.originalOwner !== propSender ? `(Orig: ${p.originalOwner})` : ''}`
         });
       }
     }
     if (selectedOfferedPlayerId) {
-      const pid = parseInt(selectedOfferedPlayerId);
-      const p = (teamRosters[propSender] || []).find(item => item.player_id === pid);
-      if (p && !finalOffered.some(a => a.type === 'player' && a.player_id === pid)) {
+      const pid = parseInt(selectedOfferedPlayerId, 10);
+      const p = (teamRosters[propSender] || []).find(item => Number(item.player_id) === pid);
+      if (p && !isPlayerInAssets(p, finalOffered)) {
         finalOffered.push({
           type: 'player',
-          player_id: p.player_id,
+          player_id: Number(p.player_id),
           name: p.name,
           position: p.position,
           team: p.team,
@@ -488,24 +521,27 @@ export default function DraftCapitalView({
 
     const finalRequested = [...requestedAssets];
     if (selectedRequestedPickRound) {
-      const r = parseInt(selectedRequestedPickRound);
-      const p = targetAvailablePicks.find(item => item.round === r);
-      if (!finalRequested.some(a => a.type === 'pick' && a.round === r)) {
+      const p = targetAvailablePicks.find(item => {
+        const itemKey = `${item.round}:${item.originalOwner}`;
+        return item.id === selectedRequestedPickRound || itemKey === selectedRequestedPickRound || String(item.round) === String(selectedRequestedPickRound);
+      });
+      if (p && !isPickInAssets(p, finalRequested)) {
         finalRequested.push({
           type: 'pick',
-          round: r,
+          pick_id: p.id || `pick-${p.round}-${p.originalOwner}`,
+          round: Number(p.round),
           original_owner: p?.originalOwner || propTarget,
-          label: `Round ${r} Pick (Orig: ${p?.originalOwner || propTarget})`
+          label: `Round ${p.round} Pick ${p?.originalOwner !== propTarget ? `(Orig: ${p.originalOwner})` : ''}`
         });
       }
     }
     if (selectedRequestedPlayerId) {
-      const pid = parseInt(selectedRequestedPlayerId);
-      const p = (teamRosters[propTarget] || []).find(item => item.player_id === pid);
-      if (p && !finalRequested.some(a => a.type === 'player' && a.player_id === pid)) {
+      const pid = parseInt(selectedRequestedPlayerId, 10);
+      const p = (teamRosters[propTarget] || []).find(item => Number(item.player_id) === pid);
+      if (p && !isPlayerInAssets(p, finalRequested)) {
         finalRequested.push({
           type: 'player',
-          player_id: p.player_id,
+          player_id: Number(p.player_id),
           name: p.name,
           position: p.position,
           team: p.team,
@@ -1826,19 +1862,23 @@ export default function DraftCapitalView({
                         <select
                           value={selectedOfferedPickRound}
                           onChange={e => {
-                            setSelectedOfferedPickRound(e.target.value);
-                            if (e.target.value) handleAddOfferedPick(e.target.value);
+                            const val = e.target.value;
+                            setSelectedOfferedPickRound(val);
+                            if (val) handleAddOfferedPick(val);
                           }}
                           className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white"
                         >
                           <option value="">-- Select draft pick --</option>
                           {senderAvailablePicks
-                            .filter(p => !offeredAssets.some(a => a.type === 'pick' && a.round === p.round))
-                            .map(p => (
-                              <option key={p.round} value={p.round}>
-                                Round {p.round} Pick {p.originalOwner !== propSender ? `(Orig: ${p.originalOwner})` : ''}
-                              </option>
-                            ))}
+                            .filter(p => !isPickInAssets(p, offeredAssets))
+                            .map(p => {
+                              const val = `${p.round}:${p.originalOwner}`;
+                              return (
+                                <option key={p.id || val} value={val}>
+                                  Round {p.round} Pick {p.originalOwner !== propSender ? `(Orig: ${p.originalOwner})` : ''}
+                                </option>
+                              );
+                            })}
                         </select>
                         <button
                           type="button"
@@ -1860,14 +1900,15 @@ export default function DraftCapitalView({
                         <select
                           value={selectedOfferedPlayerId}
                           onChange={e => {
-                            setSelectedOfferedPlayerId(e.target.value);
-                            if (e.target.value) handleAddOfferedPlayer(e.target.value);
+                            const val = e.target.value;
+                            setSelectedOfferedPlayerId(val);
+                            if (val) handleAddOfferedPlayer(val);
                           }}
                           className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white"
                         >
                           <option value="">-- Select rostered player --</option>
                           {(teamRosters[propSender] || [])
-                            .filter(p => !offeredAssets.some(a => a.type === 'player' && a.player_id === p.player_id))
+                            .filter(p => !isPlayerInAssets(p, offeredAssets))
                             .map(p => (
                               <option key={p.player_id} value={p.player_id}>
                                 {p.name} ({p.position}{p.team ? ' - ' + p.team : ''})
@@ -1939,19 +1980,23 @@ export default function DraftCapitalView({
                         <select
                           value={selectedRequestedPickRound}
                           onChange={e => {
-                            setSelectedRequestedPickRound(e.target.value);
-                            if (e.target.value) handleAddRequestedPick(e.target.value);
+                            const val = e.target.value;
+                            setSelectedRequestedPickRound(val);
+                            if (val) handleAddRequestedPick(val);
                           }}
                           className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white"
                         >
                           <option value="">-- Select draft pick --</option>
                           {targetAvailablePicks
-                            .filter(p => !requestedAssets.some(a => a.type === 'pick' && a.round === p.round))
-                            .map(p => (
-                              <option key={p.round} value={p.round}>
-                                Round {p.round} Pick {p.originalOwner !== propTarget ? `(Orig: ${p.originalOwner})` : ''}
-                              </option>
-                            ))}
+                            .filter(p => !isPickInAssets(p, requestedAssets))
+                            .map(p => {
+                              const val = `${p.round}:${p.originalOwner}`;
+                              return (
+                                <option key={p.id || val} value={val}>
+                                  Round {p.round} Pick {p.originalOwner !== propTarget ? `(Orig: ${p.originalOwner})` : ''}
+                                </option>
+                              );
+                            })}
                         </select>
                         <button
                           type="button"
@@ -1973,14 +2018,15 @@ export default function DraftCapitalView({
                         <select
                           value={selectedRequestedPlayerId}
                           onChange={e => {
-                            setSelectedRequestedPlayerId(e.target.value);
-                            if (e.target.value) handleAddRequestedPlayer(e.target.value);
+                            const val = e.target.value;
+                            setSelectedRequestedPlayerId(val);
+                            if (val) handleAddRequestedPlayer(val);
                           }}
                           className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white"
                         >
                           <option value="">-- Select rostered player --</option>
                           {(teamRosters[propTarget] || [])
-                            .filter(p => !requestedAssets.some(a => a.type === 'player' && a.player_id === p.player_id))
+                            .filter(p => !isPlayerInAssets(p, requestedAssets))
                             .map(p => (
                               <option key={p.player_id} value={p.player_id}>
                                 {p.name} ({p.position}{p.team ? ' - ' + p.team : ''})
@@ -2547,27 +2593,36 @@ export default function DraftCapitalView({
                         className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white"
                       >
                         <option value="">+ Add Pick...</option>
-                        {editSenderAvailablePicks.map(p => (
-                          <option key={p.round} value={p.round}>
-                            Round {p.round} (Orig: {p.originalOwner})
-                          </option>
-                        ))}
+                        {editSenderAvailablePicks
+                          .filter(p => !isPickInAssets(p, editingProposal.offered_assets))
+                          .map(p => {
+                            const val = `${p.round}:${p.originalOwner}`;
+                            return (
+                              <option key={p.id || val} value={val}>
+                                Round {p.round} (Orig: {p.originalOwner})
+                              </option>
+                            );
+                          })}
                       </select>
                       <button
                         type="button"
                         onClick={() => {
-                          const r = parseInt(editOfferedPickRound);
-                          if (!r) return;
-                          const p = editSenderAvailablePicks.find(item => item.round === r);
+                          if (!editOfferedPickRound) return;
+                          const p = editSenderAvailablePicks.find(item => {
+                            const itemKey = `${item.round}:${item.originalOwner}`;
+                            return item.id === editOfferedPickRound || itemKey === editOfferedPickRound || String(item.round) === String(editOfferedPickRound);
+                          });
+                          if (!p || isPickInAssets(p, editingProposal.offered_assets)) return;
                           setEditingProposal(prev => ({
                             ...prev,
                             offered_assets: [
                               ...prev.offered_assets,
                               {
                                 type: 'pick',
-                                round: r,
+                                pick_id: p.id || `pick-${p.round}-${p.originalOwner}`,
+                                round: Number(p.round),
                                 original_owner: p?.originalOwner || prev.proposing_owner,
-                                label: `Round ${r} Pick (Orig: ${p?.originalOwner || prev.proposing_owner})`
+                                label: `Round ${p.round} Pick (Orig: ${p?.originalOwner || prev.proposing_owner})`
                               }
                             ]
                           }));
@@ -2588,26 +2643,28 @@ export default function DraftCapitalView({
                         className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white"
                       >
                         <option value="">+ Add Player...</option>
-                        {(teamRosters[editingProposal.proposing_owner] || []).map(p => (
-                          <option key={p.player_id} value={p.player_id}>
-                            {p.name} ({p.position})
-                          </option>
-                        ))}
+                        {(teamRosters[editingProposal.proposing_owner] || [])
+                          .filter(p => !isPlayerInAssets(p, editingProposal.offered_assets))
+                          .map(p => (
+                            <option key={p.player_id} value={p.player_id}>
+                              {p.name} ({p.position})
+                            </option>
+                          ))}
                       </select>
                       <button
                         type="button"
                         onClick={() => {
-                          const pid = parseInt(editOfferedPlayerId);
+                          const pid = parseInt(editOfferedPlayerId, 10);
                           if (!pid) return;
-                          const p = (teamRosters[editingProposal.proposing_owner] || []).find(item => item.player_id === pid);
-                          if (!p) return;
+                          const p = (teamRosters[editingProposal.proposing_owner] || []).find(item => Number(item.player_id) === pid);
+                          if (!p || isPlayerInAssets(p, editingProposal.offered_assets)) return;
                           setEditingProposal(prev => ({
                             ...prev,
                             offered_assets: [
                               ...prev.offered_assets,
                               {
                                 type: 'player',
-                                player_id: p.player_id,
+                                player_id: Number(p.player_id),
                                 name: p.name,
                                 position: p.position,
                                 team: p.team,
@@ -2687,27 +2744,36 @@ export default function DraftCapitalView({
                         className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white"
                       >
                         <option value="">+ Add Pick...</option>
-                        {editTargetAvailablePicks.map(p => (
-                          <option key={p.round} value={p.round}>
-                            Round {p.round} (Orig: {p.originalOwner})
-                          </option>
-                        ))}
+                        {editTargetAvailablePicks
+                          .filter(p => !isPickInAssets(p, editingProposal.requested_assets))
+                          .map(p => {
+                            const val = `${p.round}:${p.originalOwner}`;
+                            return (
+                              <option key={p.id || val} value={val}>
+                                Round {p.round} (Orig: {p.originalOwner})
+                              </option>
+                            );
+                          })}
                       </select>
                       <button
                         type="button"
                         onClick={() => {
-                          const r = parseInt(editRequestedPickRound);
-                          if (!r) return;
-                          const p = editTargetAvailablePicks.find(item => item.round === r);
+                          if (!editRequestedPickRound) return;
+                          const p = editTargetAvailablePicks.find(item => {
+                            const itemKey = `${item.round}:${item.originalOwner}`;
+                            return item.id === editRequestedPickRound || itemKey === editRequestedPickRound || String(item.round) === String(editRequestedPickRound);
+                          });
+                          if (!p || isPickInAssets(p, editingProposal.requested_assets)) return;
                           setEditingProposal(prev => ({
                             ...prev,
                             requested_assets: [
                               ...prev.requested_assets,
                               {
                                 type: 'pick',
-                                round: r,
+                                pick_id: p.id || `pick-${p.round}-${p.originalOwner}`,
+                                round: Number(p.round),
                                 original_owner: p?.originalOwner || prev.target_owner,
-                                label: `Round ${r} Pick (Orig: ${p?.originalOwner || prev.target_owner})`
+                                label: `Round ${p.round} Pick (Orig: ${p?.originalOwner || prev.target_owner})`
                               }
                             ]
                           }));
@@ -2728,26 +2794,28 @@ export default function DraftCapitalView({
                         className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white"
                       >
                         <option value="">+ Add Player...</option>
-                        {(teamRosters[editingProposal.target_owner] || []).map(p => (
-                          <option key={p.player_id} value={p.player_id}>
-                            {p.name} ({p.position})
-                          </option>
-                        ))}
+                        {(teamRosters[editingProposal.target_owner] || [])
+                          .filter(p => !isPlayerInAssets(p, editingProposal.requested_assets))
+                          .map(p => (
+                            <option key={p.player_id} value={p.player_id}>
+                              {p.name} ({p.position})
+                            </option>
+                          ))}
                       </select>
                       <button
                         type="button"
                         onClick={() => {
-                          const pid = parseInt(editRequestedPlayerId);
+                          const pid = parseInt(editRequestedPlayerId, 10);
                           if (!pid) return;
-                          const p = (teamRosters[editingProposal.target_owner] || []).find(item => item.player_id === pid);
-                          if (!p) return;
+                          const p = (teamRosters[editingProposal.target_owner] || []).find(item => Number(item.player_id) === pid);
+                          if (!p || isPlayerInAssets(p, editingProposal.requested_assets)) return;
                           setEditingProposal(prev => ({
                             ...prev,
                             requested_assets: [
                               ...prev.requested_assets,
                               {
                                 type: 'player',
-                                player_id: p.player_id,
+                                player_id: Number(p.player_id),
                                 name: p.name,
                                 position: p.position,
                                 team: p.team,
