@@ -15,6 +15,43 @@ const getTeamId = (ownerName) => {
   return match ? match.id : 0;
 };
 
+// Enqueue Discord DM notification for the 24/7 Railway bot worker
+async function enqueueTradeNotification({
+  proposalId = null,
+  eventType,
+  senderTeamId,
+  senderOwner,
+  recipientTeamId,
+  recipientOwner,
+  offeredAssets = [],
+  requestedAssets = [],
+  notes = ''
+}) {
+  try {
+    const { error } = await supabase
+      .from('trade_notifications')
+      .insert({
+        trade_proposal_id: proposalId,
+        event_type: eventType,
+        sender_team_id: senderTeamId,
+        sender_owner: senderOwner,
+        recipient_team_id: recipientTeamId,
+        recipient_owner: recipientOwner,
+        details: {
+          offered_assets: offeredAssets,
+          requested_assets: requestedAssets,
+          notes: notes || '',
+        },
+        status: 'pending'
+      });
+    if (error) {
+      console.warn('Could not enqueue trade notification:', error);
+    }
+  } catch (err) {
+    console.warn('enqueueTradeNotification error:', err);
+  }
+}
+
 function compute2027DraftPicks(draftTrades = []) {
   const owners = [...DRAFT_OWNERS].sort();
   const picks = [];
@@ -460,7 +497,10 @@ export default function DraftCapitalView({
       const senderTeamId = getTeamId(propSender);
       const targetTeamId = getTeamId(propTarget);
 
-      const { error } = await supabase
+      const isCounter = (tradeNotes || '').toLowerCase().includes('counter-offer');
+      const eventType = isCounter ? 'countered' : 'proposed';
+
+      const { data: insertedData, error } = await supabase
         .from('league_trade_proposals')
         .insert({
           season_year: 2026,
@@ -473,11 +513,26 @@ export default function DraftCapitalView({
           notes: tradeNotes || null,
           status: 'pending',
           proposed_at: new Date().toISOString()
-        });
+        })
+        .select('id')
+        .single();
 
       if (error) throw error;
 
-      alert(`Official trade proposal sent to ${propTarget}! 🤝`);
+      // Enqueue Discord DM notification
+      await enqueueTradeNotification({
+        proposalId: insertedData?.id || null,
+        eventType,
+        senderTeamId,
+        senderOwner: propSender,
+        recipientTeamId: targetTeamId,
+        recipientOwner: propTarget,
+        offeredAssets: finalOffered,
+        requestedAssets: finalRequested,
+        notes: tradeNotes || '',
+      });
+
+      alert(`Official trade proposal sent to ${propTarget}! 🤝 Discord notification queued.`);
       setOfferedAssets([]);
       setRequestedAssets([]);
       setSelectedOfferedPickRound('');
@@ -543,7 +598,38 @@ export default function DraftCapitalView({
 
       if (error) throw error;
 
-      alert(`Trade accepted! 🎉 It has been sent to Commissioners (Dan & Adrian) for final league approval.`);
+      // 1. Notify the original proposing owner that their trade was accepted
+      await enqueueTradeNotification({
+        proposalId: proposal.id,
+        eventType: 'accepted',
+        senderTeamId: proposal.target_team_id || getTeamId(proposal.target_owner),
+        senderOwner: proposal.target_owner,
+        recipientTeamId: proposal.proposing_team_id || getTeamId(proposal.proposing_owner),
+        recipientOwner: proposal.proposing_owner,
+        offeredAssets: proposal.offered_assets,
+        requestedAssets: proposal.requested_assets,
+        notes: proposal.notes || '',
+      });
+
+      // 2. Notify commissioners (Dan Team 5 & Adrian Team 2) if they aren't directly party to the trade
+      const commishTeamIds = [5, 2];
+      for (const cId of commishTeamIds) {
+        if (cId !== proposal.proposing_team_id && cId !== proposal.target_team_id) {
+          await enqueueTradeNotification({
+            proposalId: proposal.id,
+            eventType: 'accepted',
+            senderTeamId: proposal.target_team_id || getTeamId(proposal.target_owner),
+            senderOwner: proposal.target_owner,
+            recipientTeamId: cId,
+            recipientOwner: cId === 5 ? 'Dan' : 'Adrian',
+            offeredAssets: proposal.offered_assets,
+            requestedAssets: proposal.requested_assets,
+            notes: `[Commish Notice] Trade agreed between ${proposal.proposing_owner} and ${proposal.target_owner}. Ready for your review & execution!`,
+          });
+        }
+      }
+
+      alert(`Trade accepted! 🎉 Discord notifications queued, and sent to Commissioners for final league approval.`);
       await loadData();
     } catch (err) {
       console.error('Accept failed:', err);
@@ -692,6 +778,30 @@ export default function DraftCapitalView({
 
       if (propErr) throw propErr;
 
+      // Notify both parties that the commissioner approved and executed the trade
+      await enqueueTradeNotification({
+        proposalId: proposal.id,
+        eventType: 'approved',
+        senderTeamId: profile?.team_id || 5,
+        senderOwner: profile?.owner_name || 'Commissioner',
+        recipientTeamId: proposal.proposing_team_id || getTeamId(proposal.proposing_owner),
+        recipientOwner: proposal.proposing_owner,
+        offeredAssets: proposal.offered_assets,
+        requestedAssets: proposal.requested_assets,
+        notes: `Trade approved & executed by Commissioner ${profile?.owner_name || 'Commish'}`,
+      });
+      await enqueueTradeNotification({
+        proposalId: proposal.id,
+        eventType: 'approved',
+        senderTeamId: profile?.team_id || 5,
+        senderOwner: profile?.owner_name || 'Commissioner',
+        recipientTeamId: proposal.target_team_id || getTeamId(proposal.target_owner),
+        recipientOwner: proposal.target_owner,
+        offeredAssets: proposal.offered_assets,
+        requestedAssets: proposal.requested_assets,
+        notes: `Trade approved & executed by Commissioner ${profile?.owner_name || 'Commish'}`,
+      });
+
       alert(`Trade officially APPROVED and EXECUTED! 👑 The 2027 draft board, players, and team ledgers have been updated.`);
       await loadData();
     } catch (err) {
@@ -721,6 +831,21 @@ export default function DraftCapitalView({
         .eq('id', proposal.id);
 
       if (error) throw error;
+
+      if (newStatus === 'declined') {
+        // Notify original proposer that trade was declined
+        await enqueueTradeNotification({
+          proposalId: proposal.id,
+          eventType: 'declined',
+          senderTeamId: proposal.target_team_id || getTeamId(proposal.target_owner),
+          senderOwner: proposal.target_owner,
+          recipientTeamId: proposal.proposing_team_id || getTeamId(proposal.proposing_owner),
+          recipientOwner: proposal.proposing_owner,
+          offeredAssets: proposal.offered_assets,
+          requestedAssets: proposal.requested_assets,
+          notes: proposal.notes || '',
+        });
+      }
 
       alert(`Trade proposal ${newStatus}.`);
       await loadData();
@@ -865,13 +990,24 @@ export default function DraftCapitalView({
     return proposals.filter(p => p.status === 'accepted_by_partner');
   }, [proposals]);
 
-  const allPendingProposals = useMemo(() => {
-    return proposals.filter(p => p.status === 'pending' || p.status === 'accepted_by_partner');
+  // Public league view: ONLY show accepted trades (accepted by partner or approved by commissioner)
+  // Private pending proposals & active negotiations remain confidential to the involved owners!
+  const leagueAcceptedTrades = useMemo(() => {
+    return proposals.filter(p => p.status === 'accepted_by_partner' || p.status === 'approved');
   }, [proposals]);
 
   const archivedProposals = useMemo(() => {
-    return proposals.filter(p => p.status === 'approved' || p.status === 'declined' || p.status === 'cancelled');
-  }, [proposals]);
+    if (isCommissioner) {
+      return proposals.filter(p => p.status === 'approved' || p.status === 'declined' || p.status === 'cancelled');
+    }
+    // For non-commissioners, only display approved trades or their own historical declined/cancelled negotiations
+    return proposals.filter(p => {
+      if (p.status === 'approved') return true;
+      const isMine = p.proposing_owner?.toLowerCase() === myNormPerspective?.toLowerCase() ||
+                     p.target_owner?.toLowerCase() === myNormPerspective?.toLowerCase();
+      return isMine && (p.status === 'declined' || p.status === 'cancelled');
+    });
+  }, [proposals, isCommissioner, myNormPerspective]);
 
   const pendingCount = useMemo(() => {
     return proposals.filter(p => p.status === 'pending' || p.status === 'accepted_by_partner').length;
@@ -1915,7 +2051,7 @@ export default function DraftCapitalView({
                     : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
                 }`}
               >
-                <span>🌐 League All ({allPendingProposals.length})</span>
+                <span>🌐 League All ({leagueAcceptedTrades.length})</span>
               </button>
 
               <button
@@ -1934,7 +2070,7 @@ export default function DraftCapitalView({
               {inboxTab === 'inbox' && `Showing offers waiting for ${viewPerspectiveOwner}'s decision`}
               {inboxTab === 'outbox' && `Showing offers sent by ${viewPerspectiveOwner} awaiting response`}
               {inboxTab === 'commish' && 'Agreed by both parties • Pending commissioner execution'}
-              {inboxTab === 'all' && 'All active proposals across the entire league'}
+              {inboxTab === 'all' && 'Agreed & executed trades across the league • Active proposals and private negotiations remain confidential between parties'}
               {inboxTab === 'archive' && 'Historical approved, declined, and cancelled proposals'}
             </div>
           </div>
@@ -1947,7 +2083,7 @@ export default function DraftCapitalView({
                 if (inboxTab === 'inbox') listToRender = incomingProposals;
                 else if (inboxTab === 'outbox') listToRender = outgoingProposals;
                 else if (inboxTab === 'commish') listToRender = commishQueueProposals;
-                else if (inboxTab === 'all') listToRender = allPendingProposals;
+                else if (inboxTab === 'all') listToRender = leagueAcceptedTrades;
 
                 if (listToRender.length === 0) {
                   return (
@@ -1959,7 +2095,7 @@ export default function DraftCapitalView({
                         {inboxTab === 'inbox' && `No pending incoming trade offers for ${viewPerspectiveOwner}.`}
                         {inboxTab === 'outbox' && `No active proposals sent by ${viewPerspectiveOwner}.`}
                         {inboxTab === 'commish' && 'No proposals currently waiting in the Commissioner queue.'}
-                        {inboxTab === 'all' && 'No active proposals in the league right now.'}
+                        {inboxTab === 'all' && 'No accepted trades in the league yet. Active negotiations remain confidential between owners.'}
                       </div>
                       <div className="text-slate-500 text-xs">
                         Use the "➕ Propose New Trade" button above to initiate a pick, player, or budget proposal.

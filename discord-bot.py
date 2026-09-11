@@ -12,6 +12,7 @@ import requests
 import discord
 from collections import defaultdict
 from discord import app_commands
+from discord.ext import tasks
 from datetime import date, timedelta, datetime, timezone
 from supabase import create_client, Client
 from historical import (
@@ -1270,8 +1271,199 @@ class HEFTYBot(discord.Client):
         except Exception as e:
             print(f"Supabase FAILED — {e}")
 
+        # Start trade notifications background worker loop
+        if not check_trade_notifications.is_running():
+            check_trade_notifications.start()
+            print("Trade notifications background worker started.")
+
 
 bot = HEFTYBot()
+
+
+# ---------------------------------------------------------------------------
+# TRADE NOTIFICATIONS BACKGROUND WORKER (DISCORD DMs)
+# ---------------------------------------------------------------------------
+
+def format_asset_list(assets):
+    if not assets:
+        return "*(None)*"
+    lines = []
+    for a in assets:
+        a_type = a.get("type")
+        if a_type == "pick":
+            lines.append(f"🎟️ **Round {a.get('round')} Draft Pick** (2027)")
+        elif a_type == "budget":
+            lines.append(f"💵 **${a.get('amount')} Draft Budget**")
+        elif a_type == "player":
+            name = a.get("name") or a.get("label") or "Player"
+            pos = f" ({a.get('position')})" if a.get("position") else ""
+            lines.append(f"👤 **{name}**{pos}")
+        else:
+            lines.append(f"📦 {a.get('label') or 'Asset'}")
+    return "\n".join(lines)
+
+
+@tasks.loop(seconds=15)
+async def check_trade_notifications():
+    """Checks Supabase for pending trade lifecycle notifications and delivers DMs."""
+    try:
+        sb = get_supabase()
+        res = (
+            sb.table("trade_notifications")
+            .select("*")
+            .eq("status", "pending")
+            .order("created_at", desc=False)
+            .limit(10)
+            .execute()
+        )
+        records = res.data or []
+        if not records:
+            return
+
+        prof_res = sb.table("league_profiles").select("*").execute()
+        profiles = prof_res.data or []
+        prof_by_team = {p["team_id"]: p for p in profiles if "team_id" in p}
+
+        for notif in records:
+            notif_id = notif["id"]
+            recipient_team_id = notif.get("recipient_team_id")
+            recipient_owner = notif.get("recipient_owner")
+            sender_owner = notif.get("sender_owner")
+            event_type = notif.get("event_type", "proposed")
+            details = notif.get("details") or {}
+            offered = details.get("offered_assets") or []
+            requested = details.get("requested_assets") or []
+            notes = details.get("notes") or ""
+
+            # Attempt to resolve recipient discord user
+            recipient_prof = prof_by_team.get(recipient_team_id)
+            discord_id_str = recipient_prof.get("discord_id") if recipient_prof else None
+            discord_user = None
+
+            if discord_id_str:
+                try:
+                    discord_user = bot.get_user(int(discord_id_str)) or await bot.fetch_user(int(discord_id_str))
+                except Exception as e:
+                    print(f"[TradeNotify] Could not fetch user by discord_id {discord_id_str}: {e}")
+
+            if not discord_user and recipient_prof:
+                target_username = (recipient_prof.get("discord_username") or "").lower()
+                if target_username:
+                    for guild in bot.guilds:
+                        member = discord.utils.find(
+                            lambda m: m.name.lower() == target_username or (m.global_name and m.global_name.lower() == target_username),
+                            guild.members
+                        )
+                        if member:
+                            discord_user = member
+                            try:
+                                sb.table("league_profiles").update({"discord_id": str(member.id)}).eq("team_id", recipient_team_id).execute()
+                            except Exception:
+                                pass
+                            break
+
+            if not discord_user:
+                for u_name, o_name in DISCORD_TO_OWNER.items():
+                    if (o_name.lower() == (recipient_owner or "").lower() or
+                        (o_name == "Dan" and recipient_owner == "Daniel") or
+                        (o_name == "Daniel" and recipient_owner == "Dan")):
+                        for guild in bot.guilds:
+                            member = discord.utils.find(lambda m: m.name.lower() == u_name.lower(), guild.members)
+                            if member:
+                                discord_user = member
+                                break
+                        if discord_user:
+                            break
+
+            if not discord_user:
+                print(f"[TradeNotify] No Discord user found for recipient {recipient_owner} (Team {recipient_team_id})")
+                sb.table("trade_notifications").update({
+                    "status": "failed",
+                    "error_message": f"Discord account not resolved for {recipient_owner}"
+                }).eq("id", notif_id).execute()
+                continue
+
+            hub_url = "https://dsellinger-braves.github.io/2026-head-to-head/#/draft-capital?tab=incoming"
+            color = 0x3B82F6  # Blue default
+            title = "📨 New Trade Proposal Received!"
+            headline = f"**{sender_owner}** has sent you an official trade offer for the 2027 season."
+
+            if event_type == "countered":
+                color = 0xF59E0B
+                title = "🔄 Trade Counter-Offer Received!"
+                headline = f"**{sender_owner}** sent a counter-offer to your previous proposal."
+            elif event_type == "accepted":
+                color = 0x10B981
+                title = "✅ Trade Offer Accepted!"
+                headline = f"**{sender_owner}** accepted your trade proposal! It is now waiting for Commissioner execution."
+                hub_url = "https://dsellinger-braves.github.io/2026-head-to-head/#/draft-capital?tab=commish"
+            elif event_type == "declined":
+                color = 0xEF4444
+                title = "❌ Trade Offer Declined"
+                headline = f"**{sender_owner}** declined your trade proposal."
+                hub_url = "https://dsellinger-braves.github.io/2026-head-to-head/#/draft-capital?tab=outbox"
+            elif event_type == "approved":
+                color = 0x8B5CF6
+                title = "🏆 Trade Approved & Executed!"
+                headline = f"The Commissioner has approved and executed the trade between **{sender_owner}** and **{recipient_owner}**! 2027 draft picks and rosters are updated."
+                hub_url = "https://dsellinger-braves.github.io/2026-head-to-head/#/draft-capital"
+
+            embed = discord.Embed(
+                title=title,
+                description=headline,
+                color=color,
+                timestamp=datetime.now(timezone.utc)
+            )
+
+            if offered:
+                embed.add_field(name=f"📦 {sender_owner} Sends", value=format_asset_list(offered), inline=False)
+            if requested:
+                embed.add_field(name=f"📥 {recipient_owner} Sends", value=format_asset_list(requested), inline=False)
+            if notes:
+                embed.add_field(name="💬 Notes", value=f"> {notes[:500]}", inline=False)
+
+            embed.add_field(
+                name="🔗 Trade Proposal Hub",
+                value=f"[**Click Here to Open Trade Hub**]({hub_url})",
+                inline=False
+            )
+
+            embed.set_footer(text="HEFTYSTRONG Fantasy Baseball • Offseason Trade System")
+
+            try:
+                await discord_user.send(embed=embed)
+                sb.table("trade_notifications").update({
+                    "status": "sent",
+                    "sent_at": datetime.now(timezone.utc).isoformat()
+                }).eq("id", notif_id).execute()
+                print(f"[TradeNotify] DM delivered successfully to {discord_user.name} for {event_type}.")
+            except discord.Forbidden:
+                print(f"[TradeNotify] DMs closed by {discord_user.name}. Tagging in fallback channel...")
+                trade_channel_id = os.environ.get("DISCORD_TRADE_CHANNEL_ID")
+                channel = bot.get_channel(int(trade_channel_id)) if trade_channel_id else None
+                if channel:
+                    await channel.send(
+                        content=f"<@{discord_user.id}> 🔔 You have an offseason trade alert from **{sender_owner}**! (Your DMs are disabled)",
+                        embed=embed
+                    )
+                sb.table("trade_notifications").update({
+                    "status": "dm_blocked",
+                    "error_message": "User has DMs disabled from server members (fallback sent if channel configured)."
+                }).eq("id", notif_id).execute()
+            except Exception as send_err:
+                print(f"[TradeNotify] Failed to send DM to {discord_user.name}: {send_err}")
+                sb.table("trade_notifications").update({
+                    "status": "failed",
+                    "error_message": str(send_err)[:400]
+                }).eq("id", notif_id).execute()
+
+    except Exception as loop_err:
+        print(f"[TradeNotify] check_trade_notifications error: {loop_err}")
+
+
+@check_trade_notifications.before_loop
+async def before_check_trade_notifications():
+    await bot.wait_until_ready()
 
 
 @bot.tree.command(name="ping", description="Test bot and database connectivity")
