@@ -32,9 +32,12 @@ import google.genai as genai
 # CONFIGURATION
 # ---------------------------------------------------------------------------
 
+DEFAULT_SUPABASE_URL = "https://wczdkcdqgtzlsbssogoz.supabase.co"
+DEFAULT_SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjemRrY2RxZ3R6bHNic3NvZ296Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NzQxMjQsImV4cCI6MjA4NTA1MDEyNH0.wOwQg2oRj5Z_XWtpjvprr0moAiA-ZvCXfVfu_0rrw44"
+
 DISCORD_BOT_TOKEN = os.environ.get("DISCORD_BOT_TOKEN")
-SUPABASE_URL      = os.environ.get("SUPABASE_URL")
-SUPABASE_KEY      = os.environ.get("SUPABASE_KEY")
+SUPABASE_URL      = os.environ.get("SUPABASE_URL") or DEFAULT_SUPABASE_URL
+SUPABASE_KEY      = os.environ.get("SUPABASE_KEY") or DEFAULT_SUPABASE_KEY
 GEMINI_API_KEY    = os.environ.get("GEMINI_API_KEY")
 
 # ESPN Fantasy API — used for real-time roster lookups in /live
@@ -68,6 +71,29 @@ DISCORD_TO_OWNER = {
     "mrussell38":  "Mark",
     "pston3":      "Preston",
 }
+
+OWNER_TO_DISCORD_ID = {
+    "dsellinger": 479043598688583703,
+    "dan": 479043598688583703,
+    "daniel": 479043598688583703,
+    "adriaxx": 702321632038879232,
+    "adrian": 702321632038879232,
+}
+
+def canonical_owner_name(name: str) -> str:
+    if not name:
+        return ""
+    key = str(name).strip().lower()
+    if key in ["dan", "daniel", "dsellinger"]:
+        return "Daniel"
+    if key in ["adrian", "adriaxx"]:
+        return "Adrian"
+    if key in DISCORD_TO_OWNER:
+        return DISCORD_TO_OWNER[key]
+    for k, v in TEAM_NAMES.items():
+        if v.lower() == key:
+            return v
+    return name
 
 TEAM_NAME_TO_ID = {v.lower(): k for k, v in TEAM_NAMES.items()}
 TEAM_ALIASES    = {"daniel": 5, "danny": 5}
@@ -555,12 +581,16 @@ def scoring_period_for_date(d: date) -> int:
 # SUPABASE
 # ---------------------------------------------------------------------------
 
+_sb_client: Client | None = None
+
 def get_supabase() -> Client:
-    url = SUPABASE_URL or "NOT SET"
-    key = SUPABASE_KEY or "NOT SET"
-    print(f"Supabase URL: '{url}' (len={len(url)})")
-    print(f"Supabase Key starts with: '{key[:20]}' (len={len(key)})")
-    return create_client(url, key)
+    global _sb_client
+    if _sb_client is not None:
+        return _sb_client
+    url = SUPABASE_URL or DEFAULT_SUPABASE_URL
+    key = SUPABASE_KEY or DEFAULT_SUPABASE_KEY
+    _sb_client = create_client(url, key)
+    return _sb_client
 
 
 def fetch_stats_up_to_period(max_period: int) -> list[dict]:
@@ -1303,9 +1333,9 @@ def format_asset_list(assets):
     return "\n".join(lines)
 
 
-@tasks.loop(seconds=15)
-async def check_trade_notifications():
-    """Checks Supabase for pending trade lifecycle notifications and delivers DMs."""
+async def process_trade_notifications_once() -> int:
+    """Processes pending trade lifecycle notifications from Supabase and delivers DMs."""
+    processed_count = 0
     try:
         sb = get_supabase()
         res = (
@@ -1318,7 +1348,7 @@ async def check_trade_notifications():
         )
         records = res.data or []
         if not records:
-            return
+            return 0
 
         prof_res = sb.table("league_profiles").select("*").execute()
         profiles = prof_res.data or []
@@ -1327,13 +1357,16 @@ async def check_trade_notifications():
         for notif in records:
             notif_id = notif["id"]
             recipient_team_id = notif.get("recipient_team_id")
-            recipient_owner = notif.get("recipient_owner")
-            sender_owner = notif.get("sender_owner")
+            raw_recipient_owner = notif.get("recipient_owner")
+            raw_sender_owner = notif.get("sender_owner")
             event_type = notif.get("event_type", "proposed")
             details = notif.get("details") or {}
             offered = details.get("offered_assets") or []
             requested = details.get("requested_assets") or []
             notes = details.get("notes") or ""
+
+            sender_owner = canonical_owner_name(raw_sender_owner)
+            recipient_owner = canonical_owner_name(raw_recipient_owner)
 
             # Check for Commissioner Powers Checkout broadcast to #league-news
             if event_type == "commish_checkout":
@@ -1380,6 +1413,7 @@ async def check_trade_notifications():
                             "sent_at": datetime.now(timezone.utc).isoformat()
                         }).eq("id", notif_id).execute()
                         print(f"[CommishNotice] Broadcasted commish checkout by {sender_owner} to #{channel.name}")
+                        processed_count += 1
                     except Exception as post_err:
                         print(f"[CommishNotice] Failed to post to channel: {post_err}")
                         sb.table("trade_notifications").update({
@@ -1396,9 +1430,23 @@ async def check_trade_notifications():
 
             # Attempt to resolve recipient discord user
             recipient_prof = prof_by_team.get(recipient_team_id)
-            discord_id_str = recipient_prof.get("discord_id") if recipient_prof else None
-            discord_user = None
+            if not recipient_prof:
+                for p in profiles:
+                    p_own = (p.get("owner_name") or "").lower()
+                    p_disc = (p.get("discord_username") or "").lower()
+                    recip_lower = recipient_owner.lower()
+                    raw_recip_lower = (raw_recipient_owner or "").lower()
+                    if recip_lower in [p_own, p_disc] or raw_recip_lower in [p_own, p_disc]:
+                        recipient_prof = p
+                        break
 
+            discord_id_str = recipient_prof.get("discord_id") if recipient_prof else None
+            if not discord_id_str:
+                known_id = OWNER_TO_DISCORD_ID.get(recipient_owner.lower()) or OWNER_TO_DISCORD_ID.get((raw_recipient_owner or "").lower())
+                if known_id:
+                    discord_id_str = str(known_id)
+
+            discord_user = None
             if discord_id_str:
                 try:
                     discord_user = bot.get_user(int(discord_id_str)) or await bot.fetch_user(int(discord_id_str))
@@ -1416,16 +1464,16 @@ async def check_trade_notifications():
                         if member:
                             discord_user = member
                             try:
-                                sb.table("league_profiles").update({"discord_id": str(member.id)}).eq("team_id", recipient_team_id).execute()
+                                sb.table("league_profiles").update({"discord_id": str(member.id)}).eq("id", recipient_prof.get("id")).execute()
                             except Exception:
                                 pass
                             break
 
             if not discord_user:
                 for u_name, o_name in DISCORD_TO_OWNER.items():
-                    if (o_name.lower() == (recipient_owner or "").lower() or
-                        (o_name == "Dan" and recipient_owner == "Daniel") or
-                        (o_name == "Daniel" and recipient_owner == "Dan")):
+                    if (o_name.lower() == recipient_owner.lower() or
+                        u_name.lower() == recipient_owner.lower() or
+                        u_name.lower() == (raw_recipient_owner or "").lower()):
                         for guild in bot.guilds:
                             member = discord.utils.find(lambda m: m.name.lower() == u_name.lower(), guild.members)
                             if member:
@@ -1496,19 +1544,32 @@ async def check_trade_notifications():
                     "sent_at": datetime.now(timezone.utc).isoformat()
                 }).eq("id", notif_id).execute()
                 print(f"[TradeNotify] DM delivered successfully to {discord_user.name} for {event_type}.")
+                processed_count += 1
             except discord.Forbidden:
                 print(f"[TradeNotify] DMs closed by {discord_user.name}. Tagging in fallback channel...")
                 trade_channel_id = os.environ.get("DISCORD_TRADE_CHANNEL_ID")
                 channel = bot.get_channel(int(trade_channel_id)) if trade_channel_id else None
+                if not channel:
+                    for guild in bot.guilds:
+                        channel = discord.utils.find(
+                            lambda c: c.name.lower() in ["league-news", "league_news", "trades", "trade-talk", "general"],
+                            guild.text_channels
+                        )
+                        if channel:
+                            break
                 if channel:
-                    await channel.send(
-                        content=f"<@{discord_user.id}> 🔔 You have an offseason trade alert from **{sender_owner}**! (Your DMs are disabled)",
-                        embed=embed
-                    )
+                    try:
+                        await channel.send(
+                            content=f"<@{discord_user.id}> 🔔 You have an offseason trade alert from **{sender_owner}**! (Your DMs are disabled)",
+                            embed=embed
+                        )
+                    except Exception:
+                        pass
                 sb.table("trade_notifications").update({
                     "status": "dm_blocked",
                     "error_message": "User has DMs disabled from server members (fallback sent if channel configured)."
                 }).eq("id", notif_id).execute()
+                processed_count += 1
             except Exception as send_err:
                 print(f"[TradeNotify] Failed to send DM to {discord_user.name}: {send_err}")
                 sb.table("trade_notifications").update({
@@ -1517,12 +1578,30 @@ async def check_trade_notifications():
                 }).eq("id", notif_id).execute()
 
     except Exception as loop_err:
-        print(f"[TradeNotify] check_trade_notifications error: {loop_err}")
+        print(f"[TradeNotify] process_trade_notifications_once error: {loop_err}")
+
+    return processed_count
+
+
+@tasks.loop(seconds=15)
+async def check_trade_notifications():
+    """Checks Supabase for pending trade lifecycle notifications and delivers DMs."""
+    await process_trade_notifications_once()
 
 
 @check_trade_notifications.before_loop
 async def before_check_trade_notifications():
     await bot.wait_until_ready()
+
+
+@bot.tree.command(name="check_trades", description="Immediately check and process pending trade notifications")
+async def check_trades_command(interaction: discord.Interaction):
+    await interaction.response.defer(ephemeral=True)
+    try:
+        count = await process_trade_notifications_once()
+        await interaction.followup.send(f"✅ Trade check complete. Processed {count} notification(s).")
+    except Exception as e:
+        await interaction.followup.send(f"❌ Error checking trades: {e}")
 
 
 @bot.tree.command(name="ping", description="Test bot and database connectivity")

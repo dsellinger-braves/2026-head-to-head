@@ -9,10 +9,43 @@ import { LEAGUE_OWNERS } from '../utils/mlbTeams';
 
 const DRAFT_OWNERS = ["Adrian", "Alex", "Anil", "Daniel", "Garrett", "Mark", "Preston", "Tim", "Will"];
 
+const LEAGUE_OWNERS_NORMALIZED = {
+  adrian: { id: 2, name: 'Adrian' },
+  adriaxx: { id: 2, name: 'Adrian' },
+  alex: { id: 8, name: 'Alex' },
+  ay0h: { id: 8, name: 'Alex' },
+  anil: { id: 6, name: 'Anil' },
+  anilbhairo: { id: 6, name: 'Anil' },
+  dan: { id: 5, name: 'Daniel' },
+  daniel: { id: 5, name: 'Daniel' },
+  dsellinger: { id: 5, name: 'Daniel' },
+  garrett: { id: 3, name: 'Garrett' },
+  ghutch: { id: 3, name: 'Garrett' },
+  mark: { id: 13, name: 'Mark' },
+  mrussell38: { id: 13, name: 'Mark' },
+  preston: { id: 14, name: 'Preston' },
+  pston3: { id: 14, name: 'Preston' },
+  tim: { id: 1, name: 'Tim' },
+  aznchuy: { id: 1, name: 'Tim' },
+  will: { id: 12, name: 'Will' },
+  senorspice: { id: 12, name: 'Will' },
+};
+
 const getTeamId = (ownerName) => {
-  const norm = ownerName === 'Dan' ? 'Daniel' : ownerName;
-  const match = LEAGUE_OWNERS.find(lo => lo.name.toLowerCase() === norm?.toLowerCase());
-  return match ? match.id : 0;
+  if (!ownerName) return 0;
+  const key = String(ownerName).toLowerCase().trim();
+  const match = LEAGUE_OWNERS_NORMALIZED[key];
+  if (match) return match.id;
+  const found = LEAGUE_OWNERS.find(lo => lo.name.toLowerCase() === key);
+  return found ? found.id : 0;
+};
+
+const canonicalOwnerName = (ownerName) => {
+  if (!ownerName) return '';
+  const key = String(ownerName).toLowerCase().trim();
+  const match = LEAGUE_OWNERS_NORMALIZED[key];
+  if (match) return match.name;
+  return ownerName;
 };
 
 // Enqueue Discord DM notification for the 24/7 Railway bot worker
@@ -108,13 +141,14 @@ export default function DraftCapitalView({
   const [teamRosters, setTeamRosters] = useState({});
   const [loading, setLoading] = useState(true);
 
+  const canonicalCurrentUser = canonicalOwnerName(effectiveOwner || currentUser);
   const [activeSubTab, setActiveSubTab] = useState(draftYear === 2026 ? '2026board' : 'board'); // 'board' | 'ledgers' | 'history' | '2026board' | 'proposals'
-  const [selectedOwner, setSelectedOwner] = useState(currentUser);
+  const [selectedOwner, setSelectedOwner] = useState(canonicalCurrentUser);
   const [roundFilter, setRoundFilter] = useState('ALL');
 
   // Trade Proposals Sub-Navigation & Perspectives
   const [inboxTab, setInboxTab] = useState('inbox'); // 'inbox' | 'outbox' | 'commish' | 'all' | 'archive'
-  const [viewPerspectiveOwner, setViewPerspectiveOwner] = useState(effectiveOwner || currentUser);
+  const [viewPerspectiveOwner, setViewPerspectiveOwner] = useState(canonicalCurrentUser);
 
   // Sync activeSubTab when draftYear prop changes
   useEffect(() => {
@@ -128,15 +162,18 @@ export default function DraftCapitalView({
   // Sync viewPerspectiveOwner when effectiveOwner updates
   useEffect(() => {
     if (effectiveOwner) {
-      setViewPerspectiveOwner(effectiveOwner);
-      setSelectedOwner(effectiveOwner);
-      setPropSender(effectiveOwner);
+      const canon = canonicalOwnerName(effectiveOwner);
+      setViewPerspectiveOwner(canon);
+      setSelectedOwner(canon);
+      setPropSender(canon);
     }
   }, [effectiveOwner]);
 
   // Trade Proposal Form State (Multi-asset support: Picks, Players, Budget)
-  const [propSender, setPropSender] = useState(effectiveOwner || currentUser);
-  const [propTarget, setPropTarget] = useState(DRAFT_OWNERS.find(o => o !== (effectiveOwner || currentUser)) || 'Adrian');
+  const [propSender, setPropSender] = useState(canonicalCurrentUser);
+  const [propTarget, setPropTarget] = useState(() => {
+    return DRAFT_OWNERS.find(o => o !== canonicalCurrentUser) || 'Adrian';
+  });
   const [offeredAssets, setOfferedAssets] = useState([]); // [{ type: 'pick'|'player'|'budget', ... }]
   const [requestedAssets, setRequestedAssets] = useState([]);
 
@@ -165,8 +202,8 @@ export default function DraftCapitalView({
   const [savingEdit, setSavingEdit] = useState(false);
 
   // Load All Data including Active Rosters
-  const loadData = React.useCallback(async () => {
-    setLoading(true);
+  const loadData = React.useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const [tradesRes, compRes, keepersRes, proposalsRes, pdsRes, p1, p2, p3, p4] = await Promise.all([
         supabase.from('draft_asset_trades').select('*').order('trade_id', { ascending: true }),
@@ -226,7 +263,7 @@ export default function DraftCapitalView({
     } catch (err) {
       console.warn('Using local fallback for draft assets:', err);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, []);
 
@@ -494,8 +531,10 @@ export default function DraftCapitalView({
 
     setSubmittingTrade(true);
     try {
-      const senderTeamId = getTeamId(propSender);
-      const targetTeamId = getTeamId(propTarget);
+      const canonicalSender = canonicalOwnerName(propSender);
+      const canonicalTarget = canonicalOwnerName(propTarget);
+      const senderTeamId = getTeamId(canonicalSender);
+      const targetTeamId = getTeamId(canonicalTarget);
 
       const isCounter = (tradeNotes || '').toLowerCase().includes('counter-offer');
       const eventType = isCounter ? 'countered' : 'proposed';
@@ -505,9 +544,9 @@ export default function DraftCapitalView({
         .insert({
           season_year: 2026,
           proposing_team_id: senderTeamId,
-          proposing_owner: propSender,
+          proposing_owner: canonicalSender,
           target_team_id: targetTeamId,
-          target_owner: propTarget,
+          target_owner: canonicalTarget,
           offered_assets: finalOffered,
           requested_assets: finalRequested,
           notes: tradeNotes || null,
@@ -524,15 +563,15 @@ export default function DraftCapitalView({
         proposalId: insertedData?.id || null,
         eventType,
         senderTeamId,
-        senderOwner: propSender,
+        senderOwner: canonicalSender,
         recipientTeamId: targetTeamId,
-        recipientOwner: propTarget,
+        recipientOwner: canonicalTarget,
         offeredAssets: finalOffered,
         requestedAssets: finalRequested,
         notes: tradeNotes || '',
       });
 
-      alert(`Official trade proposal sent to ${propTarget}! 🤝 Discord notification queued.`);
+      alert(`Official trade proposal sent to ${canonicalTarget}! 🤝 Discord notification queued.`);
       setOfferedAssets([]);
       setRequestedAssets([]);
       setSelectedOfferedPickRound('');
@@ -543,7 +582,8 @@ export default function DraftCapitalView({
       setSelectedRequestedBudget('');
       setTradeNotes('');
       setProposeModalOpen(false);
-      await loadData();
+      setInboxTab('outbox');
+      await loadData(true);
     } catch (err) {
       console.error('Failed to submit proposal:', err);
       alert('Error submitting proposal: ' + err.message);
@@ -630,7 +670,7 @@ export default function DraftCapitalView({
       }
 
       alert(`Trade accepted! 🎉 Discord notifications queued, and sent to Commissioners for final league approval.`);
-      await loadData();
+      await loadData(true);
     } catch (err) {
       console.error('Accept failed:', err);
       alert('Failed to accept proposal: ' + err.message);
@@ -817,7 +857,7 @@ export default function DraftCapitalView({
       }
 
       alert(`Trade officially APPROVED and EXECUTED! 👑 The 2027 draft board, players, and team ledgers have been updated.`);
-      await loadData();
+      await loadData(true);
     } catch (err) {
       console.error('Approval failed:', err);
       alert('Failed to approve trade: ' + err.message);
@@ -862,7 +902,7 @@ export default function DraftCapitalView({
       }
 
       alert(`Trade proposal ${newStatus}.`);
-      await loadData();
+      await loadData(true);
     } catch (err) {
       console.error('Update failed:', err);
       alert('Error: ' + err.message);
@@ -929,7 +969,7 @@ export default function DraftCapitalView({
 
       alert('Proposal updated successfully by Commissioner. 👑');
       setEditingProposal(null);
-      await loadData();
+      await loadData(true);
     } catch (err) {
       console.error('Failed to update proposal:', err);
       alert('Error updating proposal: ' + err.message);
@@ -962,7 +1002,7 @@ export default function DraftCapitalView({
       }
 
       alert('Executed trade record deleted from draft_asset_trades.');
-      await loadData();
+      await loadData(true);
     } catch (err) {
       alert('Failed to delete trade record: ' + err.message);
     }
@@ -1007,14 +1047,13 @@ export default function DraftCapitalView({
 
   // Proposal Lists Filtered by Inbox Tabs
   const myNormPerspective = useMemo(() => {
-    const norm = viewPerspectiveOwner === 'Dan' ? 'Daniel' : viewPerspectiveOwner;
-    return (norm || '').toLowerCase();
+    return canonicalOwnerName(viewPerspectiveOwner).toLowerCase();
   }, [viewPerspectiveOwner]);
 
   const incomingProposals = useMemo(() => {
     return proposals.filter(p => {
       if (p.status !== 'pending') return false;
-      const targetNorm = (p.target_owner === 'Dan' ? 'Daniel' : p.target_owner)?.toLowerCase();
+      const targetNorm = canonicalOwnerName(p.target_owner).toLowerCase();
       return targetNorm === myNormPerspective;
     });
   }, [proposals, myNormPerspective]);
@@ -1022,7 +1061,7 @@ export default function DraftCapitalView({
   const outgoingProposals = useMemo(() => {
     return proposals.filter(p => {
       if (p.status !== 'pending') return false;
-      const propNorm = (p.proposing_owner === 'Dan' ? 'Daniel' : p.proposing_owner)?.toLowerCase();
+      const propNorm = canonicalOwnerName(p.proposing_owner).toLowerCase();
       return propNorm === myNormPerspective;
     });
   }, [proposals, myNormPerspective]);
@@ -1044,8 +1083,8 @@ export default function DraftCapitalView({
     // For non-commissioners, only display approved trades or their own historical declined/cancelled negotiations
     return proposals.filter(p => {
       if (p.status === 'approved') return true;
-      const isMine = p.proposing_owner?.toLowerCase() === myNormPerspective?.toLowerCase() ||
-                     p.target_owner?.toLowerCase() === myNormPerspective?.toLowerCase();
+      const isMine = canonicalOwnerName(p.proposing_owner).toLowerCase() === myNormPerspective ||
+                     canonicalOwnerName(p.target_owner).toLowerCase() === myNormPerspective;
       return isMine && (p.status === 'declined' || p.status === 'cancelled');
     });
   }, [proposals, isCommissioner, myNormPerspective]);

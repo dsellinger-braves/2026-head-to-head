@@ -29,6 +29,28 @@ function cleanupOAuthHash() {
   }
 }
 
+const STATIC_LEAGUE_PROFILES = {
+  dsellinger: { team_id: 5, owner_name: 'Daniel', role: 'commissioner' },
+  dan: { team_id: 5, owner_name: 'Daniel', role: 'commissioner' },
+  daniel: { team_id: 5, owner_name: 'Daniel', role: 'commissioner' },
+  adriaxx: { team_id: 2, owner_name: 'Adrian', role: 'commissioner' },
+  adrian: { team_id: 2, owner_name: 'Adrian', role: 'commissioner' },
+  aznchuy: { team_id: 1, owner_name: 'Tim', role: 'owner' },
+  tim: { team_id: 1, owner_name: 'Tim', role: 'owner' },
+  ghutch: { team_id: 3, owner_name: 'Garrett', role: 'owner' },
+  garrett: { team_id: 3, owner_name: 'Garrett', role: 'owner' },
+  anilbhairo: { team_id: 6, owner_name: 'Anil', role: 'owner' },
+  anil: { team_id: 6, owner_name: 'Anil', role: 'owner' },
+  ay0h: { team_id: 8, owner_name: 'Alex', role: 'owner' },
+  alex: { team_id: 8, owner_name: 'Alex', role: 'owner' },
+  senorspice: { team_id: 12, owner_name: 'Will', role: 'owner' },
+  will: { team_id: 12, owner_name: 'Will', role: 'owner' },
+  mrussell38: { team_id: 13, owner_name: 'Mark', role: 'owner' },
+  mark: { team_id: 13, owner_name: 'Mark', role: 'owner' },
+  pston3: { team_id: 14, owner_name: 'Preston', role: 'owner' },
+  preston: { team_id: 14, owner_name: 'Preston', role: 'owner' },
+};
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
@@ -70,54 +92,81 @@ export function AuthProvider({ children }) {
     const profiles = profilesList && profilesList.length > 0 ? profilesList : await fetchProfiles();
     const meta = authUser.user_metadata || {};
     
-    // Normalized Discord username from custom_claims or profile data, stripping #discriminator (#0, #1234) if present
-    const rawName = (
-      meta.custom_claims?.global_name ||
-      meta.full_name ||
-      meta.user_name ||
-      meta.preferred_username ||
-      meta.name ||
-      ''
-    );
-    const discordUsername = rawName.replace(/#\d+$/, '').toLowerCase().trim();
+    // Normalized Discord username candidates
+    const candidateUsernames = [
+      meta.user_name,
+      meta.preferred_username,
+      authUser.identities?.[0]?.identity_data?.user_name,
+      meta.custom_claims?.preferred_username,
+      meta.name,
+      meta.full_name,
+      meta.custom_claims?.global_name,
+    ]
+      .filter(Boolean)
+      .map(s => String(s).replace(/#\d+$/, '').toLowerCase().trim());
+
+    const discordUsername = candidateUsernames[0] || '';
     const discordId = authUser.identities?.[0]?.id || meta.provider_id || authUser.identities?.[0]?.identity_data?.provider_id || null;
     const avatarUrl = meta.avatar_url || meta.picture || null;
 
-    // Match profile: 1. by linked user_id, 2. by discord_id, 3. by normalized discord_username
+    // Match profile: 1. by linked user_id, 2. by discord_id, 3. by normalized discord_username candidates, 4. static fallback
     let matched = profiles.find(p => p.user_id === authUser.id);
     if (!matched && discordId) {
       matched = profiles.find(p => p.discord_id && String(p.discord_id) === String(discordId));
     }
-    if (!matched && discordUsername) {
-      matched = profiles.find(p => (p.discord_username || '').toLowerCase().trim() === discordUsername);
+    if (!matched) {
+      matched = profiles.find(p => {
+        const pUser = (p.discord_username || '').toLowerCase().trim();
+        const pOwner = (p.owner_name || '').toLowerCase().trim();
+        return candidateUsernames.includes(pUser) || candidateUsernames.includes(pOwner);
+      });
+    }
+
+    // Static fallback if DB row not found or delayed
+    if (!matched) {
+      for (const u of candidateUsernames) {
+        if (STATIC_LEAGUE_PROFILES[u]) {
+          const s = STATIC_LEAGUE_PROFILES[u];
+          matched = {
+            id: `static_${s.team_id}`,
+            user_id: authUser.id,
+            discord_id: discordId ? String(discordId) : null,
+            discord_username: u,
+            owner_name: s.owner_name,
+            team_id: s.team_id,
+            role: s.role,
+            avatar_url: avatarUrl,
+          };
+          break;
+        }
+      }
     }
 
     if (matched) {
+      const canonicalName = matched.owner_name === 'Dan' ? 'Daniel' : (matched.owner_name || 'Owner');
+      const normalizedMatch = { ...matched, owner_name: canonicalName };
+
       // Link user_id, discord_id, and update avatar in Supabase if not yet linked
-      if (matched.user_id !== authUser.id || (discordId && matched.discord_id !== String(discordId)) || matched.avatar_url !== avatarUrl) {
-        try {
-          await supabase
-            .from('league_profiles')
-            .update({
-              user_id: authUser.id,
-              discord_id: discordId ? String(discordId) : matched.discord_id,
-              avatar_url: avatarUrl || matched.avatar_url,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', matched.id);
-          matched = { 
-            ...matched, 
-            user_id: authUser.id, 
-            discord_id: discordId ? String(discordId) : matched.discord_id, 
-            avatar_url: avatarUrl || matched.avatar_url 
-          };
-        } catch (e) {
-          console.warn('Profile link update notice:', e);
+      if (matched.id && !String(matched.id).startsWith('static_')) {
+        if (matched.user_id !== authUser.id || (discordId && matched.discord_id !== String(discordId)) || matched.avatar_url !== avatarUrl) {
+          try {
+            await supabase
+              .from('league_profiles')
+              .update({
+                user_id: authUser.id,
+                discord_id: discordId ? String(discordId) : matched.discord_id,
+                avatar_url: avatarUrl || matched.avatar_url,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', matched.id);
+          } catch (e) {
+            console.warn('Profile link update notice:', e);
+          }
         }
       }
-      setProfile(matched);
+      setProfile(normalizedMatch);
     } else {
-      // Fallback guest profile if Discord username isn't in league_profiles
+      // Fallback guest profile if Discord user isn't in league_profiles
       setProfile({
         discord_username: discordUsername || 'Guest',
         owner_name: meta.full_name || meta.name || 'Guest User',
@@ -379,9 +428,19 @@ export function AuthProvider({ children }) {
   }, [isCommissioner, overrideTeamId, profile]);
 
   const effectiveOwner = useMemo(() => {
-    if (!effectiveTeamId) return profile?.owner_name || null;
-    const found = LEAGUE_OWNERS.find(o => o.id === effectiveTeamId);
-    return found ? found.name : profile?.owner_name || null;
+    if (effectiveTeamId) {
+      const found = LEAGUE_OWNERS.find(o => o.id === effectiveTeamId);
+      if (found) return found.name === 'Dan' ? 'Daniel' : found.name;
+    }
+    if (profile?.owner_name) {
+      const norm = profile.owner_name === 'Dan' ? 'Daniel' : profile.owner_name;
+      const match = LEAGUE_OWNERS.find(o => o.name.toLowerCase() === norm.toLowerCase());
+      if (match) return match.name === 'Dan' ? 'Daniel' : match.name;
+      const staticInfo = STATIC_LEAGUE_PROFILES[profile.owner_name.toLowerCase()];
+      if (staticInfo) return staticInfo.owner_name;
+      return norm;
+    }
+    return null;
   }, [effectiveTeamId, profile]);
 
   const setEffectiveTeamId = useCallback((teamId) => {

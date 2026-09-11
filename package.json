@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d dist",
+    "start": "python discord-bot.py"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.95.3",
