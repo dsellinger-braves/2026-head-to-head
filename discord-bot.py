@@ -1286,6 +1286,21 @@ class HEFTYBot(discord.Client):
     async def setup_hook(self):
         await self.tree.sync()
         print("Slash commands synced with Discord.")
+        port_str = os.environ.get("PORT")
+        if port_str:
+            try:
+                port = int(port_str)
+                async def handle_ping(reader, writer):
+                    await reader.read(512)
+                    writer.write(b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nOK")
+                    await writer.drain()
+                    writer.close()
+                    await writer.wait_closed()
+                server = await asyncio.start_server(handle_ping, "0.0.0.0", port)
+                print(f"Health check HTTP server bound to 0.0.0.0:{port}")
+                asyncio.create_task(server.serve_forever())
+            except Exception as e:
+                print(f"Failed to start health check server on port {port_str}: {e}")
 
     async def on_ready(self):
         print(f"Bot online: {self.user} (ID: {self.user.id})")
