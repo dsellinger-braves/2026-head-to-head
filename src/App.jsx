@@ -259,7 +259,7 @@ function App() {
     if (season > 2026) {
       return [];
     }
-    const cacheKey = `fantasy_data_${season}`;
+    const cacheKey = `fantasy_data_v2_${season}`;
     try {
       const cachePromise = get(cacheKey);
       const cacheTimeout = new Promise((_, reject) =>
@@ -303,7 +303,7 @@ function App() {
         if (!isHistorical) {
           q = q.eq('league_id', 130215).order('id', { ascending: true });
         } else {
-          q = q.eq('league_id', 130215).eq('season_year', season);
+          q = q.eq('league_id', 130215).eq('season_year', season).order('_db_id', { ascending: true });
         }
         promises.push(q);
       }
@@ -394,6 +394,20 @@ function App() {
     setDownloadAllProgress(null);
   };
 
+  const loadSeason = async (season) => {
+    if (allSeasonData[season]?.length) return allSeasonData[season];
+    try {
+      const data = await fetchRawSeason(season);
+      if (data?.length > 0) {
+        setAllSeasonData(prev => ({ ...prev, [season]: data }));
+        return data;
+      }
+    } catch (e) {
+      console.error(`Failed to load season ${season}:`, e);
+    }
+    return [];
+  };
+
   const todaysRecords = useMemo(() => {
     if (!rawData.length) return [];
     let maxPeriodId = -1;
@@ -418,7 +432,7 @@ function App() {
 
   const handleRefresh = async () => {
     // Clear every season's cache so deduplication runs fresh on the next fetch.
-    await Promise.all(AVAILABLE_SEASONS.map(y => del(`fantasy_data_${y}`)));
+    await Promise.all(AVAILABLE_SEASONS.map(y => Promise.all([del(`fantasy_data_${y}`), del(`fantasy_data_v2_${y}`)])));
     setAllSeasonData({});
     fetchAllData(selectedSeason);
   };
@@ -1265,6 +1279,7 @@ function App() {
                   selectedSeason={selectedSeason}
                   onDownloadAll={downloadAllSeasons}
                   downloadAllProgress={downloadAllProgress}
+                  onLoadSeason={loadSeason}
                 />
               )}
               {currentView === 'fantasycast' && (

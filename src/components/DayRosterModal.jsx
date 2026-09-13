@@ -65,8 +65,8 @@ export default function DayRosterModal({ teamDayRecord, highlightStat, onClose }
       return { id: r.player_id, name: r.full_name, slot, stats, _r: r };
     });
 
-    const batterPlayers  = players.filter(p => (p.stats.PA || 0) > 0);
-    const pitcherPlayers = players.filter(p => (p.stats.IP || 0) > 0);
+    const batterPlayers  = players.filter(p => (p.stats.PA || 0) > 0 || (p.stats.R || 0) > 0 || (p.stats.SB || 0) > 0 || (BATTER_SLOT_ORDER[p.slot] !== undefined && p.slot !== 'BN' && p.slot !== 'IL'));
+    const pitcherPlayers = players.filter(p => (p.stats.IP || 0) > 0 || (p.stats.K || 0) > 0 || (p.stats.ER || 0) > 0 || (p.stats['SV+HDs'] || 0) > 0 || (PITCHER_SLOT_ORDER[p.slot] !== undefined && p.slot !== 'BN' && p.slot !== 'IL'));
 
     return {
       batters: [...batterPlayers].sort((a, b) =>

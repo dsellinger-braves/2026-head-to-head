@@ -27,12 +27,20 @@ function formatVal(val, cat) {
 
 const BAT_STATS = new Set(['R', 'HR', 'RBI', 'SB', 'OBP']);
 
-export default function HighlightsView({ allStats, allSeasonData = {}, selectedSeason = 2026, onDownloadAll, downloadAllProgress }) {
+export default function HighlightsView({
+  allStats,
+  allSeasonData = {},
+  selectedSeason = 2026,
+  onDownloadAll,
+  downloadAllProgress,
+  onLoadSeason,
+}) {
   const [selectedStat, setSelectedStat] = useState('HR');
   const [selectedTeamId, setSelectedTeamId] = useState('all');
   const [selectedDay, setSelectedDay] = useState(null);
   const [fromYear, setFromYear] = useState(selectedSeason);
   const [toYear, setToYear] = useState(selectedSeason);
+  const [loadingSeasonYears, setLoadingSeasonYears] = useState([]);
 
   // Reset range whenever the parent season changes.
   useEffect(() => {
@@ -51,49 +59,90 @@ export default function HighlightsView({ allStats, allSeasonData = {}, selectedS
     return years;
   }, [fromYear, toYear]);
 
+  const isYearLoaded = (y) => {
+    if (allSeasonData[y]?.length > 0) return true;
+    if (y === selectedSeason && allStats?.length > 0) return true;
+    return false;
+  };
+
   const loadedYearsInRange = useMemo(
-    () => yearsInRange.filter(y => allSeasonData[y]?.length > 0),
-    [yearsInRange, allSeasonData]
+    () => yearsInRange.filter(isYearLoaded),
+    [yearsInRange, allSeasonData, selectedSeason, allStats] // eslint-disable-line react-hooks/exhaustive-deps
   );
 
-  const missingYears = yearsInRange.filter(y => !allSeasonData[y]?.length);
+  const missingYears = useMemo(
+    () => yearsInRange.filter(y => !isYearLoaded(y)),
+    [yearsInRange, allSeasonData, selectedSeason, allStats] // eslint-disable-line react-hooks/exhaustive-deps
+  );
+
+  // Auto-load missing seasons when a focused range (<= 2 seasons missing) is selected
+  useEffect(() => {
+    if (!onLoadSeason || missingYears.length === 0) return;
+    if (missingYears.length <= 2) {
+      let isMounted = true;
+      setLoadingSeasonYears(prev => Array.from(new Set([...prev, ...missingYears])));
+      Promise.all(missingYears.map(y => onLoadSeason(y)))
+        .finally(() => {
+          if (isMounted) {
+            setLoadingSeasonYears(prev => prev.filter(y => !missingYears.includes(y)));
+          }
+        });
+      return () => {
+        isMounted = false;
+      };
+    }
+  }, [missingYears, onLoadSeason]);
+
+  const handleLoadMissing = async () => {
+    if (!onLoadSeason || missingYears.length === 0) return;
+    setLoadingSeasonYears(prev => Array.from(new Set([...prev, ...missingYears])));
+    for (const y of missingYears) {
+      await onLoadSeason(y);
+    }
+    setLoadingSeasonYears([]);
+  };
 
   // Combine records from all loaded seasons in the selected range.
   const combinedStats = useMemo(() => {
-    if (fromYear === toYear) return allStats;
     const records = [];
     yearsInRange.forEach(y => {
-      if (allSeasonData[y]) records.push(...allSeasonData[y]);
+      if (allSeasonData[y]?.length > 0) {
+        records.push(...allSeasonData[y]);
+      } else if (y === selectedSeason && allStats?.length > 0) {
+        records.push(...allStats);
+      }
     });
-    return records.length > 0 ? records : allStats;
-  }, [fromYear, toYear, yearsInRange, allStats, allSeasonData]);
+    return records;
+  }, [yearsInRange, allStats, allSeasonData, selectedSeason]);
 
   // Remove exact duplicates that can arise from multiple CSV uploads to Supabase.
   // Key: season + team + period + player — if all four match, keep only the first.
   const dedupedStats = useMemo(() => {
     const seen = new Set();
     return combinedStats.filter(r => {
-      const k = `${r.season_year}__${r.team_id}__${r.scoring_period_id}__${r.player_id ?? r.full_name}`;
+      const yr = r.season_year || selectedSeason || 2026;
+      const k = `${yr}__${r.team_id}__${r.scoring_period_id}__${r.player_id ?? r.full_name}`;
       if (seen.has(k)) return false;
       seen.add(k);
       return true;
     });
-  }, [combinedStats]);
+  }, [combinedStats, selectedSeason]);
 
   // Group records by team + day across all included seasons.
   const teamDayRecords = useMemo(() => {
     const groups = {};
     dedupedStats.forEach(r => {
       if (r.lineup_slot_id === 16 || r.lineup_slot_id === 17) return;
-      const key = `${r.season_year || 2026}__${r.team_id}__${r.scoring_period_id}`;
+      const yr = r.season_year || selectedSeason || 2026;
+      const key = `${yr}__${r.team_id}__${r.scoring_period_id}`;
       if (!groups[key]) {
         groups[key] = {
           key,
           teamId: r.team_id,
           teamName: TEAMS[r.team_id]?.name || `Team ${r.team_id}`,
           period: r.scoring_period_id,
-          season_year: r.season_year || 2026,
-          date: getDateFromPeriodId(r.scoring_period_id, r.season_year || 2026),
+          season_year: yr,
+          date: getDateFromPeriodId(r.scoring_period_id, yr),
           records: [],
         };
       }
@@ -104,7 +153,7 @@ export default function HighlightsView({ allStats, allSeasonData = {}, selectedS
       ...g,
       stats: aggregateStats(g.records),
     }));
-  }, [dedupedStats]);
+  }, [dedupedStats, selectedSeason]);
 
   const volumeConfig = VOLUME_THRESHOLDS[selectedStat] ?? null;
 
@@ -225,7 +274,19 @@ export default function HighlightsView({ allStats, allSeasonData = {}, selectedS
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
-          {records.length === 0 ? (
+          {loadingSeasonYears.length > 0 && records.length === 0 ? (
+            <tr>
+              <td colSpan={5} className="px-4 py-8 text-center text-gray-400 italic">
+                <div className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                  </svg>
+                  <span>Loading highlights data…</span>
+                </div>
+              </td>
+            </tr>
+          ) : records.length === 0 ? (
             <tr>
               <td colSpan={5} className="px-4 py-8 text-center text-gray-400 italic">
                 No records meet the minimum volume threshold.
@@ -338,7 +399,7 @@ export default function HighlightsView({ allStats, allSeasonData = {}, selectedS
         </div>
       </div>
 
-      {/* Download all / missing seasons banner */}
+      {/* Download all / loading / missing seasons banner */}
       {downloadAllProgress ? (
         <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-sm text-blue-800 flex items-center gap-3">
           <svg className="animate-spin h-4 w-4 text-blue-600 shrink-0" fill="none" viewBox="0 0 24 24">
@@ -350,18 +411,36 @@ export default function HighlightsView({ allStats, allSeasonData = {}, selectedS
             {downloadAllProgress.current && ` (loading ${downloadAllProgress.current})`}
           </span>
         </div>
-      ) : isRange && missingYears.length > 0 ? (
+      ) : loadingSeasonYears.length > 0 ? (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-sm text-blue-800 flex items-center gap-3">
+          <svg className="animate-spin h-4 w-4 text-blue-600 shrink-0" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+          </svg>
+          <span>
+            Loading season data for {loadingSeasonYears.join(', ')}…
+          </span>
+        </div>
+      ) : missingYears.length > 0 ? (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-3 text-sm text-yellow-800 flex items-center justify-between gap-4">
           <span>
             <span className="font-semibold">{loadedYearsInRange.length} of {yearsInRange.length} seasons loaded.</span>
             {' '}Missing: {missingYears.join(', ')}.
           </span>
-          <button
-            onClick={onDownloadAll}
-            className="shrink-0 bg-yellow-700 hover:bg-yellow-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"
-          >
-            Download All
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleLoadMissing}
+              className="shrink-0 bg-yellow-700 hover:bg-yellow-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"
+            >
+              Load {missingYears.length === 1 ? missingYears[0] : 'Missing Seasons'}
+            </button>
+            <button
+              onClick={onDownloadAll}
+              className="shrink-0 bg-white border border-yellow-400 hover:bg-yellow-100 text-yellow-800 text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"
+            >
+              Download All
+            </button>
+          </div>
         </div>
       ) : null}
 
