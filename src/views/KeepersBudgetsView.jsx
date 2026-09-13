@@ -213,6 +213,7 @@ export default function KeepersBudgetsView({
         onSeasonYearChange={onSeasonYearChange}
         onPlayerClick={onPlayerClick}
         onRefresh={loadData}
+        priorKeepers={defaultKeepersList}
       />
     </div>
   );

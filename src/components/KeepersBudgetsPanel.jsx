@@ -70,7 +70,8 @@ export default function KeepersBudgetsPanel({
   seasonYear = 2027,
   onSeasonYearChange,
   onPlayerClick,
-  onRefresh
+  onRefresh,
+  priorKeepers = []
 }) {
   const { user, profile, isCommissioner: authIsCommissioner, effectiveOwner } = useAuth();
   const isCommissioner = propIsCommissioner || authIsCommissioner;
@@ -89,6 +90,7 @@ export default function KeepersBudgetsPanel({
   const [plannerScope, setPlannerScope] = useState('roster'); // 'roster' | 'roster_fa' | 'all'
   const [plannerSearch, setPlannerSearch] = useState('');
   const [replacedKeepers, setReplacedKeepers] = useState({}); // { slot: newPlayerObj }
+  const [tokenSlot, setTokenSlot] = useState(null);
 
   // Offseason settings & Commissioner controls state
   const [leagueSettings, setLeagueSettings] = useState(null);
@@ -108,6 +110,37 @@ export default function KeepersBudgetsPanel({
       setPlannerOwner(effectiveOwner);
     }
   }, [effectiveOwner]);
+
+  // Lookup map for prior year (2026) keeper cost
+  const priorCostLookup = useMemo(() => {
+    const map = new Map();
+    // 1. Load from default / prior keepers (2026)
+    const pKeepers = Array.isArray(priorKeepers) ? priorKeepers : (priorKeepers?.keepers || []);
+    pKeepers.forEach(k => {
+      if (k.espn_player_id) map.set(String(k.espn_player_id), parseFloat(k.cost) || 0);
+      if (k.player_name) map.set(k.player_name.toLowerCase().trim(), parseFloat(k.cost) || 0);
+    });
+    // 2. Load from players array (Hefty Keeper Price)
+    (players || []).forEach(p => {
+      const pid = String(p['ESPN PlayerID'] || p.id || '');
+      const pName = (p.Player || p.name || p.full_name || '').toLowerCase().trim();
+      const rawPrice = p['Hefty Keeper Price'];
+      if (rawPrice !== undefined && rawPrice !== null && rawPrice !== '') {
+        const val = parseFloat(rawPrice);
+        if (!isNaN(val)) {
+          if (pid && !map.has(pid)) map.set(pid, val);
+          if (pName && !map.has(pName)) map.set(pName, val);
+        }
+      }
+    });
+    return map;
+  }, [priorKeepers, players]);
+
+  const getPriorCost = React.useCallback((pid, name, defaultCost = 0) => {
+    if (pid && priorCostLookup.has(String(pid))) return priorCostLookup.get(String(pid));
+    if (name && priorCostLookup.has(name.toLowerCase().trim())) return priorCostLookup.get(name.toLowerCase().trim());
+    return defaultCost;
+  }, [priorCostLookup]);
 
   // Load league settings (Deadline & Base Budget)
   useEffect(() => {
@@ -272,31 +305,78 @@ export default function KeepersBudgetsPanel({
     };
   }, [simBoughtRounds, simSoldRounds, activeRealBudgets]);
 
+  // Sync tokenSlot when plannerOwner changes or keepers update
+  useEffect(() => {
+    const originalKeepers = keepersByOwner[plannerOwner] || [];
+    const existingToken = originalKeepers.find(k => k.token_applied);
+    setTokenSlot(existingToken ? existingToken.keeper_slot : null);
+  }, [plannerOwner, keepersByOwner]);
+
   // Planner calculations for keeper replacements
   const plannerData = useMemo(() => {
     const originalKeepers = keepersByOwner[plannerOwner] || [];
     // Ensure all 5 keeper slots (1 through 5) are present for planning
     const currentKeepers = [1, 2, 3, 4, 5].map(slotNum => {
       const existing = originalKeepers.find(k => k.keeper_slot === slotNum);
+      const isToken = tokenSlot === slotNum;
+
       if (replacedKeepers[slotNum]) {
         const rep = replacedKeepers[slotNum];
         const rank = rep.rank || rep['Hefty Keeper Rank'] || rep['Hefty Single Season Rank'] || rep['Dynasty Rank'] || 150;
-        const cost = (rep.cost !== undefined && rep.cost !== null) ? rep.cost : calculateKeeperCostFromRank(rank);
+        const newCost = (rep.new_cost !== undefined && rep.new_cost !== null)
+          ? parseFloat(rep.new_cost)
+          : calculateKeeperCostFromRank(rank);
+        const pid = rep.id || rep.espn_player_id || rep['ESPN PlayerID'];
+        const pName = rep.name || rep.Player || rep.full_name || 'Selected Player';
+        const priorCost = (rep.prior_cost !== undefined && rep.prior_cost !== null)
+          ? parseFloat(rep.prior_cost)
+          : getPriorCost(pid, pName, newCost);
+        const midpoint = Math.round(((priorCost + newCost) / 2) * 10) / 10;
+        const finalCost = isToken ? midpoint : newCost;
+        const savings = isToken ? Math.round((newCost - midpoint) * 10) / 10 : 0;
+
         return {
           keeper_slot: slotNum,
-          player_name: rep.name || rep.Player || rep.full_name || 'Selected Player',
-          espn_player_id: rep.id || rep.espn_player_id || rep['ESPN PlayerID'],
+          player_name: pName,
+          espn_player_id: pid,
           position: rep.position || rep.Position || '---',
           mlb_team: rep.team || rep.Team || '---',
           rank: rank,
-          cost: cost,
+          cost: finalCost,
+          token_applied: isToken,
+          prior_cost: priorCost,
+          new_cost: newCost,
+          token_savings: savings,
           isReplaced: true,
           isEmpty: false
         };
       }
+
       if (existing) {
-        return { ...existing, isReplaced: false, isEmpty: false };
+        const rank = existing.rank;
+        const newCost = (existing.new_cost !== null && existing.new_cost !== undefined)
+          ? parseFloat(existing.new_cost)
+          : calculateKeeperCostFromRank(rank);
+        const priorCost = (existing.prior_cost !== null && existing.prior_cost !== undefined)
+          ? parseFloat(existing.prior_cost)
+          : getPriorCost(existing.espn_player_id, existing.player_name, newCost);
+        const midpoint = Math.round(((priorCost + newCost) / 2) * 10) / 10;
+        const finalCost = isToken ? midpoint : newCost;
+        const savings = isToken ? Math.round((newCost - midpoint) * 10) / 10 : 0;
+
+        return {
+          ...existing,
+          rank,
+          cost: finalCost,
+          token_applied: isToken,
+          prior_cost: priorCost,
+          new_cost: newCost,
+          token_savings: savings,
+          isReplaced: false,
+          isEmpty: false
+        };
       }
+
       return {
         keeper_slot: slotNum,
         player_name: 'Empty Slot - Click Replace to Pick',
@@ -305,12 +385,17 @@ export default function KeepersBudgetsPanel({
         mlb_team: '---',
         rank: null,
         cost: 0,
+        token_applied: false,
+        prior_cost: null,
+        new_cost: null,
+        token_savings: 0,
         isReplaced: false,
         isEmpty: true
       };
     });
 
     const totalCost = currentKeepers.reduce((sum, k) => sum + (k.cost || 0), 0);
+    const totalTokenSavings = currentKeepers.reduce((sum, k) => sum + (k.token_savings || 0), 0);
     const validRanks = currentKeepers.map(k => k.rank).filter(Boolean);
     const avgRank = validRanks.length ? (validRanks.reduce((s, r) => s + r, 0) / validRanks.length).toFixed(1) : 0;
     const baseBudget = (teamBudgets.find(b => normalizeManager(b.owner) === normalizeManager(plannerOwner))?.base_budget) || 100;
@@ -319,11 +404,13 @@ export default function KeepersBudgetsPanel({
     return {
       keepers: currentKeepers,
       totalCost,
+      totalTokenSavings,
+      tokenSlot,
       avgRank,
       baseBudget,
       remainingBudget
     };
-  }, [keepersByOwner, plannerOwner, replacedKeepers, teamBudgets]);
+  }, [keepersByOwner, plannerOwner, replacedKeepers, teamBudgets, tokenSlot, getPriorCost]);
 
   // Selected owner's total roster count
   const plannerOwnerRosterCount = useMemo(() => {
@@ -420,6 +507,9 @@ export default function KeepersBudgetsPanel({
         mlb_team: k.mlb_team,
         rank: k.rank,
         cost: k.cost,
+        token_applied: Boolean(k.token_applied),
+        prior_cost: k.prior_cost !== undefined ? k.prior_cost : null,
+        new_cost: k.new_cost !== undefined ? k.new_cost : null,
         updated_at: new Date().toISOString()
       }));
 
@@ -889,6 +979,8 @@ export default function KeepersBudgetsPanel({
           }}>
             {teamBudgets.map(b => {
               const picks = compPicksByOwner[b.owner] || { bought: [], lost: [], sold: [] };
+              const ownerKeepers = keepersByOwner[b.owner] || [];
+              const tokenKeeper = ownerKeepers.find(k => k.token_applied);
               const isSelected = selectedOwner === b.owner;
               return (
                 <div
@@ -963,6 +1055,28 @@ export default function KeepersBudgetsPanel({
                       <span style={{ fontSize: '10px', color: '#666', fontStyle: 'italic' }}>No comp picks traded</span>
                     )}
                   </div>
+
+                  {/* Token Status Badge for 2027 */}
+                  {seasonYear === 2027 && (
+                    <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid #2a2a2a', fontSize: '11px' }}>
+                      {tokenKeeper ? (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}>
+                            <span>🎫</span>
+                            <span>Token: {tokenKeeper.player_name}</span>
+                          </span>
+                          <span style={{ color: '#03dac6', fontSize: '10px', fontWeight: 'bold' }}>
+                            Midpoint: ${tokenKeeper.cost}
+                          </span>
+                        </div>
+                      ) : (
+                        <span style={{ color: '#888', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <span>🎫</span>
+                          <span>Midpoint Token: Unused (1 Available)</span>
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -1109,7 +1223,7 @@ export default function KeepersBudgetsPanel({
                             background: '#222',
                             padding: '8px 10px',
                             borderRadius: '6px',
-                            border: '1px solid #333',
+                            border: k.token_applied ? '1px solid #059669' : '1px solid #333',
                             cursor: onPlayerClick ? 'pointer' : 'default',
                             transition: 'background 0.15s ease'
                           }}
@@ -1124,11 +1238,29 @@ export default function KeepersBudgetsPanel({
                               #{k.keeper_slot}
                             </span>
                             <div>
-                              <div style={{ fontWeight: 'bold', fontSize: '13px', color: '#fff' }}>
-                                {k.player_name}
+                              <div style={{ fontWeight: 'bold', fontSize: '13px', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span>{k.player_name}</span>
+                                {k.token_applied && (
+                                  <span style={{
+                                    background: 'rgba(16, 185, 129, 0.2)',
+                                    color: '#10b981',
+                                    border: '1px solid #059669',
+                                    fontSize: '10px',
+                                    padding: '1px 5px',
+                                    borderRadius: '4px',
+                                    fontWeight: 'bold'
+                                  }}>
+                                    🎫 Midpoint Token
+                                  </span>
+                                )}
                               </div>
                               <div style={{ fontSize: '11px', color: '#888' }}>
                                 {k.position || 'N/A'} • {k.mlb_team || 'MLB'} • Rank {k.rank || 'N/A'}
+                                {k.token_applied && k.prior_cost != null && k.new_cost != null && (
+                                  <span style={{ color: '#03dac6', marginLeft: '6px' }}>
+                                    (Prior: ${k.prior_cost} | 2027: ${k.new_cost} | Midpoint: ${k.cost})
+                                  </span>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -1590,6 +1722,17 @@ export default function KeepersBudgetsPanel({
               </div>
               <div style={{ fontSize: '11px', color: '#666', marginTop: '2px' }}>Across 5 Keepers</div>
             </div>
+            {seasonYear === 2027 && (
+              <div style={{ background: '#1c1c1c', padding: '12px', borderRadius: '6px', border: '1px solid #333' }}>
+                <div style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase' }}>Keeper Discount Token</div>
+                <div style={{ fontSize: '20px', fontWeight: 'bold', color: plannerData.tokenSlot ? '#10b981' : '#aaa', marginTop: '4px' }}>
+                  {plannerData.tokenSlot ? `Slot #${plannerData.tokenSlot}` : '1 Available'}
+                </div>
+                <div style={{ fontSize: '11px', color: '#666', marginTop: '2px' }}>
+                  {plannerData.tokenSlot ? `Saved $${plannerData.totalTokenSavings}` : 'Pays midpoint of 2026 & 2027'}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* 5 Keepers with Swap Options */}
@@ -1603,7 +1746,7 @@ export default function KeepersBudgetsPanel({
                 key={k.keeper_slot}
                 style={{
                   background: '#181818',
-                  border: k.isReplaced ? '1px solid #4caf50' : '1px solid #2e2e2e',
+                  border: k.token_applied ? '1px solid #10b981' : k.isReplaced ? '1px solid #4caf50' : '1px solid #2e2e2e',
                   borderRadius: '8px',
                   padding: '12px',
                   display: 'flex',
@@ -1615,18 +1758,32 @@ export default function KeepersBudgetsPanel({
                   <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#888' }}>
                     Keeper Slot #{k.keeper_slot}
                   </span>
-                  {k.isReplaced && (
-                    <span style={{
-                      background: 'rgba(76, 175, 80, 0.2)',
-                      color: '#4caf50',
-                      fontSize: '10px',
-                      padding: '1px 6px',
-                      borderRadius: '4px',
-                      fontWeight: 'bold'
-                    }}>
-                      TEST SWAP
-                    </span>
-                  )}
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    {k.token_applied && (
+                      <span style={{
+                        background: 'rgba(16, 185, 129, 0.2)',
+                        color: '#10b981',
+                        fontSize: '10px',
+                        padding: '1px 6px',
+                        borderRadius: '4px',
+                        fontWeight: 'bold'
+                      }}>
+                        🎫 MIDPOINT TOKEN
+                      </span>
+                    )}
+                    {k.isReplaced && (
+                      <span style={{
+                        background: 'rgba(76, 175, 80, 0.2)',
+                        color: '#4caf50',
+                        fontSize: '10px',
+                        padding: '1px 6px',
+                        borderRadius: '4px',
+                        fontWeight: 'bold'
+                      }}>
+                        TEST SWAP
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#fff' }}>
@@ -1637,31 +1794,76 @@ export default function KeepersBudgetsPanel({
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
-                  <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#ffb74d' }}>
-                    Cost: ${k.cost}
-                  </span>
-                  {k.isReplaced && (
-                    <button
-                      onClick={() => {
-                        setReplacedKeepers(prev => {
-                          const copy = { ...prev };
-                          delete copy[k.keeper_slot];
-                          return copy;
-                        });
-                      }}
-                      style={{
-                        background: 'transparent',
-                        border: 'none',
-                        color: '#f44336',
-                        fontSize: '11px',
-                        cursor: 'pointer',
-                        textDecoration: 'underline'
-                      }}
-                    >
-                      Revert
-                    </button>
-                  )}
+                  <div>
+                    <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#ffb74d' }}>
+                      Cost: ${k.cost}
+                    </span>
+                    {k.token_applied && (
+                      <span style={{
+                        marginLeft: '6px',
+                        fontSize: '10px',
+                        fontWeight: 'bold',
+                        color: '#10b981',
+                        background: 'rgba(16, 185, 129, 0.15)',
+                        padding: '1px 5px',
+                        borderRadius: '4px',
+                        border: '1px solid rgba(16, 185, 129, 0.3)'
+                      }}>
+                        -${k.token_savings}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {seasonYear === 2027 && !k.isEmpty && (
+                      <button
+                        onClick={() => setTokenSlot(prev => prev === k.keeper_slot ? null : k.keeper_slot)}
+                        style={{
+                          background: k.token_applied ? 'rgba(16, 185, 129, 0.25)' : '#262626',
+                          color: k.token_applied ? '#6ee7b7' : '#bbb',
+                          border: k.token_applied ? '1px solid #10b981' : '1px solid #444',
+                          borderRadius: '4px',
+                          padding: '3px 8px',
+                          fontSize: '11px',
+                          fontWeight: 'bold',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          transition: 'all 0.15s ease'
+                        }}
+                        title={k.token_applied ? 'Click to remove token' : 'Apply 1 token to pay midpoint of prior year price and 2027 price'}
+                      >
+                        <span>{k.token_applied ? '✅ Active' : '🎫 Token'}</span>
+                      </button>
+                    )}
+                    {k.isReplaced && (
+                      <button
+                        onClick={() => {
+                          setReplacedKeepers(prev => {
+                            const copy = { ...prev };
+                            delete copy[k.keeper_slot];
+                            return copy;
+                          });
+                        }}
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          color: '#f44336',
+                          fontSize: '11px',
+                          cursor: 'pointer',
+                          textDecoration: 'underline'
+                        }}
+                      >
+                        Revert
+                      </button>
+                    )}
+                  </div>
                 </div>
+                {k.token_applied && (
+                  <div style={{ fontSize: '10px', color: '#03dac6', marginTop: '2px', background: '#111', padding: '4px 6px', borderRadius: '4px' }}>
+                    Prior (2026): <strong>${k.prior_cost ?? k.cost}</strong> • Standard (2027): <strong>${k.new_cost ?? k.cost}</strong> • You Pay Midpoint: <strong>${k.cost}</strong>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -1901,6 +2103,20 @@ export default function KeepersBudgetsPanel({
                         }}>
                           Rank #{rank} • ${cost}
                         </span>
+
+                        {seasonYear === 2027 && (
+                          <span style={{
+                            background: '#132e27',
+                            color: '#6ee7b7',
+                            border: '1px solid #065f46',
+                            fontSize: '10px',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            fontWeight: 'bold'
+                          }} title="If your 1 keeper token is applied to this player">
+                            Midpoint: ${Math.round(((getPriorCost(pid, pName, cost) + cost) / 2) * 10) / 10}
+                          </span>
+                        )}
 
                         {/* Ownership badge */}
                         {isCurrentManagerRoster ? (

@@ -17,11 +17,177 @@ const ROTO_CATEGORIES = [
   { id: 'WHIP', name: 'WHIP', type: 'low', isRate: true, icon: '🧤', unit: 'WHIP' }
 ];
 
+// Format display values
+const formatStatValue = (catId, v) => {
+  if (catId === 'OBP') return v.toFixed(4).replace(/^0/, '');
+  if (catId === 'ERA' || catId === 'WHIP') return v.toFixed(3);
+  return Math.round(v);
+};
+
+// Helper to compute gap, numerator delta, and pace needed to overtake a target ahead
+const computeTargetAheadGap = (cat, targetAhead, selStats, myVal, daysRemainingDays) => {
+  if (!targetAhead) return null;
+  const isRate = cat.isRate;
+  let gapAhead = null;
+  let numeratorDifference = null;
+  let rateNeededPerDay = null;
+  let dilutionText = null;
+
+  if (!isRate) {
+    const diff = Math.abs(targetAhead.rawVal - myVal);
+    gapAhead = diff;
+    if (daysRemainingDays > 0) {
+      rateNeededPerDay = (diff / daysRemainingDays).toFixed(2);
+    }
+  } else {
+    if (cat.id === 'OBP') {
+      const targetOBP = targetAhead.rawVal;
+      const currentPA = selStats.PA || 1;
+      const currentTOB = selStats.OBP_num || 0;
+      const neededTOB = Math.max(0, (targetOBP * currentPA) - currentTOB);
+      const consecutiveOnBase = targetOBP < 1 ? Math.ceil(neededTOB / (1 - targetOBP)) : Math.ceil(neededTOB);
+      numeratorDifference = {
+        label: 'Times on Base (TOB)',
+        needed: neededTOB.toFixed(1),
+        context: `+${neededTOB.toFixed(1)} TOB at current PA (or ~${consecutiveOnBase} straight on-base appearances)`
+      };
+      if (daysRemainingDays > 0) {
+        rateNeededPerDay = `+${(neededTOB / daysRemainingDays).toFixed(2)} TOB / day`;
+      }
+    } else if (cat.id === 'ERA') {
+      const targetERA = targetAhead.rawVal;
+      const currentIP = selStats.IP || 1;
+      const currentER = selStats.ER || 0;
+      const targetER = (targetERA * currentIP) / 9;
+      const erReduction = Math.max(0, currentER - targetER);
+      const dilutionIP = targetERA > 0 ? Math.max(0, ((currentER * 9) / targetERA) - currentIP) : 0;
+      numeratorDifference = {
+        label: 'Earned Runs (ER)',
+        needed: `-${erReduction.toFixed(1)} ER`,
+        context: `Needs ${erReduction.toFixed(1)} fewer ER, or ${dilutionIP.toFixed(1)} consecutive scoreless IP`
+      };
+      dilutionText = `${dilutionIP.toFixed(1)} scoreless IP`;
+      if (daysRemainingDays > 0) {
+        rateNeededPerDay = `${(dilutionIP / daysRemainingDays).toFixed(1)} scoreless IP / day`;
+      }
+    } else if (cat.id === 'WHIP') {
+      const targetWHIP = targetAhead.rawVal;
+      const currentIP = selStats.IP || 1;
+      const currentBaserunners = (selStats.BB_Allowed || 0) + (selStats.H_Allowed || 0);
+      const targetBaserunners = targetWHIP * currentIP;
+      const baserunnerReduction = Math.max(0, currentBaserunners - targetBaserunners);
+      const dilutionIP = targetWHIP > 0 ? Math.max(0, (currentBaserunners / targetWHIP) - currentIP) : 0;
+      numeratorDifference = {
+        label: 'Baserunners Allowed (H+BB)',
+        needed: `-${baserunnerReduction.toFixed(1)} H+BB`,
+        context: `Needs ${baserunnerReduction.toFixed(1)} fewer baserunners, or ${dilutionIP.toFixed(1)} clean IP (0 WH)`
+      };
+      dilutionText = `${dilutionIP.toFixed(1)} clean IP`;
+      if (daysRemainingDays > 0) {
+        rateNeededPerDay = `${(dilutionIP / daysRemainingDays).toFixed(1)} clean IP / day`;
+      }
+    }
+  }
+
+  return {
+    team: targetAhead.team,
+    val: formatStatValue(cat.id, targetAhead.rawVal),
+    rawVal: targetAhead.rawVal,
+    rotoPts: targetAhead.rotoPts,
+    gap: gapAhead,
+    numeratorDifference,
+    rateNeededPerDay,
+    dilutionText
+  };
+};
+
+// Helper to compute cushion, numerator buffer, and downside pace risk defending against a team behind
+const computeDefendingBehindCushion = (cat, defendingBehind, selStats, myVal, daysRemainingDays) => {
+  if (!defendingBehind) return null;
+  const isRate = cat.isRate;
+  let cushionBehind = null;
+  let downsideNumeratorBuffer = null;
+  let downsideRateRiskPerDay = null;
+
+  if (!isRate) {
+    const diff = Math.abs(myVal - defendingBehind.rawVal);
+    cushionBehind = diff;
+    if (diff === 0) {
+      downsideRateRiskPerDay = `Tied (any +1 ${cat.unit} surrenders point)`;
+    } else if (daysRemainingDays > 0) {
+      const daily = (diff / daysRemainingDays).toFixed(2);
+      downsideRateRiskPerDay = `+${daily} ${cat.unit} / day`;
+    }
+  } else {
+    cushionBehind = Math.abs(myVal - defendingBehind.rawVal);
+    if (cat.id === 'OBP') {
+      const trailingOBP = defendingBehind.rawVal;
+      const currentPA = selStats.PA || 1;
+      const currentTOB = selStats.OBP_num || 0;
+      const tobBuffer = Math.max(0, currentTOB - (trailingOBP * currentPA));
+      const slumpTolerance = trailingOBP > 0 ? Math.ceil(tobBuffer / trailingOBP) : 0;
+      const dailyTOB = daysRemainingDays > 0 ? (tobBuffer / daysRemainingDays).toFixed(2) : '0';
+      downsideNumeratorBuffer = {
+        label: 'Times on Base (TOB) Cushion',
+        needed: `+${tobBuffer.toFixed(1)} TOB lead`,
+        context: `Can absorb a 0-for-${slumpTolerance} slump (or chaser outpacing by +${dailyTOB} TOB/day) before dropping`
+      };
+      if (daysRemainingDays > 0) {
+        downsideRateRiskPerDay = `+${dailyTOB} TOB / day`;
+      }
+    } else if (cat.id === 'ERA') {
+      const trailingERA = defendingBehind.rawVal;
+      const currentIP = selStats.IP || 1;
+      const currentER = selStats.ER || 0;
+      const allowedERTotal = (trailingERA * currentIP) / 9;
+      const erAllowance = Math.max(0, allowedERTotal - currentER);
+      const dailyER = daysRemainingDays > 0 ? (erAllowance / daysRemainingDays).toFixed(2) : '0';
+      downsideNumeratorBuffer = {
+        label: 'Earned Runs (ER) Buffer',
+        needed: `+${erAllowance.toFixed(1)} ER buffer`,
+        context: `Can surrender up to ${erAllowance.toFixed(1)} extra ER before being passed (or +${dailyER} ER/day)`
+      };
+      if (daysRemainingDays > 0) {
+        downsideRateRiskPerDay = `+${dailyER} ER / day`;
+      }
+    } else if (cat.id === 'WHIP') {
+      const trailingWHIP = defendingBehind.rawVal;
+      const currentIP = selStats.IP || 1;
+      const currentBaserunners = (selStats.BB_Allowed || 0) + (selStats.H_Allowed || 0);
+      const allowedBaserunners = trailingWHIP * currentIP;
+      const brAllowance = Math.max(0, allowedBaserunners - currentBaserunners);
+      const dailyBR = daysRemainingDays > 0 ? (brAllowance / daysRemainingDays).toFixed(2) : '0';
+      downsideNumeratorBuffer = {
+        label: 'Baserunners Allowed (H+BB) Buffer',
+        needed: `+${brAllowance.toFixed(1)} H+BB buffer`,
+        context: `Can allow up to ${brAllowance.toFixed(1)} extra baserunners before being passed (or +${dailyBR} H+BB/day)`
+      };
+      if (daysRemainingDays > 0) {
+        downsideRateRiskPerDay = `+${dailyBR} H+BB / day`;
+      }
+    }
+  }
+
+  return {
+    team: defendingBehind.team,
+    val: formatStatValue(cat.id, defendingBehind.rawVal),
+    rawVal: defendingBehind.rawVal,
+    rotoPts: defendingBehind.rotoPts,
+    cushion: cushionBehind,
+    numeratorBuffer: downsideNumeratorBuffer,
+    rateRiskPerDay: downsideRateRiskPerDay
+  };
+};
+
 export default function RotoGapView({ allStats, selectedSeason = 2026, onOwnerClick }) {
   // Default to Daniel (ID 5) if present, else first team
   const [selectedOwnerId, setSelectedOwnerId] = useState(() => {
     return TEAMS['5'] ? '5' : Object.keys(TEAMS).find(id => parseInt(id) !== 99) || '1';
   });
+
+  // Dynamic Position Delta Toggles per category (+1, +2, +3... or -1, -2, -3...)
+  const [selectedAheadOffsets, setSelectedAheadOffsets] = useState({});
+  const [selectedBehindOffsets, setSelectedBehindOffsets] = useState({});
 
   const humanTeamIds = useMemo(() => {
     return Object.keys(TEAMS).filter(id => parseInt(id) !== 99);
@@ -66,7 +232,6 @@ export default function RotoGapView({ allStats, selectedSeason = 2026, onOwnerCl
 
     return ROTO_CATEGORIES.map(cat => {
       const isHigh = cat.type === 'high';
-      const isRate = cat.isRate;
 
       // Build sorted leaderboard for this category
       const rankedList = humanTeamIds.map(id => {
@@ -94,148 +259,44 @@ export default function RotoGapView({ allStats, selectedSeason = 2026, onOwnerCl
       // Leader
       const leader = rankedList[0];
 
-      // Team directly ahead (+1 Roto Point target)
-      const targetAhead = myIdx > 0 ? rankedList[myIdx - 1] : null;
-
-      // Team directly behind (defending lead)
-      const defendingBehind = myIdx < rankedList.length - 1 ? rankedList[myIdx + 1] : null;
-
-      // Gap calculation to target ahead
-      let gapAhead = null;
-      let numeratorDifference = null;
-      let rateNeededPerDay = null;
-      let dilutionText = null;
-
-      if (targetAhead) {
-        if (!isRate) {
-          // Counting stat: absolute difference to tie/beat
-          const diff = Math.abs(targetAhead.rawVal - myVal);
-          gapAhead = diff;
-          if (daysRemainingInfo.days > 0) {
-            rateNeededPerDay = (diff / daysRemainingInfo.days).toFixed(2);
-          }
-        } else {
-          // Ratio stat: OBP, ERA, WHIP
-          if (cat.id === 'OBP') {
-            const targetOBP = targetAhead.rawVal;
-            const currentPA = selStats.PA || 1;
-            const currentTOB = selStats.OBP_num || 0;
-            // delta TOB needed without extra PA
-            const neededTOB = Math.max(0, (targetOBP * currentPA) - currentTOB);
-            // consecutive reach base events needed: (targetOBP * PA - TOB) / (1 - targetOBP)
-            const consecutiveOnBase = targetOBP < 1 ? Math.ceil(neededTOB / (1 - targetOBP)) : Math.ceil(neededTOB);
-            numeratorDifference = {
-              label: 'Times on Base (TOB)',
-              needed: neededTOB.toFixed(1),
-              context: `+${neededTOB.toFixed(1)} TOB at current PA (or ~${consecutiveOnBase} straight on-base appearances)`
-            };
-            if (daysRemainingInfo.days > 0) {
-              rateNeededPerDay = `+${(neededTOB / daysRemainingInfo.days).toFixed(2)} TOB / day`;
-            }
-          } else if (cat.id === 'ERA') {
-            const targetERA = targetAhead.rawVal;
-            const currentIP = selStats.IP || 1;
-            const currentER = selStats.ER || 0;
-            // Equivalent ER at current IP
-            const targetER = (targetERA * currentIP) / 9;
-            const erReduction = Math.max(0, currentER - targetER);
-            // Scoreless innings to dilute current ER down to target ERA: (ER * 9 / targetERA) - IP
-            const dilutionIP = targetERA > 0 ? Math.max(0, ((currentER * 9) / targetERA) - currentIP) : 0;
-            numeratorDifference = {
-              label: 'Earned Runs (ER)',
-              needed: `-${erReduction.toFixed(1)} ER`,
-              context: `Needs ${erReduction.toFixed(1)} fewer ER, or ${dilutionIP.toFixed(1)} consecutive scoreless IP`
-            };
-            dilutionText = `${dilutionIP.toFixed(1)} scoreless IP`;
-            if (daysRemainingInfo.days > 0) {
-              rateNeededPerDay = `${(dilutionIP / daysRemainingInfo.days).toFixed(1)} scoreless IP / day`;
-            }
-          } else if (cat.id === 'WHIP') {
-            const targetWHIP = targetAhead.rawVal;
-            const currentIP = selStats.IP || 1;
-            const currentBaserunners = (selStats.BB_Allowed || 0) + (selStats.H_Allowed || 0);
-            const targetBaserunners = targetWHIP * currentIP;
-            const baserunnerReduction = Math.max(0, currentBaserunners - targetBaserunners);
-            // Baserunner-free innings to dilute WHIP down: (Baserunners / targetWHIP) - IP
-            const dilutionIP = targetWHIP > 0 ? Math.max(0, (currentBaserunners / targetWHIP) - currentIP) : 0;
-            numeratorDifference = {
-              label: 'Baserunners Allowed (H+BB)',
-              needed: `-${baserunnerReduction.toFixed(1)} H+BB`,
-              context: `Needs ${baserunnerReduction.toFixed(1)} fewer baserunners, or ${dilutionIP.toFixed(1)} clean IP (0 WH)`
-            };
-            dilutionText = `${dilutionIP.toFixed(1)} clean IP`;
-            if (daysRemainingInfo.days > 0) {
-              rateNeededPerDay = `${(dilutionIP / daysRemainingInfo.days).toFixed(1)} clean IP / day`;
-            }
-          }
-        }
+      // Precompute all targets ahead (+1, +2, +3... up to Leader)
+      const allTargetsAhead = [];
+      for (let i = myIdx - 1; i >= 0; i--) {
+        const step = myIdx - i;
+        const targetRank = i + 1;
+        const targetTeam = rankedList[i];
+        const gapDetails = computeTargetAheadGap(cat, targetTeam, selStats, myVal, daysRemainingInfo.days);
+        allTargetsAhead.push({
+          step,
+          targetRank,
+          ...gapDetails
+        });
       }
 
-      // Gap defending behind (-1 Roto Point buffer & downside pace risk)
-      let cushionBehind = null;
-      let downsideNumeratorBuffer = null;
-      let downsideRateRiskPerDay = null;
-
-      if (defendingBehind) {
-        if (!isRate) {
-          const diff = Math.abs(myVal - defendingBehind.rawVal);
-          cushionBehind = diff;
-          if (diff === 0) {
-            downsideRateRiskPerDay = `Tied (any +1 ${cat.unit} surrenders point)`;
-          } else if (daysRemainingInfo.days > 0) {
-            const daily = (diff / daysRemainingInfo.days).toFixed(2);
-            downsideRateRiskPerDay = `+${daily} ${cat.unit} / day`;
-          }
-        } else {
-          cushionBehind = Math.abs(myVal - defendingBehind.rawVal);
-          if (cat.id === 'OBP') {
-            const trailingOBP = defendingBehind.rawVal;
-            const currentPA = selStats.PA || 1;
-            const currentTOB = selStats.OBP_num || 0;
-            const tobBuffer = Math.max(0, currentTOB - (trailingOBP * currentPA));
-            const slumpTolerance = trailingOBP > 0 ? Math.ceil(tobBuffer / trailingOBP) : 0;
-            const dailyTOB = daysRemainingInfo.days > 0 ? (tobBuffer / daysRemainingInfo.days).toFixed(2) : '0';
-            downsideNumeratorBuffer = {
-              label: 'Times on Base (TOB) Cushion',
-              needed: `+${tobBuffer.toFixed(1)} TOB lead`,
-              context: `Can absorb a 0-for-${slumpTolerance} slump (or chaser outpacing by +${dailyTOB} TOB/day) before dropping`
-            };
-            if (daysRemainingInfo.days > 0) {
-              downsideRateRiskPerDay = `+${dailyTOB} TOB / day`;
-            }
-          } else if (cat.id === 'ERA') {
-            const trailingERA = defendingBehind.rawVal;
-            const currentIP = selStats.IP || 1;
-            const currentER = selStats.ER || 0;
-            const allowedERTotal = (trailingERA * currentIP) / 9;
-            const erAllowance = Math.max(0, allowedERTotal - currentER);
-            const dailyER = daysRemainingInfo.days > 0 ? (erAllowance / daysRemainingInfo.days).toFixed(2) : '0';
-            downsideNumeratorBuffer = {
-              label: 'Earned Runs (ER) Buffer',
-              needed: `+${erAllowance.toFixed(1)} ER buffer`,
-              context: `Can surrender up to ${erAllowance.toFixed(1)} extra ER before being passed (or +${dailyER} ER/day)`
-            };
-            if (daysRemainingInfo.days > 0) {
-              downsideRateRiskPerDay = `+${dailyER} ER / day`;
-            }
-          } else if (cat.id === 'WHIP') {
-            const trailingWHIP = defendingBehind.rawVal;
-            const currentIP = selStats.IP || 1;
-            const currentBaserunners = (selStats.BB_Allowed || 0) + (selStats.H_Allowed || 0);
-            const allowedBaserunners = trailingWHIP * currentIP;
-            const brAllowance = Math.max(0, allowedBaserunners - currentBaserunners);
-            const dailyBR = daysRemainingInfo.days > 0 ? (brAllowance / daysRemainingInfo.days).toFixed(2) : '0';
-            downsideNumeratorBuffer = {
-              label: 'Baserunners Allowed (H+BB) Buffer',
-              needed: `+${brAllowance.toFixed(1)} H+BB buffer`,
-              context: `Can allow up to ${brAllowance.toFixed(1)} extra baserunners before being passed (or +${dailyBR} H+BB/day)`
-            };
-            if (daysRemainingInfo.days > 0) {
-              downsideRateRiskPerDay = `+${dailyBR} H+BB / day`;
-            }
-          }
-        }
+      // Precompute all defenders behind (-1, -2, -3... down to Floor)
+      const allDefendersBehind = [];
+      for (let i = myIdx + 1; i < rankedList.length; i++) {
+        const step = i - myIdx;
+        const trailingRank = i + 1;
+        const defendingTeam = rankedList[i];
+        const cushionDetails = computeDefendingBehindCushion(cat, defendingTeam, selStats, myVal, daysRemainingInfo.days);
+        allDefendersBehind.push({
+          step,
+          trailingRank,
+          ...cushionDetails
+        });
       }
+
+      // Determine currently selected steps (defaults to 1 = immediate next team ahead / behind)
+      const activeAheadStep = selectedAheadOffsets[cat.id] || 1;
+      const activeBehindStep = selectedBehindOffsets[cat.id] || 1;
+
+      const targetAhead = allTargetsAhead.find(t => t.step === activeAheadStep) || allTargetsAhead[0] || null;
+      const defendingBehind = allDefendersBehind.find(d => d.step === activeBehindStep) || allDefendersBehind[0] || null;
+
+      // Also preserve step 1 for top opportunities / highest risks summary cards
+      const step1Ahead = allTargetsAhead.find(t => t.step === 1) || null;
+      const step1Behind = allDefendersBehind.find(d => d.step === 1) || null;
 
       // Format display values
       const formatValue = (v) => {
@@ -253,38 +314,29 @@ export default function RotoGapView({ allStats, selectedSeason = 2026, onOwnerCl
           team: leader.team,
           val: formatValue(leader.rawVal)
         },
-        targetAhead: targetAhead ? {
-          team: targetAhead.team,
-          val: formatValue(targetAhead.rawVal),
-          rotoPts: targetAhead.rotoPts,
-          gap: gapAhead,
-          numeratorDifference,
-          rateNeededPerDay,
-          dilutionText
-        } : null,
-        defendingBehind: defendingBehind ? {
-          team: defendingBehind.team,
-          val: formatValue(defendingBehind.rawVal),
-          rotoPts: defendingBehind.rotoPts,
-          cushion: cushionBehind,
-          numeratorBuffer: downsideNumeratorBuffer,
-          rateRiskPerDay: downsideRateRiskPerDay
-        } : null
+        targetAhead,
+        defendingBehind,
+        step1Ahead,
+        step1Behind,
+        allTargetsAhead,
+        allDefendersBehind,
+        activeAheadStep: targetAhead ? targetAhead.step : 1,
+        activeBehindStep: defendingBehind ? defendingBehind.step : 1
       };
     });
-  }, [selectedOwnerId, humanTeamIds, teamStatsMap, rotoPointsMap, daysRemainingInfo]);
+  }, [selectedOwnerId, humanTeamIds, teamStatsMap, rotoPointsMap, daysRemainingInfo, selectedAheadOffsets, selectedBehindOffsets]);
 
   // Top upside targets (where deficit is smallest / closest to +1 pt)
   const topOpportunities = useMemo(() => {
     return categoryAnalysis
-      .filter(c => c.targetAhead)
+      .filter(c => c.step1Ahead)
       .map(c => {
         let score = 999;
-        if (!c.cat.isRate) score = c.targetAhead.gap;
-        else if (c.cat.id === 'OBP') score = parseFloat(c.targetAhead.numeratorDifference?.needed) || 999;
-        else if (c.cat.id === 'ERA') score = parseFloat(c.targetAhead.numeratorDifference?.needed?.replace('-', '')) || 999;
-        else if (c.cat.id === 'WHIP') score = parseFloat(c.targetAhead.numeratorDifference?.needed?.replace('-', '')) || 999;
-        return { ...c, score };
+        if (!c.cat.isRate) score = c.step1Ahead.gap;
+        else if (c.cat.id === 'OBP') score = parseFloat(c.step1Ahead.numeratorDifference?.needed) || 999;
+        else if (c.cat.id === 'ERA') score = parseFloat(c.step1Ahead.numeratorDifference?.needed?.replace('-', '')) || 999;
+        else if (c.cat.id === 'WHIP') score = parseFloat(c.step1Ahead.numeratorDifference?.needed?.replace('-', '')) || 999;
+        return { ...c, targetAhead: c.step1Ahead, score };
       })
       .sort((a, b) => a.score - b.score)
       .slice(0, 3);
@@ -293,14 +345,14 @@ export default function RotoGapView({ allStats, selectedSeason = 2026, onOwnerCl
   // Highest downside risks (where cushion is smallest / closest to -1 pt)
   const highestRisks = useMemo(() => {
     return categoryAnalysis
-      .filter(c => c.defendingBehind)
+      .filter(c => c.step1Behind)
       .map(c => {
         let score = 999;
-        if (!c.cat.isRate) score = c.defendingBehind.cushion;
-        else if (c.cat.id === 'OBP') score = parseFloat(c.defendingBehind.numeratorBuffer?.needed?.replace('+', '')) || 999;
-        else if (c.cat.id === 'ERA') score = parseFloat(c.defendingBehind.numeratorBuffer?.needed?.replace('+', '')) || 999;
-        else if (c.cat.id === 'WHIP') score = parseFloat(c.defendingBehind.numeratorBuffer?.needed?.replace('+', '')) || 999;
-        return { ...c, score };
+        if (!c.cat.isRate) score = c.step1Behind.cushion;
+        else if (c.cat.id === 'OBP') score = parseFloat(c.step1Behind.numeratorBuffer?.needed?.replace('+', '')) || 999;
+        else if (c.cat.id === 'ERA') score = parseFloat(c.step1Behind.numeratorBuffer?.needed?.replace('+', '')) || 999;
+        else if (c.cat.id === 'WHIP') score = parseFloat(c.step1Behind.numeratorBuffer?.needed?.replace('+', '')) || 999;
+        return { ...c, defendingBehind: c.step1Behind, score };
       })
       .sort((a, b) => a.score - b.score)
       .slice(0, 3);
@@ -327,7 +379,7 @@ export default function RotoGapView({ allStats, selectedSeason = 2026, onOwnerCl
               </div>
             </div>
             <p className="text-xs text-gray-500 mt-2">
-              Inspect your current position in each category, the exact gap to gain +1 Roto Point, the downside pace risk of getting caught (-1 Roto Point), numerator buffers, and required daily pace.
+              Inspect your current position in each category, the exact gap to gain +1 Roto Point, the downside pace risk of getting caught (-1 Roto Point), numerator buffers, and required daily pace. Use the interactive pills on any stat tile to see requirements for +2, +3, or Leader/Floor positions.
             </p>
           </div>
 
@@ -339,10 +391,10 @@ export default function RotoGapView({ allStats, selectedSeason = 2026, onOwnerCl
 
         {/* Owner Selector Pills */}
         <div className="mt-4">
-          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2">
-            Select Team to Analyze:
-          </label>
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="text-[11px] font-bold uppercase text-gray-500 tracking-wider mb-2">
+            Select Manager Focus:
+          </div>
+          <div className="flex flex-wrap gap-2">
             {humanTeamIds.map(id => {
               const team = TEAMS[id];
               const isSelected = id === selectedOwnerId;
@@ -350,8 +402,12 @@ export default function RotoGapView({ allStats, selectedSeason = 2026, onOwnerCl
               return (
                 <button
                   key={id}
-                  onClick={() => setSelectedOwnerId(id)}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  onClick={() => {
+                    setSelectedOwnerId(id);
+                    setSelectedAheadOffsets({});
+                    setSelectedBehindOffsets({});
+                  }}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                     isSelected
                       ? 'bg-blue-700 text-white shadow-md scale-105'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -428,7 +484,7 @@ export default function RotoGapView({ allStats, selectedSeason = 2026, onOwnerCl
 
       {/* 10 Category Gap Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {categoryAnalysis.map(({ cat, myRank, myVal, myRoto, leader, targetAhead, defendingBehind }) => {
+        {categoryAnalysis.map(({ cat, myRank, myVal, myRoto, leader, targetAhead, defendingBehind, allTargetsAhead, allDefendersBehind, activeAheadStep, activeBehindStep }) => {
           const isFirstPlace = myRank === 1;
           const isLastPlace = myRank === humanTeamIds.length;
 
@@ -482,24 +538,50 @@ export default function RotoGapView({ allStats, selectedSeason = 2026, onOwnerCl
                 </div>
               </div>
 
-              {/* Target Ahead Section (+1 Roto Point) */}
+              {/* Target Ahead Section (+1, +2, +3... Roto Points) */}
               {targetAhead ? (
                 <div className="bg-blue-50/70 border border-blue-200 rounded-lg p-3 space-y-2 mt-3">
-                  <div className="flex items-center justify-between text-xs">
+                  <div className="flex flex-wrap items-center justify-between gap-1 text-xs">
                     <span className="font-bold text-blue-900 flex items-center gap-1">
-                      <span>🎯 Target Ahead (+1 Roto Point):</span>
+                      <span>🎯 Target Ahead (+{activeAheadStep} Roto Pt{activeAheadStep > 1 ? 's' : ''}):</span>
                     </span>
                     <button
                       onClick={() => onOwnerClick?.(targetAhead.team)}
-                      className="font-bold text-blue-700 hover:underline flex items-center gap-1"
+                      className="font-bold text-blue-700 hover:underline flex items-center gap-1 cursor-pointer"
                     >
                       <TeamAvatar team={targetAhead.team} size="sm" />
                       <span>{targetAhead.team.name}</span>
                     </button>
                   </div>
 
-                  <div className="flex items-baseline justify-between text-xs font-mono">
-                    <span className="text-gray-600">{targetAhead.team.name}&apos;s Total: <strong>{targetAhead.val}</strong></span>
+                  {/* Dynamic Position Stepper / Pills (+1, +2, +3... Leader) */}
+                  {allTargetsAhead.length > 1 && (
+                    <div className="flex items-center gap-1 pt-0.5 pb-1 overflow-x-auto scrollbar-none">
+                      <span className="text-[10px] font-bold uppercase text-blue-900 tracking-wider shrink-0 mr-1">Position:</span>
+                      {allTargetsAhead.map(t => {
+                        const isSelected = activeAheadStep === t.step;
+                        const isLeader = t.targetRank === 1;
+                        return (
+                          <button
+                            key={t.step}
+                            type="button"
+                            onClick={() => setSelectedAheadOffsets(prev => ({ ...prev, [cat.id]: t.step }))}
+                            className={`px-2 py-0.5 text-[11px] font-bold rounded cursor-pointer transition-all whitespace-nowrap ${
+                              isSelected
+                                ? 'bg-blue-700 text-white shadow-xs scale-105'
+                                : 'bg-white/90 text-blue-800 border border-blue-200 hover:bg-blue-100'
+                            }`}
+                            title={`Target ${t.team.name} (Rank #${t.targetRank}, +${t.step} Roto Pt${t.step > 1 ? 's' : ''})`}
+                          >
+                            {isLeader && t.step > 1 ? `👑 #1 Leader` : `+${t.step} (#${t.targetRank})`}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  <div className="flex items-baseline justify-between text-xs font-mono pt-1 border-t border-blue-200/50">
+                    <span className="text-gray-600">{targetAhead.team.name}&apos;s Total (Rank #{targetAhead.rank || (myRank - activeAheadStep)}): <strong>{targetAhead.val}</strong></span>
                     {!cat.isRate ? (
                       <span className="font-bold text-blue-800 bg-blue-100 px-2 py-0.5 rounded">
                         Deficit: {targetAhead.gap} {cat.unit}
@@ -537,24 +619,50 @@ export default function RotoGapView({ allStats, selectedSeason = 2026, onOwnerCl
                 </div>
               )}
 
-              {/* Defending Behind & Downside Risk Section (-1 Roto Point) */}
+              {/* Defending Behind & Downside Risk Section (-1, -2, -3... Roto Points) */}
               {defendingBehind ? (
                 <div className="bg-rose-50/70 border border-rose-200 rounded-lg p-3 space-y-2 mt-3">
-                  <div className="flex items-center justify-between text-xs">
+                  <div className="flex flex-wrap items-center justify-between gap-1 text-xs">
                     <span className="font-bold text-rose-950 flex items-center gap-1">
-                      <span>🛡️ Downside Risk (-1 Roto Point):</span>
+                      <span>🛡️ Downside Risk (-{activeBehindStep} Roto Pt{activeBehindStep > 1 ? 's' : ''}):</span>
                     </span>
                     <button
                       onClick={() => onOwnerClick?.(defendingBehind.team)}
-                      className="font-bold text-rose-700 hover:underline flex items-center gap-1"
+                      className="font-bold text-rose-700 hover:underline flex items-center gap-1 cursor-pointer"
                     >
                       <TeamAvatar team={defendingBehind.team} size="sm" />
                       <span>{defendingBehind.team.name}</span>
                     </button>
                   </div>
 
-                  <div className="flex items-baseline justify-between text-xs font-mono">
-                    <span className="text-gray-600">{defendingBehind.team.name}&apos;s Total: <strong>{defendingBehind.val}</strong></span>
+                  {/* Dynamic Position Stepper / Pills (-1, -2, -3... Floor) */}
+                  {allDefendersBehind.length > 1 && (
+                    <div className="flex items-center gap-1 pt-0.5 pb-1 overflow-x-auto scrollbar-none">
+                      <span className="text-[10px] font-bold uppercase text-rose-900 tracking-wider shrink-0 mr-1">Position:</span>
+                      {allDefendersBehind.map(d => {
+                        const isSelected = activeBehindStep === d.step;
+                        const isFloor = d.trailingRank === humanTeamIds.length;
+                        return (
+                          <button
+                            key={d.step}
+                            type="button"
+                            onClick={() => setSelectedBehindOffsets(prev => ({ ...prev, [cat.id]: d.step }))}
+                            className={`px-2 py-0.5 text-[11px] font-bold rounded cursor-pointer transition-all whitespace-nowrap ${
+                              isSelected
+                                ? 'bg-rose-700 text-white shadow-xs scale-105'
+                                : 'bg-white/90 text-rose-800 border border-rose-200 hover:bg-rose-100'
+                            }`}
+                            title={`Defend lead over ${d.team.name} at #${d.trailingRank} (-${d.step} Roto Pt${d.step > 1 ? 's' : ''})`}
+                          >
+                            {isFloor && d.step > 1 ? `🔻 #${d.trailingRank} Floor` : `-${d.step} (#${d.trailingRank})`}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  <div className="flex items-baseline justify-between text-xs font-mono pt-1 border-t border-rose-200/50">
+                    <span className="text-gray-600">{defendingBehind.team.name}&apos;s Total (Rank #{defendingBehind.rank || (myRank + activeBehindStep)}): <strong>{defendingBehind.val}</strong></span>
                     {!cat.isRate ? (
                       <span className="font-bold text-rose-800 bg-rose-100 px-2 py-0.5 rounded">
                         Lead Cushion: +{defendingBehind.cushion} {cat.unit}
