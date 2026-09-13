@@ -1,5 +1,6 @@
 import { useMemo, useEffect } from 'react';
 import { SCORING_CATS, aggregateStats, LINEUP_SLOTS } from '../utils/scoring';
+import { calculateEraAdjustedStat, formatHighlightVal } from '../utils/eraAdjustments';
 import TeamAvatar from './TeamAvatar';
 
 const BAT_CATS   = ['PA', 'R', 'HR', 'RBI', 'SB', 'OBP'];
@@ -46,8 +47,14 @@ function TotalRow({ totals, cats, highlightStat }) {
   );
 }
 
-export default function DayRosterModal({ teamDayRecord, highlightStat, onClose }) {
-  const { teamId, teamName, date, records } = teamDayRecord;
+export default function DayRosterModal({
+  teamDayRecord,
+  highlightStat,
+  adjustRoster = false,
+  adjustMlb = false,
+  onClose,
+}) {
+  const { teamId, teamName, date, records, season_year } = teamDayRecord;
 
   // Close modal on ESC key press
   useEffect(() => {
@@ -57,6 +64,15 @@ export default function DayRosterModal({ teamDayRecord, highlightStat, onClose }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
+
+  const adjInfo = useMemo(() => {
+    if (!highlightStat || (!adjustRoster && !adjustMlb)) return null;
+    const rawVal = parseFloat(teamDayRecord.stats?.[highlightStat]) || 0;
+    return calculateEraAdjustedStat(highlightStat, rawVal, season_year, {
+      adjustRoster,
+      adjustMlb,
+    });
+  }, [highlightStat, teamDayRecord.stats, season_year, adjustRoster, adjustMlb]);
 
   const { batters, pitchers, batterTotals, pitcherTotals } = useMemo(() => {
     const players = records.map(r => {
@@ -96,8 +112,44 @@ export default function DayRosterModal({ teamDayRecord, highlightStat, onClose }
               <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider">{date}</p>
             </div>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-white text-3xl leading-none">&times;</button>
+          <button onClick={onClose} className="text-slate-400 hover:text-white text-3xl leading-none cursor-pointer">&times;</button>
         </div>
+
+        {/* ERA ADJUSTMENT CALLOUT BANNER */}
+        {adjInfo?.isAdjusted && (
+          <div className="bg-amber-50 border-b border-amber-200 px-4 py-3 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2.5">
+              <span className="text-lg">⚡</span>
+              <div>
+                <div className="font-bold text-amber-900 flex items-center gap-2">
+                  <span>Era-Adjusted {highlightStat}:</span>
+                  <span className="text-sm text-amber-700 font-black">
+                    {formatHighlightVal(adjInfo.adjustedVal, highlightStat, true)}
+                  </span>
+                  <span className="text-gray-500 font-normal">
+                    (Raw: {Math.round(adjInfo.rawVal)})
+                  </span>
+                </div>
+                <div className="text-gray-600 mt-0.5 flex flex-wrap items-center gap-2">
+                  {adjustRoster && (
+                    <span>
+                      👥 Roster Factor: <strong>{adjInfo.rosterMultiplier.toFixed(3)}x</strong> ({season_year <= 2025 ? '13/9' : '16/12'} starters vs 2026 16/12)
+                    </span>
+                  )}
+                  {adjustRoster && adjustMlb && <span>•</span>}
+                  {adjustMlb && (
+                    <span>
+                      ⚾ MLB Environment Factor: <strong>{adjInfo.mlbMultiplier.toFixed(3)}x</strong> (MLB {season_year} baseline)
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="bg-amber-100 text-amber-900 font-mono font-bold px-2.5 py-1 rounded-lg border border-amber-300 shrink-0">
+              {adjInfo.totalMultiplier.toFixed(3)}x Multiplier
+            </div>
+          </div>
+        )}
 
         <div className="overflow-y-auto flex-1 bg-gray-50">
 
