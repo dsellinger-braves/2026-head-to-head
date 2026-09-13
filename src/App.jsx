@@ -23,6 +23,8 @@ import PlayerValuationsView from './views/PlayerValuationsView';
 import PickemView from './views/PickemView';
 import DraftCapitalView from './views/DraftCapitalView';
 import KeepersBudgetsView from './views/KeepersBudgetsView';
+import OwnerLandingView from './views/OwnerLandingView';
+import DraftHistoryView from './views/DraftHistoryView';
 import UserNavWidget from './components/UserNavWidget';
 import CommishActiveBanner from './components/CommishActiveBanner';
 import { useAuth } from './context/useAuth';
@@ -30,6 +32,7 @@ import { useAuth } from './context/useAuth';
 const AVAILABLE_SEASONS = [2027, ...Array.from({ length: 2026 - 2012 + 1 }, (_, i) => 2026 - i)];
 
 const VIEW_TO_HASH = {
+  dashboard: 'dashboard',
   weekly: 'matchups',
   summary: 'standings',
   teams: 'teams',
@@ -41,40 +44,66 @@ const VIEW_TO_HASH = {
   fantasycast: 'fantasycast',
   valuations: 'keeper-prices',
   draft: 'draft',
+  drafthistory: 'draft/history',
   pickem: 'pickem',
   capital: 'draft-capital',
   keepers: 'keepers-budgets',
 };
 
 const HASH_TO_VIEW = {
-  matchups: 'weekly',
-  weekly: 'weekly',
+  '': 'dashboard',
+  dashboard: 'dashboard',
+  home: 'dashboard',
+  landing: 'dashboard',
+  roto: 'teams',
+  teams: 'teams',
+  'teams/roto': 'teams',
   standings: 'summary',
   summary: 'summary',
-  teams: 'teams',
-  transactions: 'transactions',
-  players: 'players',
-  disparities: 'disparities',
+  'h2h-standings': 'summary',
+  'teams/standings': 'summary',
+  matchups: 'weekly',
+  weekly: 'weekly',
+  'teams/matchups': 'weekly',
   progression: 'progression',
+  'teams/progression': 'progression',
   highlights: 'highlights',
+  'teams/highlights': 'highlights',
   fantasycast: 'fantasycast',
-  'keeper-prices': 'valuations',
-  'keeper-pricing': 'valuations',
+  stats: 'players',
+  players: 'players',
+  'players/stats': 'players',
+  transactions: 'transactions',
+  'players/transactions': 'transactions',
+  disparities: 'disparities',
+  'players/disparities': 'disparities',
+  'keeper-prices': 'keepers',
+  'keeper-pricing': 'keepers',
   valuations: 'valuations',
-  pricing: 'valuations',
+  pricing: 'keepers',
   draft: 'draft',
+  'draft/lobby': 'draft',
+  'draft/history': 'drafthistory',
+  'draft-history': 'drafthistory',
+  drafthistory: 'drafthistory',
   pickem: 'pickem',
   'draft-capital': 'capital',
   capital: 'capital',
+  'draft/traded-board': 'capital',
+  'draft/ledgers': 'capital',
   'keepers-budgets': 'keepers',
   keepers: 'keepers',
+  'keepers/prices': 'keepers',
+  'keepers/rosters': 'keepers',
+  'keepers/comp-picks': 'keepers',
+  'keepers/planner': 'keepers',
   budgets: 'keepers',
 };
 
-const OFFSEASON_VIEWS = new Set(['valuations', 'draft', 'pickem', 'capital', 'keepers']);
+const OFFSEASON_VIEWS = new Set(['valuations', 'draft', 'pickem', 'capital', 'keepers', 'drafthistory']);
 
 function getViewFromHash() {
-  if (typeof window === 'undefined') return 'weekly';
+  if (typeof window === 'undefined') return 'dashboard';
   const rawHash = window.location.hash || '';
   // If the URL contains OAuth return tokens (access_token=, refresh_token=, error=),
   // don't treat the token string as a view slug. Restore saved pre-login route if available.
@@ -83,23 +112,49 @@ function getViewFromHash() {
       const saved = sessionStorage.getItem('oauth_pre_login_hash');
       if (saved) {
         const cleanSaved = saved.replace(/^#\/?/, '').trim().toLowerCase();
-        const route = cleanSaved.split('?')[0].split('/')[0];
+        const route = cleanSaved.split('?')[0];
         if (HASH_TO_VIEW[route]) return HASH_TO_VIEW[route];
+        const baseRoute = route.split('/')[0];
+        if (HASH_TO_VIEW[baseRoute]) return HASH_TO_VIEW[baseRoute];
       }
     } catch {
       // ignore
     }
-    return 'keepers';
+    return 'dashboard';
   }
   const hash = rawHash.replace(/^#\/?/, '').trim().toLowerCase();
-  const route = hash.split('?')[0].split('/')[0];
-  return HASH_TO_VIEW[route] || 'weekly';
+  const route = hash.split('?')[0];
+  if (HASH_TO_VIEW[route]) return HASH_TO_VIEW[route];
+  const baseRoute = route.split('/')[0];
+  return HASH_TO_VIEW[baseRoute] || 'dashboard';
+}
+
+function getSubTabsFromHash() {
+  if (typeof window === 'undefined') return { keepersSubTab: 'matrix', draftSubTab: 'board' };
+  const rawHash = window.location.hash || '';
+  const hash = rawHash.replace(/^#\/?/, '').trim().toLowerCase();
+  let keepersSubTab = 'matrix';
+  let draftSubTab = 'board';
+
+  if (hash.includes('rosters')) keepersSubTab = 'rosters';
+  else if (hash.includes('comp') || hash.includes('simulator')) keepersSubTab = 'simulator';
+  else if (hash.includes('planner')) keepersSubTab = 'planner';
+  else if (hash.includes('prices') || hash.includes('matrix')) keepersSubTab = 'matrix';
+
+  if (hash.includes('ledgers')) draftSubTab = 'ledgers';
+  else if (hash.includes('traded') || hash.includes('board')) draftSubTab = 'board';
+
+  return { keepersSubTab, draftSubTab };
 }
 
 function App() {
   const { user, signOut, effectiveOwner, isCommissioner } = useAuth();
   const [loading, setLoading] = useState(true);
   const [currentView, setCurrentView] = useState(getViewFromHash);
+  const [keepersSubTab, setKeepersSubTab] = useState(() => getSubTabsFromHash().keepersSubTab);
+  const [draftSubTab, setDraftSubTab] = useState(() => getSubTabsFromHash().draftSubTab);
+  const [openDropdown, setOpenDropdown] = useState(null); // 'teams' | 'players' | 'keepers' | 'draft' | null
+
   const [rawData, setRawData] = useState([]);
   const [loadStatus, setLoadStatus] = useState("Initializing...");
   const [selectedSeason, setSelectedSeason] = useState(2026);
@@ -115,26 +170,50 @@ function App() {
     return OFFSEASON_VIEWS.has(initialView) ? 'offseason' : 'season';
   });
 
-  // Synchronize browser URL hash with currentView
+  // Close dropdown on outside click
   useEffect(() => {
-    // If the hash contains OAuth tokens, do not overwrite it immediately; wait for Supabase to parse it
+    const handlePointerDown = (e) => {
+      if (!e.target.closest('[data-dropdown]')) {
+        setOpenDropdown(null);
+      }
+    };
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, []);
+
+  // Synchronize browser URL hash with currentView and active subtabs
+  useEffect(() => {
     if (window.location.hash && (window.location.hash.includes('access_token=') || window.location.hash.includes('error='))) {
       return;
     }
-    const slug = VIEW_TO_HASH[currentView] || currentView;
+    let slug = VIEW_TO_HASH[currentView] || currentView;
+    if (currentView === 'keepers') {
+      if (keepersSubTab === 'rosters') slug = 'keepers/rosters';
+      else if (keepersSubTab === 'simulator') slug = 'keepers/comp-picks';
+      else if (keepersSubTab === 'planner') slug = 'keepers/planner';
+      else slug = 'keepers/prices';
+    } else if (currentView === 'capital') {
+      if (draftSubTab === 'ledgers') slug = 'draft/ledgers';
+      else slug = 'draft/traded-board';
+    } else if (currentView === 'drafthistory') {
+      slug = 'draft/history';
+    }
+
     const targetHash = `#/${slug}`;
     if (window.location.hash !== targetHash) {
       window.location.hash = targetHash;
     }
     setActiveGroup(OFFSEASON_VIEWS.has(currentView) ? 'offseason' : 'season');
-  }, [currentView]);
+  }, [currentView, keepersSubTab, draftSubTab]);
 
   const handleGroupChange = (group) => {
     setActiveGroup(group);
+    setOpenDropdown(null);
     if (group === 'season' && OFFSEASON_VIEWS.has(currentView)) {
-      setCurrentView('weekly');
+      setCurrentView('dashboard');
     } else if (group === 'offseason' && !OFFSEASON_VIEWS.has(currentView)) {
-      setCurrentView('valuations');
+      setCurrentView('keepers');
+      setKeepersSubTab('matrix');
     }
   };
 
@@ -142,7 +221,10 @@ function App() {
   useEffect(() => {
     const handleHashChange = () => {
       const newView = getViewFromHash();
+      const { keepersSubTab: kTab, draftSubTab: dTab } = getSubTabsFromHash();
       setCurrentView((prev) => (prev !== newView ? newView : prev));
+      setKeepersSubTab(kTab);
+      setDraftSubTab(dTab);
     };
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
@@ -706,138 +788,305 @@ function App() {
               </div>
             </div>
 
-            {/* Bottom Bar: Sub-Navigation for Active Group */}
-            <div className="flex items-center space-x-1.5 py-2 overflow-x-auto scrollbar-none text-xs">
+            {/* Bottom Bar: Categorized Navigation for Active Group */}
+            <div className="flex items-center space-x-2 py-2 overflow-x-visible text-xs">
               {activeGroup === 'season' ? (
                 <>
+                  {/* DASHBOARD (HOME) */}
                   <a
-                    href="#/matchups"
-                    onClick={(e) => { e.preventDefault(); setCurrentView('weekly'); }}
-                    className={`px-3 py-1.5 rounded-lg font-bold transition-colors ${currentView === 'weekly' ? 'bg-blue-700 text-white shadow-xs' : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'}`}
+                    href="#/dashboard"
+                    onClick={(e) => { e.preventDefault(); setCurrentView('dashboard'); setOpenDropdown(null); }}
+                    className={`px-3.5 py-1.5 rounded-xl font-black flex items-center gap-1.5 transition-all cursor-pointer ${
+                      currentView === 'dashboard'
+                        ? 'bg-blue-600 text-white shadow-md ring-1 ring-blue-400'
+                        : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'
+                    }`}
+                    title="Personalized Owner Landing Page"
                   >
-                    Matchups
+                    <span>🏠</span>
+                    <span>Dashboard</span>
                   </a>
-                  <a
-                    href="#/standings"
-                    onClick={(e) => { e.preventDefault(); setCurrentView('summary'); }}
-                    className={`px-3 py-1.5 rounded-lg font-bold transition-colors ${currentView === 'summary' ? 'bg-blue-700 text-white shadow-xs' : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'}`}
-                  >
-                    Standings
-                  </a>
-                  <a
-                    href="#/teams"
-                    onClick={(e) => { e.preventDefault(); setCurrentView('teams'); }}
-                    className={`px-3 py-1.5 rounded-lg font-bold transition-colors ${currentView === 'teams' ? 'bg-blue-700 text-white shadow-xs' : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'}`}
-                  >
-                    Teams
-                  </a>
-                  <a
-                    href="#/transactions"
-                    onClick={(e) => { e.preventDefault(); setCurrentView('transactions'); }}
-                    className={`px-3 py-1.5 rounded-lg font-bold transition-colors ${currentView === 'transactions' ? 'bg-blue-700 text-white shadow-xs' : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'}`}
-                  >
-                    Transactions
-                  </a>
-                  <a
-                    href="#/players"
-                    onClick={(e) => { e.preventDefault(); setCurrentView('players'); }}
-                    className={`px-3 py-1.5 rounded-lg font-bold transition-colors ${currentView === 'players' ? 'bg-blue-700 text-white shadow-xs' : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'}`}
-                  >
-                    Players
-                  </a>
-                  <a
-                    href="#/disparities"
-                    onClick={(e) => { e.preventDefault(); setCurrentView('disparities'); }}
-                    className={`px-3 py-1.5 rounded-lg font-bold transition-colors ${currentView === 'disparities' ? 'bg-blue-700 text-white shadow-xs' : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'}`}
-                  >
-                    Disparities
-                  </a>
-                  <a
-                    href="#/progression"
-                    onClick={(e) => { e.preventDefault(); setCurrentView('progression'); }}
-                    className={`px-3 py-1.5 rounded-lg font-bold transition-colors ${currentView === 'progression' ? 'bg-blue-700 text-white shadow-xs' : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'}`}
-                  >
-                    Progression
-                  </a>
-                  <a
-                    href="#/highlights"
-                    onClick={(e) => { e.preventDefault(); setCurrentView('highlights'); }}
-                    className={`px-3 py-1.5 rounded-lg font-bold transition-colors ${currentView === 'highlights' ? 'bg-blue-700 text-white shadow-xs' : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'}`}
-                  >
-                    Highlights
-                  </a>
+
+                  {/* TEAMS DROPDOWN */}
+                  <div className="relative" data-dropdown="teams">
+                    <button
+                      type="button"
+                      onClick={() => setOpenDropdown(prev => prev === 'teams' ? null : 'teams')}
+                      className={`px-3.5 py-1.5 rounded-xl font-black flex items-center gap-1.5 transition-all cursor-pointer ${
+                        ['teams', 'summary', 'weekly', 'progression', 'highlights'].includes(currentView)
+                          ? 'bg-blue-600 text-white shadow-md ring-1 ring-blue-400'
+                          : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'
+                      }`}
+                      title="Teams Category"
+                    >
+                      <span>👥</span>
+                      <span>Teams</span>
+                      <span className={`text-[9px] transition-transform duration-200 ${openDropdown === 'teams' ? 'rotate-180' : ''}`}>▼</span>
+                    </button>
+
+                    {openDropdown === 'teams' && (
+                      <div className="absolute top-full left-0 mt-1.5 min-w-[220px] bg-slate-900/95 border border-slate-700/80 rounded-2xl shadow-2xl backdrop-blur-xl p-1.5 z-50 animate-fade-in flex flex-col gap-0.5">
+                        <a
+                          href="#/teams"
+                          onClick={(e) => { e.preventDefault(); setCurrentView('teams'); setOpenDropdown(null); }}
+                          className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-between transition cursor-pointer ${
+                            currentView === 'teams' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2"><span>📊</span><span>Roto</span></span>
+                          {currentView === 'teams' && <span className="text-[10px] text-blue-200">●</span>}
+                        </a>
+                        <a
+                          href="#/standings"
+                          onClick={(e) => { e.preventDefault(); setCurrentView('summary'); setOpenDropdown(null); }}
+                          className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-between transition cursor-pointer ${
+                            currentView === 'summary' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2"><span>🏆</span><span>H2H Standings</span></span>
+                          {currentView === 'summary' && <span className="text-[10px] text-blue-200">●</span>}
+                        </a>
+                        <a
+                          href="#/matchups"
+                          onClick={(e) => { e.preventDefault(); setCurrentView('weekly'); setOpenDropdown(null); }}
+                          className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-between transition cursor-pointer ${
+                            currentView === 'weekly' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2"><span>⚔️</span><span>Matchups</span></span>
+                          {currentView === 'weekly' && <span className="text-[10px] text-blue-200">●</span>}
+                        </a>
+                        <a
+                          href="#/progression"
+                          onClick={(e) => { e.preventDefault(); setCurrentView('progression'); setOpenDropdown(null); }}
+                          className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-between transition cursor-pointer ${
+                            currentView === 'progression' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2"><span>📈</span><span>Progression</span></span>
+                          {currentView === 'progression' && <span className="text-[10px] text-blue-200">●</span>}
+                        </a>
+                        <a
+                          href="#/highlights"
+                          onClick={(e) => { e.preventDefault(); setCurrentView('highlights'); setOpenDropdown(null); }}
+                          className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-between transition cursor-pointer ${
+                            currentView === 'highlights' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2"><span>⭐</span><span>Highlights</span></span>
+                          {currentView === 'highlights' && <span className="text-[10px] text-blue-200">●</span>}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* PLAYERS DROPDOWN */}
+                  <div className="relative" data-dropdown="players">
+                    <button
+                      type="button"
+                      onClick={() => setOpenDropdown(prev => prev === 'players' ? null : 'players')}
+                      className={`px-3.5 py-1.5 rounded-xl font-black flex items-center gap-1.5 transition-all cursor-pointer ${
+                        ['players', 'transactions', 'disparities'].includes(currentView)
+                          ? 'bg-blue-600 text-white shadow-md ring-1 ring-blue-400'
+                          : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'
+                      }`}
+                      title="Players Category"
+                    >
+                      <span>⚾</span>
+                      <span>Players</span>
+                      <span className={`text-[9px] transition-transform duration-200 ${openDropdown === 'players' ? 'rotate-180' : ''}`}>▼</span>
+                    </button>
+
+                    {openDropdown === 'players' && (
+                      <div className="absolute top-full left-0 mt-1.5 min-w-[210px] bg-slate-900/95 border border-slate-700/80 rounded-2xl shadow-2xl backdrop-blur-xl p-1.5 z-50 animate-fade-in flex flex-col gap-0.5">
+                        <a
+                          href="#/players"
+                          onClick={(e) => { e.preventDefault(); setCurrentView('players'); setOpenDropdown(null); }}
+                          className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-between transition cursor-pointer ${
+                            currentView === 'players' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2"><span>📊</span><span>Stats</span></span>
+                          {currentView === 'players' && <span className="text-[10px] text-blue-200">●</span>}
+                        </a>
+                        <a
+                          href="#/transactions"
+                          onClick={(e) => { e.preventDefault(); setCurrentView('transactions'); setOpenDropdown(null); }}
+                          className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-between transition cursor-pointer ${
+                            currentView === 'transactions' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2"><span>📋</span><span>Transactions</span></span>
+                          {currentView === 'transactions' && <span className="text-[10px] text-blue-200">●</span>}
+                        </a>
+                        <a
+                          href="#/disparities"
+                          onClick={(e) => { e.preventDefault(); setCurrentView('disparities'); setOpenDropdown(null); }}
+                          className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-between transition cursor-pointer ${
+                            currentView === 'disparities' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2"><span>⚖️</span><span>Disparities</span></span>
+                          {currentView === 'disparities' && <span className="text-[10px] text-blue-200">●</span>}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* FANTASYCAST LIVE */}
                   <a
                     href="#/fantasycast"
-                    onClick={(e) => { e.preventDefault(); setCurrentView('fantasycast'); }}
-                    className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-colors ${currentView === 'fantasycast' ? 'bg-red-700 text-white shadow-xs' : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'}`}
+                    onClick={(e) => { e.preventDefault(); setCurrentView('fantasycast'); setOpenDropdown(null); }}
+                    className={`px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 transition-colors ${
+                      currentView === 'fantasycast' ? 'bg-red-700 text-white shadow-xs' : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'
+                    }`}
                   >
                     <span className="relative flex h-2 w-2">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-300 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
                     </span>
-                    FantasyCast
+                    <span>FantasyCast</span>
                   </a>
                 </>
               ) : (
                 <>
-                  <a
-                    href="#/keeper-prices"
-                    onClick={(e) => { e.preventDefault(); setCurrentView('valuations'); }}
-                    className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-colors ${
-                      currentView === 'valuations' ? 'bg-indigo-600 text-white ring-1 ring-indigo-400 shadow-xs' : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'
-                    }`}
-                    title="Keeper Prices & Player Valuations"
-                  >
-                    <span>💰</span>
-                    <span>Keeper Prices</span>
-                  </a>
+                  {/* KEEPERS DROPDOWN */}
+                  <div className="relative" data-dropdown="keepers">
+                    <button
+                      type="button"
+                      onClick={() => setOpenDropdown(prev => prev === 'keepers' ? null : 'keepers')}
+                      className={`px-3.5 py-1.5 rounded-xl font-black flex items-center gap-1.5 transition-all cursor-pointer ${
+                        currentView === 'keepers' || currentView === 'valuations'
+                          ? 'bg-emerald-600 text-white shadow-md ring-1 ring-emerald-400'
+                          : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'
+                      }`}
+                      title="Keepers Category"
+                    >
+                      <span>💎</span>
+                      <span>Keepers</span>
+                      <span className={`text-[9px] transition-transform duration-200 ${openDropdown === 'keepers' ? 'rotate-180' : ''}`}>▼</span>
+                    </button>
 
-                  <a
-                    href="#/draft"
-                    onClick={(e) => { e.preventDefault(); setCurrentView('draft'); }}
-                    className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-colors ${
-                      currentView === 'draft' ? 'bg-amber-600 text-white ring-1 ring-amber-400 shadow-xs' : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'
-                    }`}
-                    title="Draft War Room"
-                  >
-                    <span>🎯</span>
-                    <span>Draft Room</span>
-                  </a>
+                    {openDropdown === 'keepers' && (
+                      <div className="absolute top-full left-0 mt-1.5 min-w-[210px] bg-slate-900/95 border border-slate-700/80 rounded-2xl shadow-2xl backdrop-blur-xl p-1.5 z-50 animate-fade-in flex flex-col gap-0.5">
+                        <a
+                          href="#/keepers/prices"
+                          onClick={(e) => { e.preventDefault(); setCurrentView('keepers'); setKeepersSubTab('matrix'); setOpenDropdown(null); }}
+                          className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-between transition cursor-pointer ${
+                            currentView === 'keepers' && keepersSubTab === 'matrix' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2"><span>💰</span><span>Prices</span></span>
+                          {currentView === 'keepers' && keepersSubTab === 'matrix' && <span className="text-[10px] text-emerald-200">●</span>}
+                        </a>
+                        <a
+                          href="#/keepers/rosters"
+                          onClick={(e) => { e.preventDefault(); setCurrentView('keepers'); setKeepersSubTab('rosters'); setOpenDropdown(null); }}
+                          className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-between transition cursor-pointer ${
+                            currentView === 'keepers' && keepersSubTab === 'rosters' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2"><span>📋</span><span>Rosters</span></span>
+                          {currentView === 'keepers' && keepersSubTab === 'rosters' && <span className="text-[10px] text-emerald-200">●</span>}
+                        </a>
+                        <a
+                          href="#/keepers/comp-picks"
+                          onClick={(e) => { e.preventDefault(); setCurrentView('keepers'); setKeepersSubTab('simulator'); setOpenDropdown(null); }}
+                          className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-between transition cursor-pointer ${
+                            currentView === 'keepers' && keepersSubTab === 'simulator' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2"><span>🎲</span><span>Comp Picks</span></span>
+                          {currentView === 'keepers' && keepersSubTab === 'simulator' && <span className="text-[10px] text-emerald-200">●</span>}
+                        </a>
+                        <a
+                          href="#/keepers/planner"
+                          onClick={(e) => { e.preventDefault(); setCurrentView('keepers'); setKeepersSubTab('planner'); setOpenDropdown(null); }}
+                          className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-between transition cursor-pointer ${
+                            currentView === 'keepers' && keepersSubTab === 'planner' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2"><span>🔮</span><span>Planner</span></span>
+                          {currentView === 'keepers' && keepersSubTab === 'planner' && <span className="text-[10px] text-emerald-200">●</span>}
+                        </a>
+                      </div>
+                    )}
+                  </div>
 
+                  {/* DRAFT DROPDOWN */}
+                  <div className="relative" data-dropdown="draft">
+                    <button
+                      type="button"
+                      onClick={() => setOpenDropdown(prev => prev === 'draft' ? null : 'draft')}
+                      className={`px-3.5 py-1.5 rounded-xl font-black flex items-center gap-1.5 transition-all cursor-pointer ${
+                        ['capital', 'drafthistory', 'draft'].includes(currentView)
+                          ? 'bg-amber-600 text-white shadow-md ring-1 ring-amber-400'
+                          : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'
+                      }`}
+                      title="Draft Category"
+                    >
+                      <span>🎯</span>
+                      <span>Draft</span>
+                      <span className={`text-[9px] transition-transform duration-200 ${openDropdown === 'draft' ? 'rotate-180' : ''}`}>▼</span>
+                    </button>
+
+                    {openDropdown === 'draft' && (
+                      <div className="absolute top-full left-0 mt-1.5 min-w-[210px] bg-slate-900/95 border border-slate-700/80 rounded-2xl shadow-2xl backdrop-blur-xl p-1.5 z-50 animate-fade-in flex flex-col gap-0.5">
+                        <a
+                          href="#/draft/traded-board"
+                          onClick={(e) => { e.preventDefault(); setCurrentView('capital'); setDraftSubTab('board'); setOpenDropdown(null); }}
+                          className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-between transition cursor-pointer ${
+                            currentView === 'capital' && draftSubTab === 'board' ? 'bg-amber-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2"><span>🎟️</span><span>Traded Board</span></span>
+                          {currentView === 'capital' && draftSubTab === 'board' && <span className="text-[10px] text-amber-200">●</span>}
+                        </a>
+                        <a
+                          href="#/draft/ledgers"
+                          onClick={(e) => { e.preventDefault(); setCurrentView('capital'); setDraftSubTab('ledgers'); setOpenDropdown(null); }}
+                          className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-between transition cursor-pointer ${
+                            currentView === 'capital' && draftSubTab === 'ledgers' ? 'bg-amber-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2"><span>📒</span><span>Owner Ledgers</span></span>
+                          {currentView === 'capital' && draftSubTab === 'ledgers' && <span className="text-[10px] text-amber-200">●</span>}
+                        </a>
+                        <a
+                          href="#/draft/history"
+                          onClick={(e) => { e.preventDefault(); setCurrentView('drafthistory'); setOpenDropdown(null); }}
+                          className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-between transition cursor-pointer ${
+                            currentView === 'drafthistory' ? 'bg-amber-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2"><span>📜</span><span>Draft History</span></span>
+                          {currentView === 'drafthistory' && <span className="text-[10px] text-amber-200">●</span>}
+                        </a>
+                        <a
+                          href="#/draft/lobby"
+                          onClick={(e) => { e.preventDefault(); setCurrentView('draft'); setOpenDropdown(null); }}
+                          className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-between transition cursor-pointer ${
+                            currentView === 'draft' ? 'bg-amber-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2"><span>🎯</span><span>Draft Lobby</span></span>
+                          {currentView === 'draft' && <span className="text-[10px] text-amber-200">●</span>}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* PICK'EM */}
                   <a
                     href="#/pickem"
-                    onClick={(e) => { e.preventDefault(); setCurrentView('pickem'); }}
-                    className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-colors ${
+                    onClick={(e) => { e.preventDefault(); setCurrentView('pickem'); setOpenDropdown(null); }}
+                    className={`px-3.5 py-1.5 rounded-xl font-bold flex items-center gap-1.5 transition-colors cursor-pointer ${
                       currentView === 'pickem' ? 'bg-purple-700 text-white ring-1 ring-purple-400 shadow-xs' : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'
                     }`}
                     title="Annual MLB Pick'em"
                   >
                     <span>🔮</span>
                     <span>Pick&apos;em</span>
-                  </a>
-
-                  <a
-                    href="#/draft-capital"
-                    onClick={(e) => { e.preventDefault(); setCurrentView('capital'); }}
-                    className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-colors ${
-                      currentView === 'capital' ? 'bg-teal-600 text-white ring-1 ring-teal-400 shadow-xs' : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'
-                    }`}
-                    title="2027 Draft Capital & Future Pick Ledgers"
-                  >
-                    <span>🎟️</span>
-                    <span>Draft Capital</span>
-                  </a>
-
-                  <a
-                    href="#/keepers-budgets"
-                    onClick={(e) => { e.preventDefault(); setCurrentView('keepers'); }}
-                    className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-colors ${
-                      currentView === 'keepers' ? 'bg-emerald-600 text-white ring-1 ring-emerald-400 shadow-xs' : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'
-                    }`}
-                    title="Keepers, Budget Matrix & Compensation Simulator"
-                  >
-                    <span>💎</span>
-                    <span>Keepers & Budget</span>
                   </a>
                 </>
               )}
@@ -947,6 +1196,22 @@ function App() {
             </div>
           ) : (
             <>
+              {currentView === 'dashboard' && (
+                <OwnerLandingView
+                  allStats={rawData}
+                  processedWeeks={processedWeeks}
+                  selectedSeason={selectedSeason}
+                  onOwnerClick={(team) => setSelectedOwner(team)}
+                  onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
+                  onNavigate={(view, subTab) => {
+                    if (subTab) {
+                      if (view === 'keepers') setKeepersSubTab(subTab);
+                      if (view === 'capital') setDraftSubTab(subTab);
+                    }
+                    setCurrentView(view);
+                  }}
+                />
+              )}
               {currentView === 'weekly' && (
                 <WeeklyView
                   processedWeeks={processedWeeks}
@@ -954,82 +1219,89 @@ function App() {
                   onOwnerClick={(team) => setSelectedOwner(team)}
                 />
               )}
-          {currentView === 'summary' && (
-            <SummaryView
-              processedWeeks={processedWeeks}
-              allStats={rawData}
-              onOwnerClick={(team) => setSelectedOwner(team)}
-            />
-          )}
-          {currentView === 'teams' && (
-            <TeamsView
-              allStats={rawData}
-              selectedSeason={selectedSeason}
-              onOwnerClick={(team) => setSelectedOwner(team)}
-              onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
-            />
-          )}
-          {currentView === 'transactions' && (
-            <TransactionsView
-              onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
-              onOwnerClick={(team) => setSelectedOwner(team)}
-            />
-          )}
-          {currentView === 'players' && (
-            <PlayersView
-              allStats={rawData}
-              selectedSeason={selectedSeason}
-              onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
-            />
-          )}
-          {currentView === 'disparities' && (
-            <OwnerDisparitiesView
-              allStats={rawData}
-              selectedSeason={selectedSeason}
-              onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
-              onOwnerClick={(team) => setSelectedOwner(team)}
-            />
-          )}
-          {currentView === 'progression' && (
-            <ProgressionView allStats={rawData} selectedSeason={selectedSeason} processedWeeks={processedWeeks} />
-          )}
-          {currentView === 'highlights' && (
-            <HighlightsView
-              allStats={rawData}
-              allSeasonData={allSeasonData}
-              selectedSeason={selectedSeason}
-              onDownloadAll={downloadAllSeasons}
-              downloadAllProgress={downloadAllProgress}
-            />
-          )}
-          {currentView === 'fantasycast' && (
-            <LiveScoreboardView
-              todaysRecords={todaysRecords}
-            />
-          )}
-          {currentView === 'valuations' && (
-            <PlayerValuationsView
-              allStats={rawData}
-              seasonYear={offseasonYear}
-              onSeasonYearChange={handleOffseasonYearChange}
-              onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
-              onOwnerClick={(team) => setSelectedOwner(team)}
-            />
-          )}
-          {currentView === 'pickem' && (
-            <PickemView
-              initialSeason={offseasonYear}
-              onSeasonChange={handleOffseasonYearChange}
-            />
-          )}
-          {currentView === 'capital' && (
-            <DraftCapitalView
-              currentUser={effectiveOwner || 'Daniel'}
-              isCommissioner={isCommissioner}
-              draftYear={offseasonYear}
-              onDraftYearChange={handleOffseasonYearChange}
-            />
-          )}
+              {currentView === 'summary' && (
+                <SummaryView
+                  processedWeeks={processedWeeks}
+                  allStats={rawData}
+                  onOwnerClick={(team) => setSelectedOwner(team)}
+                />
+              )}
+              {currentView === 'teams' && (
+                <TeamsView
+                  allStats={rawData}
+                  selectedSeason={selectedSeason}
+                  onOwnerClick={(team) => setSelectedOwner(team)}
+                  onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
+                />
+              )}
+              {currentView === 'transactions' && (
+                <TransactionsView
+                  onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
+                  onOwnerClick={(team) => setSelectedOwner(team)}
+                />
+              )}
+              {currentView === 'players' && (
+                <PlayersView
+                  allStats={rawData}
+                  selectedSeason={selectedSeason}
+                  onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
+                />
+              )}
+              {currentView === 'disparities' && (
+                <OwnerDisparitiesView
+                  allStats={rawData}
+                  selectedSeason={selectedSeason}
+                  onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
+                  onOwnerClick={(team) => setSelectedOwner(team)}
+                />
+              )}
+              {currentView === 'progression' && (
+                <ProgressionView allStats={rawData} selectedSeason={selectedSeason} processedWeeks={processedWeeks} />
+              )}
+              {currentView === 'highlights' && (
+                <HighlightsView
+                  allStats={rawData}
+                  allSeasonData={allSeasonData}
+                  selectedSeason={selectedSeason}
+                  onDownloadAll={downloadAllSeasons}
+                  downloadAllProgress={downloadAllProgress}
+                />
+              )}
+              {currentView === 'fantasycast' && (
+                <LiveScoreboardView
+                  todaysRecords={todaysRecords}
+                />
+              )}
+              {currentView === 'valuations' && (
+                <PlayerValuationsView
+                  allStats={rawData}
+                  seasonYear={offseasonYear}
+                  onSeasonYearChange={handleOffseasonYearChange}
+                  onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
+                  onOwnerClick={(team) => setSelectedOwner(team)}
+                />
+              )}
+              {currentView === 'pickem' && (
+                <PickemView
+                  initialSeason={offseasonYear}
+                  onSeasonChange={handleOffseasonYearChange}
+                />
+              )}
+              {currentView === 'capital' && (
+                <DraftCapitalView
+                  currentUser={effectiveOwner || 'Daniel'}
+                  isCommissioner={isCommissioner}
+                  draftYear={offseasonYear}
+                  onDraftYearChange={handleOffseasonYearChange}
+                  subTab={draftSubTab}
+                />
+              )}
+              {currentView === 'drafthistory' && (
+                <DraftHistoryView
+                  onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
+                  onOwnerClick={(team) => setSelectedOwner(team)}
+                />
+              )}
               {currentView === 'keepers' && (
                 <KeepersBudgetsView
                   currentUser={effectiveOwner || 'Daniel'}
@@ -1037,6 +1309,7 @@ function App() {
                   seasonYear={offseasonYear}
                   onSeasonYearChange={handleOffseasonYearChange}
                   onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
+                  subTab={keepersSubTab}
                 />
               )}
             </>

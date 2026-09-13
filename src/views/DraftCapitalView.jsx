@@ -153,7 +153,8 @@ export default function DraftCapitalView({
   currentUser = 'Daniel',
   isCommissioner: propIsCommissioner = false,
   draftYear = 2027,
-  onDraftYearChange
+  onDraftYearChange,
+  subTab
 }) {
   const { user, profile, isCommissioner: authIsCommissioner, effectiveOwner, logCommissionerAction } = useAuth();
   const isCommissioner = propIsCommissioner || authIsCommissioner;
@@ -166,7 +167,10 @@ export default function DraftCapitalView({
   const [loading, setLoading] = useState(true);
 
   const canonicalCurrentUser = canonicalOwnerName(effectiveOwner || currentUser);
-  const [activeSubTab, setActiveSubTab] = useState(draftYear === 2026 ? '2026board' : 'board'); // 'board' | 'ledgers' | 'history' | '2026board' | 'proposals'
+  const [activeSubTab, setActiveSubTab] = useState(() => {
+    if (subTab) return subTab;
+    return draftYear === 2026 ? '2026board' : 'board';
+  }); // 'board' | 'ledgers' | 'history' | '2026board' | 'proposals'
   const [selectedOwner, setSelectedOwner] = useState(canonicalCurrentUser);
   const [roundFilter, setRoundFilter] = useState('ALL');
 
@@ -174,14 +178,23 @@ export default function DraftCapitalView({
   const [inboxTab, setInboxTab] = useState('inbox'); // 'inbox' | 'outbox' | 'commish' | 'all' | 'archive'
   const [viewPerspectiveOwner, setViewPerspectiveOwner] = useState(canonicalCurrentUser);
 
+  // Sync activeSubTab when subTab prop changes
+  useEffect(() => {
+    if (subTab) {
+      setActiveSubTab(subTab);
+    }
+  }, [subTab]);
+
   // Sync activeSubTab when draftYear prop changes
   useEffect(() => {
-    if (draftYear === 2026 && activeSubTab === 'board') {
-      setActiveSubTab('2026board');
-    } else if (draftYear === 2027 && activeSubTab === '2026board') {
-      setActiveSubTab('board');
+    if (!subTab) {
+      if (draftYear === 2026 && activeSubTab === 'board') {
+        setActiveSubTab('2026board');
+      } else if (draftYear === 2027 && activeSubTab === '2026board') {
+        setActiveSubTab('board');
+      }
     }
-  }, [draftYear, activeSubTab]);
+  }, [draftYear, activeSubTab, subTab]);
 
   // Sync viewPerspectiveOwner when effectiveOwner updates
   useEffect(() => {
