@@ -441,31 +441,38 @@ function generateDefaultDraftOrder() {
   return order;
 }
 
-// --- GEMINI INTEGRATION ---
+// --- GEMINI INTEGRATION & AI PICK ANALYSIS ---
+const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+
 async function callGemini(prompt) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
-  
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{ text: prompt }]
-        }]
-      })
-    });
-    
-    const data = await response.json();
-    
-    if (data.candidates && data.candidates[0]) {
-      return data.candidates[0].content.parts[0].text;
-    }
-    return "Analysis unavailable";
-  } catch (error) {
-    console.error('Gemini API Error:', error);
-    return "Analysis unavailable";
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || (typeof GEMINI_API_KEY !== 'undefined' ? GEMINI_API_KEY : '');
+  if (!apiKey || apiKey.startsWith('AIzaSyDQ0eRBz6jSsORZrnG19jR5mzmd0QE0DWg')) {
+    return null; // Stale fallback key bypass
   }
+
+  for (const model of GEMINI_MODELS) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{ text: prompt }]
+          }]
+        })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
+          return data.candidates[0].content.parts[0].text;
+        }
+      }
+    } catch (err) {
+      console.warn(`Gemini fetch error for ${model}:`, err);
+    }
+  }
+  return null;
 }
 
 function formatPlayerStats(player) {
@@ -476,9 +483,55 @@ function formatPlayerStats(player) {
   return `R: ${player.ZIPSR || 'N/A'}, HR: ${player.ZIPSHR || 'N/A'}, RBI: ${player.ZIPSRBI || 'N/A'}, SB: ${player.ZIPSSB || 'N/A'}, OBP: ${player.ZIPSOBP || 'N/A'}`;
 }
 
-async function generateDraftCommentary(player, owner, pickNum, teamStats) {
+function generateLocalDraftCommentary(player, owner, pickNum, season = 2027) {
+  const adp = parseFloat(player.ADP) || null;
+  const isPitcher = player.Position?.includes('SP') || player.Position?.includes('RP');
+  const ownerProfile = DEFAULT_OWNER_PROFILES[owner] || { archetype: { name: 'Contender', emoji: '🏆' } };
+  
+  let valueVerdict = 'at fair market value';
+  let valueBadge = '🎯 Solid Value';
+  if (adp) {
+    const diff = pickNum - adp;
+    if (diff >= 15) {
+      valueVerdict = `an absolute steal at pick #${pickNum} (consensus ADP was ${adp.toFixed(1)})`;
+      valueBadge = '🔥 Steal of the Draft';
+    } else if (diff >= 5) {
+      valueVerdict = `great value slipping past his ${adp.toFixed(1)} ADP`;
+      valueBadge = '📈 Positive Value';
+    } else if (diff <= -15) {
+      valueVerdict = `an aggressive reach at #${pickNum} (ADP was ${adp.toFixed(1)})`;
+      valueBadge = '⚠️ Reached Early';
+    } else if (diff <= -5) {
+      valueVerdict = `a slight reach ahead of his ${adp.toFixed(1)} ADP`;
+      valueBadge = '⚡ Priority Target';
+    }
+  }
+
+  let statHighlight = '';
+  if (isPitcher) {
+    const k = player.ZIPSK || player.ESPNK;
+    const era = player.ZIPSERA || player.ESPNERA;
+    const qs = player.ZIPSQS || player.ESPNQS;
+    statHighlight = `Anchors the pitching staff with a projected ${era || '3.50'} ERA and ${k || '170'} strikeouts across ${qs || '15'} quality starts.`;
+  } else {
+    const hr = player.ZIPSHR || player.ESPNHR;
+    const rbi = player.ZIPSRBI || player.ESPNRBI;
+    const sb = player.ZIPSSB || player.ESPNSB;
+    const obp = player.ZIPSOBP || player.ESPNOBP;
+    statHighlight = `Provides immediate category firepower with projected ${hr || '25'} HR, ${rbi || '85'} RBI, ${sb ? `${sb} SB, ` : ''}and an on-base skill profile (.${String(obp || '340').replace('0.', '')} OBP).`;
+  }
+
+  return `
+    <b>${ownerProfile.archetype.emoji} ${owner} locks in ${player.Player} at Pick #${pickNum}!</b><br><br>
+    This selection marks <b>${valueVerdict}</b>. Fitting ${owner}'s <i>${ownerProfile.archetype.name}</i> identity, this move solidifies their ${player.Position} depth for the ${season} championship push.<br><br>
+    ${statHighlight}<br><br>
+    <b>Pick Assessment:</b> ${valueBadge} | <b>Position:</b> ${player.Position} | <b>MLB:</b> ${player.Team} | <b>ADP:</b> ${player.ADP || 'N/A'}
+  `;
+}
+
+async function generateDraftCommentary(player, owner, pickNum, teamStats, season = 2027) {
   const prompt = `
-Context: Fantasy Baseball Draft (2026 Season).
+Context: Fantasy Baseball Draft (${season} Season).
 
 Action: ${owner} picked ${player.Player} (Pick #${pickNum}).
 
@@ -505,7 +558,11 @@ End with:
 Position: ${player.Position} | Team: ${player.Team} | ADP: ${player.ADP || 'N/A'}
 `;
 
-  return await callGemini(prompt);
+  const aiResponse = await callGemini(prompt);
+  if (aiResponse && aiResponse !== 'Analysis unavailable') {
+    return aiResponse;
+  }
+  return generateLocalDraftCommentary(player, owner, pickNum, season);
 }
 
 // --- AUDIO SYSTEM ---
@@ -548,6 +605,32 @@ function getInjuryIndicator(playerId, playerInfoArray) {
   }
 
   return { color, status: displayText };
+}
+
+// --- HEADSHOT HELPERS ---
+function getPlayerHeadshotUrl(player) {
+  if (!player) {
+    return 'https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/generic/headshot/67/current';
+  }
+  const espnId = player['ESPN PlayerID'] || player.espn_player_id || player.player_id || player.id;
+  const mlbId = player.MLBAMID || player.mlbamid || player.mlbam_id || player.playerid;
+  if (espnId) {
+    return `https://a.espncdn.com/combiner/i?img=/i/headshots/mlb/players/full/${espnId}.png&w=350&h=254`;
+  }
+  if (mlbId) {
+    return `https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/${mlbId}/headshot/67/current`;
+  }
+  return 'https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/generic/headshot/67/current';
+}
+
+function handleHeadshotError(e, player) {
+  const mlbId = player?.MLBAMID || player?.mlbamid || player?.mlbam_id || player?.playerid;
+  const genericFallback = 'https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/generic/headshot/67/current';
+  if (mlbId && !e.target.src.includes('mlbstatic.com')) {
+    e.target.src = `https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/${mlbId}/headshot/67/current`;
+  } else {
+    e.target.src = genericFallback;
+  }
 }
 
 // --- PLAYER MODAL ---
@@ -638,25 +721,44 @@ function PlayerModal({ player, onClose, onOpenInDepthModal }) {
       <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div style={styles.modalHeader}>
-          <div>
-            <h2 style={{ margin: 0, color: '#fff', fontSize: '28px' }}>
-              {player.Player}
-            </h2>
-            <div style={{ color: '#888', fontSize: '16px', marginTop: '5px' }}>
-              {player.Position} • {player.Team}
-              {playerInfo && (
-                <span style={{
-                  marginLeft: '15px',
-                  padding: '4px 12px',
-                  borderRadius: '4px',
-                  background: injuryColor,
-                  color: injuryDisplay === 'Healthy' ? '#000' : '#fff',
-                  fontWeight: 'bold',
-                  fontSize: '12px'
-                }}>
-                  {injuryDisplay}
-                </span>
-              )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
+            <div style={{
+              width: '80px',
+              height: '80px',
+              borderRadius: '50%',
+              border: '3px solid #bb86fc',
+              backgroundColor: '#222',
+              overflow: 'hidden',
+              flexShrink: 0,
+              boxShadow: '0 4px 14px rgba(187, 134, 252, 0.35)'
+            }}>
+              <img
+                src={getPlayerHeadshotUrl(player)}
+                alt={player.Player}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                onError={(e) => handleHeadshotError(e, player)}
+              />
+            </div>
+            <div>
+              <h2 style={{ margin: 0, color: '#fff', fontSize: '28px' }}>
+                {player.Player}
+              </h2>
+              <div style={{ color: '#888', fontSize: '16px', marginTop: '5px' }}>
+                {player.Position} • {player.Team}
+                {playerInfo && (
+                  <span style={{
+                    marginLeft: '15px',
+                    padding: '4px 12px',
+                    borderRadius: '4px',
+                    background: injuryColor,
+                    color: injuryDisplay === 'Healthy' ? '#000' : '#fff',
+                    fontWeight: 'bold',
+                    fontSize: '12px'
+                  }}>
+                    {injuryDisplay}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -1206,7 +1308,16 @@ function RecentActivityWidget({ recentPicks, players, onPlayerClick, playerInfo 
                   <span style={{ color: 'var(--highlight)', fontWeight: 'bold' }}>{pick.Owner}</span>
                 </div>
                 {player ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div style={{ width: '22px', height: '22px', borderRadius: '50%', overflow: 'hidden', background: '#222', flexShrink: 0, border: '1px solid #444' }}>
+                      <img
+                        src={getPlayerHeadshotUrl(player)}
+                        alt=""
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        onError={(e) => handleHeadshotError(e, player)}
+                        loading="lazy"
+                      />
+                    </div>
                     <PlayerNameButton 
                       player={player} 
                       onClick={onPlayerClick}
@@ -1238,12 +1349,23 @@ function QueuePreviewWidget({ queue, onPlayerClick, playerInfo }) {
           {queue.slice(0, 5).map(player => {
             const injury = getInjuryIndicator(player['ESPN PlayerID'], playerInfo);
             return (
-              <div key={player['ESPN PlayerID']} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-                <PlayerNameButton 
-                  player={player} 
-                  onClick={onPlayerClick}
-                  style={{ color: injury ? injury.color : '#fff', fontWeight: 'bold' }}
-                />
+              <div key={player['ESPN PlayerID']} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ width: '22px', height: '22px', borderRadius: '50%', overflow: 'hidden', background: '#222', flexShrink: 0, border: '1px solid #444' }}>
+                    <img
+                      src={getPlayerHeadshotUrl(player)}
+                      alt=""
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      onError={(e) => handleHeadshotError(e, player)}
+                      loading="lazy"
+                    />
+                  </div>
+                  <PlayerNameButton 
+                    player={player} 
+                    onClick={onPlayerClick}
+                    style={{ color: injury ? injury.color : '#fff', fontWeight: 'bold' }}
+                  />
+                </div>
                 <span style={{ color: '#888', fontSize: '10px' }}>{player.Position} • {player.Team}</span>
               </div>
             );
@@ -1390,24 +1512,43 @@ function PlayerPoolPanel({ players, onDraft, isMyTurn, queue, onAddToQueue, onRe
                       </button>
                     </td>
                     <td style={styles.td}>
-                      <PlayerNameButton 
-                        player={p} 
-                        onClick={onPlayerClick}
-                        style={{ color: injury ? injury.color : '#fff', fontWeight: 'bold' }}
-                      />
-                      {injury && (
-                        <span style={{
-                          marginLeft: '8px',
-                          padding: '2px 6px',
-                          borderRadius: '3px',
-                          background: injury.color,
-                          color: '#000',
-                          fontSize: '10px',
-                          fontWeight: 'bold'
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{
+                          width: '26px',
+                          height: '26px',
+                          borderRadius: '50%',
+                          overflow: 'hidden',
+                          background: '#222',
+                          flexShrink: 0,
+                          border: '1px solid #444'
                         }}>
-                          {injury.status}
-                        </span>
-                      )}
+                          <img
+                            src={getPlayerHeadshotUrl(p)}
+                            alt=""
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            onError={(e) => handleHeadshotError(e, p)}
+                            loading="lazy"
+                          />
+                        </div>
+                        <PlayerNameButton 
+                          player={p} 
+                          onClick={onPlayerClick}
+                          style={{ color: injury ? injury.color : '#fff', fontWeight: 'bold' }}
+                        />
+                        {injury && (
+                          <span style={{
+                            marginLeft: '4px',
+                            padding: '2px 6px',
+                            borderRadius: '3px',
+                            background: injury.color,
+                            color: '#000',
+                            fontSize: '10px',
+                            fontWeight: 'bold'
+                          }}>
+                            {injury.status}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td style={styles.td}>{p.Position}</td>
                     <td style={styles.td}>{p.Team}</td>
@@ -1447,9 +1588,20 @@ function PlayerPoolPanel({ players, onDraft, isMyTurn, queue, onAddToQueue, onRe
             ) : (
               queue.map(p => (
                 <div key={p['ESPN PlayerID']} style={styles.queueItem}>
-                  <div>
-                    <div style={{ fontWeight: 'bold' }}>{p.Player}</div>
-                    <div style={{ fontSize: '12px', color: '#888' }}>{p.Position} - {p.Team}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '28px', height: '28px', borderRadius: '50%', overflow: 'hidden', background: '#222', flexShrink: 0, border: '1px solid #444' }}>
+                      <img
+                        src={getPlayerHeadshotUrl(p)}
+                        alt=""
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        onError={(e) => handleHeadshotError(e, p)}
+                        loading="lazy"
+                      />
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 'bold' }}>{p.Player}</div>
+                      <div style={{ fontSize: '12px', color: '#888' }}>{p.Position} - {p.Team}</div>
+                    </div>
                   </div>
                   <button 
                     onClick={() => onRemoveFromQueue(p['ESPN PlayerID'])}
@@ -3105,9 +3257,30 @@ export default function DraftRoomView({
   }, [currentPickId, currentPickOwner, audioEnabled]);
 
   // Commentary callback - stable reference using playersRef
+  // Commentary callback - stable reference using playersRef
   const handleNewPick = useCallback(async (pick) => {
     const player = playersRef.current.find(p => String(p['ESPN PlayerID']) === String(pick['ESPN PlayerID']));
     if (!player) return;
+
+    // If pick already comes with commentary, display immediately without regenerating
+    if (pick.ai_commentary) {
+      setLastPickCommentary(pick.ai_commentary);
+      const historyEntry = {
+        pickNumber: pick['Overall Pick'],
+        round: pick.Round,
+        owner: pick.Owner,
+        playerName: player.Player,
+        position: player.Position,
+        team: player.Team,
+        commentary: pick.ai_commentary,
+        timestamp: new Date().toLocaleTimeString()
+      };
+      setAnalysisHistory(prev => {
+        if (prev.some(h => h.pickNumber === historyEntry.pickNumber)) return prev;
+        return [...prev, historyEntry];
+      });
+      return;
+    }
     
     setGeneratingCommentary(true);
     
@@ -3116,7 +3289,8 @@ export default function DraftRoomView({
       player,
       pick.Owner,
       pick['Overall Pick'],
-      teamStats
+      teamStats,
+      roomSeason
     );
     
     setLastPickCommentary(commentary);
@@ -3132,8 +3306,24 @@ export default function DraftRoomView({
       commentary: commentary,
       timestamp: new Date().toLocaleTimeString()
     };
-    setAnalysisHistory(prev => [...prev, historyEntry]);
-  }, []);
+    setAnalysisHistory(prev => {
+      if (prev.some(h => h.pickNumber === historyEntry.pickNumber)) return prev;
+      return [...prev, historyEntry];
+    });
+
+    // Persist to Supabase draft_picks if in 2027 live draft
+    if (roomSeason === 2027 && pick['Overall Pick']) {
+      try {
+        await supabase
+          .from('draft_picks')
+          .update({ ai_commentary: commentary })
+          .eq('season_year', 2027)
+          .eq('overall_pick', pick['Overall Pick']);
+      } catch (err) {
+        console.warn('Could not persist AI commentary to draft_picks:', err);
+      }
+    }
+  }, [roomSeason]);
 
   const fetchDraftOrder = useCallback(async () => {
     try {
@@ -3164,6 +3354,28 @@ export default function DraftRoomView({
           }
           if (liveRes?.data) {
             livePicks2027 = liveRes.data;
+            const existingComments = liveRes.data
+              .filter(lp => lp.ai_commentary)
+              .map(lp => ({
+                pickNumber: lp.overall_pick,
+                round: lp.round,
+                owner: lp.team_owner,
+                playerName: lp.player_name,
+                position: lp.player_position || '',
+                team: lp.player_team || '',
+                commentary: lp.ai_commentary,
+                timestamp: lp.picked_at ? new Date(lp.picked_at).toLocaleTimeString() : ''
+              }));
+            if (existingComments.length > 0) {
+              setAnalysisHistory(prev => {
+                const map = new Map(prev.map(item => [item.pickNumber, item]));
+                existingComments.forEach(item => {
+                  if (!map.has(item.pickNumber)) map.set(item.pickNumber, item);
+                });
+                return Array.from(map.values()).sort((a, b) => a.pickNumber - b.pickNumber);
+              });
+              setLastPickCommentary(existingComments[existingComments.length - 1].commentary);
+            }
           }
         } catch (e) {
           console.warn('Supabase 2027 data fetch notice:', e);
@@ -3179,7 +3391,8 @@ export default function DraftRoomView({
               return {
                 ...p,
                 'ESPN PlayerID': lp.player_id,
-                Selection: lp.player_name
+                Selection: lp.player_name,
+                ai_commentary: lp.ai_commentary
               };
             }
             return p;
@@ -3679,6 +3892,12 @@ export default function DraftRoomView({
           return;
         }
         fetchDraftOrder();
+        handleNewPick({
+          ...currentPick,
+          'ESPN PlayerID': player['ESPN PlayerID'],
+          Round: currentPick.Round,
+          Selection: player.Player
+        });
       } else {
         const { error } = await supabase
           .from('draft-order')
@@ -3694,6 +3913,12 @@ export default function DraftRoomView({
         }
         
         fetchDraftOrder();
+        handleNewPick({
+          ...currentPick,
+          'ESPN PlayerID': player['ESPN PlayerID'],
+          Round: currentPick.Round,
+          Selection: player.Player
+        });
       }
     }
     
@@ -3897,12 +4122,12 @@ export default function DraftRoomView({
 
             {lastPickPlayer ? (
               <div style={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-                <div style={{ width: '120px', height: '120px', borderRadius: '16px', border: '3px solid #bb86fc', overflow: 'hidden', background: '#111', flexShrink: 0 }}>
+                <div style={{ width: '120px', height: '120px', borderRadius: '16px', border: '3px solid #bb86fc', overflow: 'hidden', background: '#111', flexShrink: 0, boxShadow: '0 4px 20px rgba(187, 134, 252, 0.4)' }}>
                   <img
-                    src={`https://midfield.mlbstatic.com/v1/people/${lastPickPlayer.MLBAMID}/spots/120`}
+                    src={getPlayerHeadshotUrl(lastPickPlayer)}
                     alt={lastPickPlayer.Player}
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    onError={e => { e.target.style.display = 'none'; }}
+                    onError={(e) => handleHeadshotError(e, lastPickPlayer)}
                   />
                 </div>
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 16px' }}>
@@ -4507,27 +4732,46 @@ export default function DraftRoomView({
             </div>
             <div style={styles.pickPlayer}>
               {lastPickPlayer ? (
-                <>
-                  <PlayerNameButton 
-                    player={lastPickPlayer} 
-                    onClick={setSelectedPlayer}
-                    style={{ color: '#fff', fontWeight: '700', fontSize: '56px' }}
-                  />
-                  {getInjuryIndicator(lastPickPlayer['ESPN PlayerID'], playerInfo) && (
-                    <span style={{
-                      marginLeft: '15px',
-                      padding: '4px 10px',
-                      borderRadius: '6px',
-                      background: getInjuryIndicator(lastPickPlayer['ESPN PlayerID'], playerInfo).color,
-                      color: '#000',
-                      fontSize: '18px',
-                      fontWeight: 'bold',
-                      verticalAlign: 'middle'
-                    }}>
-                      {getInjuryIndicator(lastPickPlayer['ESPN PlayerID'], playerInfo).status}
-                    </span>
-                  )}
-                </>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
+                  <div style={{
+                    width: '84px',
+                    height: '84px',
+                    borderRadius: '50%',
+                    border: '3px solid #bb86fc',
+                    backgroundColor: '#222',
+                    overflow: 'hidden',
+                    flexShrink: 0,
+                    boxShadow: '0 4px 18px rgba(187, 134, 252, 0.4)'
+                  }}>
+                    <img
+                      src={getPlayerHeadshotUrl(lastPickPlayer)}
+                      alt={lastPickPlayer.Player}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      onError={(e) => handleHeadshotError(e, lastPickPlayer)}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <PlayerNameButton 
+                      player={lastPickPlayer} 
+                      onClick={setSelectedPlayer}
+                      style={{ color: '#fff', fontWeight: '700', fontSize: '52px' }}
+                    />
+                    {getInjuryIndicator(lastPickPlayer['ESPN PlayerID'], playerInfo) && (
+                      <span style={{
+                        marginLeft: '15px',
+                        padding: '4px 10px',
+                        borderRadius: '6px',
+                        background: getInjuryIndicator(lastPickPlayer['ESPN PlayerID'], playerInfo).color,
+                        color: '#000',
+                        fontSize: '18px',
+                        fontWeight: 'bold',
+                        verticalAlign: 'middle'
+                      }}>
+                        {getInjuryIndicator(lastPickPlayer['ESPN PlayerID'], playerInfo).status}
+                      </span>
+                    )}
+                  </div>
+                </div>
               ) : (
                 'WAITING ON CLOCK...'
               )}
