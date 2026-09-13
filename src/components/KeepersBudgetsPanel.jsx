@@ -71,12 +71,20 @@ export default function KeepersBudgetsPanel({
   onSeasonYearChange,
   onPlayerClick,
   onRefresh,
-  priorKeepers = []
+  priorKeepers = [],
+  initialTab = 'matrix'
 }) {
   const { user, profile, isCommissioner: authIsCommissioner, effectiveOwner } = useAuth();
   const isCommissioner = propIsCommissioner || authIsCommissioner;
 
-  const [activeTab, setActiveTab] = useState('matrix'); // 'matrix' | 'rosters' | 'simulator' | 'planner' | 'settings'
+  const [activeTab, setActiveTab] = useState(initialTab || 'matrix'); // 'matrix' | 'rosters' | 'simulator' | 'planner' | 'settings'
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
+
   const [selectedOwner, setSelectedOwner] = useState(currentUser || 'Daniel');
   const [keeperOwnerFilter, setKeeperOwnerFilter] = useState('ALL');
 

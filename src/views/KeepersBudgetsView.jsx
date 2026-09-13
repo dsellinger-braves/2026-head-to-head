@@ -63,7 +63,8 @@ export default function KeepersBudgetsView({
   isCommissioner = false,
   seasonYear = 2027,
   onSeasonYearChange,
-  onPlayerClick
+  onPlayerClick,
+  subTab = 'matrix'
 }) {
   const [teamBudgets, setTeamBudgets] = useState(seasonYear === 2026 ? defaultBudgetsList : []);
   const [compPicks, setCompPicks] = useState(seasonYear === 2026 ? defaultCompPicksList : []);
@@ -214,6 +215,7 @@ export default function KeepersBudgetsView({
         onPlayerClick={onPlayerClick}
         onRefresh={loadData}
         priorKeepers={defaultKeepersList}
+        initialTab={subTab}
       />
     </div>
   );
