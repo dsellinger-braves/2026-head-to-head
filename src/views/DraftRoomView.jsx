@@ -5,6 +5,8 @@ import defaultTeamBudgets from '../data/teamBudgets2026.json';
 import defaultCompPicks from '../data/compensationPicks2026.json';
 import defaultKeepers from '../data/keeperInput2026.json';
 import KeepersBudgetsPanel from '../components/KeepersBudgetsPanel';
+import HistoricalDraftView from './HistoricalDraftView';
+import { getPlayerHeadshotUrl, handleHeadshotError, updateGlobalPlayerLookup } from '../utils/headshotUtils';
 
 // --- CONFIGURATION ---
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyDQ0eRBz6jSsORZrnG19jR5mzmd0QE0DWg';
@@ -607,31 +609,6 @@ function getInjuryIndicator(playerId, playerInfoArray) {
   return { color, status: displayText };
 }
 
-// --- HEADSHOT HELPERS ---
-function getPlayerHeadshotUrl(player) {
-  if (!player) {
-    return 'https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/generic/headshot/67/current';
-  }
-  const espnId = player['ESPN PlayerID'] || player.espn_player_id || player.player_id || player.id;
-  const mlbId = player.MLBAMID || player.mlbamid || player.mlbam_id || player.playerid;
-  if (espnId) {
-    return `https://a.espncdn.com/combiner/i?img=/i/headshots/mlb/players/full/${espnId}.png&w=350&h=254`;
-  }
-  if (mlbId) {
-    return `https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/${mlbId}/headshot/67/current`;
-  }
-  return 'https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/generic/headshot/67/current';
-}
-
-function handleHeadshotError(e, player) {
-  const mlbId = player?.MLBAMID || player?.mlbamid || player?.mlbam_id || player?.playerid;
-  const genericFallback = 'https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/generic/headshot/67/current';
-  if (mlbId && !e.target.src.includes('mlbstatic.com')) {
-    e.target.src = `https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/${mlbId}/headshot/67/current`;
-  } else {
-    e.target.src = genericFallback;
-  }
-}
 
 // --- PLAYER MODAL ---
 function PlayerModal({ player, onClose, onOpenInDepthModal }) {
@@ -737,6 +714,7 @@ function PlayerModal({ player, onClose, onOpenInDepthModal }) {
                 alt={player.Player}
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 onError={(e) => handleHeadshotError(e, player)}
+                referrerPolicy="no-referrer"
               />
             </div>
             <div>
@@ -1315,6 +1293,7 @@ function RecentActivityWidget({ recentPicks, players, onPlayerClick, playerInfo 
                         alt=""
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         onError={(e) => handleHeadshotError(e, player)}
+                        referrerPolicy="no-referrer"
                         loading="lazy"
                       />
                     </div>
@@ -1357,6 +1336,7 @@ function QueuePreviewWidget({ queue, onPlayerClick, playerInfo }) {
                       alt=""
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                       onError={(e) => handleHeadshotError(e, player)}
+                      referrerPolicy="no-referrer"
                       loading="lazy"
                     />
                   </div>
@@ -1527,6 +1507,7 @@ function PlayerPoolPanel({ players, onDraft, isMyTurn, queue, onAddToQueue, onRe
                             alt=""
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                             onError={(e) => handleHeadshotError(e, p)}
+                            referrerPolicy="no-referrer"
                             loading="lazy"
                           />
                         </div>
@@ -1595,6 +1576,7 @@ function PlayerPoolPanel({ players, onDraft, isMyTurn, queue, onAddToQueue, onRe
                         alt=""
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         onError={(e) => handleHeadshotError(e, p)}
+                        referrerPolicy="no-referrer"
                         loading="lazy"
                       />
                     </div>
@@ -1860,9 +1842,12 @@ function generate2027DraftOrder(draftTrades = [], keepers2027 = [], compPicks202
     roundOwners.forEach((owner, idx) => {
       // Find keeper assigned to this owner and slot if submitted
       const keeper = (keepers2027 || []).find(k => {
-        const oName = (k.owner_name === 'Dan' ? 'Daniel' : k.owner_name) || k.team_owner;
-        return oName === owner && (k.keeper_slot === r || (!k.keeper_slot && idx === 0));
+        const rawOwner = k.owner || k.owner_name || k.team_owner || '';
+        const oName = (rawOwner === 'Dan' || rawOwner === 'dsellinger') ? 'Daniel' : rawOwner;
+        return oName.toLowerCase() === owner.toLowerCase() && (Number(k.keeper_slot) === r || (!k.keeper_slot && idx === 0));
       });
+
+      const espnId = keeper ? String(keeper.espn_player_id || keeper.player_id || '') : null;
 
       fullOrder.push({
         'Overall Pick': overall,
@@ -1874,7 +1859,7 @@ function generate2027DraftOrder(draftTrades = [], keepers2027 = [], compPicks202
         'Pick Traded?': 'N',
         'Comp Pick?': null,
         'Number Pick for Owner': `${owner}${r - 1}`,
-        'ESPN PlayerID': keeper ? String(keeper.player_id) : null,
+        'ESPN PlayerID': espnId || null,
         Selection: keeper ? (keeper.player_name || keeper.Player) : null,
         isKeeper: true
       });
@@ -3045,11 +3030,31 @@ function DraftLogPanel({ allPicks, players, onPlayerClick }) {
                     <strong style={{ color: '#fff' }}>{pick.Owner}</strong>
                   </td>
                   <td style={styles.td}>
-                    <PlayerNameButton 
-                      player={player} 
-                      onClick={onPlayerClick}
-                      style={{ color: '#fff', fontWeight: 'bold' }}
-                    />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{
+                        width: '26px',
+                        height: '26px',
+                        borderRadius: '50%',
+                        overflow: 'hidden',
+                        background: '#222',
+                        flexShrink: 0,
+                        border: '1px solid #444'
+                      }}>
+                        <img
+                          src={getPlayerHeadshotUrl(player)}
+                          alt=""
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          onError={(e) => handleHeadshotError(e, player)}
+                          referrerPolicy="no-referrer"
+                          loading="lazy"
+                        />
+                      </div>
+                      <PlayerNameButton 
+                        player={player} 
+                        onClick={onPlayerClick}
+                        style={{ color: '#fff', fontWeight: 'bold' }}
+                      />
+                    </div>
                   </td>
                   <td style={styles.td}>{player.Position}</td>
                   <td style={styles.td}>{player.Team}</td>
@@ -3204,10 +3209,6 @@ export default function DraftRoomView({
   // Audio state
   const [audioEnabled, setAudioEnabled] = useState(false);
   const lastAnnouncedPickRef = useRef(null);
-  const playersRef = useRef(players);
-  useEffect(() => {
-    playersRef.current = players;
-  }, [players]);
 
   const [isRunningMock, setIsRunningMock] = useState(false);
   const [mockSpeed, setMockSpeed] = useState(1000);
@@ -3234,6 +3235,40 @@ export default function DraftRoomView({
   const displayPicks = useMemo(() => {
     return (draftMode === 'test' || draftMode === 'mockdraft') && testModePicks.length > 0 ? testModePicks : picks;
   }, [draftMode, testModePicks, picks]);
+
+  const displayPlayers = useMemo(() => {
+    if (!players || players.length === 0) return [];
+    if (roomSeason === 2027) {
+      // For 2027 draft, the ONLY players that should show as currently rostered
+      // are the presumed 2027 keeper picks. All other players must show as Available.
+      const keeperMap = new Map();
+      (_keepers || []).forEach(k => {
+        const rawOwner = k.owner || k.owner_name || k.team_owner || '';
+        const owner = (rawOwner === 'Dan' || rawOwner === 'dsellinger') ? 'Daniel' : rawOwner;
+        const pid = String(k.espn_player_id || k.player_id || '');
+        if (pid) keeperMap.set(pid, { owner, slot: k.keeper_slot });
+      });
+
+      return players.map(p => {
+        const pid = String(p['ESPN PlayerID'] || p.espn_player_id || p.id || '');
+        const kInfo = keeperMap.get(pid);
+        return {
+          ...p,
+          Availability: kInfo ? kInfo.owner : 'Available',
+          isKeeper: !!kInfo,
+          keeperOwner: kInfo ? kInfo.owner : null,
+          keeperSlot: kInfo ? kInfo.slot : null
+        };
+      });
+    }
+    return players;
+  }, [players, roomSeason, _keepers]);
+
+  const playersRef = useRef(displayPlayers);
+  useEffect(() => {
+    playersRef.current = displayPlayers;
+    updateGlobalPlayerLookup(displayPlayers);
+  }, [displayPlayers]);
 
   const currentPick = useMemo(() => {
     if (roomSeason === 2027) {
@@ -3830,7 +3865,7 @@ export default function DraftRoomView({
   };
 
   const lastPick = displayPicks.filter(p => p['ESPN PlayerID']).slice(-1)[0];
-  const lastPickPlayer = lastPick ? players.find(p => String(p['ESPN PlayerID']) === String(lastPick['ESPN PlayerID'])) : null;
+  const lastPickPlayer = lastPick ? displayPlayers.find(p => String(p['ESPN PlayerID']) === String(lastPick['ESPN PlayerID'])) : null;
   
   const isMyTurn = (currentPick && currentUser && currentPick.Owner === currentUser) || draftMode === 'test' || draftMode === 'multitest';
 
@@ -3936,6 +3971,36 @@ export default function DraftRoomView({
     setQueue(newQueue);
     localStorage.setItem('draft_queue', JSON.stringify(newQueue));
   };
+
+  // --- HISTORICAL DRAFT SNAPSHOT (2026 ARCHIVE) ---
+  if (roomSeason === 2026) {
+    return (
+      <>
+        <HistoricalDraftView
+          allPicks={displayPicks}
+          players={displayPlayers}
+          keepers={_keepers}
+          compPicks={_compPicks}
+          draftTrades={draftTrades}
+          onSeasonChange={handleSeasonChange}
+          onOpenPlayerModal={(id, name) => {
+            const found = displayPlayers.find(p => String(p['ESPN PlayerID']) === String(id));
+            if (found) setSelectedPlayer(found);
+            else if (onOpenPlayerModal) onOpenPlayerModal(id, name);
+          }}
+          onSwitchView={onSwitchView}
+          analysisHistory={analysisHistory}
+        />
+        {selectedPlayer && (
+          <PlayerModal
+            player={selectedPlayer}
+            onClose={() => setSelectedPlayer(null)}
+            onOpenInDepthModal={onOpenPlayerModal}
+          />
+        )}
+      </>
+    );
+  }
 
   if (!draftMode) {
     return (
@@ -4246,7 +4311,7 @@ export default function DraftRoomView({
           <div style={{ flex: 1, overflowY: 'auto' }}>
             <RecentActivityWidget
               recentPicks={recentPicks}
-              players={players}
+              players={displayPlayers}
               onPlayerClick={setSelectedPlayer}
               playerInfo={playerInfo}
             />
@@ -4255,7 +4320,7 @@ export default function DraftRoomView({
 
         {/* Bottom Ticker */}
         <div style={{ gridColumn: '1 / -1', gridRow: '3 / 4', borderTop: '2px solid #333' }}>
-          <Ticker recentPicks={recentPicks} players={players} />
+          <Ticker recentPicks={recentPicks} players={displayPlayers} />
         </div>
 
         {selectedPlayer && (
@@ -4322,7 +4387,7 @@ export default function DraftRoomView({
         <div style={{ gridColumn: '1 / -1', overflow: 'hidden', background: '#121212', padding: '10px' }}>
           {activeTab === 'Pool' && (
             <PlayerPoolPanel
-              players={players}
+              players={displayPlayers}
               onDraft={handleDraft}
               isMyTurn={isMyTurn}
               queue={queue}
@@ -4359,7 +4424,7 @@ export default function DraftRoomView({
           {activeTab === 'Roster' && (
             <RosterManagerPanel
               allPicks={displayPicks}
-              players={players}
+              players={displayPlayers}
               currentUser={currentUser}
             />
           )}
@@ -4368,7 +4433,7 @@ export default function DraftRoomView({
               <div style={styles.wrHeader}>Draft Feed</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {recentPicks.slice().reverse().map(p => {
-                  const playerObj = players.find(pl => String(pl['ESPN PlayerID']) === String(p['ESPN PlayerID']));
+                  const playerObj = displayPlayers.find(pl => String(pl['ESPN PlayerID']) === String(p['ESPN PlayerID']));
                   return (
                     <div key={p['Overall Pick']} style={{
                       padding: '10px',
@@ -4794,10 +4859,10 @@ export default function DraftRoomView({
 
         {/* Bottom Info Bar */}
         <div style={styles.infoBar}>
-          <TeamNeedsSummary myPicks={myPicks} players={players} />
+          <TeamNeedsSummary myPicks={myPicks} players={displayPlayers} />
           <RecentActivityWidget 
             recentPicks={recentPicks} 
-            players={players} 
+            players={displayPlayers} 
             onPlayerClick={setSelectedPlayer}
             playerInfo={playerInfo}
           />
@@ -4809,7 +4874,7 @@ export default function DraftRoomView({
         </div>
 
         {/* Scrolling Ticker */}
-        <Ticker recentPicks={recentPicks} players={players} />
+        <Ticker recentPicks={recentPicks} players={displayPlayers} />
 
         {/* War Room Drawer / Panel */}
         {showDashboard && (
@@ -4836,7 +4901,7 @@ export default function DraftRoomView({
 
             <div style={{ ...styles.panelContent, display: activeTab === 'Pool' ? 'grid' : 'none' }}>
               <PlayerPoolPanel
-                players={players}
+                players={displayPlayers}
                 onDraft={handleDraft}
                 isMyTurn={isMyTurn}
                 queue={queue}
@@ -4853,7 +4918,7 @@ export default function DraftRoomView({
             <div style={{ ...styles.panelContent, display: activeTab === 'Roster' ? 'grid' : 'none' }}>
               <RosterManagerPanel
                 allPicks={displayPicks}
-                players={players}
+                players={displayPlayers}
                 currentUser={currentUser}
               />
             </div>
@@ -4861,7 +4926,7 @@ export default function DraftRoomView({
             <div style={{ ...styles.panelContent, display: activeTab === 'MyPicks' ? 'grid' : 'none' }}>
               <MyPicksPanel
                 allPicks={displayPicks}
-                players={players}
+                players={displayPlayers}
                 currentUser={currentUser}
                 draftTrades={draftTrades}
                 roomSeason={roomSeason}
@@ -4871,7 +4936,7 @@ export default function DraftRoomView({
             <div style={{ ...styles.panelContent, display: activeTab === 'DraftLog' ? 'grid' : 'none' }}>
               <DraftLogPanel
                 allPicks={displayPicks}
-                players={players}
+                players={displayPlayers}
                 onPlayerClick={setSelectedPlayer}
               />
             </div>
@@ -4885,7 +4950,7 @@ export default function DraftRoomView({
             <div style={{ ...styles.panelContent, display: activeTab === 'Standings' ? 'grid' : 'none' }}>
               <StandingsPanel 
                 allPicks={displayPicks}
-                players={players}
+                players={displayPlayers}
               />
             </div>
           </div>
