@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/useAuth';
 
 export default function CommishActiveBanner() {
-  const { isCommissioner, profile, commishCheckoutReason, relinquishCommissionerPowers, effectiveOwner, isActingAsOther } = useAuth();
+  const { isCommissioner, profile, commishCheckoutReason, relinquishCommissionerPowers, effectiveOwner, isActingAsOther, governanceTitle = 'Commissioner' } = useAuth();
   const [relinquishing, setRelinquishing] = useState(false);
 
   if (!isCommissioner) return null;
@@ -13,7 +13,7 @@ export default function CommishActiveBanner() {
     try {
       await relinquishCommissionerPowers();
     } catch (err) {
-      console.error('Error relinquishing commissioner powers:', err);
+      console.error('Error relinquishing powers:', err);
     } finally {
       setRelinquishing(false);
     }
@@ -22,10 +22,10 @@ export default function CommishActiveBanner() {
   return (
     <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-slate-950 font-bold px-4 py-2 border-b border-amber-400 shadow-md flex flex-wrap items-center justify-between gap-3 text-xs">
       <div className="flex items-center gap-2">
-        <span className="text-base animate-pulse">🛡️</span>
+        <span className="text-base animate-pulse">{governanceTitle === 'Commissioner' ? '🛡️' : '⚡'}</span>
         <div>
-          <span className="font-black uppercase tracking-wider">Commissioner Powers Active:</span>{' '}
-          <span>{profile?.owner_name || 'Commissioner'}</span>
+          <span className="font-black uppercase tracking-wider">{governanceTitle} Powers Active:</span>{' '}
+          <span>{profile?.owner_name || governanceTitle}</span>
           {isActingAsOther && (
             <span className="ml-2 px-2 py-0.5 rounded-full bg-slate-950 text-amber-300 text-[10px] font-black">
               Acting as {effectiveOwner}

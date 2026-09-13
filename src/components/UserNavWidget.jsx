@@ -18,7 +18,9 @@ export default function UserNavWidget() {
     isActingAsOther,
     setEffectiveTeamId,
     signInWithDiscord,
-    signOut
+    signOut,
+    governanceTitle = 'Commissioner',
+    governanceShortTitle = 'Commish'
   } = useAuth();
 
   const [menuOpen, setMenuOpen] = useState(false);
@@ -83,15 +85,15 @@ export default function UserNavWidget() {
     <>
       <div className="relative" ref={menuRef}>
         <div className="flex items-center gap-2">
-          {/* If Commissioner powers are dormant, show quick checkout button */}
+          {/* If Governance powers are dormant, show quick checkout button */}
           {isCommishEligible && !isCommishCheckedOut && (
             <button
               onClick={() => setCheckoutModalOpen(true)}
               className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-xs font-bold transition-all cursor-pointer shadow-xs"
-              title="Click to check out commissioner powers (action will be posted to #league-news)"
+              title={`Click to check out ${governanceTitle.toLowerCase()} powers (action will be posted to #league-news)`}
             >
-              <span>🛡️</span>
-              <span>Commish Checkout</span>
+              <span>{governanceTitle === 'Commissioner' ? '🛡️' : '⚡'}</span>
+              <span>{governanceShortTitle} Checkout</span>
             </button>
           )}
 
@@ -131,7 +133,7 @@ export default function UserNavWidget() {
                 <span>{profile.owner_name}</span>
                 {isCommissioner && (
                   <span className="text-[10px] font-black px-1.5 py-0.2 rounded bg-amber-400 text-slate-950 shadow-xs">
-                    COMMISH ACTIVE
+                    {governanceTitle === 'Commissioner' ? 'COMMISH ACTIVE' : 'ADMIN ACTIVE'}
                   </span>
                 )}
               </div>
@@ -165,11 +167,11 @@ export default function UserNavWidget() {
                   <span>{profile.owner_name}</span>
                   {isCommissioner ? (
                     <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-amber-400 text-slate-950">
-                      👑 COMMISH ACTIVE
+                      {governanceTitle === 'Commissioner' ? '👑 COMMISH ACTIVE' : '⚡ ADMIN ACTIVE'}
                     </span>
                   ) : isCommishEligible ? (
                     <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
-                      Commish Dormant
+                      {governanceShortTitle} Dormant
                     </span>
                   ) : null}
                 </div>
@@ -184,13 +186,13 @@ export default function UserNavWidget() {
               </div>
             </div>
 
-            {/* COMMISSIONER BREAK-GLASS CONTROLS (DAN & ADRIAN ONLY) */}
+            {/* GOVERNANCE BREAK-GLASS CONTROLS (DAN & ADRIAN ONLY) */}
             {isCommishEligible && (
               <div className="bg-amber-950/30 border border-amber-500/40 rounded-xl p-3 space-y-2.5">
                 <div className="flex items-center justify-between text-xs font-bold text-amber-300">
                   <span className="flex items-center gap-1.5">
-                    <span>🛡️</span>
-                    <span>Governance Powers</span>
+                    <span>{governanceTitle === 'Commissioner' ? '🛡️' : '⚡'}</span>
+                    <span>{governanceTitle} Powers</span>
                   </span>
                   {isCommissioner && (
                     <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded font-black">
@@ -202,7 +204,7 @@ export default function UserNavWidget() {
                 {!isCommishCheckedOut ? (
                   <div className="space-y-2">
                     <p className="text-[11px] text-slate-400 leading-relaxed">
-                      Commish access is dormant by default. Check out powers to edit trades, manage rosters, or approve league actions.
+                      {governanceTitle} access is dormant by default. Check out powers to edit trades, manage rosters, or approve league actions.
                     </p>
                     <button
                       onClick={() => {
@@ -211,7 +213,7 @@ export default function UserNavWidget() {
                       }}
                       className="w-full py-1.5 px-3 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black transition-all cursor-pointer shadow-sm flex items-center justify-center gap-1.5"
                     >
-                      <span>🛡️ Check Out Commish Powers</span>
+                      <span>{governanceTitle === 'Commissioner' ? '🛡️' : '⚡'} Check Out {governanceShortTitle} Powers</span>
                     </button>
                   </div>
                 ) : (

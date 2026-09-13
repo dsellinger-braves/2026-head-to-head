@@ -30,9 +30,9 @@ function cleanupOAuthHash() {
 }
 
 const STATIC_LEAGUE_PROFILES = {
-  dsellinger: { team_id: 5, owner_name: 'Daniel', role: 'commissioner' },
-  dan: { team_id: 5, owner_name: 'Daniel', role: 'commissioner' },
-  daniel: { team_id: 5, owner_name: 'Daniel', role: 'commissioner' },
+  dsellinger: { team_id: 5, owner_name: 'Daniel', role: 'admin' },
+  dan: { team_id: 5, owner_name: 'Daniel', role: 'admin' },
+  daniel: { team_id: 5, owner_name: 'Daniel', role: 'admin' },
   adriaxx: { team_id: 2, owner_name: 'Adrian', role: 'commissioner' },
   adrian: { team_id: 2, owner_name: 'Adrian', role: 'commissioner' },
   aznchuy: { team_id: 1, owner_name: 'Tim', role: 'owner' },
@@ -144,7 +144,8 @@ export function AuthProvider({ children }) {
 
     if (matched) {
       const canonicalName = matched.owner_name === 'Dan' ? 'Daniel' : (matched.owner_name || 'Owner');
-      const normalizedMatch = { ...matched, owner_name: canonicalName };
+      const role = (canonicalName === 'Daniel' || matched.team_id === 5) ? 'admin' : matched.role;
+      const normalizedMatch = { ...matched, owner_name: canonicalName, role };
 
       // Link user_id, discord_id, and update avatar in Supabase if not yet linked
       if (matched.id && !String(matched.id).startsWith('static_')) {
@@ -293,13 +294,35 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  // Commissioner eligibility: strictly Dan (Team 5) and Adrian (Team 2)
-  const isCommishEligible = useMemo(() => {
-    if (!profile) return false;
-    return profile.role === 'commissioner' || profile.team_id === 5 || profile.team_id === 2;
+  // Differentiate titles: Adrian is the sole Commissioner, Daniel is Admin
+  // Privileges and break-glass governance powers remain 100% identical.
+  const isAdrian = useMemo(() => {
+    return profile?.team_id === 2 || profile?.owner_name?.toLowerCase() === 'adrian';
   }, [profile]);
 
-  // Active commissioner status: requires BOTH eligibility AND explicit checkout!
+  const isDaniel = useMemo(() => {
+    return profile?.team_id === 5 || profile?.owner_name?.toLowerCase() === 'daniel' || profile?.owner_name?.toLowerCase() === 'dan';
+  }, [profile]);
+
+  const governanceTitle = useMemo(() => {
+    if (isDaniel || profile?.role === 'admin') return 'Admin';
+    if (isAdrian || profile?.role === 'commissioner') return 'Commissioner';
+    return 'Owner';
+  }, [isDaniel, isAdrian, profile]);
+
+  const governanceShortTitle = useMemo(() => {
+    if (isDaniel || profile?.role === 'admin') return 'Admin';
+    if (isAdrian || profile?.role === 'commissioner') return 'Commish';
+    return 'Owner';
+  }, [isDaniel, isAdrian, profile]);
+
+  // Governance eligibility: strictly Dan/Daniel (Team 5) and Adrian (Team 2)
+  const isCommishEligible = useMemo(() => {
+    if (!profile) return false;
+    return profile.role === 'commissioner' || profile.role === 'admin' || profile.team_id === 5 || profile.team_id === 2;
+  }, [profile]);
+
+  // Active commissioner/admin status: requires BOTH eligibility AND explicit checkout!
   const isCommissioner = useMemo(() => {
     return Boolean(isCommishEligible && isCommishCheckedOut);
   }, [isCommishEligible, isCommishCheckedOut]);
@@ -334,7 +357,7 @@ export function AuthProvider({ children }) {
     }
   }, [profile, commishCheckoutReason]);
 
-  // Check out commissioner powers with reason and post to #league-news
+  // Check out commissioner/admin powers with reason and post to #league-news
   const checkoutCommissionerPowers = useCallback(async (reason = '') => {
     if (!isCommishEligible || !profile) return false;
     const finalReason = reason?.trim() || 'Administrative maintenance & trade management';
@@ -355,8 +378,9 @@ export function AuthProvider({ children }) {
         commissioner_team_id: profile.team_id || 0,
         commissioner_discord_id: profile.discord_id || null,
         action_type: 'checkout_powers',
-        action_description: `${profile.owner_name} checked out commissioner powers`,
+        action_description: `${profile.owner_name} checked out ${governanceTitle.toLowerCase()} powers`,
         details: {
+          role: governanceTitle,
           reason: finalReason,
           activated_at: new Date().toISOString()
         }
@@ -375,6 +399,7 @@ export function AuthProvider({ children }) {
         recipient_team_id: 0,
         recipient_owner: 'League',
         details: {
+          role: governanceTitle,
           reason: finalReason,
           channel: 'league-news',
           activated_at: new Date().toISOString()
@@ -386,9 +411,9 @@ export function AuthProvider({ children }) {
     }
 
     return true;
-  }, [isCommishEligible, profile]);
+  }, [isCommishEligible, profile, governanceTitle]);
 
-  // Relinquish commissioner powers back to standard owner view
+  // Relinquish commissioner/admin powers back to standard owner view
   const relinquishCommissionerPowers = useCallback(async () => {
     if (!profile) return;
     setIsCommishCheckedOut(false);
@@ -409,15 +434,16 @@ export function AuthProvider({ children }) {
         commissioner_team_id: profile.team_id || 0,
         commissioner_discord_id: profile.discord_id || null,
         action_type: 'relinquish_powers',
-        action_description: `${profile.owner_name} checked in / relinquished commissioner powers`,
+        action_description: `${profile.owner_name} checked in / relinquished ${governanceTitle.toLowerCase()} powers`,
         details: {
+          role: governanceTitle,
           relinquished_at: new Date().toISOString()
         }
       });
     } catch (e) {
       console.warn('Audit log insert error:', e);
     }
-  }, [profile]);
+  }, [profile, governanceTitle]);
 
   // The team currently being acted as (either own team or commissioner override)
   const effectiveTeamId = useMemo(() => {
@@ -466,7 +492,13 @@ export function AuthProvider({ children }) {
     setEffectiveTeamId,
     signInWithDiscord,
     signOut,
-    refreshProfiles: fetchProfiles
+    refreshProfiles: fetchProfiles,
+    governanceTitle,
+    governanceShortTitle,
+    isAdmin: Boolean(isDaniel || profile?.role === 'admin'),
+    isOnlyCommissioner: Boolean(isAdrian || (profile?.role === 'commissioner' && !isDaniel)),
+    isAdrian,
+    isDaniel
   }), [
     user,
     profile,
@@ -485,7 +517,11 @@ export function AuthProvider({ children }) {
     setEffectiveTeamId,
     signInWithDiscord,
     signOut,
-    fetchProfiles
+    fetchProfiles,
+    governanceTitle,
+    governanceShortTitle,
+    isAdrian,
+    isDaniel
   ]);
 
   return (

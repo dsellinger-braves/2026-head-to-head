@@ -91,6 +91,8 @@ const HASH_TO_VIEW = {
   capital: 'capital',
   'draft/traded-board': 'capital',
   'draft/ledgers': 'capital',
+  'draft/trade-proposals': 'capital',
+  'draft/proposals': 'capital',
   'keepers-budgets': 'keepers',
   keepers: 'keepers',
   'keepers/prices': 'keepers',
@@ -141,7 +143,8 @@ function getSubTabsFromHash() {
   else if (hash.includes('planner')) keepersSubTab = 'planner';
   else if (hash.includes('prices') || hash.includes('matrix')) keepersSubTab = 'matrix';
 
-  if (hash.includes('ledgers')) draftSubTab = 'ledgers';
+  if (hash.includes('proposal')) draftSubTab = 'proposals';
+  else if (hash.includes('ledgers')) draftSubTab = 'ledgers';
   else if (hash.includes('traded') || hash.includes('board')) draftSubTab = 'board';
 
   return { keepersSubTab, draftSubTab };
@@ -193,7 +196,8 @@ function App() {
       else if (keepersSubTab === 'planner') slug = 'keepers/planner';
       else slug = 'keepers/prices';
     } else if (currentView === 'capital') {
-      if (draftSubTab === 'ledgers') slug = 'draft/ledgers';
+      if (draftSubTab === 'proposals') slug = 'draft/trade-proposals';
+      else if (draftSubTab === 'ledgers') slug = 'draft/ledgers';
       else slug = 'draft/traded-board';
     } else if (currentView === 'drafthistory') {
       slug = 'draft/history';
@@ -1027,7 +1031,7 @@ function App() {
                     )}
                   </div>
 
-                  {/* DRAFT DROPDOWN */}
+                  {/* DRAFT & TRADES DROPDOWN */}
                   <div className="relative" data-dropdown="draft">
                     <button
                       type="button"
@@ -1037,10 +1041,10 @@ function App() {
                           ? 'bg-amber-600 text-white shadow-md ring-1 ring-amber-400'
                           : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'
                       }`}
-                      title="Draft Category"
+                      title="Draft and Trades"
                     >
                       <span>🎯</span>
-                      <span>Draft</span>
+                      <span>Draft and Trades</span>
                       <span className={`text-[9px] transition-transform duration-200 ${openDropdown === 'draft' ? 'rotate-180' : ''}`}>▼</span>
                     </button>
 
@@ -1065,6 +1069,16 @@ function App() {
                         >
                           <span className="flex items-center gap-2"><span>📒</span><span>Owner Ledgers</span></span>
                           {currentView === 'capital' && draftSubTab === 'ledgers' && <span className="text-[10px] text-amber-200">●</span>}
+                        </a>
+                        <a
+                          href="#/draft/trade-proposals"
+                          onClick={(e) => { e.preventDefault(); setCurrentView('capital'); setDraftSubTab('proposals'); setOpenDropdown(null); }}
+                          className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-between transition cursor-pointer ${
+                            currentView === 'capital' && draftSubTab === 'proposals' ? 'bg-amber-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2"><span>🤝</span><span>Trade Proposals</span></span>
+                          {currentView === 'capital' && draftSubTab === 'proposals' && <span className="text-[10px] text-amber-200">●</span>}
                         </a>
                         <a
                           href="#/draft/history"

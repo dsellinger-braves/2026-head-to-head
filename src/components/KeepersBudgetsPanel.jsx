@@ -74,7 +74,7 @@ export default function KeepersBudgetsPanel({
   priorKeepers = [],
   initialTab = 'matrix'
 }) {
-  const { user, profile, isCommissioner: authIsCommissioner, effectiveOwner } = useAuth();
+  const { user, profile, isCommissioner: authIsCommissioner, effectiveOwner, governanceTitle = 'Commissioner' } = useAuth();
   const isCommissioner = propIsCommissioner || authIsCommissioner;
 
   const [activeTab, setActiveTab] = useState(initialTab || 'matrix'); // 'matrix' | 'rosters' | 'simulator' | 'planner' | 'settings'
@@ -479,7 +479,7 @@ export default function KeepersBudgetsPanel({
       (profile?.owner_name === 'Daniel' && plannerOwner === 'Dan');
 
     if (isDeadlinePassed && !isCommissioner) {
-      alert('The keeper selection deadline has passed. Only league commissioners (Dan and Adrian) can submit keeper changes now.');
+      alert('The keeper selection deadline has passed. Only Commissioner (Adrian) or Admin (Dan) can submit keeper changes now.');
       return;
     }
 
@@ -679,7 +679,7 @@ export default function KeepersBudgetsPanel({
   // Commissioner: Handle Save League Settings (Deadline & Base Budget)
   const handleSaveLeagueSettings = async () => {
     if (!isCommissioner) {
-      alert('Only commissioners (Dan & Adrian) can modify league settings.');
+      alert('Only Commissioner (Adrian) or Admin (Dan) can modify league settings.');
       return;
     }
 
@@ -693,7 +693,7 @@ export default function KeepersBudgetsPanel({
         .update({
           keeper_lock_deadline: deadlineIso,
           base_budget: baseVal,
-          updated_by: profile?.owner_name || 'Commissioner',
+          updated_by: profile?.owner_name || (governanceTitle === 'Admin' ? 'Admin' : 'Commissioner'),
           updated_at: new Date().toISOString()
         })
         .eq('league_id', 130215);
@@ -715,10 +715,10 @@ export default function KeepersBudgetsPanel({
     }
   };
 
-  // Commissioner: Handle Save Manual Punitive / Award Adjustments
+  // Commissioner / Admin: Handle Save Manual Punitive / Award Adjustments
   const handleSaveManualAdjustments = async () => {
     if (!isCommissioner) {
-      alert('Only commissioners (Dan & Adrian) can modify owner budget adjustments.');
+      alert('Only Commissioner (Adrian) or Admin (Dan) can modify owner budget adjustments.');
       return;
     }
 
@@ -936,7 +936,7 @@ export default function KeepersBudgetsPanel({
               fontSize: '10px',
               fontWeight: 'bold'
             }}>
-              👑 Commissioner Override Rights Active
+              {governanceTitle === 'Commissioner' ? '👑' : '⚡'} {governanceTitle} Override Rights Active
             </span>
           )}
         </div>
@@ -2234,9 +2234,9 @@ export default function KeepersBudgetsPanel({
             margin: '20px auto'
           }}>
             <div style={{ fontSize: '36px', marginBottom: '12px' }}>🔒</div>
-            <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#fff' }}>Commissioner Access Only</div>
+            <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#fff' }}>Commissioner & Admin Access Only</div>
             <div style={{ fontSize: '12px', color: '#888', marginTop: '8px', lineHeight: '1.5' }}>
-              Setting the official keeper deadline, base budget, and applying punitive or award adjustments to individual owners is restricted to league commissioners (<strong>Dan</strong> and <strong>Adrian</strong>).
+              Setting the official keeper deadline, base budget, and applying punitive or award adjustments to individual owners is restricted to Commissioner (<strong>Adrian</strong>) and Admin (<strong>Dan</strong>).
             </div>
             {user ? (
               <div style={{ fontSize: '11px', color: '#818cf8', marginTop: '16px', paddingTop: '12px', borderTop: '1px solid #282828' }}>

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/useAuth';
 
 export default function CommishCheckoutModal({ isOpen, onClose }) {
-  const { profile, checkoutCommissionerPowers } = useAuth();
+  const { profile, checkoutCommissionerPowers, governanceTitle = 'Commissioner', governanceShortTitle = 'Commish' } = useAuth();
   const [reason, setReason] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -23,8 +23,8 @@ export default function CommishCheckoutModal({ isOpen, onClose }) {
       await checkoutCommissionerPowers(reason || 'Administrative maintenance');
       onClose();
     } catch (err) {
-      console.error('Failed to checkout commish powers:', err);
-      alert('Error activating commissioner powers: ' + err.message);
+      console.error('Failed to checkout powers:', err);
+      alert(`Error activating ${governanceTitle.toLowerCase()} powers: ` + err.message);
     } finally {
       setLoading(false);
     }
@@ -35,10 +35,10 @@ export default function CommishCheckoutModal({ isOpen, onClose }) {
       <div className="bg-slate-900 border border-amber-500/40 rounded-2xl max-w-md w-full shadow-2xl overflow-hidden ring-1 ring-amber-500/30">
         <div className="bg-gradient-to-r from-amber-600/30 to-slate-900 px-6 py-4 border-b border-amber-500/30 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-2xl">🛡️</span>
+            <span className="text-2xl">{governanceTitle === 'Commissioner' ? '🛡️' : '⚡'}</span>
             <div>
-              <h3 className="text-base font-black text-white">Check Out Commissioner Powers</h3>
-              <p className="text-[11px] text-amber-300/80">Break-glass access for {profile?.owner_name || 'Commissioner'}</p>
+              <h3 className="text-base font-black text-white">Check Out {governanceTitle} Powers</h3>
+              <p className="text-[11px] text-amber-300/80">Break-glass access for {profile?.owner_name || governanceTitle}</p>
             </div>
           </div>
           <button
@@ -56,7 +56,7 @@ export default function CommishCheckoutModal({ isOpen, onClose }) {
               <span>Discord Notification & Audit Notice</span>
             </p>
             <p>
-              Activating commissioner powers allows you to approve/edit trades, override rosters, and manage draft capital.
+              Activating {governanceTitle.toLowerCase()} powers allows you to approve/edit trades, override rosters, and manage draft capital.
             </p>
             <p className="text-[11px] text-amber-400/80">
               An alert will be posted to the <strong className="text-amber-200">#league-news</strong> Discord channel announcing your checkout, and all administrative actions will be recorded in the league audit log.
@@ -106,7 +106,7 @@ export default function CommishCheckoutModal({ isOpen, onClose }) {
               disabled={loading}
               className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-lg shadow-amber-500/20 cursor-pointer disabled:opacity-50 transition-all flex items-center gap-1.5"
             >
-              <span>{loading ? 'Activating...' : '🛡️ Activate Commish Powers'}</span>
+              <span>{loading ? 'Activating...' : `${governanceTitle === 'Commissioner' ? '🛡️' : '⚡'} Activate ${governanceShortTitle} Powers`}</span>
             </button>
           </div>
         </form>

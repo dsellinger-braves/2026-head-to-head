@@ -156,8 +156,9 @@ export default function DraftCapitalView({
   onDraftYearChange,
   subTab
 }) {
-  const { user, profile, isCommissioner: authIsCommissioner, effectiveOwner, logCommissionerAction } = useAuth();
+  const { user, profile, isCommissioner: authIsCommissioner, effectiveOwner, logCommissionerAction, governanceTitle = 'Commissioner', isAdrian: authIsAdrian } = useAuth();
   const isCommissioner = propIsCommissioner || authIsCommissioner;
+  const isAdrian = authIsAdrian || profile?.team_id === 2 || profile?.owner_name?.toLowerCase() === 'adrian';
 
   const [draftTrades, setDraftTrades] = useState(defaultDraftAssetTrades);
   const [compPicks, setCompPicks] = useState(defaultCompPicks);
@@ -670,7 +671,7 @@ export default function DraftCapitalView({
       (profile?.owner_name === 'Daniel' && proposal.target_owner === 'Dan');
 
     if (!isCommissioner && !isMe) {
-      alert(`Only ${proposal.target_owner} or league commissioners can accept this proposal.`);
+      alert(`Only ${proposal.target_owner}, Commissioner (Adrian), or Admin (Dan) can accept this proposal.`);
       return;
     }
 
@@ -700,7 +701,7 @@ export default function DraftCapitalView({
         notes: proposal.notes || '',
       });
 
-      // 2. Notify commissioners (Dan Team 5 & Adrian Team 2) if they aren't directly party to the trade
+      // 2. Notify commissioners/admin (Dan Team 5 & Adrian Team 2) if they aren't directly party to the trade
       const commishTeamIds = [5, 2];
       for (const cId of commishTeamIds) {
         if (cId !== proposal.proposing_team_id && cId !== proposal.target_team_id) {
@@ -713,12 +714,12 @@ export default function DraftCapitalView({
             recipientOwner: cId === 5 ? 'Dan' : 'Adrian',
             offeredAssets: proposal.offered_assets,
             requestedAssets: proposal.requested_assets,
-            notes: `[Commish Notice] Trade agreed between ${proposal.proposing_owner} and ${proposal.target_owner}. Ready for your review & execution!`,
+            notes: `[Governance Notice] Trade agreed between ${proposal.proposing_owner} and ${proposal.target_owner}. Ready for your review & execution!`,
           });
         }
       }
 
-      alert(`Trade accepted! 🎉 Discord notifications queued, and sent to Commissioners for final league approval.`);
+      alert('Trade accepted! 🎉 Discord notifications queued, and sent to Commissioner & Admin for final league approval.');
       await loadData(true);
     } catch (err) {
       console.error('Accept failed:', err);
@@ -728,10 +729,10 @@ export default function DraftCapitalView({
     }
   };
 
-  // Commissioner Approval: Officially executes the trade into draft_asset_trades!
+  // Commissioner / Admin Approval: Officially executes the trade into draft_asset_trades!
   const handleCommissionerApprove = async (proposal) => {
     if (!isCommissioner) {
-      alert('Only league commissioners (Dan & Adrian) can execute official trade approval.');
+      alert('Only Commissioner (Adrian) or Admin (Dan) can execute official trade approval.');
       return;
     }
 
@@ -861,34 +862,34 @@ export default function DraftCapitalView({
         .update({
           status: 'approved',
           responded_at: new Date().toISOString(),
-          responded_by: `${profile?.owner_name || 'Commissioner'} (Approved)`
+          responded_by: `${profile?.owner_name || governanceTitle} (${isAdrian ? 'Commissioner' : 'Admin'} Approved)`
         })
         .eq('id', proposal.id);
 
       if (propErr) throw propErr;
 
-      // Notify both parties that the commissioner approved and executed the trade
+      // Notify both parties that the commissioner/admin approved and executed the trade
       await enqueueTradeNotification({
         proposalId: proposal.id,
         eventType: 'approved',
         senderTeamId: profile?.team_id || 5,
-        senderOwner: profile?.owner_name || 'Commissioner',
+        senderOwner: profile?.owner_name || (isAdrian ? 'Commissioner' : 'Admin'),
         recipientTeamId: proposal.proposing_team_id || getTeamId(proposal.proposing_owner),
         recipientOwner: proposal.proposing_owner,
         offeredAssets: proposal.offered_assets,
         requestedAssets: proposal.requested_assets,
-        notes: `Trade approved & executed by Commissioner ${profile?.owner_name || 'Commish'}`,
+        notes: `Trade approved & executed by ${isAdrian ? 'Commissioner' : 'Admin'} ${profile?.owner_name || ''}`,
       });
       await enqueueTradeNotification({
         proposalId: proposal.id,
         eventType: 'approved',
         senderTeamId: profile?.team_id || 5,
-        senderOwner: profile?.owner_name || 'Commissioner',
+        senderOwner: profile?.owner_name || (isAdrian ? 'Commissioner' : 'Admin'),
         recipientTeamId: proposal.target_team_id || getTeamId(proposal.target_owner),
         recipientOwner: proposal.target_owner,
         offeredAssets: proposal.offered_assets,
         requestedAssets: proposal.requested_assets,
-        notes: `Trade approved & executed by Commissioner ${profile?.owner_name || 'Commish'}`,
+        notes: `Trade approved & executed by ${isAdrian ? 'Commissioner' : 'Admin'} ${profile?.owner_name || ''}`,
       });
 
       if (logCommissionerAction) {
@@ -1003,7 +1004,7 @@ export default function DraftCapitalView({
       if (logCommissionerAction) {
         await logCommissionerAction({
           actionType: 'edit_trade',
-          actionDescription: `Commissioner edited trade proposal ${editingProposal.id} (${editingProposal.proposing_owner} <-> ${editingProposal.target_owner})`,
+          actionDescription: `${isAdrian ? 'Commissioner' : 'Admin'} edited trade proposal ${editingProposal.id} (${editingProposal.proposing_owner} <-> ${editingProposal.target_owner})`,
           targetOwner: editingProposal.target_owner,
           targetTeamId: tTeamId,
           details: {
@@ -1016,7 +1017,7 @@ export default function DraftCapitalView({
         });
       }
 
-      alert('Proposal updated successfully by Commissioner. 👑');
+      alert(`Proposal updated successfully by ${isAdrian ? 'Commissioner. 👑' : 'Admin. ⚡'}`);
       setEditingProposal(null);
       await loadData(true);
     } catch (err) {
@@ -1548,7 +1549,7 @@ export default function DraftCapitalView({
             </div>
             {isCommissioner && (
               <span className="text-[10px] font-bold px-2.5 py-1 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">
-                👑 Commissioner Mode: Delete & Modify Actions Enabled
+                {isAdrian ? '👑 Commissioner Mode: Delete & Modify Actions Enabled' : '⚡ Admin Mode: Delete & Modify Actions Enabled'}
               </span>
             )}
           </div>
@@ -1563,7 +1564,7 @@ export default function DraftCapitalView({
                   <th className="py-3 px-4 w-32">Receiving Owner</th>
                   <th className="py-3 px-4 w-52">Asset Traded</th>
                   <th className="py-3 px-4">Notes & Package Details</th>
-                  {isCommissioner && <th className="py-3 px-3 text-right w-24">Commish</th>}
+                  {isCommissioner && <th className="py-3 px-3 text-right w-24">{isAdrian ? 'Commish' : 'Admin'}</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60 font-medium text-slate-200">
@@ -1754,7 +1755,7 @@ export default function DraftCapitalView({
                 </h2>
               </div>
               <p className="text-xs text-slate-400 mt-1 max-w-3xl leading-relaxed">
-                Propose trades consisting of <strong>2027 draft picks</strong>, <strong>active rostered players</strong>, and <strong>draft budget cash</strong>. Offers wait in the partner's inbox for agreement before routing to <strong>Commissioners (Dan & Adrian)</strong> for final league execution.
+                Propose trades consisting of <strong>2027 draft picks</strong>, <strong>active rostered players</strong>, and <strong>draft budget cash</strong>. Offers wait in the partner's inbox for agreement before routing to <strong>Commissioner (Adrian)</strong> or <strong>Admin (Dan)</strong> for final league execution.
               </p>
             </div>
 
@@ -1794,7 +1795,7 @@ export default function DraftCapitalView({
                 </h3>
                 {isCommissioner && (
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">
-                    👑 Commissioner Override: Send on behalf of any team
+                    {isAdrian ? '👑 Commissioner Override: Send on behalf of any team' : '⚡ Admin Override: Send on behalf of any team'}
                   </span>
                 )}
               </div>

@@ -5,7 +5,7 @@ import { MLB_TEAMS, LEAGUE_OWNERS, PROMINENT_AWARD_CANDIDATES, teamsMatch, PICKE
 import { useAuth } from '../context/useAuth';
 
 export default function PickemView({ initialSeason = 2027, onSeasonChange }) {
-  const { user, profile, isCommissioner, effectiveOwner, effectiveTeamId } = useAuth();
+  const { user, profile, isCommissioner, effectiveOwner, effectiveTeamId, governanceTitle = 'Commissioner' } = useAuth();
   const [seasons, setSeasons] = useState([]);
   const [selectedSeason, setSelectedSeason] = useState(initialSeason || 2027);
   const [activeTab, setActiveTab] = useState('board'); // 'board', 'entry', 'history', 'admin'
@@ -1389,9 +1389,9 @@ export default function PickemView({ initialSeason = 2027, onSeasonChange }) {
               {isCommissioner && (
                 <div className="bg-amber-950/40 border border-amber-500/50 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-amber-200 shadow-sm">
                   <div className="flex items-center gap-2">
-                    <span className="text-base">👑</span>
+                    <span className="text-base">{governanceTitle === 'Commissioner' ? '👑' : '⚡'}</span>
                     <span>
-                      <strong>Commissioner Mode Active:</strong> You have commissioner privileges to submit or edit official picks on behalf of <strong>{entryOwner}</strong>.
+                      <strong>{governanceTitle} Mode Active:</strong> You have {governanceTitle.toLowerCase()} privileges to submit or edit official picks on behalf of <strong>{entryOwner}</strong>.
                     </span>
                   </div>
                   <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40 uppercase tracking-wider text-[10px] w-fit">
@@ -1708,9 +1708,9 @@ export default function PickemView({ initialSeason = 2027, onSeasonChange }) {
                   🔒
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">Commissioner Access Only</h3>
+                  <h3 className="text-lg font-bold text-white">Commissioner & Admin Access Only</h3>
                   <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                    Official grading, answer resolution, and bootstrapping new Pick'em seasons are restricted to league commissioners (<strong>Dan</strong> and <strong>Adrian</strong>).
+                    Official grading, answer resolution, and bootstrapping new Pick'em seasons are restricted to Commissioner (<strong>Adrian</strong>) and Admin (<strong>Dan</strong>).
                   </p>
                 </div>
                 {user ? (

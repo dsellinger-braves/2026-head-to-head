@@ -1416,10 +1416,11 @@ async def process_trade_notifications_once() -> int:
 
             # Check for Commissioner Powers Checkout broadcast to #league-news
             if event_type == "commish_checkout":
+                role_title = details.get("role") or ("Admin" if sender_owner in ["Daniel", "Dan"] else "Commissioner")
                 reason = details.get("reason") or "Administrative maintenance & trade management"
                 embed = discord.Embed(
-                    title="🛡️ Commissioner Powers Activated",
-                    description=f"**{sender_owner}** has checked out **Commissioner Powers** in the HEFTYSTRONG Dashboard.",
+                    title=f"{'🛡️' if role_title == 'Commissioner' else '⚡'} {role_title} Powers Activated",
+                    description=f"**{sender_owner}** has checked out **{role_title} Powers** in the HEFTYSTRONG Dashboard.",
                     color=0xF59E0B,  # Amber / Warning Gold
                     timestamp=datetime.now(timezone.utc)
                 )
@@ -1429,7 +1430,7 @@ async def process_trade_notifications_once() -> int:
                     value="All administrative actions and overrides are recorded in the league audit log.",
                     inline=False
                 )
-                embed.set_footer(text="HEFTYSTRONG Fantasy Baseball • Commissioner Governance")
+                embed.set_footer(text=f"HEFTYSTRONG Fantasy Baseball • {role_title} Governance")
 
                 channel = None
                 news_channel_id = os.environ.get("DISCORD_LEAGUE_NEWS_CHANNEL_ID")
