@@ -4,6 +4,78 @@ import { TEAMS } from '../schedule';
 import { aggregateStats, calculateRotoPoints, SCORING_CATS } from '../utils/scoring';
 import { useAuth } from '../context/useAuth';
 import TeamAvatar from '../components/TeamAvatar';
+import { getPlayerHeadshotUrl, handleHeadshotError } from '../utils/headshotUtils';
+
+const MLB_TEAMS = {
+  0: { abbreviation: 'FA', name: 'Free Agent', shortName: 'FA' },
+  1: { abbreviation: 'BAL', name: 'Baltimore Orioles', shortName: 'Orioles' },
+  2: { abbreviation: 'BOS', name: 'Boston Red Sox', shortName: 'Red Sox' },
+  3: { abbreviation: 'LAA', name: 'Los Angeles Angels', shortName: 'Angels' },
+  4: { abbreviation: 'CHW', name: 'Chicago White Sox', shortName: 'White Sox' },
+  5: { abbreviation: 'CLE', name: 'Cleveland Guardians', shortName: 'Guardians' },
+  6: { abbreviation: 'DET', name: 'Detroit Tigers', shortName: 'Tigers' },
+  7: { abbreviation: 'KC', name: 'Kansas City Royals', shortName: 'Royals' },
+  8: { abbreviation: 'MIL', name: 'Milwaukee Brewers', shortName: 'Brewers' },
+  9: { abbreviation: 'MIN', name: 'Minnesota Twins', shortName: 'Twins' },
+  10: { abbreviation: 'NYY', name: 'New York Yankees', shortName: 'Yankees' },
+  11: { abbreviation: 'ATH', name: 'Athletics', shortName: 'Athletics' },
+  12: { abbreviation: 'SEA', name: 'Seattle Mariners', shortName: 'Mariners' },
+  13: { abbreviation: 'TEX', name: 'Texas Rangers', shortName: 'Rangers' },
+  14: { abbreviation: 'TOR', name: 'Toronto Blue Jays', shortName: 'Blue Jays' },
+  15: { abbreviation: 'ATL', name: 'Atlanta Braves', shortName: 'Braves' },
+  16: { abbreviation: 'CHC', name: 'Chicago Cubs', shortName: 'Cubs' },
+  17: { abbreviation: 'CIN', name: 'Cincinnati Reds', shortName: 'Reds' },
+  18: { abbreviation: 'HOU', name: 'Houston Astros', shortName: 'Astros' },
+  19: { abbreviation: 'LAD', name: 'Los Angeles Dodgers', shortName: 'Dodgers' },
+  20: { abbreviation: 'WSH', name: 'Washington Nationals', shortName: 'Nationals' },
+  21: { abbreviation: 'NYM', name: 'New York Mets', shortName: 'Mets' },
+  22: { abbreviation: 'PHI', name: 'Philadelphia Phillies', shortName: 'Phillies' },
+  23: { abbreviation: 'PIT', name: 'Pittsburgh Pirates', shortName: 'Pirates' },
+  24: { abbreviation: 'STL', name: 'St. Louis Cardinals', shortName: 'Cardinals' },
+  25: { abbreviation: 'SD', name: 'San Diego Padres', shortName: 'Padres' },
+  26: { abbreviation: 'SF', name: 'San Francisco Giants', shortName: 'Giants' },
+  27: { abbreviation: 'COL', name: 'Colorado Rockies', shortName: 'Rockies' },
+  28: { abbreviation: 'MIA', name: 'Miami Marlins', shortName: 'Marlins' },
+  29: { abbreviation: 'ARI', name: 'Arizona Diamondbacks', shortName: 'D-backs' },
+  30: { abbreviation: 'TB', name: 'Tampa Bay Rays', shortName: 'Rays' }
+};
+
+const SLOT_MAP = {
+  0: 'C',
+  1: '1B',
+  2: '2B',
+  3: '3B',
+  4: 'SS',
+  5: 'OF',
+  11: 'DH',
+  14: 'SP',
+  15: 'RP'
+};
+
+const DEFAULT_POS_MAP = {
+  1: 'SP',
+  2: 'C',
+  3: '1B',
+  4: '2B',
+  5: '3B',
+  6: 'SS',
+  7: 'LF',
+  8: 'CF',
+  9: 'RF',
+  10: 'DH',
+  11: 'RP'
+};
+
+function getPlayerPositions(p) {
+  if (!p) return 'UTIL';
+  const slots = p.eligibleSlots || [];
+  const mapped = slots.filter(s => SLOT_MAP[s]).map(s => SLOT_MAP[s]);
+  const unique = Array.from(new Set(mapped));
+  const fielding = unique.filter(s => s !== 'DH');
+  if (fielding.length > 0) return fielding.join(', ');
+  if (unique.length > 0) return unique.join(', ');
+  return DEFAULT_POS_MAP[p.defaultPositionId] || 'UTIL';
+}
 
 const ESPN_ROSTER_ENDPOINT = 'https://lm-api-reads.fantasy.espn.com/apis/v3/games/flb/seasons/2026/segments/0/leagues/130215?view=mRoster&view=kona_player_info';
 const ESPN_NEWS_ENDPOINT = 'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/news';
@@ -256,38 +328,53 @@ export default function OwnerLandingView({
       names.add(p.fullName?.toLowerCase());
       if (p.fullName) names.add(p.fullName);
 
+      const mlbTeam = MLB_TEAMS[p.proTeamId] || { abbreviation: 'MLB', name: 'MLB', shortName: 'MLB' };
+      const teamLogo = p.proTeamId ? `https://a.espncdn.com/combiner/i?img=/i/teamlogos/mlb/500/${mlbTeam.abbreviation.toLowerCase()}.png&w=48&h=48` : null;
+
       // Check Injury Status
       if (p.injured || (p.injuryStatus && p.injuryStatus !== 'ACTIVE')) {
         injured.push({
           id: p.id,
           name: p.fullName,
-          position: p.defaultPositionId === 1 ? 'SP' : (p.defaultPositionId === 11 ? 'RP' : 'BAT'),
+          position: getPlayerPositions(p),
           injuryStatus: p.injuryStatus || 'DAY_TO_DAY',
           injured: true,
-          team: p.proTeamId ? `MLB Team ${p.proTeamId}` : 'MLB'
+          teamId: p.proTeamId,
+          teamAbbr: mlbTeam.abbreviation,
+          teamName: mlbTeam.name,
+          teamLogo,
+          _raw: p
         });
       }
 
-      // Check 15-Day PR Split (`statSplitTypeId === 2`)
+      // Check 15-Day PR Split:
+      // ESPN computes the official 15-day player rating (PR15) in entry.playerPoolEntry.ratings['2'].totalRating
+      const officialPr15 = entry.playerPoolEntry?.ratings?.['2']?.totalRating;
       const s15 = p.stats?.find(s => s.statSplitTypeId === 2);
       const st = s15?.stats || {};
       const isPitcher = p.defaultPositionId === 1 || p.defaultPositionId === 11 || (p.eligibleSlots && p.eligibleSlots.includes(13));
 
-      let pr = 0;
+      let pr = typeof officialPr15 === 'number' ? officialPr15 : 0;
       let statSummary = '';
       let hasActivity = false;
 
       if (!isPitcher) {
-        pr = typeof st['19'] === 'number' ? st['19'] : 0;
         const ab = st['0'] || 0;
         const h = st['1'] || 0;
         const hr = st['5'] || 0;
         const rbi = st['21'] || 0;
         const sb = st['23'] || 0;
+        const pa = st['16'] || 0;
         if (ab > 0) {
           hasActivity = true;
           const avg = (h / ab).toFixed(3).replace(/^0/, '');
           statSummary = `${avg} AVG · ${hr} HR · ${rbi} RBI · ${sb} SB (${ab} AB)`;
+        } else if (pa > 0 || sb > 0) {
+          hasActivity = true;
+          statSummary = `${st['20'] || 0} R · ${sb} SB · ${st['10'] || 0} BB`;
+        } else if (typeof officialPr15 === 'number' && Math.abs(officialPr15) > 0.001) {
+          hasActivity = true;
+          statSummary = 'Active in last 15d';
         } else {
           statSummary = '0 ABs last 15d';
         }
@@ -297,12 +384,17 @@ export default function OwnerLandingView({
         const er = st['45'] || 0;
         const bb = st['39'] || 0;
         const h = st['37'] || 0;
+        const sv = st['57'] || 0;
+        const hd = st['60'] || 0;
         if (ip > 0) {
           hasActivity = true;
           const era = ((er * 9) / ip).toFixed(2);
           const whip = ((bb + h) / ip).toFixed(2);
-          pr = (k * 1.0 + (st['63'] || 0) * 3 + (st['57'] || 0) * 4 + (st['60'] || 0) * 3 - er * 1.5 - bb * 0.5) / (ip / 5);
-          statSummary = `${ip.toFixed(1)} IP · ${k} K · ${era} ERA · ${whip} WHIP`;
+          const svhdStr = (sv + hd > 0) ? ` · ${sv + hd} SV+H` : '';
+          statSummary = `${ip.toFixed(1)} IP · ${k} K · ${era} ERA · ${whip} WHIP${svhdStr}`;
+        } else if (typeof officialPr15 === 'number' && Math.abs(officialPr15) > 0.001) {
+          hasActivity = true;
+          statSummary = 'Active in last 15d';
         } else {
           statSummary = '0 IP last 15d';
         }
@@ -315,7 +407,11 @@ export default function OwnerLandingView({
           isPitcher,
           pr: parseFloat(pr.toFixed(2)),
           statSummary,
-          position: isPitcher ? 'P' : 'BAT'
+          position: getPlayerPositions(p),
+          teamAbbr: mlbTeam.abbreviation,
+          teamName: mlbTeam.name,
+          teamLogo,
+          _raw: p
         });
       }
     });
@@ -759,23 +855,34 @@ export default function OwnerLandingView({
                     onClick={() => onPlayerClick && onPlayerClick(p.id, p.name)}
                     className="group flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-amber-950/20 via-slate-950/40 to-slate-950/60 border border-amber-500/20 hover:border-amber-400/50 transition cursor-pointer"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-7 h-7 rounded-xl bg-amber-500/20 text-amber-300 font-black text-xs flex items-center justify-center border border-amber-500/30">
-                        {idx + 1}
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="relative shrink-0">
+                        <img
+                          src={getPlayerHeadshotUrl(p._raw || p)}
+                          alt={p.name}
+                          onError={(e) => handleHeadshotError(e, p._raw || p)}
+                          className="w-10 h-10 rounded-full object-cover border-2 border-amber-500/40 bg-slate-800 shadow"
+                        />
+                        <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-amber-500 text-slate-950 font-black text-[10px] flex items-center justify-center shadow">
+                          {idx + 1}
+                        </span>
                       </div>
-                      <div>
-                        <div className="text-sm font-black text-white group-hover:text-amber-300 transition flex items-center gap-1.5">
-                          <span>{p.name}</span>
-                          <span className="text-[10px] text-slate-400 font-bold">({p.position})</span>
+                      <div className="min-w-0">
+                        <div className="text-sm font-black text-white group-hover:text-amber-300 transition flex items-center gap-1.5 flex-wrap">
+                          <span className="truncate">{p.name}</span>
+                          <span className="text-[10px] text-amber-400 font-bold bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">{p.position}</span>
                         </div>
-                        <div className="text-xs text-slate-400 font-medium mt-0.5">
-                          {p.statSummary}
+                        <div className="text-xs text-slate-400 font-medium mt-0.5 flex items-center gap-1.5">
+                          {p.teamLogo && (
+                            <img src={p.teamLogo} alt="" className="w-3.5 h-3.5 object-contain shrink-0" />
+                          )}
+                          <span className="truncate">{p.statSummary}</span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="text-right">
-                      <span className="px-2.5 py-1 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 font-black text-xs">
+                    <div className="text-right shrink-0 ml-2">
+                      <span className="px-2.5 py-1 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 font-black text-xs whitespace-nowrap">
                         +{p.pr} PR
                       </span>
                     </div>
@@ -804,23 +911,34 @@ export default function OwnerLandingView({
                     onClick={() => onPlayerClick && onPlayerClick(p.id, p.name)}
                     className="group flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-cyan-950/20 via-slate-950/40 to-slate-950/60 border border-cyan-500/20 hover:border-cyan-400/50 transition cursor-pointer"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-7 h-7 rounded-xl bg-cyan-500/20 text-cyan-300 font-black text-xs flex items-center justify-center border border-cyan-500/30">
-                        {idx + 1}
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="relative shrink-0">
+                        <img
+                          src={getPlayerHeadshotUrl(p._raw || p)}
+                          alt={p.name}
+                          onError={(e) => handleHeadshotError(e, p._raw || p)}
+                          className="w-10 h-10 rounded-full object-cover border-2 border-cyan-500/40 bg-slate-800 shadow"
+                        />
+                        <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-cyan-500 text-slate-950 font-black text-[10px] flex items-center justify-center shadow">
+                          {idx + 1}
+                        </span>
                       </div>
-                      <div>
-                        <div className="text-sm font-black text-white group-hover:text-cyan-300 transition flex items-center gap-1.5">
-                          <span>{p.name}</span>
-                          <span className="text-[10px] text-slate-400 font-bold">({p.position})</span>
+                      <div className="min-w-0">
+                        <div className="text-sm font-black text-white group-hover:text-cyan-300 transition flex items-center gap-1.5 flex-wrap">
+                          <span className="truncate">{p.name}</span>
+                          <span className="text-[10px] text-cyan-400 font-bold bg-cyan-500/10 px-1.5 py-0.5 rounded border border-cyan-500/20">{p.position}</span>
                         </div>
-                        <div className="text-xs text-slate-400 font-medium mt-0.5">
-                          {p.statSummary}
+                        <div className="text-xs text-slate-400 font-medium mt-0.5 flex items-center gap-1.5">
+                          {p.teamLogo && (
+                            <img src={p.teamLogo} alt="" className="w-3.5 h-3.5 object-contain shrink-0" />
+                          )}
+                          <span className="truncate">{p.statSummary}</span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="text-right">
-                      <span className={`px-2.5 py-1 rounded-xl font-black text-xs border ${p.pr < 0 ? 'bg-rose-500/20 text-rose-400 border-rose-500/30' : 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30'}`}>
+                    <div className="text-right shrink-0 ml-2">
+                      <span className={`px-2.5 py-1 rounded-xl font-black text-xs whitespace-nowrap border ${p.pr < 0 ? 'bg-rose-500/20 text-rose-400 border-rose-500/30' : 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30'}`}>
                         {p.pr} PR
                       </span>
                     </div>
@@ -867,22 +985,38 @@ export default function OwnerLandingView({
                       onClick={() => onPlayerClick && onPlayerClick(p.id, p.name)}
                       className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800 hover:border-slate-700 transition cursor-pointer"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-xl bg-slate-800 flex items-center justify-center text-sm font-bold text-slate-300">
-                          {p.position}
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="relative shrink-0">
+                          <img
+                            src={getPlayerHeadshotUrl(p._raw || p)}
+                            alt={p.name}
+                            onError={(e) => handleHeadshotError(e, p._raw || p)}
+                            className="w-10 h-10 rounded-full object-cover border-2 border-slate-700 bg-slate-800 shadow"
+                          />
+                          {p.teamLogo && (
+                            <img
+                              src={p.teamLogo}
+                              alt=""
+                              className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-slate-900 border border-slate-700 object-contain p-0.5"
+                            />
+                          )}
                         </div>
-                        <div>
-                          <div className="text-sm font-black text-white hover:text-blue-400 transition">
-                            {p.name}
+                        <div className="min-w-0">
+                          <div className="text-sm font-black text-white hover:text-blue-400 transition flex items-center gap-1.5 flex-wrap">
+                            <span className="truncate">{p.name}</span>
+                            <span className="text-[10px] text-slate-300 font-bold bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">{p.position}</span>
                           </div>
-                          <div className="text-xs text-slate-400">
-                            {p.team}
+                          <div className="text-xs text-slate-400 flex items-center gap-1.5 mt-0.5">
+                            {p.teamLogo && (
+                              <img src={p.teamLogo} alt="" className="w-3.5 h-3.5 object-contain shrink-0" />
+                            )}
+                            <span className="truncate">{p.teamName}</span>
                           </div>
                         </div>
                       </div>
 
-                      <div className="text-right">
-                        <span className={`px-2.5 py-1 rounded-xl text-xs font-black uppercase tracking-wider border ${
+                      <div className="text-right shrink-0 ml-2">
+                        <span className={`px-2.5 py-1 rounded-xl text-xs font-black uppercase tracking-wider whitespace-nowrap border ${
                           isSevere
                             ? 'bg-rose-600/20 text-rose-400 border-rose-600/30'
                             : isDayToDay
