@@ -1,0 +1,215 @@
+{
+  "league_id": 130215,
+  "league_name": "2026 Head to Head Heftystrong",
+  "scoring_format": "10-Category Head-to-Head Each Category / Points (R, HR, RBI, OBP, SB | K, QS, SV+HD, ERA, WHIP)",
+  "roster_expansion_year": 2026,
+  "roster_size": 28,
+  "manager_personas": {
+    "Dan": {
+      "team_id": 5,
+      "team_name": "Daniel's Squad",
+      "archetype": "The High-Volume Tinkerer & Waiver Wire Hawk",
+      "tendencies": [
+        "Leads the league in total roster moves and late-night waiver claims",
+        "Willing to trade future draft capital for win-now production",
+        "Constantly streaming pitchers and chasing category leverage"
+      ],
+      "banter_triggers": [
+        "Trading MacKenzie Gore at pick 243 in 2024 to Tim",
+        "Endless trade proposals in the commissioner group chat",
+        "Churning through relievers at 2 AM"
+      ]
+    },
+    "Adrian": {
+      "team_id": 2,
+      "team_name": "Adrian's Aces",
+      "archetype": "The Commissioner & Pitching Architect",
+      "tendencies": [
+        "Obsessed with elite starting pitching aces (Glasnow, Eflin, Fried)",
+        "Stout defender of league integrity and keeper submission deadlines",
+        "Drafts high-upside pitchers despite injury risks"
+      ],
+      "banter_triggers": [
+        "Trading Tyler Glasnow to Dan in 2024",
+        "Having half his rotation land on the Injured List simultaneously",
+        "Strict commissioner rulings on trade vetos"
+      ]
+    },
+    "Garrett": {
+      "team_id": 3,
+      "team_name": "Garrett's Sluggers",
+      "archetype": "The Pure Power Maximizer",
+      "tendencies": [
+        "Focuses heavily on raw home runs and RBI over rate stats",
+        "Holds young cornerstone keepers like Gunnar Henderson fiercely",
+        "Calculated drafter who targets middle-round pitching value"
+      ],
+      "banter_triggers": [
+        "Leading in HRs while posting a sub-.310 OBP",
+        "Hoarding corner infield sluggers",
+        "Quietly lurking near the top of the standings"
+      ]
+    },
+    "Mark": {
+      "team_id": 13,
+      "team_name": "Mark's Maulers",
+      "archetype": "The Late-Season Comeback Specialist",
+      "tendencies": [
+        "Known for dramatic late-season surges in August and September",
+        "Big-game trader willing to execute franchise-shifting blockbusters",
+        "Strong drafting in the mid-to-late rounds (Eovaldi pick 235)"
+      ],
+      "banter_triggers": [
+        "The 2025 blockbuster trade: sending Bobby Witt Jr. to Anil for Corbin Carroll",
+        "Slow April/May starts followed by historic second-half tears",
+        "Patiently stashing injured stars until the fantasy playoffs"
+      ]
+    },
+    "Anil": {
+      "team_id": 6,
+      "team_name": "Anil's Avengers",
+      "archetype": "The Five-Category Dynasty Builder",
+      "tendencies": [
+        "Aggressively targets generational speed/power talents (Bobby Witt Jr.)",
+        "Values balanced roto profiles across all 5 hitting categories",
+        "Shrewd draft board navigator"
+      ],
+      "banter_triggers": [
+        "Landing Bobby Witt Jr. and flexing his MVP counting stats daily",
+        "Refusing to trade top keepers unless blown away",
+        "Boasting about league-leading stolen base totals"
+      ]
+    },
+    "Tim": {
+      "team_id": 1,
+      "team_name": "Tim's Veterans",
+      "archetype": "The Shrewd Draft Capital Capitalizer",
+      "tendencies": [
+        "Historically excels in off-season draft pick trades",
+        "Acquired MacKenzie Gore and Trea Turner in masterclass 2024 moves",
+        "Constructs deep, veteran-led lineups that grind out category wins"
+      ],
+      "banter_triggers": [
+        "Reminding Dan about the 2024 MacKenzie Gore pick trade",
+        "Drafting veteran workhorses who consistently throw 170+ innings",
+        "Methodical waiver pickups that quietly produce 15 wins"
+      ]
+    },
+    "Will": {
+      "team_id": 12,
+      "team_name": "Will's Warriors",
+      "archetype": "The Contact & OBP Fundamentalist",
+      "tendencies": [
+        "Prioritizes plate discipline, high walk rates, and elite OBP",
+        "Rosters steady high-floor hitters like Yandy Diaz",
+        "Disciplined in matchup play, rarely punts categories"
+      ],
+      "banter_triggers": [
+        "Winning matchups 6-4 purely off OBP and WHIP decimal margins",
+        "Trading for Josh Hader to lock down late-inning saves",
+        "Drafting players with elite walk-to-strikeout ratios"
+      ]
+    },
+    "Preston": {
+      "team_id": 14,
+      "team_name": "Preston's Bullpen",
+      "archetype": "The Relief Pitching Baron",
+      "tendencies": [
+        "Monopolizes closers and high-leverage setup men to dominate SV+HD",
+        "Rosters Aaron Judge as the nuclear power center of his lineup",
+        "Employs unorthodox pitching management to conquer rate stats"
+      ],
+      "banter_triggers": [
+        "Having 6 active relievers on any given Tuesday",
+        "Sweeping SV+HD every single week while barely qualifying for minimum innings",
+        "Relying on Aaron Judge to single-handedly match entire opponent HR totals"
+      ]
+    },
+    "Alex": {
+      "team_id": 8,
+      "team_name": "Alex's All-Stars",
+      "archetype": "The Upside Speculator",
+      "tendencies": [
+        "Excels at identifying breakout prospects and second-year players",
+        "Takes aggressive swings in the middle rounds of the draft",
+        "Capable of putting up league-wide weekly scoring highs"
+      ],
+      "banter_triggers": [
+        "Streaky scoring weeks: 80 points one week, 25 the next",
+        "Stashing top prospects weeks before their MLB call-ups",
+        "Surprise waiver snags that turn into fantasy studs"
+      ]
+    },
+    "Joe": {
+      "team_id": 10,
+      "team_name": "Joe's Juggernauts",
+      "archetype": "The Historical Draft Board Strategist",
+      "tendencies": [
+        "Drafted Adley Rutschman and Spencer Steer in marquee rounds",
+        "High-energy participant in off-season draft pick negotiations",
+        "Loyal to drafted core players"
+      ],
+      "banter_triggers": [
+        "Swapping draft picks in complex multi-pick packages",
+        "Touting catcher premium value with Adley Rutschman",
+        "Fierce matchup battles with Adrian and Dan"
+      ]
+    }
+  },
+  "rivalries": [
+    {
+      "name": "The Veteran Showdown",
+      "managers": ["Dan", "Tim"],
+      "narrative": "A battle of transaction volume vs draft patience. Tim still boasts about extracting MacKenzie Gore (pick 243) and Trea Turner in 2024, while Dan relentlessly churns the wire to prove depth beats draft day."
+    },
+    {
+      "name": "The Commissioner Clashes",
+      "managers": ["Adrian", "Preston"],
+      "narrative": "Adrian's pursuit of rotation workhorses directly clashes with Preston's radical relief-pitching monopoly. Every matchup between them is a philosophical referendum on starting pitching vs bullpen dominance."
+    },
+    {
+      "name": "The Witt-Carroll Blockbuster Rivalry",
+      "managers": ["Mark", "Anil"],
+      "narrative": "Born from the legendary 2025 trade where Mark sent Bobby Witt Jr. to Anil for Corbin Carroll and draft picks. Every week is an ongoing referendum on which cornerstone franchise talent delivered the bigger return."
+    },
+    {
+      "name": "The Battle of Category Grinders",
+      "managers": ["Will", "Garrett"],
+      "narrative": "Will's disciplined high-OBP approach meets Garrett's raw power-hitting arsenal. Usually decided by fractional OBP margins or Sunday night stolen base miracles."
+    }
+  ],
+  "season_storylines": [
+    {
+      "title": "2026 Lineup Expansion to 28 Rounds",
+      "description": "With the league expanding roster depth to 28 rounds, late-round draft capital and deep-bench management have never been more critical. Managers who navigated the expansion draft wisely hold a decisive depth edge."
+    },
+    {
+      "title": "The Closer & Reliever Arms Race",
+      "description": "SV+HD has become the most contested roto category in the league. Preston's bullpen monopoly has forced managers like Will (acquiring Hader) and Dan to aggressively hunt setup men."
+    },
+    {
+      "title": "The Post-Trade Grading Reckoning",
+      "description": "With the league's Trade Analyzer now grading all past trades with exact cumulative stats and drafted pick returns, past trade blunders and draft steals are on full display for daily trash talk."
+    }
+  ],
+  "trade_lore": [
+    {
+      "season": 2024,
+      "deal": "2024 Deal #1",
+      "summary": "Dan sent Trea Turner & Pick #243 to Tim for Mike Trout, Pick #80, and $11 budget cash.",
+      "outcome": "Tim turned Pick #243 into MacKenzie Gore (181 K, 11 QS, 110.7 pts), securing an A+ grade (+83.5 margin) while Turner posted 135.9 pts. Dan drafted Yandy Diaz (81.2 pts) at Pick #80."
+    },
+    {
+      "deal": "2025 Deal #1",
+      "season": 2025,
+      "summary": "Mark sent Bobby Witt Jr. and Pick #235 to Anil for Corbin Carroll, Pick #52, and $4 budget cash.",
+      "outcome": "Anil secured generational MVP talent Bobby Witt Jr. (186.0 pts) and struck gold with Nathan Eovaldi at Pick #235 (182.5 pts) for an A+ grade (+86.5 margin), despite Carroll delivering 222.8 pts (including keeper equity) to Mark."
+    },
+    {
+      "deal": "2024 Deal #3 & #5",
+      "season": 2024,
+      "summary": "Adrian and Dan traded Pick #64 back and forth in multi-pick swaps.",
+      "outcome": "Pick #64 yielded Tyler Glasnow (135.1 pts, 168 K, 14 QS), vastly outperforming the baseline pick curve."
+    }
+  ]
+}

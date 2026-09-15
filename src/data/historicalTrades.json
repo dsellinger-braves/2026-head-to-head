@@ -27,7 +27,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 32760
+            "espn_player_id": 32760,
+            "stats": {
+              "is_pitcher": true,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 41.3,
+              "ER": 4.0,
+              "K": 54.0,
+              "QS": 0.0,
+              "SV": 25.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -77,7 +95,7 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": 33816
           }
         ]
       },
@@ -115,7 +133,7 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": 33816
           }
         ],
         "received": [
@@ -133,7 +151,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 32760
+            "espn_player_id": 32760,
+            "stats": {
+              "is_pitcher": true,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 41.3,
+              "ER": 4.0,
+              "K": 54.0,
+              "QS": 0.0,
+              "SV": 25.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -169,7 +205,25 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 32760
+        "espn_player_id": 32760,
+        "stats": {
+          "is_pitcher": true,
+          "PA": 0.0,
+          "AB": 0.0,
+          "H": 0.0,
+          "R": 0.0,
+          "HR": 0.0,
+          "RBI": 0.0,
+          "SB": 0.0,
+          "BB": 0.0,
+          "OBP": 0.0,
+          "IP": 41.3,
+          "ER": 4.0,
+          "K": 54.0,
+          "QS": 0.0,
+          "SV": 25.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2026,
@@ -217,7 +271,7 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": null
+        "espn_player_id": 33816
       }
     ]
   },
@@ -249,7 +303,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 41262
+            "espn_player_id": 41205,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 148.0,
+              "AB": 137.0,
+              "H": 32.0,
+              "R": 15.0,
+              "HR": 6.0,
+              "RBI": 17.0,
+              "SB": 0.0,
+              "BB": 11.0,
+              "OBP": 0.291,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -283,7 +355,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 41249
+            "espn_player_id": 42453,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 600.0,
+              "AB": 521.0,
+              "H": 128.0,
+              "R": 89.0,
+              "HR": 28.0,
+              "RBI": 75.0,
+              "SB": 17.0,
+              "BB": 79.0,
+              "OBP": 0.345,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -321,7 +411,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 41249
+            "espn_player_id": 42453,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 600.0,
+              "AB": 521.0,
+              "H": 128.0,
+              "R": 89.0,
+              "HR": 28.0,
+              "RBI": 75.0,
+              "SB": 17.0,
+              "BB": 79.0,
+              "OBP": 0.345,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -355,7 +463,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 41262
+            "espn_player_id": 41205,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 148.0,
+              "AB": 137.0,
+              "H": 32.0,
+              "R": 15.0,
+              "HR": 6.0,
+              "RBI": 17.0,
+              "SB": 0.0,
+              "BB": 11.0,
+              "OBP": 0.291,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -391,7 +517,25 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 41262
+        "espn_player_id": 41205,
+        "stats": {
+          "is_pitcher": false,
+          "PA": 148.0,
+          "AB": 137.0,
+          "H": 32.0,
+          "R": 15.0,
+          "HR": 6.0,
+          "RBI": 17.0,
+          "SB": 0.0,
+          "BB": 11.0,
+          "OBP": 0.291,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2026,
@@ -423,7 +567,25 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 41249
+        "espn_player_id": 42453,
+        "stats": {
+          "is_pitcher": false,
+          "PA": 600.0,
+          "AB": 521.0,
+          "H": 128.0,
+          "R": 89.0,
+          "HR": 28.0,
+          "RBI": 75.0,
+          "SB": 17.0,
+          "BB": 79.0,
+          "OBP": 0.345,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2026,
@@ -471,7 +633,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 5129617
+            "espn_player_id": 4719511,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 300.0,
+              "AB": 274.0,
+              "H": 61.0,
+              "R": 31.0,
+              "HR": 7.0,
+              "RBI": 24.0,
+              "SB": 7.0,
+              "BB": 26.0,
+              "OBP": 0.29,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -487,7 +667,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 42998
+            "espn_player_id": 4918156,
+            "stats": {
+              "is_pitcher": true,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 85.7,
+              "ER": 39.0,
+              "K": 100.0,
+              "QS": 5.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -521,7 +719,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 35241
+            "espn_player_id": 35241,
+            "stats": {
+              "is_pitcher": true,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 205.0,
+              "ER": 88.0,
+              "K": 149.0,
+              "QS": 21.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -537,7 +753,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 36502
+            "espn_player_id": 39667,
+            "stats": {
+              "is_pitcher": true,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 178.7,
+              "ER": 57.0,
+              "K": 221.0,
+              "QS": 17.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -575,7 +809,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 35241
+            "espn_player_id": 35241,
+            "stats": {
+              "is_pitcher": true,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 205.0,
+              "ER": 88.0,
+              "K": 149.0,
+              "QS": 21.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -591,7 +843,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 36502
+            "espn_player_id": 39667,
+            "stats": {
+              "is_pitcher": true,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 178.7,
+              "ER": 57.0,
+              "K": 221.0,
+              "QS": 17.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -625,7 +895,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 5129617
+            "espn_player_id": 4719511,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 300.0,
+              "AB": 274.0,
+              "H": 61.0,
+              "R": 31.0,
+              "HR": 7.0,
+              "RBI": 24.0,
+              "SB": 7.0,
+              "BB": 26.0,
+              "OBP": 0.29,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -641,7 +929,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 42998
+            "espn_player_id": 4918156,
+            "stats": {
+              "is_pitcher": true,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 85.7,
+              "ER": 39.0,
+              "K": 100.0,
+              "QS": 5.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -677,7 +983,25 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 5129617
+        "espn_player_id": 4719511,
+        "stats": {
+          "is_pitcher": false,
+          "PA": 300.0,
+          "AB": 274.0,
+          "H": 61.0,
+          "R": 31.0,
+          "HR": 7.0,
+          "RBI": 24.0,
+          "SB": 7.0,
+          "BB": 26.0,
+          "OBP": 0.29,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2026,
@@ -693,7 +1017,25 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 42998
+        "espn_player_id": 4918156,
+        "stats": {
+          "is_pitcher": true,
+          "PA": 0.0,
+          "AB": 0.0,
+          "H": 0.0,
+          "R": 0.0,
+          "HR": 0.0,
+          "RBI": 0.0,
+          "SB": 0.0,
+          "BB": 0.0,
+          "OBP": 0.0,
+          "IP": 85.7,
+          "ER": 39.0,
+          "K": 100.0,
+          "QS": 5.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2026,
@@ -725,7 +1067,25 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 35241
+        "espn_player_id": 35241,
+        "stats": {
+          "is_pitcher": true,
+          "PA": 0.0,
+          "AB": 0.0,
+          "H": 0.0,
+          "R": 0.0,
+          "HR": 0.0,
+          "RBI": 0.0,
+          "SB": 0.0,
+          "BB": 0.0,
+          "OBP": 0.0,
+          "IP": 205.0,
+          "ER": 88.0,
+          "K": 149.0,
+          "QS": 21.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2026,
@@ -741,7 +1101,25 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 36502
+        "espn_player_id": 39667,
+        "stats": {
+          "is_pitcher": true,
+          "PA": 0.0,
+          "AB": 0.0,
+          "H": 0.0,
+          "R": 0.0,
+          "HR": 0.0,
+          "RBI": 0.0,
+          "SB": 0.0,
+          "BB": 0.0,
+          "OBP": 0.0,
+          "IP": 178.7,
+          "ER": 57.0,
+          "K": 221.0,
+          "QS": 17.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2026,
@@ -789,7 +1167,7 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 5212345
+            "espn_player_id": null
           },
           {
             "season_year": 2026,
@@ -805,7 +1183,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 34954
+            "espn_player_id": 35066,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 595.0,
+              "AB": 553.0,
+              "H": 149.0,
+              "R": 57.0,
+              "HR": 10.0,
+              "RBI": 50.0,
+              "SB": 27.0,
+              "BB": 42.0,
+              "OBP": 0.321,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -839,7 +1235,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 41219
+            "espn_player_id": 42584,
+            "stats": {
+              "is_pitcher": true,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 160.3,
+              "ER": 50.0,
+              "K": 160.0,
+              "QS": 17.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -855,7 +1269,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 32767
+            "espn_player_id": 32767,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 647.0,
+              "AB": 584.0,
+              "H": 145.0,
+              "R": 96.0,
+              "HR": 39.0,
+              "RBI": 85.0,
+              "SB": 4.0,
+              "BB": 63.0,
+              "OBP": 0.321,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -893,7 +1325,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 41219
+            "espn_player_id": 42584,
+            "stats": {
+              "is_pitcher": true,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 160.3,
+              "ER": 50.0,
+              "K": 160.0,
+              "QS": 17.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -909,7 +1359,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 32767
+            "espn_player_id": 32767,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 647.0,
+              "AB": 584.0,
+              "H": 145.0,
+              "R": 96.0,
+              "HR": 39.0,
+              "RBI": 85.0,
+              "SB": 4.0,
+              "BB": 63.0,
+              "OBP": 0.321,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -943,7 +1411,7 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 5212345
+            "espn_player_id": null
           },
           {
             "season_year": 2026,
@@ -959,7 +1427,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 34954
+            "espn_player_id": 35066,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 595.0,
+              "AB": 553.0,
+              "H": 149.0,
+              "R": 57.0,
+              "HR": 10.0,
+              "RBI": 50.0,
+              "SB": 27.0,
+              "BB": 42.0,
+              "OBP": 0.321,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -995,7 +1481,7 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 5212345
+        "espn_player_id": null
       },
       {
         "season_year": 2026,
@@ -1011,7 +1497,25 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 34954
+        "espn_player_id": 35066,
+        "stats": {
+          "is_pitcher": false,
+          "PA": 595.0,
+          "AB": 553.0,
+          "H": 149.0,
+          "R": 57.0,
+          "HR": 10.0,
+          "RBI": 50.0,
+          "SB": 27.0,
+          "BB": 42.0,
+          "OBP": 0.321,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2026,
@@ -1043,7 +1547,25 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 41219
+        "espn_player_id": 42584,
+        "stats": {
+          "is_pitcher": true,
+          "PA": 0.0,
+          "AB": 0.0,
+          "H": 0.0,
+          "R": 0.0,
+          "HR": 0.0,
+          "RBI": 0.0,
+          "SB": 0.0,
+          "BB": 0.0,
+          "OBP": 0.0,
+          "IP": 160.3,
+          "ER": 50.0,
+          "K": 160.0,
+          "QS": 17.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2026,
@@ -1059,7 +1581,25 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 32767
+        "espn_player_id": 32767,
+        "stats": {
+          "is_pitcher": false,
+          "PA": 647.0,
+          "AB": 584.0,
+          "H": 145.0,
+          "R": 96.0,
+          "HR": 39.0,
+          "RBI": 85.0,
+          "SB": 4.0,
+          "BB": 63.0,
+          "OBP": 0.321,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2026,
@@ -1141,7 +1681,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 32512
+            "espn_player_id": 32512,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 564.0,
+              "AB": 517.0,
+              "H": 129.0,
+              "R": 71.0,
+              "HR": 22.0,
+              "RBI": 73.0,
+              "SB": 4.0,
+              "BB": 47.0,
+              "OBP": 0.312,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -1179,7 +1737,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 32512
+            "espn_player_id": 32512,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 564.0,
+              "AB": 517.0,
+              "H": 129.0,
+              "R": 71.0,
+              "HR": 22.0,
+              "RBI": 73.0,
+              "SB": 4.0,
+              "BB": 47.0,
+              "OBP": 0.312,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -1281,7 +1857,25 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 32512
+        "espn_player_id": 32512,
+        "stats": {
+          "is_pitcher": false,
+          "PA": 564.0,
+          "AB": 517.0,
+          "H": 129.0,
+          "R": 71.0,
+          "HR": 22.0,
+          "RBI": 73.0,
+          "SB": 4.0,
+          "BB": 47.0,
+          "OBP": 0.312,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2026,
@@ -1345,7 +1939,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": 41217,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 327.0,
+              "AB": 312.0,
+              "H": 71.0,
+              "R": 30.0,
+              "HR": 5.0,
+              "RBI": 28.0,
+              "SB": 9.0,
+              "BB": 15.0,
+              "OBP": 0.263,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ],
         "received": [
@@ -1363,7 +1975,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 33912
+            "espn_player_id": 33912,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 515.0,
+              "AB": 459.0,
+              "H": 123.0,
+              "R": 69.0,
+              "HR": 15.0,
+              "RBI": 69.0,
+              "SB": 11.0,
+              "BB": 56.0,
+              "OBP": 0.348,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ]
       },
@@ -1385,7 +2015,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 33912
+            "espn_player_id": 33912,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 515.0,
+              "AB": 459.0,
+              "H": 123.0,
+              "R": 69.0,
+              "HR": 15.0,
+              "RBI": 69.0,
+              "SB": 11.0,
+              "BB": 56.0,
+              "OBP": 0.348,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ],
         "received": [
@@ -1419,7 +2067,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": 41217,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 327.0,
+              "AB": 312.0,
+              "H": 71.0,
+              "R": 30.0,
+              "HR": 5.0,
+              "RBI": 28.0,
+              "SB": 9.0,
+              "BB": 15.0,
+              "OBP": 0.263,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ]
       }
@@ -1439,7 +2105,25 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 33912
+        "espn_player_id": 33912,
+        "stats": {
+          "is_pitcher": false,
+          "PA": 515.0,
+          "AB": 459.0,
+          "H": 123.0,
+          "R": 69.0,
+          "HR": 15.0,
+          "RBI": 69.0,
+          "SB": 11.0,
+          "BB": 56.0,
+          "OBP": 0.348,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2026,
@@ -1471,7 +2155,25 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": null
+        "espn_player_id": 41217,
+        "stats": {
+          "is_pitcher": false,
+          "PA": 327.0,
+          "AB": 312.0,
+          "H": 71.0,
+          "R": 30.0,
+          "HR": 5.0,
+          "RBI": 28.0,
+          "SB": 9.0,
+          "BB": 15.0,
+          "OBP": 0.263,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       }
     ]
   },
@@ -1503,7 +2205,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 36185
+            "espn_player_id": 36185,
+            "stats": {
+              "is_pitcher": true,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 64.3,
+              "ER": 19.0,
+              "K": 63.0,
+              "QS": 7.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2025,
@@ -1519,7 +2239,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 39800
+            "espn_player_id": 39800,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 544.0,
+              "AB": 471.0,
+              "H": 94.0,
+              "R": 62.0,
+              "HR": 20.0,
+              "RBI": 61.0,
+              "SB": 38.0,
+              "BB": 64.0,
+              "OBP": 0.298,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2025,
@@ -1535,7 +2273,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 42525
+            "espn_player_id": 42525,
+            "stats": {
+              "is_pitcher": true,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 90.3,
+              "ER": 57.0,
+              "K": 74.0,
+              "QS": 1.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2025,
@@ -1551,7 +2307,32 @@
             "round_number": 24,
             "budget_amount": 0.0,
             "original_pick": "239",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Cade Smith",
+              "player_id": 4987924,
+              "team_owner": "Adrian",
+              "adp": 257.3095890410959,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 73.7,
+                "ER": 24.0,
+                "K": 104.0,
+                "QS": 0.0,
+                "SV": 16.0,
+                "HD": 19.0
+              }
+            }
           },
           {
             "season_year": 2025,
@@ -1567,7 +2348,32 @@
             "round_number": 23,
             "budget_amount": 0.0,
             "original_pick": "222",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Pete Fairbanks",
+              "player_id": 42180,
+              "team_owner": "Adrian",
+              "adp": 254.7835616438356,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 60.3,
+                "ER": 19.0,
+                "K": 59.0,
+                "QS": 0.0,
+                "SV": 27.0,
+                "HD": 0.0
+              }
+            }
           }
         ],
         "received": [
@@ -1585,7 +2391,32 @@
             "round_number": 16,
             "budget_amount": 0.0,
             "original_pick": "153",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Spencer Steer",
+              "player_id": 4722857,
+              "team_owner": "Patrick",
+              "adp": 195.23835616438356,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": false,
+                "PA": 568.0,
+                "AB": 509.0,
+                "H": 121.0,
+                "R": 66.0,
+                "HR": 21.0,
+                "RBI": 75.0,
+                "SB": 7.0,
+                "BB": 51.0,
+                "OBP": 0.312,
+                "IP": 0.0,
+                "ER": 0.0,
+                "K": 0.0,
+                "QS": 0.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           },
           {
             "season_year": 2025,
@@ -1601,7 +2432,32 @@
             "round_number": 20,
             "budget_amount": 0.0,
             "original_pick": "193",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Trevor Megill",
+              "player_id": 40080,
+              "team_owner": "Patrick",
+              "adp": 238.82054794520548,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 47.0,
+                "ER": 13.0,
+                "K": 60.0,
+                "QS": 0.0,
+                "SV": 30.0,
+                "HD": 0.0
+              }
+            }
           }
         ]
       },
@@ -1623,7 +2479,32 @@
             "round_number": 16,
             "budget_amount": 0.0,
             "original_pick": "153",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Spencer Steer",
+              "player_id": 4722857,
+              "team_owner": "Patrick",
+              "adp": 195.23835616438356,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": false,
+                "PA": 568.0,
+                "AB": 509.0,
+                "H": 121.0,
+                "R": 66.0,
+                "HR": 21.0,
+                "RBI": 75.0,
+                "SB": 7.0,
+                "BB": 51.0,
+                "OBP": 0.312,
+                "IP": 0.0,
+                "ER": 0.0,
+                "K": 0.0,
+                "QS": 0.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           },
           {
             "season_year": 2025,
@@ -1639,7 +2520,32 @@
             "round_number": 20,
             "budget_amount": 0.0,
             "original_pick": "193",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Trevor Megill",
+              "player_id": 40080,
+              "team_owner": "Patrick",
+              "adp": 238.82054794520548,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 47.0,
+                "ER": 13.0,
+                "K": 60.0,
+                "QS": 0.0,
+                "SV": 30.0,
+                "HD": 0.0
+              }
+            }
           }
         ],
         "received": [
@@ -1657,7 +2563,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 36185
+            "espn_player_id": 36185,
+            "stats": {
+              "is_pitcher": true,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 64.3,
+              "ER": 19.0,
+              "K": 63.0,
+              "QS": 7.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2025,
@@ -1673,7 +2597,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 39800
+            "espn_player_id": 39800,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 544.0,
+              "AB": 471.0,
+              "H": 94.0,
+              "R": 62.0,
+              "HR": 20.0,
+              "RBI": 61.0,
+              "SB": 38.0,
+              "BB": 64.0,
+              "OBP": 0.298,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2025,
@@ -1689,7 +2631,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 42525
+            "espn_player_id": 42525,
+            "stats": {
+              "is_pitcher": true,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 90.3,
+              "ER": 57.0,
+              "K": 74.0,
+              "QS": 1.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2025,
@@ -1705,7 +2665,32 @@
             "round_number": 24,
             "budget_amount": 0.0,
             "original_pick": "239",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Cade Smith",
+              "player_id": 4987924,
+              "team_owner": "Adrian",
+              "adp": 257.3095890410959,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 73.7,
+                "ER": 24.0,
+                "K": 104.0,
+                "QS": 0.0,
+                "SV": 16.0,
+                "HD": 19.0
+              }
+            }
           },
           {
             "season_year": 2025,
@@ -1721,7 +2706,32 @@
             "round_number": 23,
             "budget_amount": 0.0,
             "original_pick": "222",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Pete Fairbanks",
+              "player_id": 42180,
+              "team_owner": "Adrian",
+              "adp": 254.7835616438356,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 60.3,
+                "ER": 19.0,
+                "K": 59.0,
+                "QS": 0.0,
+                "SV": 27.0,
+                "HD": 0.0
+              }
+            }
           }
         ]
       }
@@ -1741,7 +2751,25 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 36185
+        "espn_player_id": 36185,
+        "stats": {
+          "is_pitcher": true,
+          "PA": 0.0,
+          "AB": 0.0,
+          "H": 0.0,
+          "R": 0.0,
+          "HR": 0.0,
+          "RBI": 0.0,
+          "SB": 0.0,
+          "BB": 0.0,
+          "OBP": 0.0,
+          "IP": 64.3,
+          "ER": 19.0,
+          "K": 63.0,
+          "QS": 7.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2025,
@@ -1757,7 +2785,25 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 39800
+        "espn_player_id": 39800,
+        "stats": {
+          "is_pitcher": false,
+          "PA": 544.0,
+          "AB": 471.0,
+          "H": 94.0,
+          "R": 62.0,
+          "HR": 20.0,
+          "RBI": 61.0,
+          "SB": 38.0,
+          "BB": 64.0,
+          "OBP": 0.298,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2025,
@@ -1773,7 +2819,25 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 42525
+        "espn_player_id": 42525,
+        "stats": {
+          "is_pitcher": true,
+          "PA": 0.0,
+          "AB": 0.0,
+          "H": 0.0,
+          "R": 0.0,
+          "HR": 0.0,
+          "RBI": 0.0,
+          "SB": 0.0,
+          "BB": 0.0,
+          "OBP": 0.0,
+          "IP": 90.3,
+          "ER": 57.0,
+          "K": 74.0,
+          "QS": 1.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2025,
@@ -1789,7 +2853,32 @@
         "round_number": 16,
         "budget_amount": 0.0,
         "original_pick": "153",
-        "espn_player_id": null
+        "espn_player_id": null,
+        "drafted_player": {
+          "player_name": "Spencer Steer",
+          "player_id": 4722857,
+          "team_owner": "Patrick",
+          "adp": 195.23835616438356,
+          "is_keeper": false,
+          "stats": {
+            "is_pitcher": false,
+            "PA": 568.0,
+            "AB": 509.0,
+            "H": 121.0,
+            "R": 66.0,
+            "HR": 21.0,
+            "RBI": 75.0,
+            "SB": 7.0,
+            "BB": 51.0,
+            "OBP": 0.312,
+            "IP": 0.0,
+            "ER": 0.0,
+            "K": 0.0,
+            "QS": 0.0,
+            "SV": 0.0,
+            "HD": 0.0
+          }
+        }
       },
       {
         "season_year": 2025,
@@ -1805,7 +2894,32 @@
         "round_number": 20,
         "budget_amount": 0.0,
         "original_pick": "193",
-        "espn_player_id": null
+        "espn_player_id": null,
+        "drafted_player": {
+          "player_name": "Trevor Megill",
+          "player_id": 40080,
+          "team_owner": "Patrick",
+          "adp": 238.82054794520548,
+          "is_keeper": false,
+          "stats": {
+            "is_pitcher": true,
+            "PA": 0.0,
+            "AB": 0.0,
+            "H": 0.0,
+            "R": 0.0,
+            "HR": 0.0,
+            "RBI": 0.0,
+            "SB": 0.0,
+            "BB": 0.0,
+            "OBP": 0.0,
+            "IP": 47.0,
+            "ER": 13.0,
+            "K": 60.0,
+            "QS": 0.0,
+            "SV": 30.0,
+            "HD": 0.0
+          }
+        }
       },
       {
         "season_year": 2025,
@@ -1821,7 +2935,32 @@
         "round_number": 24,
         "budget_amount": 0.0,
         "original_pick": "239",
-        "espn_player_id": null
+        "espn_player_id": null,
+        "drafted_player": {
+          "player_name": "Cade Smith",
+          "player_id": 4987924,
+          "team_owner": "Adrian",
+          "adp": 257.3095890410959,
+          "is_keeper": false,
+          "stats": {
+            "is_pitcher": true,
+            "PA": 0.0,
+            "AB": 0.0,
+            "H": 0.0,
+            "R": 0.0,
+            "HR": 0.0,
+            "RBI": 0.0,
+            "SB": 0.0,
+            "BB": 0.0,
+            "OBP": 0.0,
+            "IP": 73.7,
+            "ER": 24.0,
+            "K": 104.0,
+            "QS": 0.0,
+            "SV": 16.0,
+            "HD": 19.0
+          }
+        }
       },
       {
         "season_year": 2025,
@@ -1837,7 +2976,32 @@
         "round_number": 23,
         "budget_amount": 0.0,
         "original_pick": "222",
-        "espn_player_id": null
+        "espn_player_id": null,
+        "drafted_player": {
+          "player_name": "Pete Fairbanks",
+          "player_id": 42180,
+          "team_owner": "Adrian",
+          "adp": 254.7835616438356,
+          "is_keeper": false,
+          "stats": {
+            "is_pitcher": true,
+            "PA": 0.0,
+            "AB": 0.0,
+            "H": 0.0,
+            "R": 0.0,
+            "HR": 0.0,
+            "RBI": 0.0,
+            "SB": 0.0,
+            "BB": 0.0,
+            "OBP": 0.0,
+            "IP": 60.3,
+            "ER": 19.0,
+            "K": 59.0,
+            "QS": 0.0,
+            "SV": 27.0,
+            "HD": 0.0
+          }
+        }
       }
     ]
   },
@@ -1869,7 +3033,32 @@
             "round_number": 18,
             "budget_amount": 0.0,
             "original_pick": "180",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Kodai Senga",
+              "player_id": 4142421,
+              "team_owner": "Daniel",
+              "adp": 159.52602739726026,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 113.3,
+                "ER": 38.0,
+                "K": 109.0,
+                "QS": 6.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           }
         ],
         "received": [
@@ -1903,7 +3092,32 @@
             "round_number": 24,
             "budget_amount": 0.0,
             "original_pick": "245",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Spencer Arrighetti",
+              "player_id": 4726080,
+              "team_owner": "Tim",
+              "adp": 259.05479452054794,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 35.3,
+                "ER": 21.0,
+                "K": 31.0,
+                "QS": 2.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           }
         ]
       },
@@ -1941,7 +3155,32 @@
             "round_number": 24,
             "budget_amount": 0.0,
             "original_pick": "245",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Spencer Arrighetti",
+              "player_id": 4726080,
+              "team_owner": "Tim",
+              "adp": 259.05479452054794,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 35.3,
+                "ER": 21.0,
+                "K": 31.0,
+                "QS": 2.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           }
         ],
         "received": [
@@ -1959,7 +3198,32 @@
             "round_number": 18,
             "budget_amount": 0.0,
             "original_pick": "180",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Kodai Senga",
+              "player_id": 4142421,
+              "team_owner": "Daniel",
+              "adp": 159.52602739726026,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 113.3,
+                "ER": 38.0,
+                "K": 109.0,
+                "QS": 6.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           }
         ]
       }
@@ -1979,7 +3243,32 @@
         "round_number": 18,
         "budget_amount": 0.0,
         "original_pick": "180",
-        "espn_player_id": null
+        "espn_player_id": null,
+        "drafted_player": {
+          "player_name": "Kodai Senga",
+          "player_id": 4142421,
+          "team_owner": "Daniel",
+          "adp": 159.52602739726026,
+          "is_keeper": false,
+          "stats": {
+            "is_pitcher": true,
+            "PA": 0.0,
+            "AB": 0.0,
+            "H": 0.0,
+            "R": 0.0,
+            "HR": 0.0,
+            "RBI": 0.0,
+            "SB": 0.0,
+            "BB": 0.0,
+            "OBP": 0.0,
+            "IP": 113.3,
+            "ER": 38.0,
+            "K": 109.0,
+            "QS": 6.0,
+            "SV": 0.0,
+            "HD": 0.0
+          }
+        }
       },
       {
         "season_year": 2025,
@@ -2011,7 +3300,32 @@
         "round_number": 24,
         "budget_amount": 0.0,
         "original_pick": "245",
-        "espn_player_id": null
+        "espn_player_id": null,
+        "drafted_player": {
+          "player_name": "Spencer Arrighetti",
+          "player_id": 4726080,
+          "team_owner": "Tim",
+          "adp": 259.05479452054794,
+          "is_keeper": false,
+          "stats": {
+            "is_pitcher": true,
+            "PA": 0.0,
+            "AB": 0.0,
+            "H": 0.0,
+            "R": 0.0,
+            "HR": 0.0,
+            "RBI": 0.0,
+            "SB": 0.0,
+            "BB": 0.0,
+            "OBP": 0.0,
+            "IP": 35.3,
+            "ER": 21.0,
+            "K": 31.0,
+            "QS": 2.0,
+            "SV": 0.0,
+            "HD": 0.0
+          }
+        }
       }
     ]
   },
@@ -2043,7 +3357,32 @@
             "round_number": 14,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Freddy Peralta",
+              "player_id": 39825,
+              "team_owner": "Daniel",
+              "adp": 119.03835616438356,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 176.7,
+                "ER": 53.0,
+                "K": 204.0,
+                "QS": 13.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           }
         ],
         "received": [
@@ -2077,7 +3416,32 @@
             "round_number": 22,
             "budget_amount": 0.0,
             "original_pick": "224",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Garrett Mitchell",
+              "player_id": 4313442,
+              "team_owner": "Garrett",
+              "adp": 259.4506849315068,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": false,
+                "PA": 78.0,
+                "AB": 68.0,
+                "H": 14.0,
+                "R": 9.0,
+                "HR": 0.0,
+                "RBI": 3.0,
+                "SB": 3.0,
+                "BB": 7.0,
+                "OBP": 0.286,
+                "IP": 0.0,
+                "ER": 0.0,
+                "K": 0.0,
+                "QS": 0.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           }
         ]
       },
@@ -2115,7 +3479,32 @@
             "round_number": 22,
             "budget_amount": 0.0,
             "original_pick": "224",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Garrett Mitchell",
+              "player_id": 4313442,
+              "team_owner": "Garrett",
+              "adp": 259.4506849315068,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": false,
+                "PA": 78.0,
+                "AB": 68.0,
+                "H": 14.0,
+                "R": 9.0,
+                "HR": 0.0,
+                "RBI": 3.0,
+                "SB": 3.0,
+                "BB": 7.0,
+                "OBP": 0.286,
+                "IP": 0.0,
+                "ER": 0.0,
+                "K": 0.0,
+                "QS": 0.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           }
         ],
         "received": [
@@ -2133,7 +3522,32 @@
             "round_number": 14,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Freddy Peralta",
+              "player_id": 39825,
+              "team_owner": "Daniel",
+              "adp": 119.03835616438356,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 176.7,
+                "ER": 53.0,
+                "K": 204.0,
+                "QS": 13.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           }
         ]
       }
@@ -2153,7 +3567,32 @@
         "round_number": 14,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": null
+        "espn_player_id": null,
+        "drafted_player": {
+          "player_name": "Freddy Peralta",
+          "player_id": 39825,
+          "team_owner": "Daniel",
+          "adp": 119.03835616438356,
+          "is_keeper": false,
+          "stats": {
+            "is_pitcher": true,
+            "PA": 0.0,
+            "AB": 0.0,
+            "H": 0.0,
+            "R": 0.0,
+            "HR": 0.0,
+            "RBI": 0.0,
+            "SB": 0.0,
+            "BB": 0.0,
+            "OBP": 0.0,
+            "IP": 176.7,
+            "ER": 53.0,
+            "K": 204.0,
+            "QS": 13.0,
+            "SV": 0.0,
+            "HD": 0.0
+          }
+        }
       },
       {
         "season_year": 2025,
@@ -2185,7 +3624,32 @@
         "round_number": 22,
         "budget_amount": 0.0,
         "original_pick": "224",
-        "espn_player_id": null
+        "espn_player_id": null,
+        "drafted_player": {
+          "player_name": "Garrett Mitchell",
+          "player_id": 4313442,
+          "team_owner": "Garrett",
+          "adp": 259.4506849315068,
+          "is_keeper": false,
+          "stats": {
+            "is_pitcher": false,
+            "PA": 78.0,
+            "AB": 68.0,
+            "H": 14.0,
+            "R": 9.0,
+            "HR": 0.0,
+            "RBI": 3.0,
+            "SB": 3.0,
+            "BB": 7.0,
+            "OBP": 0.286,
+            "IP": 0.0,
+            "ER": 0.0,
+            "K": 0.0,
+            "QS": 0.0,
+            "SV": 0.0,
+            "HD": 0.0
+          }
+        }
       }
     ]
   },
@@ -2217,7 +3681,32 @@
             "round_number": 20,
             "budget_amount": 0.0,
             "original_pick": "200",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Bryan Abreu",
+              "player_id": 41208,
+              "team_owner": "Daniel",
+              "adp": 241.80547945205478,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 71.0,
+                "ER": 18.0,
+                "K": 105.0,
+                "QS": 0.0,
+                "SV": 7.0,
+                "HD": 25.0
+              }
+            }
           },
           {
             "season_year": 2025,
@@ -2233,7 +3722,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 30948
+            "espn_player_id": 30948,
+            "stats": {
+              "is_pitcher": true,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 125.7,
+              "ER": 36.0,
+              "K": 165.0,
+              "QS": 11.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2025,
@@ -2249,7 +3756,32 @@
             "round_number": 12,
             "budget_amount": 0.0,
             "original_pick": "120",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Dylan Crews",
+              "player_id": 4719511,
+              "team_owner": "Daniel",
+              "adp": 256.8767123287671,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": false,
+                "PA": 322.0,
+                "AB": 293.0,
+                "H": 61.0,
+                "R": 43.0,
+                "HR": 10.0,
+                "RBI": 27.0,
+                "SB": 17.0,
+                "BB": 24.0,
+                "OBP": 0.28,
+                "IP": 0.0,
+                "ER": 0.0,
+                "K": 0.0,
+                "QS": 0.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           }
         ],
         "received": [
@@ -2267,7 +3799,32 @@
             "round_number": 9,
             "budget_amount": 0.0,
             "original_pick": "90",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Bailey Ober",
+              "player_id": 3107919,
+              "team_owner": "Anil",
+              "adp": 126.56712328767124,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 146.3,
+                "ER": 83.0,
+                "K": 120.0,
+                "QS": 8.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           },
           {
             "season_year": 2025,
@@ -2283,7 +3840,32 @@
             "round_number": 11,
             "budget_amount": 0.0,
             "original_pick": "110",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Justin Steele",
+              "player_id": 41022,
+              "team_owner": "Anil",
+              "adp": 255.2178082191781,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 22.7,
+                "ER": 12.0,
+                "K": 21.0,
+                "QS": 1.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           }
         ]
       },
@@ -2305,7 +3887,32 @@
             "round_number": 9,
             "budget_amount": 0.0,
             "original_pick": "90",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Bailey Ober",
+              "player_id": 3107919,
+              "team_owner": "Anil",
+              "adp": 126.56712328767124,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 146.3,
+                "ER": 83.0,
+                "K": 120.0,
+                "QS": 8.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           },
           {
             "season_year": 2025,
@@ -2321,7 +3928,32 @@
             "round_number": 11,
             "budget_amount": 0.0,
             "original_pick": "110",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Justin Steele",
+              "player_id": 41022,
+              "team_owner": "Anil",
+              "adp": 255.2178082191781,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 22.7,
+                "ER": 12.0,
+                "K": 21.0,
+                "QS": 1.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           }
         ],
         "received": [
@@ -2339,7 +3971,32 @@
             "round_number": 20,
             "budget_amount": 0.0,
             "original_pick": "200",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Bryan Abreu",
+              "player_id": 41208,
+              "team_owner": "Daniel",
+              "adp": 241.80547945205478,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 71.0,
+                "ER": 18.0,
+                "K": 105.0,
+                "QS": 0.0,
+                "SV": 7.0,
+                "HD": 25.0
+              }
+            }
           },
           {
             "season_year": 2025,
@@ -2355,7 +4012,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 30948
+            "espn_player_id": 30948,
+            "stats": {
+              "is_pitcher": true,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 125.7,
+              "ER": 36.0,
+              "K": 165.0,
+              "QS": 11.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2025,
@@ -2371,7 +4046,32 @@
             "round_number": 12,
             "budget_amount": 0.0,
             "original_pick": "120",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Dylan Crews",
+              "player_id": 4719511,
+              "team_owner": "Daniel",
+              "adp": 256.8767123287671,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": false,
+                "PA": 322.0,
+                "AB": 293.0,
+                "H": 61.0,
+                "R": 43.0,
+                "HR": 10.0,
+                "RBI": 27.0,
+                "SB": 17.0,
+                "BB": 24.0,
+                "OBP": 0.28,
+                "IP": 0.0,
+                "ER": 0.0,
+                "K": 0.0,
+                "QS": 0.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           }
         ]
       }
@@ -2391,7 +4091,32 @@
         "round_number": 20,
         "budget_amount": 0.0,
         "original_pick": "200",
-        "espn_player_id": null
+        "espn_player_id": null,
+        "drafted_player": {
+          "player_name": "Bryan Abreu",
+          "player_id": 41208,
+          "team_owner": "Daniel",
+          "adp": 241.80547945205478,
+          "is_keeper": false,
+          "stats": {
+            "is_pitcher": true,
+            "PA": 0.0,
+            "AB": 0.0,
+            "H": 0.0,
+            "R": 0.0,
+            "HR": 0.0,
+            "RBI": 0.0,
+            "SB": 0.0,
+            "BB": 0.0,
+            "OBP": 0.0,
+            "IP": 71.0,
+            "ER": 18.0,
+            "K": 105.0,
+            "QS": 0.0,
+            "SV": 7.0,
+            "HD": 25.0
+          }
+        }
       },
       {
         "season_year": 2025,
@@ -2407,7 +4132,25 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 30948
+        "espn_player_id": 30948,
+        "stats": {
+          "is_pitcher": true,
+          "PA": 0.0,
+          "AB": 0.0,
+          "H": 0.0,
+          "R": 0.0,
+          "HR": 0.0,
+          "RBI": 0.0,
+          "SB": 0.0,
+          "BB": 0.0,
+          "OBP": 0.0,
+          "IP": 125.7,
+          "ER": 36.0,
+          "K": 165.0,
+          "QS": 11.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2025,
@@ -2423,7 +4166,32 @@
         "round_number": 12,
         "budget_amount": 0.0,
         "original_pick": "120",
-        "espn_player_id": null
+        "espn_player_id": null,
+        "drafted_player": {
+          "player_name": "Dylan Crews",
+          "player_id": 4719511,
+          "team_owner": "Daniel",
+          "adp": 256.8767123287671,
+          "is_keeper": false,
+          "stats": {
+            "is_pitcher": false,
+            "PA": 322.0,
+            "AB": 293.0,
+            "H": 61.0,
+            "R": 43.0,
+            "HR": 10.0,
+            "RBI": 27.0,
+            "SB": 17.0,
+            "BB": 24.0,
+            "OBP": 0.28,
+            "IP": 0.0,
+            "ER": 0.0,
+            "K": 0.0,
+            "QS": 0.0,
+            "SV": 0.0,
+            "HD": 0.0
+          }
+        }
       },
       {
         "season_year": 2025,
@@ -2439,7 +4207,32 @@
         "round_number": 9,
         "budget_amount": 0.0,
         "original_pick": "90",
-        "espn_player_id": null
+        "espn_player_id": null,
+        "drafted_player": {
+          "player_name": "Bailey Ober",
+          "player_id": 3107919,
+          "team_owner": "Anil",
+          "adp": 126.56712328767124,
+          "is_keeper": false,
+          "stats": {
+            "is_pitcher": true,
+            "PA": 0.0,
+            "AB": 0.0,
+            "H": 0.0,
+            "R": 0.0,
+            "HR": 0.0,
+            "RBI": 0.0,
+            "SB": 0.0,
+            "BB": 0.0,
+            "OBP": 0.0,
+            "IP": 146.3,
+            "ER": 83.0,
+            "K": 120.0,
+            "QS": 8.0,
+            "SV": 0.0,
+            "HD": 0.0
+          }
+        }
       },
       {
         "season_year": 2025,
@@ -2455,7 +4248,32 @@
         "round_number": 11,
         "budget_amount": 0.0,
         "original_pick": "110",
-        "espn_player_id": null
+        "espn_player_id": null,
+        "drafted_player": {
+          "player_name": "Justin Steele",
+          "player_id": 41022,
+          "team_owner": "Anil",
+          "adp": 255.2178082191781,
+          "is_keeper": false,
+          "stats": {
+            "is_pitcher": true,
+            "PA": 0.0,
+            "AB": 0.0,
+            "H": 0.0,
+            "R": 0.0,
+            "HR": 0.0,
+            "RBI": 0.0,
+            "SB": 0.0,
+            "BB": 0.0,
+            "OBP": 0.0,
+            "IP": 22.7,
+            "ER": 12.0,
+            "K": 21.0,
+            "QS": 1.0,
+            "SV": 0.0,
+            "HD": 0.0
+          }
+        }
       }
     ]
   },
@@ -2487,7 +4305,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 30951
+            "espn_player_id": 30951,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 580.0,
+              "AB": 501.0,
+              "H": 131.0,
+              "R": 72.0,
+              "HR": 27.0,
+              "RBI": 75.0,
+              "SB": 12.0,
+              "BB": 70.0,
+              "OBP": 0.357,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2025,
@@ -2503,7 +4339,32 @@
             "round_number": 25,
             "budget_amount": 0.0,
             "original_pick": "242",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Blake Treinen",
+              "player_id": 32185,
+              "team_owner": "Adrian",
+              "adp": 258.9013698630137,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 26.7,
+                "ER": 16.0,
+                "K": 36.0,
+                "QS": 0.0,
+                "SV": 2.0,
+                "HD": 10.0
+              }
+            }
           }
         ],
         "received": [
@@ -2537,7 +4398,32 @@
             "round_number": 16,
             "budget_amount": 0.0,
             "original_pick": "154",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Tyler O'Neill",
+              "player_id": 34168,
+              "team_owner": "Alex",
+              "adp": 257.3945205479452,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": false,
+                "PA": 209.0,
+                "AB": 181.0,
+                "H": 36.0,
+                "R": 22.0,
+                "HR": 9.0,
+                "RBI": 26.0,
+                "SB": 4.0,
+                "BB": 22.0,
+                "OBP": 0.292,
+                "IP": 0.0,
+                "ER": 0.0,
+                "K": 0.0,
+                "QS": 0.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           }
         ]
       },
@@ -2575,7 +4461,32 @@
             "round_number": 16,
             "budget_amount": 0.0,
             "original_pick": "154",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Tyler O'Neill",
+              "player_id": 34168,
+              "team_owner": "Alex",
+              "adp": 257.3945205479452,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": false,
+                "PA": 209.0,
+                "AB": 181.0,
+                "H": 36.0,
+                "R": 22.0,
+                "HR": 9.0,
+                "RBI": 26.0,
+                "SB": 4.0,
+                "BB": 22.0,
+                "OBP": 0.292,
+                "IP": 0.0,
+                "ER": 0.0,
+                "K": 0.0,
+                "QS": 0.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           }
         ],
         "received": [
@@ -2593,7 +4504,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 30951
+            "espn_player_id": 30951,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 580.0,
+              "AB": 501.0,
+              "H": 131.0,
+              "R": 72.0,
+              "HR": 27.0,
+              "RBI": 75.0,
+              "SB": 12.0,
+              "BB": 70.0,
+              "OBP": 0.357,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2025,
@@ -2609,7 +4538,32 @@
             "round_number": 25,
             "budget_amount": 0.0,
             "original_pick": "242",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Blake Treinen",
+              "player_id": 32185,
+              "team_owner": "Adrian",
+              "adp": 258.9013698630137,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 26.7,
+                "ER": 16.0,
+                "K": 36.0,
+                "QS": 0.0,
+                "SV": 2.0,
+                "HD": 10.0
+              }
+            }
           }
         ]
       }
@@ -2629,7 +4583,25 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 30951
+        "espn_player_id": 30951,
+        "stats": {
+          "is_pitcher": false,
+          "PA": 580.0,
+          "AB": 501.0,
+          "H": 131.0,
+          "R": 72.0,
+          "HR": 27.0,
+          "RBI": 75.0,
+          "SB": 12.0,
+          "BB": 70.0,
+          "OBP": 0.357,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2025,
@@ -2661,7 +4633,32 @@
         "round_number": 16,
         "budget_amount": 0.0,
         "original_pick": "154",
-        "espn_player_id": null
+        "espn_player_id": null,
+        "drafted_player": {
+          "player_name": "Tyler O'Neill",
+          "player_id": 34168,
+          "team_owner": "Alex",
+          "adp": 257.3945205479452,
+          "is_keeper": false,
+          "stats": {
+            "is_pitcher": false,
+            "PA": 209.0,
+            "AB": 181.0,
+            "H": 36.0,
+            "R": 22.0,
+            "HR": 9.0,
+            "RBI": 26.0,
+            "SB": 4.0,
+            "BB": 22.0,
+            "OBP": 0.292,
+            "IP": 0.0,
+            "ER": 0.0,
+            "K": 0.0,
+            "QS": 0.0,
+            "SV": 0.0,
+            "HD": 0.0
+          }
+        }
       },
       {
         "season_year": 2025,
@@ -2677,7 +4674,32 @@
         "round_number": 25,
         "budget_amount": 0.0,
         "original_pick": "242",
-        "espn_player_id": null
+        "espn_player_id": null,
+        "drafted_player": {
+          "player_name": "Blake Treinen",
+          "player_id": 32185,
+          "team_owner": "Adrian",
+          "adp": 258.9013698630137,
+          "is_keeper": false,
+          "stats": {
+            "is_pitcher": true,
+            "PA": 0.0,
+            "AB": 0.0,
+            "H": 0.0,
+            "R": 0.0,
+            "HR": 0.0,
+            "RBI": 0.0,
+            "SB": 0.0,
+            "BB": 0.0,
+            "OBP": 0.0,
+            "IP": 26.7,
+            "ER": 16.0,
+            "K": 36.0,
+            "QS": 0.0,
+            "SV": 2.0,
+            "HD": 10.0
+          }
+        }
       }
     ]
   },
@@ -2709,7 +4731,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 34961
+            "espn_player_id": 34961,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 447.0,
+              "AB": 416.0,
+              "H": 108.0,
+              "R": 54.0,
+              "HR": 16.0,
+              "RBI": 54.0,
+              "SB": 2.0,
+              "BB": 27.0,
+              "OBP": 0.309,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2025,
@@ -2725,7 +4765,32 @@
             "round_number": 23,
             "budget_amount": 0.0,
             "original_pick": "237",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Griffin Jax",
+              "player_id": 42604,
+              "team_owner": "Garrett",
+              "adp": 195.01780821917808,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 66.0,
+                "ER": 31.0,
+                "K": 99.0,
+                "QS": 0.0,
+                "SV": 0.0,
+                "HD": 28.0
+              }
+            }
           },
           {
             "season_year": 2025,
@@ -2741,7 +4806,32 @@
             "round_number": 24,
             "budget_amount": 0.0,
             "original_pick": "244",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Shane McClanahan",
+              "player_id": 41199,
+              "team_owner": "Garrett",
+              "adp": 257.75342465753425,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": false,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 0.0,
+                "ER": 0.0,
+                "K": 0.0,
+                "QS": 0.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           }
         ],
         "received": [
@@ -2759,7 +4849,32 @@
             "round_number": 6,
             "budget_amount": 0.0,
             "original_pick": "53",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Dylan Cease",
+              "player_id": 34943,
+              "team_owner": "Patrick",
+              "adp": 34.535616438356165,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 168.0,
+                "ER": 85.0,
+                "K": 215.0,
+                "QS": 8.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           },
           {
             "season_year": 2025,
@@ -2775,7 +4890,32 @@
             "round_number": 12,
             "budget_amount": 0.0,
             "original_pick": "113",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Seth Lugo",
+              "player_id": 34873,
+              "team_owner": "Patrick",
+              "adp": 210.91095890410958,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 145.3,
+                "ER": 67.0,
+                "K": 125.0,
+                "QS": 12.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           }
         ]
       },
@@ -2797,7 +4937,32 @@
             "round_number": 6,
             "budget_amount": 0.0,
             "original_pick": "53",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Dylan Cease",
+              "player_id": 34943,
+              "team_owner": "Patrick",
+              "adp": 34.535616438356165,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 168.0,
+                "ER": 85.0,
+                "K": 215.0,
+                "QS": 8.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           },
           {
             "season_year": 2025,
@@ -2813,7 +4978,32 @@
             "round_number": 12,
             "budget_amount": 0.0,
             "original_pick": "113",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Seth Lugo",
+              "player_id": 34873,
+              "team_owner": "Patrick",
+              "adp": 210.91095890410958,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 145.3,
+                "ER": 67.0,
+                "K": 125.0,
+                "QS": 12.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           }
         ],
         "received": [
@@ -2831,7 +5021,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 34961
+            "espn_player_id": 34961,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 447.0,
+              "AB": 416.0,
+              "H": 108.0,
+              "R": 54.0,
+              "HR": 16.0,
+              "RBI": 54.0,
+              "SB": 2.0,
+              "BB": 27.0,
+              "OBP": 0.309,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2025,
@@ -2847,7 +5055,32 @@
             "round_number": 23,
             "budget_amount": 0.0,
             "original_pick": "237",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Griffin Jax",
+              "player_id": 42604,
+              "team_owner": "Garrett",
+              "adp": 195.01780821917808,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 66.0,
+                "ER": 31.0,
+                "K": 99.0,
+                "QS": 0.0,
+                "SV": 0.0,
+                "HD": 28.0
+              }
+            }
           },
           {
             "season_year": 2025,
@@ -2863,7 +5096,32 @@
             "round_number": 24,
             "budget_amount": 0.0,
             "original_pick": "244",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Shane McClanahan",
+              "player_id": 41199,
+              "team_owner": "Garrett",
+              "adp": 257.75342465753425,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": false,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 0.0,
+                "ER": 0.0,
+                "K": 0.0,
+                "QS": 0.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           }
         ]
       }
@@ -2883,7 +5141,25 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 34961
+        "espn_player_id": 34961,
+        "stats": {
+          "is_pitcher": false,
+          "PA": 447.0,
+          "AB": 416.0,
+          "H": 108.0,
+          "R": 54.0,
+          "HR": 16.0,
+          "RBI": 54.0,
+          "SB": 2.0,
+          "BB": 27.0,
+          "OBP": 0.309,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2025,
@@ -2899,7 +5175,32 @@
         "round_number": 23,
         "budget_amount": 0.0,
         "original_pick": "237",
-        "espn_player_id": null
+        "espn_player_id": null,
+        "drafted_player": {
+          "player_name": "Griffin Jax",
+          "player_id": 42604,
+          "team_owner": "Garrett",
+          "adp": 195.01780821917808,
+          "is_keeper": false,
+          "stats": {
+            "is_pitcher": true,
+            "PA": 0.0,
+            "AB": 0.0,
+            "H": 0.0,
+            "R": 0.0,
+            "HR": 0.0,
+            "RBI": 0.0,
+            "SB": 0.0,
+            "BB": 0.0,
+            "OBP": 0.0,
+            "IP": 66.0,
+            "ER": 31.0,
+            "K": 99.0,
+            "QS": 0.0,
+            "SV": 0.0,
+            "HD": 28.0
+          }
+        }
       },
       {
         "season_year": 2025,
@@ -2915,7 +5216,32 @@
         "round_number": 24,
         "budget_amount": 0.0,
         "original_pick": "244",
-        "espn_player_id": null
+        "espn_player_id": null,
+        "drafted_player": {
+          "player_name": "Shane McClanahan",
+          "player_id": 41199,
+          "team_owner": "Garrett",
+          "adp": 257.75342465753425,
+          "is_keeper": false,
+          "stats": {
+            "is_pitcher": false,
+            "PA": 0.0,
+            "AB": 0.0,
+            "H": 0.0,
+            "R": 0.0,
+            "HR": 0.0,
+            "RBI": 0.0,
+            "SB": 0.0,
+            "BB": 0.0,
+            "OBP": 0.0,
+            "IP": 0.0,
+            "ER": 0.0,
+            "K": 0.0,
+            "QS": 0.0,
+            "SV": 0.0,
+            "HD": 0.0
+          }
+        }
       },
       {
         "season_year": 2025,
@@ -2931,7 +5257,32 @@
         "round_number": 6,
         "budget_amount": 0.0,
         "original_pick": "53",
-        "espn_player_id": null
+        "espn_player_id": null,
+        "drafted_player": {
+          "player_name": "Dylan Cease",
+          "player_id": 34943,
+          "team_owner": "Patrick",
+          "adp": 34.535616438356165,
+          "is_keeper": false,
+          "stats": {
+            "is_pitcher": true,
+            "PA": 0.0,
+            "AB": 0.0,
+            "H": 0.0,
+            "R": 0.0,
+            "HR": 0.0,
+            "RBI": 0.0,
+            "SB": 0.0,
+            "BB": 0.0,
+            "OBP": 0.0,
+            "IP": 168.0,
+            "ER": 85.0,
+            "K": 215.0,
+            "QS": 8.0,
+            "SV": 0.0,
+            "HD": 0.0
+          }
+        }
       },
       {
         "season_year": 2025,
@@ -2947,7 +5298,32 @@
         "round_number": 12,
         "budget_amount": 0.0,
         "original_pick": "113",
-        "espn_player_id": null
+        "espn_player_id": null,
+        "drafted_player": {
+          "player_name": "Seth Lugo",
+          "player_id": 34873,
+          "team_owner": "Patrick",
+          "adp": 210.91095890410958,
+          "is_keeper": false,
+          "stats": {
+            "is_pitcher": true,
+            "PA": 0.0,
+            "AB": 0.0,
+            "H": 0.0,
+            "R": 0.0,
+            "HR": 0.0,
+            "RBI": 0.0,
+            "SB": 0.0,
+            "BB": 0.0,
+            "OBP": 0.0,
+            "IP": 145.3,
+            "ER": 67.0,
+            "K": 125.0,
+            "QS": 12.0,
+            "SV": 0.0,
+            "HD": 0.0
+          }
+        }
       }
     ]
   },
@@ -2979,7 +5355,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 42403
+            "espn_player_id": 42403,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 642.0,
+              "AB": 564.0,
+              "H": 146.0,
+              "R": 107.0,
+              "HR": 31.0,
+              "RBI": 84.0,
+              "SB": 32.0,
+              "BB": 67.0,
+              "OBP": 0.343,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2025,
@@ -2995,7 +5389,32 @@
             "round_number": 6,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Adley Rutschman",
+              "player_id": 42178,
+              "team_owner": "Joseph",
+              "adp": 36.3041095890411,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": false,
+                "PA": 365.0,
+                "AB": 322.0,
+                "H": 71.0,
+                "R": 37.0,
+                "HR": 9.0,
+                "RBI": 29.0,
+                "SB": 0.0,
+                "BB": 40.0,
+                "OBP": 0.307,
+                "IP": 0.0,
+                "ER": 0.0,
+                "K": 0.0,
+                "QS": 0.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           },
           {
             "season_year": 2025,
@@ -3029,7 +5448,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 42402
+            "espn_player_id": 42402,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 687.0,
+              "AB": 623.0,
+              "H": 184.0,
+              "R": 99.0,
+              "HR": 23.0,
+              "RBI": 88.0,
+              "SB": 38.0,
+              "BB": 49.0,
+              "OBP": 0.351,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2025,
@@ -3045,7 +5482,32 @@
             "round_number": 24,
             "budget_amount": 0.0,
             "original_pick": "246",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Nathan Eovaldi",
+              "player_id": 31174,
+              "team_owner": "Mark",
+              "adp": 191.33972602739726,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 130.0,
+                "ER": 25.0,
+                "K": 129.0,
+                "QS": 14.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           }
         ]
       },
@@ -3067,7 +5529,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 42402
+            "espn_player_id": 42402,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 687.0,
+              "AB": 623.0,
+              "H": 184.0,
+              "R": 99.0,
+              "HR": 23.0,
+              "RBI": 88.0,
+              "SB": 38.0,
+              "BB": 49.0,
+              "OBP": 0.351,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2025,
@@ -3083,7 +5563,32 @@
             "round_number": 24,
             "budget_amount": 0.0,
             "original_pick": "246",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Nathan Eovaldi",
+              "player_id": 31174,
+              "team_owner": "Mark",
+              "adp": 191.33972602739726,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 130.0,
+                "ER": 25.0,
+                "K": 129.0,
+                "QS": 14.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           }
         ],
         "received": [
@@ -3101,7 +5606,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 42403
+            "espn_player_id": 42403,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 642.0,
+              "AB": 564.0,
+              "H": 146.0,
+              "R": 107.0,
+              "HR": 31.0,
+              "RBI": 84.0,
+              "SB": 32.0,
+              "BB": 67.0,
+              "OBP": 0.343,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2025,
@@ -3117,7 +5640,32 @@
             "round_number": 6,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Adley Rutschman",
+              "player_id": 42178,
+              "team_owner": "Joseph",
+              "adp": 36.3041095890411,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": false,
+                "PA": 365.0,
+                "AB": 322.0,
+                "H": 71.0,
+                "R": 37.0,
+                "HR": 9.0,
+                "RBI": 29.0,
+                "SB": 0.0,
+                "BB": 40.0,
+                "OBP": 0.307,
+                "IP": 0.0,
+                "ER": 0.0,
+                "K": 0.0,
+                "QS": 0.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           },
           {
             "season_year": 2025,
@@ -3153,7 +5701,25 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 42403
+        "espn_player_id": 42403,
+        "stats": {
+          "is_pitcher": false,
+          "PA": 642.0,
+          "AB": 564.0,
+          "H": 146.0,
+          "R": 107.0,
+          "HR": 31.0,
+          "RBI": 84.0,
+          "SB": 32.0,
+          "BB": 67.0,
+          "OBP": 0.343,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2025,
@@ -3169,7 +5735,32 @@
         "round_number": 6,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": null
+        "espn_player_id": null,
+        "drafted_player": {
+          "player_name": "Adley Rutschman",
+          "player_id": 42178,
+          "team_owner": "Joseph",
+          "adp": 36.3041095890411,
+          "is_keeper": false,
+          "stats": {
+            "is_pitcher": false,
+            "PA": 365.0,
+            "AB": 322.0,
+            "H": 71.0,
+            "R": 37.0,
+            "HR": 9.0,
+            "RBI": 29.0,
+            "SB": 0.0,
+            "BB": 40.0,
+            "OBP": 0.307,
+            "IP": 0.0,
+            "ER": 0.0,
+            "K": 0.0,
+            "QS": 0.0,
+            "SV": 0.0,
+            "HD": 0.0
+          }
+        }
       },
       {
         "season_year": 2025,
@@ -3201,7 +5792,25 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 42402
+        "espn_player_id": 42402,
+        "stats": {
+          "is_pitcher": false,
+          "PA": 687.0,
+          "AB": 623.0,
+          "H": 184.0,
+          "R": 99.0,
+          "HR": 23.0,
+          "RBI": 88.0,
+          "SB": 38.0,
+          "BB": 49.0,
+          "OBP": 0.351,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2025,
@@ -3217,7 +5826,32 @@
         "round_number": 24,
         "budget_amount": 0.0,
         "original_pick": "246",
-        "espn_player_id": null
+        "espn_player_id": null,
+        "drafted_player": {
+          "player_name": "Nathan Eovaldi",
+          "player_id": 31174,
+          "team_owner": "Mark",
+          "adp": 191.33972602739726,
+          "is_keeper": false,
+          "stats": {
+            "is_pitcher": true,
+            "PA": 0.0,
+            "AB": 0.0,
+            "H": 0.0,
+            "R": 0.0,
+            "HR": 0.0,
+            "RBI": 0.0,
+            "SB": 0.0,
+            "BB": 0.0,
+            "OBP": 0.0,
+            "IP": 130.0,
+            "ER": 25.0,
+            "K": 129.0,
+            "QS": 14.0,
+            "SV": 0.0,
+            "HD": 0.0
+          }
+        }
       }
     ]
   },
@@ -3249,7 +5883,32 @@
             "round_number": 10,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Triston Casas",
+              "player_id": 41180,
+              "team_owner": "Tim",
+              "adp": 251.60201149425288,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": false,
+                "PA": 240.0,
+                "AB": 210.0,
+                "H": 51.0,
+                "R": 28.0,
+                "HR": 13.0,
+                "RBI": 32.0,
+                "SB": 0.0,
+                "BB": 29.0,
+                "OBP": 0.338,
+                "IP": 0.0,
+                "ER": 0.0,
+                "K": 0.0,
+                "QS": 0.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           }
         ],
         "received": [
@@ -3267,7 +5926,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 32685
+            "espn_player_id": 32685,
+            "stats": {
+              "is_pitcher": true,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 174.3,
+              "ER": 63.0,
+              "K": 166.0,
+              "QS": 16.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2024,
@@ -3283,7 +5960,32 @@
             "round_number": 10,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Merrill Kelly",
+              "player_id": 32968,
+              "team_owner": "Joseph",
+              "adp": 250.14798850574712,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 73.7,
+                "ER": 33.0,
+                "K": 63.0,
+                "QS": 5.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           }
         ]
       },
@@ -3305,7 +6007,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 32685
+            "espn_player_id": 32685,
+            "stats": {
+              "is_pitcher": true,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 174.3,
+              "ER": 63.0,
+              "K": 166.0,
+              "QS": 16.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2024,
@@ -3321,7 +6041,32 @@
             "round_number": 10,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Merrill Kelly",
+              "player_id": 32968,
+              "team_owner": "Joseph",
+              "adp": 250.14798850574712,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 73.7,
+                "ER": 33.0,
+                "K": 63.0,
+                "QS": 5.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           }
         ],
         "received": [
@@ -3339,7 +6084,32 @@
             "round_number": 10,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Triston Casas",
+              "player_id": 41180,
+              "team_owner": "Tim",
+              "adp": 251.60201149425288,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": false,
+                "PA": 240.0,
+                "AB": 210.0,
+                "H": 51.0,
+                "R": 28.0,
+                "HR": 13.0,
+                "RBI": 32.0,
+                "SB": 0.0,
+                "BB": 29.0,
+                "OBP": 0.338,
+                "IP": 0.0,
+                "ER": 0.0,
+                "K": 0.0,
+                "QS": 0.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           }
         ]
       }
@@ -3359,7 +6129,25 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 32685
+        "espn_player_id": 32685,
+        "stats": {
+          "is_pitcher": true,
+          "PA": 0.0,
+          "AB": 0.0,
+          "H": 0.0,
+          "R": 0.0,
+          "HR": 0.0,
+          "RBI": 0.0,
+          "SB": 0.0,
+          "BB": 0.0,
+          "OBP": 0.0,
+          "IP": 174.3,
+          "ER": 63.0,
+          "K": 166.0,
+          "QS": 16.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2024,
@@ -3375,7 +6163,32 @@
         "round_number": 10,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": null
+        "espn_player_id": null,
+        "drafted_player": {
+          "player_name": "Merrill Kelly",
+          "player_id": 32968,
+          "team_owner": "Joseph",
+          "adp": 250.14798850574712,
+          "is_keeper": false,
+          "stats": {
+            "is_pitcher": true,
+            "PA": 0.0,
+            "AB": 0.0,
+            "H": 0.0,
+            "R": 0.0,
+            "HR": 0.0,
+            "RBI": 0.0,
+            "SB": 0.0,
+            "BB": 0.0,
+            "OBP": 0.0,
+            "IP": 73.7,
+            "ER": 33.0,
+            "K": 63.0,
+            "QS": 5.0,
+            "SV": 0.0,
+            "HD": 0.0
+          }
+        }
       },
       {
         "season_year": 2024,
@@ -3391,7 +6204,32 @@
         "round_number": 10,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": null
+        "espn_player_id": null,
+        "drafted_player": {
+          "player_name": "Triston Casas",
+          "player_id": 41180,
+          "team_owner": "Tim",
+          "adp": 251.60201149425288,
+          "is_keeper": false,
+          "stats": {
+            "is_pitcher": false,
+            "PA": 240.0,
+            "AB": 210.0,
+            "H": 51.0,
+            "R": 28.0,
+            "HR": 13.0,
+            "RBI": 32.0,
+            "SB": 0.0,
+            "BB": 29.0,
+            "OBP": 0.338,
+            "IP": 0.0,
+            "ER": 0.0,
+            "K": 0.0,
+            "QS": 0.0,
+            "SV": 0.0,
+            "HD": 0.0
+          }
+        }
       }
     ]
   },
@@ -3423,7 +6261,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 32667
+            "espn_player_id": 32667,
+            "stats": {
+              "is_pitcher": true,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 181.0,
+              "ER": 77.0,
+              "K": 162.0,
+              "QS": 16.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ],
         "received": [
@@ -3441,7 +6297,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 32081
+            "espn_player_id": 32081,
+            "stats": {
+              "is_pitcher": true,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 95.0,
+              "ER": 36.0,
+              "K": 99.0,
+              "QS": 8.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2024,
@@ -3479,7 +6353,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 32081
+            "espn_player_id": 32081,
+            "stats": {
+              "is_pitcher": true,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 95.0,
+              "ER": 36.0,
+              "K": 99.0,
+              "QS": 8.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2024,
@@ -3513,7 +6405,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 32667
+            "espn_player_id": 32667,
+            "stats": {
+              "is_pitcher": true,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 181.0,
+              "ER": 77.0,
+              "K": 162.0,
+              "QS": 16.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ]
       }
@@ -3533,7 +6443,25 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 32667
+        "espn_player_id": 32667,
+        "stats": {
+          "is_pitcher": true,
+          "PA": 0.0,
+          "AB": 0.0,
+          "H": 0.0,
+          "R": 0.0,
+          "HR": 0.0,
+          "RBI": 0.0,
+          "SB": 0.0,
+          "BB": 0.0,
+          "OBP": 0.0,
+          "IP": 181.0,
+          "ER": 77.0,
+          "K": 162.0,
+          "QS": 16.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2024,
@@ -3549,7 +6477,25 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 32081
+        "espn_player_id": 32081,
+        "stats": {
+          "is_pitcher": true,
+          "PA": 0.0,
+          "AB": 0.0,
+          "H": 0.0,
+          "R": 0.0,
+          "HR": 0.0,
+          "RBI": 0.0,
+          "SB": 0.0,
+          "BB": 0.0,
+          "OBP": 0.0,
+          "IP": 95.0,
+          "ER": 36.0,
+          "K": 99.0,
+          "QS": 8.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2024,
@@ -3597,7 +6543,32 @@
             "round_number": 6,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Framber Valdez",
+              "player_id": 36581,
+              "team_owner": "Daniel",
+              "adp": 78.10632183908046,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 176.3,
+                "ER": 57.0,
+                "K": 169.0,
+                "QS": 17.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           },
           {
             "season_year": 2024,
@@ -3613,7 +6584,32 @@
             "round_number": 11,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Jorge Soler",
+              "player_id": 32558,
+              "team_owner": "Daniel",
+              "adp": 252.45114942528735,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": false,
+                "PA": 574.0,
+                "AB": 493.0,
+                "H": 119.0,
+                "R": 84.0,
+                "HR": 21.0,
+                "RBI": 64.0,
+                "SB": 1.0,
+                "BB": 68.0,
+                "OBP": 0.338,
+                "IP": 0.0,
+                "ER": 0.0,
+                "K": 0.0,
+                "QS": 0.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           }
         ],
         "received": [
@@ -3631,7 +6627,32 @@
             "round_number": 7,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Tyler Glasnow",
+              "player_id": 33190,
+              "team_owner": "Adrian",
+              "adp": 59.67097701149425,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 134.0,
+                "ER": 52.0,
+                "K": 168.0,
+                "QS": 14.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           },
           {
             "season_year": 2024,
@@ -3647,7 +6668,32 @@
             "round_number": 8,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Zach Eflin",
+              "player_id": 32804,
+              "team_owner": "Adrian",
+              "adp": 161.59913793103448,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 165.3,
+                "ER": 66.0,
+                "K": 134.0,
+                "QS": 13.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           }
         ]
       },
@@ -3669,7 +6715,32 @@
             "round_number": 7,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Tyler Glasnow",
+              "player_id": 33190,
+              "team_owner": "Adrian",
+              "adp": 59.67097701149425,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 134.0,
+                "ER": 52.0,
+                "K": 168.0,
+                "QS": 14.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           },
           {
             "season_year": 2024,
@@ -3685,7 +6756,32 @@
             "round_number": 8,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Zach Eflin",
+              "player_id": 32804,
+              "team_owner": "Adrian",
+              "adp": 161.59913793103448,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 165.3,
+                "ER": 66.0,
+                "K": 134.0,
+                "QS": 13.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           }
         ],
         "received": [
@@ -3703,7 +6799,32 @@
             "round_number": 6,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Framber Valdez",
+              "player_id": 36581,
+              "team_owner": "Daniel",
+              "adp": 78.10632183908046,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 176.3,
+                "ER": 57.0,
+                "K": 169.0,
+                "QS": 17.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           },
           {
             "season_year": 2024,
@@ -3719,7 +6840,32 @@
             "round_number": 11,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Jorge Soler",
+              "player_id": 32558,
+              "team_owner": "Daniel",
+              "adp": 252.45114942528735,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": false,
+                "PA": 574.0,
+                "AB": 493.0,
+                "H": 119.0,
+                "R": 84.0,
+                "HR": 21.0,
+                "RBI": 64.0,
+                "SB": 1.0,
+                "BB": 68.0,
+                "OBP": 0.338,
+                "IP": 0.0,
+                "ER": 0.0,
+                "K": 0.0,
+                "QS": 0.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           }
         ]
       }
@@ -3739,7 +6885,32 @@
         "round_number": 7,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": null
+        "espn_player_id": null,
+        "drafted_player": {
+          "player_name": "Tyler Glasnow",
+          "player_id": 33190,
+          "team_owner": "Adrian",
+          "adp": 59.67097701149425,
+          "is_keeper": false,
+          "stats": {
+            "is_pitcher": true,
+            "PA": 0.0,
+            "AB": 0.0,
+            "H": 0.0,
+            "R": 0.0,
+            "HR": 0.0,
+            "RBI": 0.0,
+            "SB": 0.0,
+            "BB": 0.0,
+            "OBP": 0.0,
+            "IP": 134.0,
+            "ER": 52.0,
+            "K": 168.0,
+            "QS": 14.0,
+            "SV": 0.0,
+            "HD": 0.0
+          }
+        }
       },
       {
         "season_year": 2024,
@@ -3755,7 +6926,32 @@
         "round_number": 8,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": null
+        "espn_player_id": null,
+        "drafted_player": {
+          "player_name": "Zach Eflin",
+          "player_id": 32804,
+          "team_owner": "Adrian",
+          "adp": 161.59913793103448,
+          "is_keeper": false,
+          "stats": {
+            "is_pitcher": true,
+            "PA": 0.0,
+            "AB": 0.0,
+            "H": 0.0,
+            "R": 0.0,
+            "HR": 0.0,
+            "RBI": 0.0,
+            "SB": 0.0,
+            "BB": 0.0,
+            "OBP": 0.0,
+            "IP": 165.3,
+            "ER": 66.0,
+            "K": 134.0,
+            "QS": 13.0,
+            "SV": 0.0,
+            "HD": 0.0
+          }
+        }
       },
       {
         "season_year": 2024,
@@ -3771,7 +6967,32 @@
         "round_number": 6,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": null
+        "espn_player_id": null,
+        "drafted_player": {
+          "player_name": "Framber Valdez",
+          "player_id": 36581,
+          "team_owner": "Daniel",
+          "adp": 78.10632183908046,
+          "is_keeper": false,
+          "stats": {
+            "is_pitcher": true,
+            "PA": 0.0,
+            "AB": 0.0,
+            "H": 0.0,
+            "R": 0.0,
+            "HR": 0.0,
+            "RBI": 0.0,
+            "SB": 0.0,
+            "BB": 0.0,
+            "OBP": 0.0,
+            "IP": 176.3,
+            "ER": 57.0,
+            "K": 169.0,
+            "QS": 17.0,
+            "SV": 0.0,
+            "HD": 0.0
+          }
+        }
       },
       {
         "season_year": 2024,
@@ -3787,7 +7008,32 @@
         "round_number": 11,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": null
+        "espn_player_id": null,
+        "drafted_player": {
+          "player_name": "Jorge Soler",
+          "player_id": 32558,
+          "team_owner": "Daniel",
+          "adp": 252.45114942528735,
+          "is_keeper": false,
+          "stats": {
+            "is_pitcher": false,
+            "PA": 574.0,
+            "AB": 493.0,
+            "H": 119.0,
+            "R": 84.0,
+            "HR": 21.0,
+            "RBI": 64.0,
+            "SB": 1.0,
+            "BB": 68.0,
+            "OBP": 0.338,
+            "IP": 0.0,
+            "ER": 0.0,
+            "K": 0.0,
+            "QS": 0.0,
+            "SV": 0.0,
+            "HD": 0.0
+          }
+        }
       }
     ]
   },
@@ -3819,7 +7065,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 36563
+            "espn_player_id": 36563,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 648.0,
+              "AB": 549.0,
+              "H": 120.0,
+              "R": 77.0,
+              "HR": 20.0,
+              "RBI": 60.0,
+              "SB": 20.0,
+              "BB": 73.0,
+              "OBP": 0.332,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2024,
@@ -3835,7 +7099,32 @@
             "round_number": 8,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Zach Eflin",
+              "player_id": 32804,
+              "team_owner": "Adrian",
+              "adp": 161.59913793103448,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 165.3,
+                "ER": 66.0,
+                "K": 134.0,
+                "QS": 13.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           }
         ],
         "received": [
@@ -3853,7 +7142,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 42426
+            "espn_player_id": 42426,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 470.0,
+              "AB": 440.0,
+              "H": 116.0,
+              "R": 58.0,
+              "HR": 16.0,
+              "RBI": 48.0,
+              "SB": 10.0,
+              "BB": 23.0,
+              "OBP": 0.304,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2024,
@@ -3869,7 +7176,32 @@
             "round_number": 21,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Jeremy Pena",
+              "player_id": 41273,
+              "team_owner": "Anil",
+              "adp": 248.71264367816093,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": false,
+                "PA": 650.0,
+                "AB": 602.0,
+                "H": 160.0,
+                "R": 78.0,
+                "HR": 15.0,
+                "RBI": 70.0,
+                "SB": 20.0,
+                "BB": 25.0,
+                "OBP": 0.308,
+                "IP": 0.0,
+                "ER": 0.0,
+                "K": 0.0,
+                "QS": 0.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           },
           {
             "season_year": 2024,
@@ -3907,7 +7239,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 42426
+            "espn_player_id": 42426,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 470.0,
+              "AB": 440.0,
+              "H": 116.0,
+              "R": 58.0,
+              "HR": 16.0,
+              "RBI": 48.0,
+              "SB": 10.0,
+              "BB": 23.0,
+              "OBP": 0.304,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2024,
@@ -3923,7 +7273,32 @@
             "round_number": 21,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Jeremy Pena",
+              "player_id": 41273,
+              "team_owner": "Anil",
+              "adp": 248.71264367816093,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": false,
+                "PA": 650.0,
+                "AB": 602.0,
+                "H": 160.0,
+                "R": 78.0,
+                "HR": 15.0,
+                "RBI": 70.0,
+                "SB": 20.0,
+                "BB": 25.0,
+                "OBP": 0.308,
+                "IP": 0.0,
+                "ER": 0.0,
+                "K": 0.0,
+                "QS": 0.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           },
           {
             "season_year": 2024,
@@ -3957,7 +7332,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 36563
+            "espn_player_id": 36563,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 648.0,
+              "AB": 549.0,
+              "H": 120.0,
+              "R": 77.0,
+              "HR": 20.0,
+              "RBI": 60.0,
+              "SB": 20.0,
+              "BB": 73.0,
+              "OBP": 0.332,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2024,
@@ -3973,7 +7366,32 @@
             "round_number": 8,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Zach Eflin",
+              "player_id": 32804,
+              "team_owner": "Adrian",
+              "adp": 161.59913793103448,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 165.3,
+                "ER": 66.0,
+                "K": 134.0,
+                "QS": 13.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           }
         ]
       }
@@ -3993,7 +7411,25 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 42426
+        "espn_player_id": 42426,
+        "stats": {
+          "is_pitcher": false,
+          "PA": 470.0,
+          "AB": 440.0,
+          "H": 116.0,
+          "R": 58.0,
+          "HR": 16.0,
+          "RBI": 48.0,
+          "SB": 10.0,
+          "BB": 23.0,
+          "OBP": 0.304,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2024,
@@ -4009,7 +7445,32 @@
         "round_number": 21,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": null
+        "espn_player_id": null,
+        "drafted_player": {
+          "player_name": "Jeremy Pena",
+          "player_id": 41273,
+          "team_owner": "Anil",
+          "adp": 248.71264367816093,
+          "is_keeper": false,
+          "stats": {
+            "is_pitcher": false,
+            "PA": 650.0,
+            "AB": 602.0,
+            "H": 160.0,
+            "R": 78.0,
+            "HR": 15.0,
+            "RBI": 70.0,
+            "SB": 20.0,
+            "BB": 25.0,
+            "OBP": 0.308,
+            "IP": 0.0,
+            "ER": 0.0,
+            "K": 0.0,
+            "QS": 0.0,
+            "SV": 0.0,
+            "HD": 0.0
+          }
+        }
       },
       {
         "season_year": 2024,
@@ -4041,7 +7502,25 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 36563
+        "espn_player_id": 36563,
+        "stats": {
+          "is_pitcher": false,
+          "PA": 648.0,
+          "AB": 549.0,
+          "H": 120.0,
+          "R": 77.0,
+          "HR": 20.0,
+          "RBI": 60.0,
+          "SB": 20.0,
+          "BB": 73.0,
+          "OBP": 0.332,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2024,
@@ -4057,7 +7536,32 @@
         "round_number": 8,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": null
+        "espn_player_id": null,
+        "drafted_player": {
+          "player_name": "Zach Eflin",
+          "player_id": 32804,
+          "team_owner": "Adrian",
+          "adp": 161.59913793103448,
+          "is_keeper": false,
+          "stats": {
+            "is_pitcher": true,
+            "PA": 0.0,
+            "AB": 0.0,
+            "H": 0.0,
+            "R": 0.0,
+            "HR": 0.0,
+            "RBI": 0.0,
+            "SB": 0.0,
+            "BB": 0.0,
+            "OBP": 0.0,
+            "IP": 165.3,
+            "ER": 66.0,
+            "K": 134.0,
+            "QS": 13.0,
+            "SV": 0.0,
+            "HD": 0.0
+          }
+        }
       }
     ]
   },
@@ -4089,7 +7593,32 @@
             "round_number": 7,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Tyler Glasnow",
+              "player_id": 33190,
+              "team_owner": "Adrian",
+              "adp": 59.67097701149425,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 134.0,
+                "ER": 52.0,
+                "K": 168.0,
+                "QS": 14.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           },
           {
             "season_year": 2024,
@@ -4105,7 +7634,32 @@
             "round_number": 9,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Nico Hoerner",
+              "player_id": 41219,
+              "team_owner": "Daniel",
+              "adp": 59.1882183908046,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": false,
+                "PA": 641.0,
+                "AB": 582.0,
+                "H": 159.0,
+                "R": 86.0,
+                "HR": 7.0,
+                "RBI": 48.0,
+                "SB": 31.0,
+                "BB": 44.0,
+                "OBP": 0.335,
+                "IP": 0.0,
+                "ER": 0.0,
+                "K": 0.0,
+                "QS": 0.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           },
           {
             "season_year": 2024,
@@ -4121,7 +7675,32 @@
             "round_number": 10,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Seiya Suzuki",
+              "player_id": 4142424,
+              "team_owner": "Daniel",
+              "adp": 140.25862068965517,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": false,
+                "PA": 585.0,
+                "AB": 512.0,
+                "H": 145.0,
+                "R": 74.0,
+                "HR": 21.0,
+                "RBI": 73.0,
+                "SB": 16.0,
+                "BB": 63.0,
+                "OBP": 0.366,
+                "IP": 0.0,
+                "ER": 0.0,
+                "K": 0.0,
+                "QS": 0.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           }
         ],
         "received": [
@@ -4139,7 +7718,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 42537
+            "espn_player_id": 42537,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 719.0,
+              "AB": 630.0,
+              "H": 177.0,
+              "R": 118.0,
+              "HR": 37.0,
+              "RBI": 92.0,
+              "SB": 21.0,
+              "BB": 78.0,
+              "OBP": 0.364,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2024,
@@ -4155,7 +7752,32 @@
             "round_number": 23,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Ryan Pressly",
+              "player_id": 33072,
+              "team_owner": "Adrian",
+              "adp": 259.67672413793105,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 56.7,
+                "ER": 22.0,
+                "K": 58.0,
+                "QS": 0.0,
+                "SV": 4.0,
+                "HD": 25.0
+              }
+            }
           },
           {
             "season_year": 2024,
@@ -4171,7 +7793,32 @@
             "round_number": 22,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "A.J. Minter",
+              "player_id": 36133,
+              "team_owner": "Adrian",
+              "adp": 259.6264367816092,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 34.3,
+                "ER": 10.0,
+                "K": 35.0,
+                "QS": 0.0,
+                "SV": 1.0,
+                "HD": 9.0
+              }
+            }
           },
           {
             "season_year": 2024,
@@ -4187,7 +7834,32 @@
             "round_number": 18,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Taylor Ward",
+              "player_id": 34923,
+              "team_owner": "Adrian",
+              "adp": 161.90804597701148,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": false,
+                "PA": 663.0,
+                "AB": 585.0,
+                "H": 144.0,
+                "R": 73.0,
+                "HR": 25.0,
+                "RBI": 75.0,
+                "SB": 6.0,
+                "BB": 63.0,
+                "OBP": 0.323,
+                "IP": 0.0,
+                "ER": 0.0,
+                "K": 0.0,
+                "QS": 0.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           },
           {
             "season_year": 2024,
@@ -4225,7 +7897,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 42537
+            "espn_player_id": 42537,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 719.0,
+              "AB": 630.0,
+              "H": 177.0,
+              "R": 118.0,
+              "HR": 37.0,
+              "RBI": 92.0,
+              "SB": 21.0,
+              "BB": 78.0,
+              "OBP": 0.364,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2024,
@@ -4241,7 +7931,32 @@
             "round_number": 23,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Ryan Pressly",
+              "player_id": 33072,
+              "team_owner": "Adrian",
+              "adp": 259.67672413793105,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 56.7,
+                "ER": 22.0,
+                "K": 58.0,
+                "QS": 0.0,
+                "SV": 4.0,
+                "HD": 25.0
+              }
+            }
           },
           {
             "season_year": 2024,
@@ -4257,7 +7972,32 @@
             "round_number": 22,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "A.J. Minter",
+              "player_id": 36133,
+              "team_owner": "Adrian",
+              "adp": 259.6264367816092,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 34.3,
+                "ER": 10.0,
+                "K": 35.0,
+                "QS": 0.0,
+                "SV": 1.0,
+                "HD": 9.0
+              }
+            }
           },
           {
             "season_year": 2024,
@@ -4273,7 +8013,32 @@
             "round_number": 18,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Taylor Ward",
+              "player_id": 34923,
+              "team_owner": "Adrian",
+              "adp": 161.90804597701148,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": false,
+                "PA": 663.0,
+                "AB": 585.0,
+                "H": 144.0,
+                "R": 73.0,
+                "HR": 25.0,
+                "RBI": 75.0,
+                "SB": 6.0,
+                "BB": 63.0,
+                "OBP": 0.323,
+                "IP": 0.0,
+                "ER": 0.0,
+                "K": 0.0,
+                "QS": 0.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           },
           {
             "season_year": 2024,
@@ -4307,7 +8072,32 @@
             "round_number": 7,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Tyler Glasnow",
+              "player_id": 33190,
+              "team_owner": "Adrian",
+              "adp": 59.67097701149425,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 134.0,
+                "ER": 52.0,
+                "K": 168.0,
+                "QS": 14.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           },
           {
             "season_year": 2024,
@@ -4323,7 +8113,32 @@
             "round_number": 9,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Nico Hoerner",
+              "player_id": 41219,
+              "team_owner": "Daniel",
+              "adp": 59.1882183908046,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": false,
+                "PA": 641.0,
+                "AB": 582.0,
+                "H": 159.0,
+                "R": 86.0,
+                "HR": 7.0,
+                "RBI": 48.0,
+                "SB": 31.0,
+                "BB": 44.0,
+                "OBP": 0.335,
+                "IP": 0.0,
+                "ER": 0.0,
+                "K": 0.0,
+                "QS": 0.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           },
           {
             "season_year": 2024,
@@ -4339,7 +8154,32 @@
             "round_number": 10,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Seiya Suzuki",
+              "player_id": 4142424,
+              "team_owner": "Daniel",
+              "adp": 140.25862068965517,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": false,
+                "PA": 585.0,
+                "AB": 512.0,
+                "H": 145.0,
+                "R": 74.0,
+                "HR": 21.0,
+                "RBI": 73.0,
+                "SB": 16.0,
+                "BB": 63.0,
+                "OBP": 0.366,
+                "IP": 0.0,
+                "ER": 0.0,
+                "K": 0.0,
+                "QS": 0.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           }
         ]
       }
@@ -4359,7 +8199,32 @@
         "round_number": 7,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": null
+        "espn_player_id": null,
+        "drafted_player": {
+          "player_name": "Tyler Glasnow",
+          "player_id": 33190,
+          "team_owner": "Adrian",
+          "adp": 59.67097701149425,
+          "is_keeper": false,
+          "stats": {
+            "is_pitcher": true,
+            "PA": 0.0,
+            "AB": 0.0,
+            "H": 0.0,
+            "R": 0.0,
+            "HR": 0.0,
+            "RBI": 0.0,
+            "SB": 0.0,
+            "BB": 0.0,
+            "OBP": 0.0,
+            "IP": 134.0,
+            "ER": 52.0,
+            "K": 168.0,
+            "QS": 14.0,
+            "SV": 0.0,
+            "HD": 0.0
+          }
+        }
       },
       {
         "season_year": 2024,
@@ -4375,7 +8240,32 @@
         "round_number": 9,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": null
+        "espn_player_id": null,
+        "drafted_player": {
+          "player_name": "Nico Hoerner",
+          "player_id": 41219,
+          "team_owner": "Daniel",
+          "adp": 59.1882183908046,
+          "is_keeper": false,
+          "stats": {
+            "is_pitcher": false,
+            "PA": 641.0,
+            "AB": 582.0,
+            "H": 159.0,
+            "R": 86.0,
+            "HR": 7.0,
+            "RBI": 48.0,
+            "SB": 31.0,
+            "BB": 44.0,
+            "OBP": 0.335,
+            "IP": 0.0,
+            "ER": 0.0,
+            "K": 0.0,
+            "QS": 0.0,
+            "SV": 0.0,
+            "HD": 0.0
+          }
+        }
       },
       {
         "season_year": 2024,
@@ -4391,7 +8281,32 @@
         "round_number": 10,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": null
+        "espn_player_id": null,
+        "drafted_player": {
+          "player_name": "Seiya Suzuki",
+          "player_id": 4142424,
+          "team_owner": "Daniel",
+          "adp": 140.25862068965517,
+          "is_keeper": false,
+          "stats": {
+            "is_pitcher": false,
+            "PA": 585.0,
+            "AB": 512.0,
+            "H": 145.0,
+            "R": 74.0,
+            "HR": 21.0,
+            "RBI": 73.0,
+            "SB": 16.0,
+            "BB": 63.0,
+            "OBP": 0.366,
+            "IP": 0.0,
+            "ER": 0.0,
+            "K": 0.0,
+            "QS": 0.0,
+            "SV": 0.0,
+            "HD": 0.0
+          }
+        }
       },
       {
         "season_year": 2024,
@@ -4407,7 +8322,25 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 42537
+        "espn_player_id": 42537,
+        "stats": {
+          "is_pitcher": false,
+          "PA": 719.0,
+          "AB": 630.0,
+          "H": 177.0,
+          "R": 118.0,
+          "HR": 37.0,
+          "RBI": 92.0,
+          "SB": 21.0,
+          "BB": 78.0,
+          "OBP": 0.364,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2024,
@@ -4423,7 +8356,32 @@
         "round_number": 23,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": null
+        "espn_player_id": null,
+        "drafted_player": {
+          "player_name": "Ryan Pressly",
+          "player_id": 33072,
+          "team_owner": "Adrian",
+          "adp": 259.67672413793105,
+          "is_keeper": false,
+          "stats": {
+            "is_pitcher": true,
+            "PA": 0.0,
+            "AB": 0.0,
+            "H": 0.0,
+            "R": 0.0,
+            "HR": 0.0,
+            "RBI": 0.0,
+            "SB": 0.0,
+            "BB": 0.0,
+            "OBP": 0.0,
+            "IP": 56.7,
+            "ER": 22.0,
+            "K": 58.0,
+            "QS": 0.0,
+            "SV": 4.0,
+            "HD": 25.0
+          }
+        }
       },
       {
         "season_year": 2024,
@@ -4439,7 +8397,32 @@
         "round_number": 22,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": null
+        "espn_player_id": null,
+        "drafted_player": {
+          "player_name": "A.J. Minter",
+          "player_id": 36133,
+          "team_owner": "Adrian",
+          "adp": 259.6264367816092,
+          "is_keeper": false,
+          "stats": {
+            "is_pitcher": true,
+            "PA": 0.0,
+            "AB": 0.0,
+            "H": 0.0,
+            "R": 0.0,
+            "HR": 0.0,
+            "RBI": 0.0,
+            "SB": 0.0,
+            "BB": 0.0,
+            "OBP": 0.0,
+            "IP": 34.3,
+            "ER": 10.0,
+            "K": 35.0,
+            "QS": 0.0,
+            "SV": 1.0,
+            "HD": 9.0
+          }
+        }
       },
       {
         "season_year": 2024,
@@ -4455,7 +8438,32 @@
         "round_number": 18,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": null
+        "espn_player_id": null,
+        "drafted_player": {
+          "player_name": "Taylor Ward",
+          "player_id": 34923,
+          "team_owner": "Adrian",
+          "adp": 161.90804597701148,
+          "is_keeper": false,
+          "stats": {
+            "is_pitcher": false,
+            "PA": 663.0,
+            "AB": 585.0,
+            "H": 144.0,
+            "R": 73.0,
+            "HR": 25.0,
+            "RBI": 75.0,
+            "SB": 6.0,
+            "BB": 63.0,
+            "OBP": 0.323,
+            "IP": 0.0,
+            "ER": 0.0,
+            "K": 0.0,
+            "QS": 0.0,
+            "SV": 0.0,
+            "HD": 0.0
+          }
+        }
       },
       {
         "season_year": 2024,
@@ -4504,7 +8512,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 41285
+            "espn_player_id": 41285,
+            "stats": {
+              "is_pitcher": true,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 116.7,
+              "ER": 50.0,
+              "K": 130.0,
+              "QS": 11.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2024,
@@ -4520,7 +8546,32 @@
             "round_number": 24,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Brusdar Graterol",
+              "player_id": 40965,
+              "team_owner": "Joseph",
+              "adp": 259.67241379310343,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 7.3,
+                "ER": 2.0,
+                "K": 7.0,
+                "QS": 0.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           }
         ],
         "received": [
@@ -4554,7 +8605,32 @@
             "round_number": 7,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Josh Hader",
+              "player_id": 32760,
+              "team_owner": "Daniel",
+              "adp": 46.41235632183908,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 71.0,
+                "ER": 30.0,
+                "K": 105.0,
+                "QS": 0.0,
+                "SV": 34.0,
+                "HD": 0.0
+              }
+            }
           }
         ]
       },
@@ -4576,7 +8652,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 41258
+            "espn_player_id": 41258,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 336.0,
+              "AB": 311.0,
+              "H": 70.0,
+              "R": 29.0,
+              "HR": 4.0,
+              "RBI": 31.0,
+              "SB": 5.0,
+              "BB": 20.0,
+              "OBP": 0.277,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2024,
@@ -4626,7 +8720,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 41285
+            "espn_player_id": 41285,
+            "stats": {
+              "is_pitcher": true,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 116.7,
+              "ER": 50.0,
+              "K": 130.0,
+              "QS": 11.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ]
       },
@@ -4664,7 +8776,32 @@
             "round_number": 7,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Josh Hader",
+              "player_id": 32760,
+              "team_owner": "Daniel",
+              "adp": 46.41235632183908,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 71.0,
+                "ER": 30.0,
+                "K": 105.0,
+                "QS": 0.0,
+                "SV": 34.0,
+                "HD": 0.0
+              }
+            }
           }
         ],
         "received": [
@@ -4682,7 +8819,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 41258
+            "espn_player_id": 41258,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 336.0,
+              "AB": 311.0,
+              "H": 70.0,
+              "R": 29.0,
+              "HR": 4.0,
+              "RBI": 31.0,
+              "SB": 5.0,
+              "BB": 20.0,
+              "OBP": 0.277,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2024,
@@ -4698,7 +8853,32 @@
             "round_number": 24,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Brusdar Graterol",
+              "player_id": 40965,
+              "team_owner": "Joseph",
+              "adp": 259.67241379310343,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 7.3,
+                "ER": 2.0,
+                "K": 7.0,
+                "QS": 0.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           }
         ]
       }
@@ -4718,7 +8898,25 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 41258
+        "espn_player_id": 41258,
+        "stats": {
+          "is_pitcher": false,
+          "PA": 336.0,
+          "AB": 311.0,
+          "H": 70.0,
+          "R": 29.0,
+          "HR": 4.0,
+          "RBI": 31.0,
+          "SB": 5.0,
+          "BB": 20.0,
+          "OBP": 0.277,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2024,
@@ -4766,7 +8964,25 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 41285
+        "espn_player_id": 41285,
+        "stats": {
+          "is_pitcher": true,
+          "PA": 0.0,
+          "AB": 0.0,
+          "H": 0.0,
+          "R": 0.0,
+          "HR": 0.0,
+          "RBI": 0.0,
+          "SB": 0.0,
+          "BB": 0.0,
+          "OBP": 0.0,
+          "IP": 116.7,
+          "ER": 50.0,
+          "K": 130.0,
+          "QS": 11.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2024,
@@ -4782,7 +8998,32 @@
         "round_number": 7,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": null
+        "espn_player_id": null,
+        "drafted_player": {
+          "player_name": "Josh Hader",
+          "player_id": 32760,
+          "team_owner": "Daniel",
+          "adp": 46.41235632183908,
+          "is_keeper": false,
+          "stats": {
+            "is_pitcher": true,
+            "PA": 0.0,
+            "AB": 0.0,
+            "H": 0.0,
+            "R": 0.0,
+            "HR": 0.0,
+            "RBI": 0.0,
+            "SB": 0.0,
+            "BB": 0.0,
+            "OBP": 0.0,
+            "IP": 71.0,
+            "ER": 30.0,
+            "K": 105.0,
+            "QS": 0.0,
+            "SV": 34.0,
+            "HD": 0.0
+          }
+        }
       },
       {
         "season_year": 2024,
@@ -4798,7 +9039,32 @@
         "round_number": 24,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": null
+        "espn_player_id": null,
+        "drafted_player": {
+          "player_name": "Brusdar Graterol",
+          "player_id": 40965,
+          "team_owner": "Joseph",
+          "adp": 259.67241379310343,
+          "is_keeper": false,
+          "stats": {
+            "is_pitcher": true,
+            "PA": 0.0,
+            "AB": 0.0,
+            "H": 0.0,
+            "R": 0.0,
+            "HR": 0.0,
+            "RBI": 0.0,
+            "SB": 0.0,
+            "BB": 0.0,
+            "OBP": 0.0,
+            "IP": 7.3,
+            "ER": 2.0,
+            "K": 7.0,
+            "QS": 0.0,
+            "SV": 0.0,
+            "HD": 0.0
+          }
+        }
       }
     ]
   },
@@ -4830,7 +9096,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 33710
+            "espn_player_id": 33710,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 539.0,
+              "AB": 505.0,
+              "H": 149.0,
+              "R": 88.0,
+              "HR": 21.0,
+              "RBI": 62.0,
+              "SB": 19.0,
+              "BB": 27.0,
+              "OBP": 0.338,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2024,
@@ -4846,7 +9130,32 @@
             "round_number": 25,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "MacKenzie Gore",
+              "player_id": 39636,
+              "team_owner": "Tim",
+              "adp": 259.610632183908,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 166.3,
+                "ER": 74.0,
+                "K": 181.0,
+                "QS": 11.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           }
         ],
         "received": [
@@ -4864,7 +9173,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 30836
+            "espn_player_id": 30836,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 126.0,
+              "AB": 109.0,
+              "H": 24.0,
+              "R": 17.0,
+              "HR": 10.0,
+              "RBI": 14.0,
+              "SB": 6.0,
+              "BB": 16.0,
+              "OBP": 0.325,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2024,
@@ -4880,7 +9207,32 @@
             "round_number": 8,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Yandy Diaz",
+              "player_id": 33481,
+              "team_owner": "Daniel",
+              "adp": 155.63074712643677,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": false,
+                "PA": 621.0,
+                "AB": 563.0,
+                "H": 158.0,
+                "R": 55.0,
+                "HR": 14.0,
+                "RBI": 65.0,
+                "SB": 0.0,
+                "BB": 50.0,
+                "OBP": 0.341,
+                "IP": 0.0,
+                "ER": 0.0,
+                "K": 0.0,
+                "QS": 0.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           },
           {
             "season_year": 2024,
@@ -4918,7 +9270,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 30836
+            "espn_player_id": 30836,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 126.0,
+              "AB": 109.0,
+              "H": 24.0,
+              "R": 17.0,
+              "HR": 10.0,
+              "RBI": 14.0,
+              "SB": 6.0,
+              "BB": 16.0,
+              "OBP": 0.325,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2024,
@@ -4934,7 +9304,32 @@
             "round_number": 8,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "Yandy Diaz",
+              "player_id": 33481,
+              "team_owner": "Daniel",
+              "adp": 155.63074712643677,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": false,
+                "PA": 621.0,
+                "AB": 563.0,
+                "H": 158.0,
+                "R": 55.0,
+                "HR": 14.0,
+                "RBI": 65.0,
+                "SB": 0.0,
+                "BB": 50.0,
+                "OBP": 0.341,
+                "IP": 0.0,
+                "ER": 0.0,
+                "K": 0.0,
+                "QS": 0.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           },
           {
             "season_year": 2024,
@@ -4968,7 +9363,25 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 33710
+            "espn_player_id": 33710,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 539.0,
+              "AB": 505.0,
+              "H": 149.0,
+              "R": 88.0,
+              "HR": 21.0,
+              "RBI": 62.0,
+              "SB": 19.0,
+              "BB": 27.0,
+              "OBP": 0.338,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2024,
@@ -4984,7 +9397,32 @@
             "round_number": 25,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": null,
+            "drafted_player": {
+              "player_name": "MacKenzie Gore",
+              "player_id": 39636,
+              "team_owner": "Tim",
+              "adp": 259.610632183908,
+              "is_keeper": false,
+              "stats": {
+                "is_pitcher": true,
+                "PA": 0.0,
+                "AB": 0.0,
+                "H": 0.0,
+                "R": 0.0,
+                "HR": 0.0,
+                "RBI": 0.0,
+                "SB": 0.0,
+                "BB": 0.0,
+                "OBP": 0.0,
+                "IP": 166.3,
+                "ER": 74.0,
+                "K": 181.0,
+                "QS": 11.0,
+                "SV": 0.0,
+                "HD": 0.0
+              }
+            }
           }
         ]
       }
@@ -5004,7 +9442,25 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 30836
+        "espn_player_id": 30836,
+        "stats": {
+          "is_pitcher": false,
+          "PA": 126.0,
+          "AB": 109.0,
+          "H": 24.0,
+          "R": 17.0,
+          "HR": 10.0,
+          "RBI": 14.0,
+          "SB": 6.0,
+          "BB": 16.0,
+          "OBP": 0.325,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2024,
@@ -5020,7 +9476,32 @@
         "round_number": 8,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": null
+        "espn_player_id": null,
+        "drafted_player": {
+          "player_name": "Yandy Diaz",
+          "player_id": 33481,
+          "team_owner": "Daniel",
+          "adp": 155.63074712643677,
+          "is_keeper": false,
+          "stats": {
+            "is_pitcher": false,
+            "PA": 621.0,
+            "AB": 563.0,
+            "H": 158.0,
+            "R": 55.0,
+            "HR": 14.0,
+            "RBI": 65.0,
+            "SB": 0.0,
+            "BB": 50.0,
+            "OBP": 0.341,
+            "IP": 0.0,
+            "ER": 0.0,
+            "K": 0.0,
+            "QS": 0.0,
+            "SV": 0.0,
+            "HD": 0.0
+          }
+        }
       },
       {
         "season_year": 2024,
@@ -5052,7 +9533,25 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 33710
+        "espn_player_id": 33710,
+        "stats": {
+          "is_pitcher": false,
+          "PA": 539.0,
+          "AB": 505.0,
+          "H": 149.0,
+          "R": 88.0,
+          "HR": 21.0,
+          "RBI": 62.0,
+          "SB": 19.0,
+          "BB": 27.0,
+          "OBP": 0.338,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2024,
@@ -5068,7 +9567,32 @@
         "round_number": 25,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": null
+        "espn_player_id": null,
+        "drafted_player": {
+          "player_name": "MacKenzie Gore",
+          "player_id": 39636,
+          "team_owner": "Tim",
+          "adp": 259.610632183908,
+          "is_keeper": false,
+          "stats": {
+            "is_pitcher": true,
+            "PA": 0.0,
+            "AB": 0.0,
+            "H": 0.0,
+            "R": 0.0,
+            "HR": 0.0,
+            "RBI": 0.0,
+            "SB": 0.0,
+            "BB": 0.0,
+            "OBP": 0.0,
+            "IP": 166.3,
+            "ER": 74.0,
+            "K": 181.0,
+            "QS": 11.0,
+            "SV": 0.0,
+            "HD": 0.0
+          }
+        }
       }
     ]
   }

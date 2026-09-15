@@ -64,76 +64,143 @@ export function getKeeperSurplus(playerName, seasonYear) {
 
 /**
  * Approximate player baseline fantasy production points from stats
+ * and generate an itemized cumulative category breakdown
  */
-export function calculatePlayerStatValue(playerName, seasonYear, statsData = []) {
-  if (!playerName) return { points: 0, summary: 'No stats' };
+export function calculatePlayerStatValue(playerName, seasonYear, statsData = [], assetStats = null) {
+  if (!playerName) return { points: 0, summary: 'No stats', statBreakdown: [] };
   const clean = playerName.toLowerCase().trim();
 
-  // Find relevant player records
-  const matchingRecords = statsData.filter(r => {
-    const rName = (r.full_name || r['fullName'] || '').toLowerCase();
-    return rName.includes(clean) || clean.includes(rName);
-  });
-
-  if (!matchingRecords || matchingRecords.length === 0) {
-    // Calibrate reasonable baseline from known player tiers
-    const elitePlayers = ['bobby witt jr.', 'corbin carroll', 'gunnar henderson', 'chris sale', 'mike trout', 'trea turner', 'gerrit cole', 'corbin burnes', 'cody bellinger', 'bryce harper', 'josh hader'];
-    const midPlayers = ['austin riley', 'michael harris ii', 'kevin gausman', 'max fried', 'oneil cruz', 'bryce miller', 'randy arozarena', 'bo bichette', 'matt olson', 'ketel marte'];
-    
-    if (elitePlayers.some(p => clean.includes(p))) {
-      return { points: 55.0, summary: 'Elite Performance (estimated)' };
-    }
-    if (midPlayers.some(p => clean.includes(p))) {
-      return { points: 38.0, summary: 'Solid Starter (estimated)' };
-    }
-    return { points: 22.0, summary: 'Role Player / Streamer (estimated)' };
-  }
-
-  // If we have records, sum counting stats
   let r = 0, hr = 0, rbi = 0, sb = 0, h = 0, ab = 0, bb = 0, ip = 0, k = 0, qs = 0, sv = 0, hd = 0, er = 0;
   let isPitcher = false;
+  let hasStats = false;
 
-  matchingRecords.forEach(rec => {
-    const st = rec.stats || rec;
-    const rAB = parseFloat(st['0'] || 0);
-    const rH = parseFloat(st['1'] || 0);
-    const rHR = parseFloat(st['5'] || 0);
-    const rBB = parseFloat(st['10'] || 0);
-    const rR = parseFloat(st['20'] || 0);
-    const rRBI = parseFloat(st['21'] || 0);
-    const rSB = parseFloat(st['23'] || 0);
-    const rIP = parseFloat(st['34'] || 0) / 3;
-    const rER = parseFloat(st['45'] || 0);
-    const rK = parseFloat(st['48'] || 0);
-    const rSV = parseFloat(st['57'] || 0);
-    const rHD = parseFloat(st['60'] || 0);
-    const rQS = parseFloat(st['63'] || 0);
+  if (assetStats && typeof assetStats === 'object') {
+    hasStats = true;
+    isPitcher = Boolean(assetStats.is_pitcher);
+    ab = parseFloat(assetStats.AB || 0);
+    h = parseFloat(assetStats.H || 0);
+    r = parseFloat(assetStats.R || 0);
+    hr = parseFloat(assetStats.HR || 0);
+    rbi = parseFloat(assetStats.RBI || 0);
+    sb = parseFloat(assetStats.SB || 0);
+    bb = parseFloat(assetStats.BB || 0);
+    ip = parseFloat(assetStats.IP || 0);
+    er = parseFloat(assetStats.ER || 0);
+    k = parseFloat(assetStats.K || 0);
+    qs = parseFloat(assetStats.QS || 0);
+    sv = parseFloat(assetStats.SV || 0);
+    hd = parseFloat(assetStats.HD || 0);
+    if (ip > 0 || k > 0 || sv > 0) isPitcher = true;
+  } else {
+    // Find relevant player records in statsData
+    const matchingRecords = (statsData || []).filter(rec => {
+      const rName = (rec.full_name || rec['fullName'] || '').toLowerCase();
+      return rName.includes(clean) || clean.includes(rName);
+    });
 
-    if (rIP > 0 || rK > 0 || rSV > 0) isPitcher = true;
+    if (matchingRecords.length > 0) {
+      hasStats = true;
+      matchingRecords.forEach(rec => {
+        const st = rec.stats || rec;
+        const rAB = parseFloat(st['0'] || 0);
+        const rH = parseFloat(st['1'] || 0);
+        const rHR = parseFloat(st['5'] || 0);
+        const rBB = parseFloat(st['10'] || 0);
+        const rR = parseFloat(st['20'] || 0);
+        const rRBI = parseFloat(st['21'] || 0);
+        const rSB = parseFloat(st['23'] || 0);
+        const rIP = parseFloat(st['34'] || 0) / 3;
+        const rER = parseFloat(st['45'] || 0);
+        const rK = parseFloat(st['48'] || 0);
+        const rSV = parseFloat(st['57'] || 0);
+        const rHD = parseFloat(st['60'] || 0);
+        const rQS = parseFloat(st['63'] || 0);
 
-    ab += rAB; h += rH; hr += rHR; bb += rBB; r += rR; rbi += rRBI; sb += rSB;
-    ip += rIP; er += rER; k += rK; sv += rSV; hd += rHD; qs += rQS;
-  });
+        if (rIP > 0 || rK > 0 || rSV > 0) isPitcher = true;
+
+        ab += rAB; h += rH; hr += rHR; bb += rBB; r += rR; rbi += rRBI; sb += rSB;
+        ip += rIP; er += rER; k += rK; sv += rSV; hd += rHD; qs += rQS;
+      });
+    }
+  }
+
+  if (!hasStats || (ab === 0 && ip === 0 && k === 0 && r === 0 && hr === 0)) {
+    // Calibrate reasonable baseline from known player tiers
+    const elitePlayers = ['bobby witt jr.', 'corbin carroll', 'gunnar henderson', 'chris sale', 'mike trout', 'trea turner', 'gerrit cole', 'corbin burnes', 'cody bellinger', 'bryce harper', 'josh hader', 'matt olson'];
+    const midPlayers = ['austin riley', 'michael harris ii', 'kevin gausman', 'max fried', 'oneil cruz', 'bryce miller', 'randy arozarena', 'bo bichette', 'ketel marte', 'josh naylor', 'sandy alcantara', 'jesus luzardo'];
+    
+    let baselinePts = 22.0;
+    let baselineTier = 'Role Player / Streamer (estimated)';
+    if (elitePlayers.some(p => clean.includes(p))) {
+      baselinePts = 55.0;
+      baselineTier = 'Elite Performance (estimated)';
+    } else if (midPlayers.some(p => clean.includes(p))) {
+      baselinePts = 38.0;
+      baselineTier = 'Solid Starter (estimated)';
+    }
+
+    return {
+      points: baselinePts,
+      summary: baselineTier,
+      isEstimated: true,
+      statBreakdown: [
+        { cat: 'Baseline Tier', val: baselineTier, pts: baselinePts, formula: 'Calibrated Player Tier Equity' }
+      ]
+    };
+  }
 
   if (isPitcher && ip > 0) {
     const era = (er * 9) / ip;
     const eraBonus = Math.max(-15, (4.00 - era) * (ip / 9) * 2.5);
-    const pts = (k * 0.4) + (qs * 3.5) + ((sv + hd) * 3.0) + eraBonus;
+    const kPts = parseFloat((k * 0.4).toFixed(1));
+    const qsPts = parseFloat((qs * 3.5).toFixed(1));
+    const svHdPts = parseFloat(((sv + hd) * 3.0).toFixed(1));
+    const eraPts = parseFloat(eraBonus.toFixed(1));
+    const totalPts = parseFloat(Math.max(10, kPts + qsPts + svHdPts + eraPts).toFixed(1));
+
+    const statBreakdown = [
+      { cat: 'IP', val: ip.toFixed(1), pts: null, formula: `${ip.toFixed(1)} IP total` },
+      { cat: 'K', val: Math.round(k), pts: kPts, formula: `${Math.round(k)} K × 0.4` },
+      { cat: 'QS', val: Math.round(qs), pts: qsPts, formula: `${Math.round(qs)} QS × 3.5` },
+      { cat: 'SV+HD', val: Math.round(sv + hd), pts: svHdPts, formula: `${Math.round(sv + hd)} SV+HD × 3.0` },
+      { cat: 'ERA', val: era.toFixed(2), pts: eraPts, formula: `(4.00 - ${era.toFixed(2)}) × (${ip.toFixed(1)}/9) × 2.5` }
+    ];
+
     return {
-      points: parseFloat(Math.max(10, pts).toFixed(1)),
-      summary: `${ip.toFixed(1)} IP · ${k} K · ${era.toFixed(2)} ERA · ${qs} QS · ${sv + hd} SV+H`
+      points: totalPts,
+      isPitcher: true,
+      summary: `${ip.toFixed(1)} IP · ${Math.round(k)} K · ${era.toFixed(2)} ERA · ${Math.round(qs)} QS · ${Math.round(sv + hd)} SV+H`,
+      statBreakdown
     };
-  } else if (ab > 0) {
-    const obp = (h + bb) / (ab + bb || 1);
-    const obpBonus = (obp - 0.320) * (ab + bb) * 0.2;
-    const pts = (r * 0.4) + (hr * 2.2) + (rbi * 0.4) + (sb * 1.5) + obpBonus;
+  } else if (ab > 0 || r > 0 || hr > 0) {
+    const pa = ab + bb || 1;
+    const obp = (h + bb) / pa;
+    const obpBonus = (obp - 0.320) * pa * 0.2;
+    const rPts = parseFloat((r * 0.4).toFixed(1));
+    const hrPts = parseFloat((hr * 2.2).toFixed(1));
+    const rbiPts = parseFloat((rbi * 0.4).toFixed(1));
+    const sbPts = parseFloat((sb * 1.5).toFixed(1));
+    const obpPts = parseFloat(obpBonus.toFixed(1));
+    const totalPts = parseFloat(Math.max(10, rPts + hrPts + rbiPts + sbPts + obpPts).toFixed(1));
+
+    const obpDisplay = obp.toFixed(3).replace(/^0/, '');
+    const statBreakdown = [
+      { cat: 'R', val: Math.round(r), pts: rPts, formula: `${Math.round(r)} R × 0.4` },
+      { cat: 'HR', val: Math.round(hr), pts: hrPts, formula: `${Math.round(hr)} HR × 2.2` },
+      { cat: 'RBI', val: Math.round(rbi), pts: rbiPts, formula: `${Math.round(rbi)} RBI × 0.4` },
+      { cat: 'SB', val: Math.round(sb), pts: sbPts, formula: `${Math.round(sb)} SB × 1.5` },
+      { cat: 'OBP', val: obpDisplay, pts: obpPts, formula: `(${obpDisplay} - .320) × ${Math.round(pa)} PA × 0.2` }
+    ];
+
     return {
-      points: parseFloat(Math.max(10, pts).toFixed(1)),
-      summary: `${hr} HR · ${rbi} RBI · ${r} R · ${sb} SB · ${obp.toFixed(3).replace(/^0/, '')} OBP`
+      points: totalPts,
+      isPitcher: false,
+      summary: `${Math.round(hr)} HR · ${Math.round(rbi)} RBI · ${Math.round(r)} R · ${Math.round(sb)} SB · ${obpDisplay} OBP`,
+      statBreakdown
     };
   }
 
-  return { points: 25.0, summary: 'Standard Contributor' };
+  return { points: 25.0, summary: 'Standard Contributor', statBreakdown: [] };
 }
 
 /**
@@ -144,11 +211,56 @@ export function evaluateAsset(asset, seasonYear, statsData = []) {
 
   const type = asset.asset_type;
   if (type === 'Pick') {
-    const val = calculatePickValue(asset.pick_number);
+    const curveVal = calculatePickValue(asset.pick_number);
+    
+    // If an actual drafted player is attached from draft history
+    if (asset.drafted_player) {
+      const dp = asset.drafted_player;
+      const statVal = calculatePlayerStatValue(dp.player_name, seasonYear, statsData, dp.stats);
+      const keeper = getKeeperSurplus(dp.player_name, seasonYear);
+      const draftedPlayerValue = parseFloat((statVal.points + keeper.bonus).toFixed(1));
+      const surplus = parseFloat((draftedPlayerValue - curveVal).toFixed(1));
+
+      const breakdown = [...(statVal.statBreakdown || [])];
+      if (keeper.isKept) {
+        breakdown.push({
+          cat: 'Keeper Equity',
+          val: keeper.label,
+          pts: keeper.bonus,
+          formula: 'Franchise Keeper Retention Bonus'
+        });
+      }
+
+      return {
+        ...asset,
+        value: draftedPlayerValue, // Realized draft selection equity
+        curveValue: curveVal,
+        draftedPlayerValue,
+        surplus,
+        statPoints: statVal.points,
+        statSummary: statVal.summary,
+        statBreakdown: breakdown,
+        isKept: keeper.isKept,
+        keeperBonus: keeper.bonus,
+        keeperLabel: keeper.label,
+        detail: `Selected: ${dp.player_name} (${draftedPlayerValue} pts · ${surplus >= 0 ? '+' : ''}${surplus} vs curve)`
+      };
+    }
+
+    // Unselected or future draft pick
     return {
       ...asset,
-      value: val,
-      detail: `Pick #${asset.pick_number || '?'} (Round ${asset.round_number || '?'}) · ${val} pts`
+      value: curveVal,
+      curveValue: curveVal,
+      statBreakdown: [
+        {
+          cat: 'Pick Curve',
+          val: `Pick #${asset.pick_number || '?'}`,
+          pts: curveVal,
+          formula: '100 × e^(-0.015 × (Pick - 1))'
+        }
+      ],
+      detail: `Pick #${asset.pick_number || '?'} (Round ${asset.round_number || '?'}) · ${curveVal} pts`
     };
   }
 
@@ -157,20 +269,39 @@ export function evaluateAsset(asset, seasonYear, statsData = []) {
     return {
       ...asset,
       value: val,
+      statBreakdown: [
+        {
+          cat: 'Budget Cash',
+          val: `$${asset.budget_amount}`,
+          pts: val,
+          formula: '$1.00 = 3.5 pts purchasing leverage'
+        }
+      ],
       detail: `$${asset.budget_amount} Budget Cash · ${val} pts`
     };
   }
 
   if (type === 'Player') {
-    const statVal = calculatePlayerStatValue(asset.asset_name, seasonYear, statsData);
+    const statVal = calculatePlayerStatValue(asset.asset_name, seasonYear, statsData, asset.stats);
     const keeper = getKeeperSurplus(asset.asset_name, seasonYear);
     const totalVal = parseFloat((statVal.points + keeper.bonus).toFixed(1));
+
+    const breakdown = [...(statVal.statBreakdown || [])];
+    if (keeper.isKept) {
+      breakdown.push({
+        cat: 'Keeper Equity',
+        val: keeper.label,
+        pts: keeper.bonus,
+        formula: 'Next-Season Franchise Retention Bonus'
+      });
+    }
 
     return {
       ...asset,
       value: totalVal,
       statPoints: statVal.points,
       statSummary: statVal.summary,
+      statBreakdown: breakdown,
       isKept: keeper.isKept,
       keeperBonus: keeper.bonus,
       keeperLabel: keeper.label,
