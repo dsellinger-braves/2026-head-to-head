@@ -23,6 +23,18 @@ const PITCHER_SLOT_ORDER = {
   13: 2,  // P
 };
 
+function formatOBP(val) {
+  if (val == null) return '.000';
+  const n = typeof val === 'number' ? val : parseFloat(val);
+  return !isNaN(n) ? n.toFixed(3).replace(/^0/, '') : String(val);
+}
+
+function formatRate(val, decimals = 2) {
+  if (val == null) return (0).toFixed(decimals);
+  const n = typeof val === 'number' ? val : parseFloat(val);
+  return !isNaN(n) ? n.toFixed(decimals) : String(val);
+}
+
 // Calculate fantasy point / game score contribution for a daily batter record
 function getBatterDailyScore(stats) {
   if (!stats) return 0;
@@ -356,7 +368,7 @@ export default function FullRosterView({ allStats = [], onOwnerClick, onPlayerCl
           return (parseFloat(s.QS ?? s['63'] ?? 0) > 0) || (ip >= 6 && er <= 3);
         }).length;
 
-        recentSummaryText = `${filteredStarts.length} GS · ${recentStats.IP?.toFixed(1) || 0} IP · ${recentStats.ERA?.toFixed(2) || '0.00'} ERA · ${recentStats.K || 0} K (${qsCount} QS)`;
+        recentSummaryText = `${filteredStarts.length} GS · ${formatRate(recentStats.IP, 1)} IP · ${formatRate(recentStats.ERA, 2)} ERA · ${recentStats.K || 0} K (${qsCount} QS)`;
 
       } else if (isPitcher) {
         // --- RELIEF PITCHER CADENCE ---
@@ -389,7 +401,7 @@ export default function FullRosterView({ allStats = [], onOwnerClick, onPlayerCl
         });
 
         recentStats = aggregateStats(recentRecords, { includeAll: true });
-        recentSummaryText = `${appRecords.length} App · ${recentStats['SV+HDs'] || 0} SV+HD · ${recentStats.K || 0} K · ${recentStats.ERA?.toFixed(2) || '0.00'} ERA`;
+        recentSummaryText = `${appRecords.length} App · ${recentStats['SV+HDs'] || 0} SV+HD · ${recentStats.K || 0} K · ${formatRate(recentStats.ERA, 2)} ERA`;
 
       } else {
         // --- BATTER CADENCE ---
@@ -421,7 +433,7 @@ export default function FullRosterView({ allStats = [], onOwnerClick, onPlayerCl
         });
 
         recentStats = aggregateStats(recentRecords, { includeAll: true });
-        const obpStr = recentStats.OBP ? recentStats.OBP.toFixed(3).replace(/^0/, '') : '.000';
+        const obpStr = formatOBP(recentStats.OBP);
         recentSummaryText = `${appRecords.length} G · ${recentStats.HR || 0} HR · ${recentStats.RBI || 0} RBI · ${recentStats.SB || 0} SB · ${obpStr} OBP`;
       }
 
@@ -759,10 +771,10 @@ function RosterTableSection({ title, badge, players, onPlayerClick, selectedTeam
                       {p.isPitcher ? (
                         <>
                           <div className="font-bold text-gray-900">
-                            {stats.IP ? `${Math.floor(stats.IP)}.${Math.round((stats.IP % 1) * 3)} IP` : '0 IP'} · {stats.K || 0} K
+                            {stats.IP ? `${Math.floor(parseFloat(stats.IP))}.${Math.round((parseFloat(stats.IP) % 1) * 3)} IP` : '0 IP'} · {stats.K || 0} K
                           </div>
                           <div className="text-[11px] text-gray-500 mt-0.5">
-                            {stats.ERA?.toFixed(2) || '0.00'} ERA · {stats.WHIP?.toFixed(2) || '0.00'} WHIP · {p.isSP ? `${stats.QS || 0} QS` : `${stats['SV+HDs'] || 0} SV+HD`}
+                            {formatRate(stats.ERA, 2)} ERA · {formatRate(stats.WHIP, 2)} WHIP · {p.isSP ? `${stats.QS || 0} QS` : `${stats['SV+HDs'] || 0} SV+HD`}
                           </div>
                         </>
                       ) : (
@@ -771,7 +783,7 @@ function RosterTableSection({ title, badge, players, onPlayerClick, selectedTeam
                             {stats.PA || 0} PA · {stats.HR || 0} HR · {stats.RBI || 0} RBI
                           </div>
                           <div className="text-[11px] text-gray-500 mt-0.5">
-                            {stats.R || 0} R · {stats.SB || 0} SB · {stats.OBP ? stats.OBP.toFixed(3).replace(/^0/, '') : '.000'} OBP
+                            {stats.R || 0} R · {stats.SB || 0} SB · {formatOBP(stats.OBP)} OBP
                           </div>
                         </>
                       )}

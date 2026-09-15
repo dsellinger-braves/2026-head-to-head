@@ -22,20 +22,20 @@ const formatStat = (row, cat) => {
     return `${Math.floor(ip)}.${Math.round((ip % 1) * 3)}`;
   }
   if (cat === 'ERA' || cat === 'WHIP') {
-    const raw = row[`${cat}_raw`];
-    if (raw !== undefined) return isNaN(raw) ? '-' : raw.toFixed(4);
+    const raw = parseFloat(row[`${cat}_raw`]);
+    if (!isNaN(raw)) return raw.toFixed(4);
     const n = parseFloat(val);
     return isNaN(n) ? '-' : n.toFixed(2);
   }
   if (cat === 'OBP') {
-    const raw = row[`${cat}_raw`];
-    if (raw !== undefined) return isNaN(raw) ? '-' : raw.toFixed(4).replace(/^0/, '');
+    const raw = parseFloat(row[`${cat}_raw`]);
+    if (!isNaN(raw)) return raw.toFixed(4).replace(/^0/, '');
     const n = parseFloat(val);
     return isNaN(n) ? '-' : n.toFixed(4).replace(/^0/, '');
   }
   if (cat === 'AVG' || cat === 'SLG' || cat === 'OPS') {
-    const raw = row[`${cat}_raw`];
-    if (raw !== undefined) return isNaN(raw) ? '-' : raw.toFixed(3).replace(/^0/, '');
+    const raw = parseFloat(row[`${cat}_raw`]);
+    if (!isNaN(raw)) return raw.toFixed(3).replace(/^0/, '');
     const n = parseFloat(val);
     return isNaN(n) ? '-' : n.toFixed(3).replace(/^0/, '');
   }
