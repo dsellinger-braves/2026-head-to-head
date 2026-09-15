@@ -1,12 +1,13 @@
 // src/views/DraftHistoryView.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../supabaseClient';
+import defaultDraft2026 from '../data/draft2026.json';
 
 const GCS_DRAFT_HISTORY = 'https://storage.googleapis.com/fantasy-draft-2026/draft-history.json';
 
 const AVAILABLE_YEARS = [
   'ALL',
-  2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015, 2014, 2013, 2012
+  2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015, 2014, 2013, 2012
 ];
 
 export default function DraftHistoryView({ onPlayerClick, onOwnerClick }) {
@@ -33,9 +34,24 @@ export default function DraftHistoryView({ onPlayerClick, onOwnerClick }) {
           .order('season_year', { ascending: false })
           .order('overall_pick', { ascending: true });
 
+        const picks2026 = (defaultDraft2026 || []).map(d => ({
+          id: `draft-2026-${d.overall_pick}`,
+          year: 2026,
+          round: d.round,
+          pick: d.pick,
+          overallPick: d.overall_pick,
+          owner: d.team_owner,
+          playerId: d.player_id,
+          playerName: d.player_name,
+          position: '-',
+          team: '-',
+          isKeeper: Boolean(d.is_keeper),
+          pickedAt: null
+        }));
+
         if (!error && data && data.length > 0) {
           if (isMounted) {
-            setAllPicks(data.map(d => ({
+            const histPicks = data.filter(d => d.season_year !== 2026).map(d => ({
               id: d.id,
               year: d.season_year,
               round: d.round,
@@ -48,8 +64,9 @@ export default function DraftHistoryView({ onPlayerClick, onOwnerClick }) {
               team: d.player_team || '-',
               isKeeper: Boolean(d.is_keeper),
               pickedAt: d.picked_at
-            })));
-            setDataSource('Supabase Warehouse');
+            }));
+            setAllPicks([...picks2026, ...histPicks]);
+            setDataSource('Supabase Warehouse + 2026 Live Draft');
             setLoading(false);
             return;
           }
@@ -64,7 +81,21 @@ export default function DraftHistoryView({ onPlayerClick, onOwnerClick }) {
         if (res.ok) {
           const gcsData = await res.json();
           if (isMounted && Array.isArray(gcsData)) {
-            const mapped = gcsData.map((d, index) => ({
+            const picks2026 = (defaultDraft2026 || []).map(d => ({
+              id: `draft-2026-${d.overall_pick}`,
+              year: 2026,
+              round: d.round,
+              pick: d.pick,
+              overallPick: d.overall_pick,
+              owner: d.team_owner,
+              playerId: d.player_id,
+              playerName: d.player_name,
+              position: '-',
+              team: '-',
+              isKeeper: Boolean(d.is_keeper),
+              pickedAt: null
+            }));
+            const mapped = gcsData.filter(d => parseInt(d.Year, 10) !== 2026).map((d, index) => ({
               id: `gcs-${d.Year}-${d.Pick_Overall || index}`,
               year: parseInt(d.Year, 10),
               round: parseInt(d.Round, 10) || 1,
@@ -78,8 +109,8 @@ export default function DraftHistoryView({ onPlayerClick, onOwnerClick }) {
               isKeeper: String(d.Keeper).toLowerCase() === 'true',
               pickedAt: null
             }));
-            setAllPicks(mapped);
-            setDataSource('GCS Archive');
+            setAllPicks([...picks2026, ...mapped]);
+            setDataSource('GCS Archive + 2026 Live Draft');
           }
         }
       } catch (err) {

@@ -486,6 +486,146 @@ def process_sheet(sheet_conf, picks_by_year_pick, players_by_year_name, stats_20
     return unified_trades
 
 
+def process_espn_trades(existing_trades, stats_2026_map):
+    txs_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "src", "data", "transactions2026.json"
+    )
+    if not os.path.exists(txs_path):
+        print(f"⚠️ {txs_path} not found for ESPN trade processing")
+        return []
+
+    with open(txs_path, "r", encoding="utf-8") as f:
+        txs = json.load(f)
+
+    trade_txs = [t for t in txs if t.get("transaction_type") == "TRADE"]
+    deals = defaultdict(lambda: {"items": []})
+    for t in trade_txs:
+        root = t["espn_transaction_id"].split("_")[0]
+        deals[root]["id"] = root
+        deals[root]["date"] = t["transaction_date"].split("T")[0]
+        deals[root]["items"].append(t)
+
+    TEAM_ID_TO_OWNER = {
+        1: "Tim",
+        2: "Adrian",
+        3: "Garrett",
+        5: "Dan",
+        6: "Anil",
+        8: "Alex",
+        12: "Will",
+        13: "Mark",
+        14: "Preston"
+    }
+
+    new_espn_trades = []
+    # Sort deals chronologically so trade IDs are sequential
+    sorted_deal_items = sorted(deals.values(), key=lambda d: d["date"])
+    deal_counter = 1
+
+    for deal in sorted_deal_items:
+        deal_date = deal["date"]
+        d_dt = datetime.datetime.strptime(deal_date, "%Y-%m-%d")
+        deal_player_ids = set(i["player_id"] for i in deal["items"])
+        
+        deal_teams = set()
+        for i in deal["items"]:
+            deal_teams.add(i["from_team_id"])
+            deal_teams.add(i["to_team_id"])
+        deal_owners = set(TEAM_ID_TO_OWNER.get(tid) for tid in deal_teams if tid in TEAM_ID_TO_OWNER)
+
+        # Check overlap against existing Google Sheet trades
+        matched = None
+        for ext in existing_trades:
+            if ext.get("season_year") != 2026:
+                continue
+            ext_date = ext.get("trade_date")
+            try:
+                ext_dt = datetime.datetime.strptime(ext_date, "%Y-%m-%d")
+            except Exception:
+                continue
+            if abs((d_dt - ext_dt).days) > 5:
+                continue
+            ext_pids = set(it.get("espn_player_id") for it in ext.get("items", []) if it.get("asset_type") == "Player")
+            if ext_pids.intersection(deal_player_ids):
+                matched = ext
+                break
+
+        if matched:
+            print(f"ℹ️ ESPN deal {deal['id'][:8]} ({deal_date}) overlaps with existing {matched['unique_id']} ({matched['trade_date']}) - keeping primary sheet record")
+            continue
+
+        if len(deal_owners) < 2:
+            continue
+
+        participants = sorted(list(deal_owners))
+        trade_unique_id = f"2026_espn_{deal_counter}"
+        trade_id_label = f"ESPN-{deal_counter}"
+
+        trade_items = []
+        for i in deal["items"]:
+            snd = TEAM_ID_TO_OWNER.get(i["from_team_id"], f"Team {i['from_team_id']}")
+            rcv = TEAM_ID_TO_OWNER.get(i["to_team_id"], f"Team {i['to_team_id']}")
+            pid = i.get("player_id")
+            pname = i.get("player_name")
+
+            p_stats = stats_2026_map.get(pid)
+
+            trade_item = {
+                "season_year": 2026,
+                "trade_id": trade_id_label,
+                "trade_date": deal_date,
+                "sending_owner": snd,
+                "from_team_id": i["from_team_id"],
+                "receiving_owner": rcv,
+                "to_team_id": i["to_team_id"],
+                "asset_type": "Player",
+                "asset_name": pname,
+                "pick_number": None,
+                "round_number": None,
+                "budget_amount": 0.0,
+                "original_pick": "",
+                "espn_player_id": pid
+            }
+            if p_stats:
+                trade_item["stats"] = p_stats
+
+            trade_items.append(trade_item)
+
+        owner_packages = {}
+        for p in participants:
+            owner_packages[p] = {
+                "owner": p,
+                "team_id": OWNER_TO_TEAM_ID.get(p),
+                "sent": [],
+                "received": []
+            }
+
+        for item in trade_items:
+            snd = item["sending_owner"]
+            rcv = item["receiving_owner"]
+            if snd in owner_packages:
+                owner_packages[snd]["sent"].append(item)
+            if rcv in owner_packages:
+                owner_packages[rcv]["received"].append(item)
+
+        new_espn_trades.append({
+            "unique_id": trade_unique_id,
+            "season_year": 2026,
+            "trade_id": trade_id_label,
+            "trade_date": deal_date,
+            "espn_root_id": deal["id"],
+            "is_espn_player_only": True,
+            "participants": participants,
+            "owner_packages": owner_packages,
+            "items": trade_items
+        })
+        deal_counter += 1
+
+    print(f"✅ Ingested {len(new_espn_trades)} player-only ESPN trades for 2026")
+    return new_espn_trades
+
+
 def main():
     picks_by_year_pick, players_by_year_name = load_draft_history()
     stats_2026_map = load_2026_player_stats()
@@ -496,6 +636,9 @@ def main():
         print(f"Season {sheet['season_year']}: Processed {len(trades)} trades.")
         all_trades.extend(trades)
 
+    espn_trades = process_espn_trades(all_trades, stats_2026_map)
+    all_trades.extend(espn_trades)
+
     all_trades.sort(key=lambda x: (x["trade_date"], x["unique_id"]), reverse=True)
 
     output_path = os.path.join(
@@ -505,8 +648,9 @@ def main():
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(all_trades, f, indent=2)
 
-    print(f"🎉 Successfully saved {len(all_trades)} multi-year trades with drafted player & stats enrichment to {output_path}")
+    print(f"🎉 Successfully saved {len(all_trades)} multi-year trades with drafted player, stats, & ESPN trades to {output_path}")
 
 
 if __name__ == "__main__":
     main()
+

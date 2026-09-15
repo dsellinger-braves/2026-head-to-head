@@ -26,6 +26,7 @@ import DraftCapitalView from './views/DraftCapitalView';
 import KeepersBudgetsView from './views/KeepersBudgetsView';
 import OwnerLandingView from './views/OwnerLandingView';
 import DraftHistoryView from './views/DraftHistoryView';
+import FullRosterView from './views/FullRosterView';
 import UserNavWidget from './components/UserNavWidget';
 import CommishActiveBanner from './components/CommishActiveBanner';
 import { useAuth } from './context/useAuth';
@@ -37,6 +38,7 @@ const VIEW_TO_HASH = {
   weekly: 'matchups',
   summary: 'standings',
   teams: 'teams',
+  rosters: 'rosters',
   transactions: 'transactions',
   trades: 'trades',
   players: 'players',
@@ -60,6 +62,12 @@ const HASH_TO_VIEW = {
   roto: 'teams',
   teams: 'teams',
   'teams/roto': 'teams',
+  rosters: 'rosters',
+  roster: 'rosters',
+  lineups: 'rosters',
+  lineup: 'rosters',
+  'teams/rosters': 'rosters',
+  'teams/lineups': 'rosters',
   standings: 'summary',
   summary: 'summary',
   'h2h-standings': 'summary',
@@ -837,7 +845,7 @@ function App() {
                       type="button"
                       onClick={() => setOpenDropdown(prev => prev === 'teams' ? null : 'teams')}
                       className={`px-3.5 py-1.5 rounded-xl font-black flex items-center gap-1.5 transition-all cursor-pointer ${
-                        ['teams', 'summary', 'weekly', 'progression', 'highlights'].includes(currentView)
+                        ['teams', 'rosters', 'summary', 'weekly', 'progression', 'highlights'].includes(currentView)
                           ? 'bg-blue-600 text-white shadow-md ring-1 ring-blue-400'
                           : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'
                       }`}
@@ -850,6 +858,16 @@ function App() {
 
                     {openDropdown === 'teams' && (
                       <div className="absolute top-full left-0 mt-1.5 min-w-[220px] bg-slate-900/95 border border-slate-700/80 rounded-2xl shadow-2xl backdrop-blur-xl p-1.5 z-50 animate-fade-in flex flex-col gap-0.5">
+                        <a
+                          href="#/rosters"
+                          onClick={(e) => { e.preventDefault(); setCurrentView('rosters'); setOpenDropdown(null); }}
+                          className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-between transition cursor-pointer ${
+                            currentView === 'rosters' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2"><span>📋</span><span>Lineups & Rosters</span></span>
+                          {currentView === 'rosters' && <span className="text-[10px] text-blue-200">●</span>}
+                        </a>
                         <a
                           href="#/teams"
                           onClick={(e) => { e.preventDefault(); setCurrentView('teams'); setOpenDropdown(null); }}
@@ -1278,6 +1296,14 @@ function App() {
                   onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
                 />
               )}
+              {currentView === 'rosters' && (
+                <FullRosterView
+                  allStats={rawData}
+                  selectedSeason={selectedSeason}
+                  onOwnerClick={(team) => setSelectedOwner(team)}
+                  onPlayerClick={(id, name, teamId) => setSelectedPlayer({ id, name, teamId })}
+                />
+              )}
               {currentView === 'transactions' && (
                 <TransactionsView
                   onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
@@ -1383,6 +1409,7 @@ function App() {
           <PlayerHistoryModal
             playerId={selectedPlayer.id}
             playerName={selectedPlayer.name}
+            teamId={selectedPlayer.teamId}
             allStats={rawData}
             selectedSeason={selectedSeason}
             onClose={() => setSelectedPlayer(null)}

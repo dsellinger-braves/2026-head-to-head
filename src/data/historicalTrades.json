@@ -1,5 +1,357 @@
 [
   {
+    "unique_id": "2026_espn_18",
+    "season_year": 2026,
+    "trade_id": "ESPN-18",
+    "trade_date": "2026-09-03",
+    "espn_root_id": "a9674ba0-906b-4064-8104-73710f305f05",
+    "is_espn_player_only": true,
+    "participants": [
+      "Dan",
+      "Mark"
+    ],
+    "owner_packages": {
+      "Dan": {
+        "owner": "Dan",
+        "team_id": 5,
+        "sent": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-18",
+            "trade_date": "2026-09-03",
+            "sending_owner": "Dan",
+            "from_team_id": 5,
+            "receiving_owner": "Mark",
+            "to_team_id": 13,
+            "asset_type": "Player",
+            "asset_name": "Chase DeLauter",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 4619649
+          }
+        ],
+        "received": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-18",
+            "trade_date": "2026-09-03",
+            "sending_owner": "Mark",
+            "from_team_id": 13,
+            "receiving_owner": "Dan",
+            "to_team_id": 5,
+            "asset_type": "Player",
+            "asset_name": "Aroldis Chapman",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 30442
+          }
+        ]
+      },
+      "Mark": {
+        "owner": "Mark",
+        "team_id": 13,
+        "sent": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-18",
+            "trade_date": "2026-09-03",
+            "sending_owner": "Mark",
+            "from_team_id": 13,
+            "receiving_owner": "Dan",
+            "to_team_id": 5,
+            "asset_type": "Player",
+            "asset_name": "Aroldis Chapman",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 30442
+          }
+        ],
+        "received": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-18",
+            "trade_date": "2026-09-03",
+            "sending_owner": "Dan",
+            "from_team_id": 5,
+            "receiving_owner": "Mark",
+            "to_team_id": 13,
+            "asset_type": "Player",
+            "asset_name": "Chase DeLauter",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 4619649
+          }
+        ]
+      }
+    },
+    "items": [
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-18",
+        "trade_date": "2026-09-03",
+        "sending_owner": "Dan",
+        "from_team_id": 5,
+        "receiving_owner": "Mark",
+        "to_team_id": 13,
+        "asset_type": "Player",
+        "asset_name": "Chase DeLauter",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 4619649
+      },
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-18",
+        "trade_date": "2026-09-03",
+        "sending_owner": "Mark",
+        "from_team_id": 13,
+        "receiving_owner": "Dan",
+        "to_team_id": 5,
+        "asset_type": "Player",
+        "asset_name": "Aroldis Chapman",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 30442
+      }
+    ]
+  },
+  {
+    "unique_id": "2026_espn_17",
+    "season_year": 2026,
+    "trade_id": "ESPN-17",
+    "trade_date": "2026-08-15",
+    "espn_root_id": "38ec4c82-5221-40b8-bd12-05504b79a595",
+    "is_espn_player_only": true,
+    "participants": [
+      "Dan",
+      "Mark"
+    ],
+    "owner_packages": {
+      "Dan": {
+        "owner": "Dan",
+        "team_id": 5,
+        "sent": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-17",
+            "trade_date": "2026-08-15",
+            "sending_owner": "Dan",
+            "from_team_id": 5,
+            "receiving_owner": "Mark",
+            "to_team_id": 13,
+            "asset_type": "Player",
+            "asset_name": "Keider Montero",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 5182933
+          },
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-17",
+            "trade_date": "2026-08-15",
+            "sending_owner": "Dan",
+            "from_team_id": 5,
+            "receiving_owner": "Mark",
+            "to_team_id": 13,
+            "asset_type": "Player",
+            "asset_name": "Max Clark",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 5148964
+          }
+        ],
+        "received": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-17",
+            "trade_date": "2026-08-15",
+            "sending_owner": "Mark",
+            "from_team_id": 13,
+            "receiving_owner": "Dan",
+            "to_team_id": 5,
+            "asset_type": "Player",
+            "asset_name": "Ceddanne Rafaela",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 4987382
+          },
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-17",
+            "trade_date": "2026-08-15",
+            "sending_owner": "Mark",
+            "from_team_id": 13,
+            "receiving_owner": "Dan",
+            "to_team_id": 5,
+            "asset_type": "Player",
+            "asset_name": "Sonny Gray",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 32082
+          }
+        ]
+      },
+      "Mark": {
+        "owner": "Mark",
+        "team_id": 13,
+        "sent": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-17",
+            "trade_date": "2026-08-15",
+            "sending_owner": "Mark",
+            "from_team_id": 13,
+            "receiving_owner": "Dan",
+            "to_team_id": 5,
+            "asset_type": "Player",
+            "asset_name": "Ceddanne Rafaela",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 4987382
+          },
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-17",
+            "trade_date": "2026-08-15",
+            "sending_owner": "Mark",
+            "from_team_id": 13,
+            "receiving_owner": "Dan",
+            "to_team_id": 5,
+            "asset_type": "Player",
+            "asset_name": "Sonny Gray",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 32082
+          }
+        ],
+        "received": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-17",
+            "trade_date": "2026-08-15",
+            "sending_owner": "Dan",
+            "from_team_id": 5,
+            "receiving_owner": "Mark",
+            "to_team_id": 13,
+            "asset_type": "Player",
+            "asset_name": "Keider Montero",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 5182933
+          },
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-17",
+            "trade_date": "2026-08-15",
+            "sending_owner": "Dan",
+            "from_team_id": 5,
+            "receiving_owner": "Mark",
+            "to_team_id": 13,
+            "asset_type": "Player",
+            "asset_name": "Max Clark",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 5148964
+          }
+        ]
+      }
+    },
+    "items": [
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-17",
+        "trade_date": "2026-08-15",
+        "sending_owner": "Mark",
+        "from_team_id": 13,
+        "receiving_owner": "Dan",
+        "to_team_id": 5,
+        "asset_type": "Player",
+        "asset_name": "Ceddanne Rafaela",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 4987382
+      },
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-17",
+        "trade_date": "2026-08-15",
+        "sending_owner": "Mark",
+        "from_team_id": 13,
+        "receiving_owner": "Dan",
+        "to_team_id": 5,
+        "asset_type": "Player",
+        "asset_name": "Sonny Gray",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 32082
+      },
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-17",
+        "trade_date": "2026-08-15",
+        "sending_owner": "Dan",
+        "from_team_id": 5,
+        "receiving_owner": "Mark",
+        "to_team_id": 13,
+        "asset_type": "Player",
+        "asset_name": "Keider Montero",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 5182933
+      },
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-17",
+        "trade_date": "2026-08-15",
+        "sending_owner": "Dan",
+        "from_team_id": 5,
+        "receiving_owner": "Mark",
+        "to_team_id": 13,
+        "asset_type": "Player",
+        "asset_name": "Max Clark",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 5148964
+      }
+    ]
+  },
+  {
     "unique_id": "2026_6",
     "season_year": 2026,
     "trade_id": "6",
@@ -1896,6 +2248,358 @@
     ]
   },
   {
+    "unique_id": "2026_espn_16",
+    "season_year": 2026,
+    "trade_id": "ESPN-16",
+    "trade_date": "2026-06-13",
+    "espn_root_id": "89489c29-4e52-4356-b19a-f6172f9d6761",
+    "is_espn_player_only": true,
+    "participants": [
+      "Dan",
+      "Will"
+    ],
+    "owner_packages": {
+      "Dan": {
+        "owner": "Dan",
+        "team_id": 5,
+        "sent": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-16",
+            "trade_date": "2026-06-13",
+            "sending_owner": "Dan",
+            "from_team_id": 5,
+            "receiving_owner": "Will",
+            "to_team_id": 12,
+            "asset_type": "Player",
+            "asset_name": "Ivan Herrera",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 41889
+          },
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-16",
+            "trade_date": "2026-06-13",
+            "sending_owner": "Dan",
+            "from_team_id": 5,
+            "receiving_owner": "Will",
+            "to_team_id": 12,
+            "asset_type": "Player",
+            "asset_name": "Joe Ryan",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 42450
+          }
+        ],
+        "received": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-16",
+            "trade_date": "2026-06-13",
+            "sending_owner": "Will",
+            "from_team_id": 12,
+            "receiving_owner": "Dan",
+            "to_team_id": 5,
+            "asset_type": "Player",
+            "asset_name": "Munetaka Murakami",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 4872595
+          },
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-16",
+            "trade_date": "2026-06-13",
+            "sending_owner": "Will",
+            "from_team_id": 12,
+            "receiving_owner": "Dan",
+            "to_team_id": 5,
+            "asset_type": "Player",
+            "asset_name": "Salvador Perez",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 31127
+          }
+        ]
+      },
+      "Will": {
+        "owner": "Will",
+        "team_id": 12,
+        "sent": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-16",
+            "trade_date": "2026-06-13",
+            "sending_owner": "Will",
+            "from_team_id": 12,
+            "receiving_owner": "Dan",
+            "to_team_id": 5,
+            "asset_type": "Player",
+            "asset_name": "Munetaka Murakami",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 4872595
+          },
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-16",
+            "trade_date": "2026-06-13",
+            "sending_owner": "Will",
+            "from_team_id": 12,
+            "receiving_owner": "Dan",
+            "to_team_id": 5,
+            "asset_type": "Player",
+            "asset_name": "Salvador Perez",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 31127
+          }
+        ],
+        "received": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-16",
+            "trade_date": "2026-06-13",
+            "sending_owner": "Dan",
+            "from_team_id": 5,
+            "receiving_owner": "Will",
+            "to_team_id": 12,
+            "asset_type": "Player",
+            "asset_name": "Ivan Herrera",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 41889
+          },
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-16",
+            "trade_date": "2026-06-13",
+            "sending_owner": "Dan",
+            "from_team_id": 5,
+            "receiving_owner": "Will",
+            "to_team_id": 12,
+            "asset_type": "Player",
+            "asset_name": "Joe Ryan",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 42450
+          }
+        ]
+      }
+    },
+    "items": [
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-16",
+        "trade_date": "2026-06-13",
+        "sending_owner": "Will",
+        "from_team_id": 12,
+        "receiving_owner": "Dan",
+        "to_team_id": 5,
+        "asset_type": "Player",
+        "asset_name": "Munetaka Murakami",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 4872595
+      },
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-16",
+        "trade_date": "2026-06-13",
+        "sending_owner": "Dan",
+        "from_team_id": 5,
+        "receiving_owner": "Will",
+        "to_team_id": 12,
+        "asset_type": "Player",
+        "asset_name": "Ivan Herrera",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 41889
+      },
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-16",
+        "trade_date": "2026-06-13",
+        "sending_owner": "Will",
+        "from_team_id": 12,
+        "receiving_owner": "Dan",
+        "to_team_id": 5,
+        "asset_type": "Player",
+        "asset_name": "Salvador Perez",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 31127
+      },
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-16",
+        "trade_date": "2026-06-13",
+        "sending_owner": "Dan",
+        "from_team_id": 5,
+        "receiving_owner": "Will",
+        "to_team_id": 12,
+        "asset_type": "Player",
+        "asset_name": "Joe Ryan",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 42450
+      }
+    ]
+  },
+  {
+    "unique_id": "2026_espn_15",
+    "season_year": 2026,
+    "trade_id": "ESPN-15",
+    "trade_date": "2026-06-12",
+    "espn_root_id": "85eeadda-b7e0-40a8-83eb-8f8990326a46",
+    "is_espn_player_only": true,
+    "participants": [
+      "Mark",
+      "Will"
+    ],
+    "owner_packages": {
+      "Mark": {
+        "owner": "Mark",
+        "team_id": 13,
+        "sent": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-15",
+            "trade_date": "2026-06-12",
+            "sending_owner": "Mark",
+            "from_team_id": 13,
+            "receiving_owner": "Will",
+            "to_team_id": 12,
+            "asset_type": "Player",
+            "asset_name": "Mookie Betts",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 33039
+          }
+        ],
+        "received": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-15",
+            "trade_date": "2026-06-12",
+            "sending_owner": "Will",
+            "from_team_id": 12,
+            "receiving_owner": "Mark",
+            "to_team_id": 13,
+            "asset_type": "Player",
+            "asset_name": "Riley O'Brien",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 41509
+          }
+        ]
+      },
+      "Will": {
+        "owner": "Will",
+        "team_id": 12,
+        "sent": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-15",
+            "trade_date": "2026-06-12",
+            "sending_owner": "Will",
+            "from_team_id": 12,
+            "receiving_owner": "Mark",
+            "to_team_id": 13,
+            "asset_type": "Player",
+            "asset_name": "Riley O'Brien",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 41509
+          }
+        ],
+        "received": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-15",
+            "trade_date": "2026-06-12",
+            "sending_owner": "Mark",
+            "from_team_id": 13,
+            "receiving_owner": "Will",
+            "to_team_id": 12,
+            "asset_type": "Player",
+            "asset_name": "Mookie Betts",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 33039
+          }
+        ]
+      }
+    },
+    "items": [
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-15",
+        "trade_date": "2026-06-12",
+        "sending_owner": "Will",
+        "from_team_id": 12,
+        "receiving_owner": "Mark",
+        "to_team_id": 13,
+        "asset_type": "Player",
+        "asset_name": "Riley O'Brien",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 41509
+      },
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-15",
+        "trade_date": "2026-06-12",
+        "sending_owner": "Mark",
+        "from_team_id": 13,
+        "receiving_owner": "Will",
+        "to_team_id": 12,
+        "asset_type": "Player",
+        "asset_name": "Mookie Betts",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 33039
+      }
+    ]
+  },
+  {
     "unique_id": "2026_1",
     "season_year": 2026,
     "trade_id": "1",
@@ -2167,6 +2871,2156 @@
           "SB": 9.0,
           "BB": 15.0,
           "OBP": 0.263,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
+      }
+    ]
+  },
+  {
+    "unique_id": "2026_espn_14",
+    "season_year": 2026,
+    "trade_id": "ESPN-14",
+    "trade_date": "2026-06-09",
+    "espn_root_id": "5758bc77-d157-48f2-b898-ad5c1b200b7d",
+    "is_espn_player_only": true,
+    "participants": [
+      "Garrett",
+      "Mark"
+    ],
+    "owner_packages": {
+      "Garrett": {
+        "owner": "Garrett",
+        "team_id": 3,
+        "sent": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-14",
+            "trade_date": "2026-06-09",
+            "sending_owner": "Garrett",
+            "from_team_id": 3,
+            "receiving_owner": "Mark",
+            "to_team_id": 13,
+            "asset_type": "Player",
+            "asset_name": "Aaron Judge",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 33192
+          }
+        ],
+        "received": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-14",
+            "trade_date": "2026-06-09",
+            "sending_owner": "Mark",
+            "from_team_id": 13,
+            "receiving_owner": "Garrett",
+            "to_team_id": 3,
+            "asset_type": "Player",
+            "asset_name": "Matt Olson",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 32767,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 647.0,
+              "AB": 584.0,
+              "H": 145.0,
+              "R": 96.0,
+              "HR": 39.0,
+              "RBI": 85.0,
+              "SB": 4.0,
+              "BB": 63.0,
+              "OBP": 0.321,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
+          }
+        ]
+      },
+      "Mark": {
+        "owner": "Mark",
+        "team_id": 13,
+        "sent": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-14",
+            "trade_date": "2026-06-09",
+            "sending_owner": "Mark",
+            "from_team_id": 13,
+            "receiving_owner": "Garrett",
+            "to_team_id": 3,
+            "asset_type": "Player",
+            "asset_name": "Matt Olson",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 32767,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 647.0,
+              "AB": 584.0,
+              "H": 145.0,
+              "R": 96.0,
+              "HR": 39.0,
+              "RBI": 85.0,
+              "SB": 4.0,
+              "BB": 63.0,
+              "OBP": 0.321,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
+          }
+        ],
+        "received": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-14",
+            "trade_date": "2026-06-09",
+            "sending_owner": "Garrett",
+            "from_team_id": 3,
+            "receiving_owner": "Mark",
+            "to_team_id": 13,
+            "asset_type": "Player",
+            "asset_name": "Aaron Judge",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 33192
+          }
+        ]
+      }
+    },
+    "items": [
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-14",
+        "trade_date": "2026-06-09",
+        "sending_owner": "Garrett",
+        "from_team_id": 3,
+        "receiving_owner": "Mark",
+        "to_team_id": 13,
+        "asset_type": "Player",
+        "asset_name": "Aaron Judge",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 33192
+      },
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-14",
+        "trade_date": "2026-06-09",
+        "sending_owner": "Mark",
+        "from_team_id": 13,
+        "receiving_owner": "Garrett",
+        "to_team_id": 3,
+        "asset_type": "Player",
+        "asset_name": "Matt Olson",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 32767,
+        "stats": {
+          "is_pitcher": false,
+          "PA": 647.0,
+          "AB": 584.0,
+          "H": 145.0,
+          "R": 96.0,
+          "HR": 39.0,
+          "RBI": 85.0,
+          "SB": 4.0,
+          "BB": 63.0,
+          "OBP": 0.321,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
+      }
+    ]
+  },
+  {
+    "unique_id": "2026_espn_13",
+    "season_year": 2026,
+    "trade_id": "ESPN-13",
+    "trade_date": "2026-05-30",
+    "espn_root_id": "fbdc3b2d-8fca-4578-a9ba-2c6475c3cb88",
+    "is_espn_player_only": true,
+    "participants": [
+      "Anil",
+      "Dan"
+    ],
+    "owner_packages": {
+      "Anil": {
+        "owner": "Anil",
+        "team_id": 6,
+        "sent": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-13",
+            "trade_date": "2026-05-30",
+            "sending_owner": "Anil",
+            "from_team_id": 6,
+            "receiving_owner": "Dan",
+            "to_team_id": 5,
+            "asset_type": "Player",
+            "asset_name": "Andres Munoz",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 40939
+          }
+        ],
+        "received": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-13",
+            "trade_date": "2026-05-30",
+            "sending_owner": "Dan",
+            "from_team_id": 5,
+            "receiving_owner": "Anil",
+            "to_team_id": 6,
+            "asset_type": "Player",
+            "asset_name": "Shane McClanahan",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 41199
+          }
+        ]
+      },
+      "Dan": {
+        "owner": "Dan",
+        "team_id": 5,
+        "sent": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-13",
+            "trade_date": "2026-05-30",
+            "sending_owner": "Dan",
+            "from_team_id": 5,
+            "receiving_owner": "Anil",
+            "to_team_id": 6,
+            "asset_type": "Player",
+            "asset_name": "Shane McClanahan",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 41199
+          }
+        ],
+        "received": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-13",
+            "trade_date": "2026-05-30",
+            "sending_owner": "Anil",
+            "from_team_id": 6,
+            "receiving_owner": "Dan",
+            "to_team_id": 5,
+            "asset_type": "Player",
+            "asset_name": "Andres Munoz",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 40939
+          }
+        ]
+      }
+    },
+    "items": [
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-13",
+        "trade_date": "2026-05-30",
+        "sending_owner": "Dan",
+        "from_team_id": 5,
+        "receiving_owner": "Anil",
+        "to_team_id": 6,
+        "asset_type": "Player",
+        "asset_name": "Shane McClanahan",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 41199
+      },
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-13",
+        "trade_date": "2026-05-30",
+        "sending_owner": "Anil",
+        "from_team_id": 6,
+        "receiving_owner": "Dan",
+        "to_team_id": 5,
+        "asset_type": "Player",
+        "asset_name": "Andres Munoz",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 40939
+      }
+    ]
+  },
+  {
+    "unique_id": "2026_espn_12",
+    "season_year": 2026,
+    "trade_id": "ESPN-12",
+    "trade_date": "2026-05-25",
+    "espn_root_id": "d70504a5-fa49-4e1f-8e1e-65b23f41bc86",
+    "is_espn_player_only": true,
+    "participants": [
+      "Garrett",
+      "Preston"
+    ],
+    "owner_packages": {
+      "Garrett": {
+        "owner": "Garrett",
+        "team_id": 3,
+        "sent": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-12",
+            "trade_date": "2026-05-25",
+            "sending_owner": "Garrett",
+            "from_team_id": 3,
+            "receiving_owner": "Preston",
+            "to_team_id": 14,
+            "asset_type": "Player",
+            "asset_name": "Jacob Misiorowski",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 5080761
+          },
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-12",
+            "trade_date": "2026-05-25",
+            "sending_owner": "Garrett",
+            "from_team_id": 3,
+            "receiving_owner": "Preston",
+            "to_team_id": 14,
+            "asset_type": "Player",
+            "asset_name": "Travis Bazzana",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 5007707
+          },
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-12",
+            "trade_date": "2026-05-25",
+            "sending_owner": "Garrett",
+            "from_team_id": 3,
+            "receiving_owner": "Preston",
+            "to_team_id": 14,
+            "asset_type": "Player",
+            "asset_name": "Gunnar Henderson",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 42507
+          }
+        ],
+        "received": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-12",
+            "trade_date": "2026-05-25",
+            "sending_owner": "Preston",
+            "from_team_id": 14,
+            "receiving_owner": "Garrett",
+            "to_team_id": 3,
+            "asset_type": "Player",
+            "asset_name": "Aaron Judge",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 33192
+          },
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-12",
+            "trade_date": "2026-05-25",
+            "sending_owner": "Preston",
+            "from_team_id": 14,
+            "receiving_owner": "Garrett",
+            "to_team_id": 3,
+            "asset_type": "Player",
+            "asset_name": "Seiya Suzuki",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 4142424
+          }
+        ]
+      },
+      "Preston": {
+        "owner": "Preston",
+        "team_id": 14,
+        "sent": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-12",
+            "trade_date": "2026-05-25",
+            "sending_owner": "Preston",
+            "from_team_id": 14,
+            "receiving_owner": "Garrett",
+            "to_team_id": 3,
+            "asset_type": "Player",
+            "asset_name": "Aaron Judge",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 33192
+          },
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-12",
+            "trade_date": "2026-05-25",
+            "sending_owner": "Preston",
+            "from_team_id": 14,
+            "receiving_owner": "Garrett",
+            "to_team_id": 3,
+            "asset_type": "Player",
+            "asset_name": "Seiya Suzuki",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 4142424
+          }
+        ],
+        "received": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-12",
+            "trade_date": "2026-05-25",
+            "sending_owner": "Garrett",
+            "from_team_id": 3,
+            "receiving_owner": "Preston",
+            "to_team_id": 14,
+            "asset_type": "Player",
+            "asset_name": "Jacob Misiorowski",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 5080761
+          },
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-12",
+            "trade_date": "2026-05-25",
+            "sending_owner": "Garrett",
+            "from_team_id": 3,
+            "receiving_owner": "Preston",
+            "to_team_id": 14,
+            "asset_type": "Player",
+            "asset_name": "Travis Bazzana",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 5007707
+          },
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-12",
+            "trade_date": "2026-05-25",
+            "sending_owner": "Garrett",
+            "from_team_id": 3,
+            "receiving_owner": "Preston",
+            "to_team_id": 14,
+            "asset_type": "Player",
+            "asset_name": "Gunnar Henderson",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 42507
+          }
+        ]
+      }
+    },
+    "items": [
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-12",
+        "trade_date": "2026-05-25",
+        "sending_owner": "Preston",
+        "from_team_id": 14,
+        "receiving_owner": "Garrett",
+        "to_team_id": 3,
+        "asset_type": "Player",
+        "asset_name": "Aaron Judge",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 33192
+      },
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-12",
+        "trade_date": "2026-05-25",
+        "sending_owner": "Garrett",
+        "from_team_id": 3,
+        "receiving_owner": "Preston",
+        "to_team_id": 14,
+        "asset_type": "Player",
+        "asset_name": "Jacob Misiorowski",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 5080761
+      },
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-12",
+        "trade_date": "2026-05-25",
+        "sending_owner": "Garrett",
+        "from_team_id": 3,
+        "receiving_owner": "Preston",
+        "to_team_id": 14,
+        "asset_type": "Player",
+        "asset_name": "Travis Bazzana",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 5007707
+      },
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-12",
+        "trade_date": "2026-05-25",
+        "sending_owner": "Garrett",
+        "from_team_id": 3,
+        "receiving_owner": "Preston",
+        "to_team_id": 14,
+        "asset_type": "Player",
+        "asset_name": "Gunnar Henderson",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 42507
+      },
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-12",
+        "trade_date": "2026-05-25",
+        "sending_owner": "Preston",
+        "from_team_id": 14,
+        "receiving_owner": "Garrett",
+        "to_team_id": 3,
+        "asset_type": "Player",
+        "asset_name": "Seiya Suzuki",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 4142424
+      }
+    ]
+  },
+  {
+    "unique_id": "2026_espn_11",
+    "season_year": 2026,
+    "trade_id": "ESPN-11",
+    "trade_date": "2026-05-19",
+    "espn_root_id": "5ee8a045-f8a9-417b-9598-e9156b951b8a",
+    "is_espn_player_only": true,
+    "participants": [
+      "Mark",
+      "Tim"
+    ],
+    "owner_packages": {
+      "Mark": {
+        "owner": "Mark",
+        "team_id": 13,
+        "sent": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-11",
+            "trade_date": "2026-05-19",
+            "sending_owner": "Mark",
+            "from_team_id": 13,
+            "receiving_owner": "Tim",
+            "to_team_id": 1,
+            "asset_type": "Player",
+            "asset_name": "Corbin Carroll",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 42404
+          }
+        ],
+        "received": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-11",
+            "trade_date": "2026-05-19",
+            "sending_owner": "Tim",
+            "from_team_id": 1,
+            "receiving_owner": "Mark",
+            "to_team_id": 13,
+            "asset_type": "Player",
+            "asset_name": "Jordan Walker",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 4684778
+          }
+        ]
+      },
+      "Tim": {
+        "owner": "Tim",
+        "team_id": 1,
+        "sent": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-11",
+            "trade_date": "2026-05-19",
+            "sending_owner": "Tim",
+            "from_team_id": 1,
+            "receiving_owner": "Mark",
+            "to_team_id": 13,
+            "asset_type": "Player",
+            "asset_name": "Jordan Walker",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 4684778
+          }
+        ],
+        "received": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-11",
+            "trade_date": "2026-05-19",
+            "sending_owner": "Mark",
+            "from_team_id": 13,
+            "receiving_owner": "Tim",
+            "to_team_id": 1,
+            "asset_type": "Player",
+            "asset_name": "Corbin Carroll",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 42404
+          }
+        ]
+      }
+    },
+    "items": [
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-11",
+        "trade_date": "2026-05-19",
+        "sending_owner": "Mark",
+        "from_team_id": 13,
+        "receiving_owner": "Tim",
+        "to_team_id": 1,
+        "asset_type": "Player",
+        "asset_name": "Corbin Carroll",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 42404
+      },
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-11",
+        "trade_date": "2026-05-19",
+        "sending_owner": "Tim",
+        "from_team_id": 1,
+        "receiving_owner": "Mark",
+        "to_team_id": 13,
+        "asset_type": "Player",
+        "asset_name": "Jordan Walker",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 4684778
+      }
+    ]
+  },
+  {
+    "unique_id": "2026_espn_10",
+    "season_year": 2026,
+    "trade_id": "ESPN-10",
+    "trade_date": "2026-05-01",
+    "espn_root_id": "dcb6a9bd-7411-4bd8-80b6-ee4ba0a6a3a9",
+    "is_espn_player_only": true,
+    "participants": [
+      "Dan",
+      "Preston"
+    ],
+    "owner_packages": {
+      "Dan": {
+        "owner": "Dan",
+        "team_id": 5,
+        "sent": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-10",
+            "trade_date": "2026-05-01",
+            "sending_owner": "Dan",
+            "from_team_id": 5,
+            "receiving_owner": "Preston",
+            "to_team_id": 14,
+            "asset_type": "Player",
+            "asset_name": "Sandy Alcantara",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 35241,
+            "stats": {
+              "is_pitcher": true,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 205.0,
+              "ER": 88.0,
+              "K": 149.0,
+              "QS": 21.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
+          }
+        ],
+        "received": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-10",
+            "trade_date": "2026-05-01",
+            "sending_owner": "Preston",
+            "from_team_id": 14,
+            "receiving_owner": "Dan",
+            "to_team_id": 5,
+            "asset_type": "Player",
+            "asset_name": "Bryan Reynolds",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 38980
+          }
+        ]
+      },
+      "Preston": {
+        "owner": "Preston",
+        "team_id": 14,
+        "sent": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-10",
+            "trade_date": "2026-05-01",
+            "sending_owner": "Preston",
+            "from_team_id": 14,
+            "receiving_owner": "Dan",
+            "to_team_id": 5,
+            "asset_type": "Player",
+            "asset_name": "Bryan Reynolds",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 38980
+          }
+        ],
+        "received": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-10",
+            "trade_date": "2026-05-01",
+            "sending_owner": "Dan",
+            "from_team_id": 5,
+            "receiving_owner": "Preston",
+            "to_team_id": 14,
+            "asset_type": "Player",
+            "asset_name": "Sandy Alcantara",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 35241,
+            "stats": {
+              "is_pitcher": true,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 205.0,
+              "ER": 88.0,
+              "K": 149.0,
+              "QS": 21.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
+          }
+        ]
+      }
+    },
+    "items": [
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-10",
+        "trade_date": "2026-05-01",
+        "sending_owner": "Dan",
+        "from_team_id": 5,
+        "receiving_owner": "Preston",
+        "to_team_id": 14,
+        "asset_type": "Player",
+        "asset_name": "Sandy Alcantara",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 35241,
+        "stats": {
+          "is_pitcher": true,
+          "PA": 0.0,
+          "AB": 0.0,
+          "H": 0.0,
+          "R": 0.0,
+          "HR": 0.0,
+          "RBI": 0.0,
+          "SB": 0.0,
+          "BB": 0.0,
+          "OBP": 0.0,
+          "IP": 205.0,
+          "ER": 88.0,
+          "K": 149.0,
+          "QS": 21.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
+      },
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-10",
+        "trade_date": "2026-05-01",
+        "sending_owner": "Preston",
+        "from_team_id": 14,
+        "receiving_owner": "Dan",
+        "to_team_id": 5,
+        "asset_type": "Player",
+        "asset_name": "Bryan Reynolds",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 38980
+      }
+    ]
+  },
+  {
+    "unique_id": "2026_espn_9",
+    "season_year": 2026,
+    "trade_id": "ESPN-9",
+    "trade_date": "2026-04-19",
+    "espn_root_id": "1daad3d8-eafd-4986-9c44-a9528696eba2",
+    "is_espn_player_only": true,
+    "participants": [
+      "Preston",
+      "Tim"
+    ],
+    "owner_packages": {
+      "Preston": {
+        "owner": "Preston",
+        "team_id": 14,
+        "sent": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-9",
+            "trade_date": "2026-04-19",
+            "sending_owner": "Preston",
+            "from_team_id": 14,
+            "receiving_owner": "Tim",
+            "to_team_id": 1,
+            "asset_type": "Player",
+            "asset_name": "Brandon Woodruff",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 37515
+          }
+        ],
+        "received": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-9",
+            "trade_date": "2026-04-19",
+            "sending_owner": "Tim",
+            "from_team_id": 1,
+            "receiving_owner": "Preston",
+            "to_team_id": 14,
+            "asset_type": "Player",
+            "asset_name": "Josh Hader",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 32760,
+            "stats": {
+              "is_pitcher": true,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 41.3,
+              "ER": 4.0,
+              "K": 54.0,
+              "QS": 0.0,
+              "SV": 25.0,
+              "HD": 0.0
+            }
+          },
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-9",
+            "trade_date": "2026-04-19",
+            "sending_owner": "Tim",
+            "from_team_id": 1,
+            "receiving_owner": "Preston",
+            "to_team_id": 14,
+            "asset_type": "Player",
+            "asset_name": "Xavier Edwards",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 41326
+          }
+        ]
+      },
+      "Tim": {
+        "owner": "Tim",
+        "team_id": 1,
+        "sent": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-9",
+            "trade_date": "2026-04-19",
+            "sending_owner": "Tim",
+            "from_team_id": 1,
+            "receiving_owner": "Preston",
+            "to_team_id": 14,
+            "asset_type": "Player",
+            "asset_name": "Josh Hader",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 32760,
+            "stats": {
+              "is_pitcher": true,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 41.3,
+              "ER": 4.0,
+              "K": 54.0,
+              "QS": 0.0,
+              "SV": 25.0,
+              "HD": 0.0
+            }
+          },
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-9",
+            "trade_date": "2026-04-19",
+            "sending_owner": "Tim",
+            "from_team_id": 1,
+            "receiving_owner": "Preston",
+            "to_team_id": 14,
+            "asset_type": "Player",
+            "asset_name": "Xavier Edwards",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 41326
+          }
+        ],
+        "received": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-9",
+            "trade_date": "2026-04-19",
+            "sending_owner": "Preston",
+            "from_team_id": 14,
+            "receiving_owner": "Tim",
+            "to_team_id": 1,
+            "asset_type": "Player",
+            "asset_name": "Brandon Woodruff",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 37515
+          }
+        ]
+      }
+    },
+    "items": [
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-9",
+        "trade_date": "2026-04-19",
+        "sending_owner": "Tim",
+        "from_team_id": 1,
+        "receiving_owner": "Preston",
+        "to_team_id": 14,
+        "asset_type": "Player",
+        "asset_name": "Josh Hader",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 32760,
+        "stats": {
+          "is_pitcher": true,
+          "PA": 0.0,
+          "AB": 0.0,
+          "H": 0.0,
+          "R": 0.0,
+          "HR": 0.0,
+          "RBI": 0.0,
+          "SB": 0.0,
+          "BB": 0.0,
+          "OBP": 0.0,
+          "IP": 41.3,
+          "ER": 4.0,
+          "K": 54.0,
+          "QS": 0.0,
+          "SV": 25.0,
+          "HD": 0.0
+        }
+      },
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-9",
+        "trade_date": "2026-04-19",
+        "sending_owner": "Tim",
+        "from_team_id": 1,
+        "receiving_owner": "Preston",
+        "to_team_id": 14,
+        "asset_type": "Player",
+        "asset_name": "Xavier Edwards",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 41326
+      },
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-9",
+        "trade_date": "2026-04-19",
+        "sending_owner": "Preston",
+        "from_team_id": 14,
+        "receiving_owner": "Tim",
+        "to_team_id": 1,
+        "asset_type": "Player",
+        "asset_name": "Brandon Woodruff",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 37515
+      }
+    ]
+  },
+  {
+    "unique_id": "2026_espn_8",
+    "season_year": 2026,
+    "trade_id": "ESPN-8",
+    "trade_date": "2026-03-17",
+    "espn_root_id": "a54c1b97-fddb-4fc7-b8ff-4fb198edf78a",
+    "is_espn_player_only": true,
+    "participants": [
+      "Alex",
+      "Tim"
+    ],
+    "owner_packages": {
+      "Alex": {
+        "owner": "Alex",
+        "team_id": 8,
+        "sent": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-8",
+            "trade_date": "2026-03-17",
+            "sending_owner": "Alex",
+            "from_team_id": 8,
+            "receiving_owner": "Tim",
+            "to_team_id": 1,
+            "asset_type": "Player",
+            "asset_name": "Jonathan India",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 41171
+          }
+        ],
+        "received": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-8",
+            "trade_date": "2026-03-17",
+            "sending_owner": "Tim",
+            "from_team_id": 1,
+            "receiving_owner": "Alex",
+            "to_team_id": 8,
+            "asset_type": "Player",
+            "asset_name": "Cristopher Sanchez",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 42359
+          }
+        ]
+      },
+      "Tim": {
+        "owner": "Tim",
+        "team_id": 1,
+        "sent": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-8",
+            "trade_date": "2026-03-17",
+            "sending_owner": "Tim",
+            "from_team_id": 1,
+            "receiving_owner": "Alex",
+            "to_team_id": 8,
+            "asset_type": "Player",
+            "asset_name": "Cristopher Sanchez",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 42359
+          }
+        ],
+        "received": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-8",
+            "trade_date": "2026-03-17",
+            "sending_owner": "Alex",
+            "from_team_id": 8,
+            "receiving_owner": "Tim",
+            "to_team_id": 1,
+            "asset_type": "Player",
+            "asset_name": "Jonathan India",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 41171
+          }
+        ]
+      }
+    },
+    "items": [
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-8",
+        "trade_date": "2026-03-17",
+        "sending_owner": "Alex",
+        "from_team_id": 8,
+        "receiving_owner": "Tim",
+        "to_team_id": 1,
+        "asset_type": "Player",
+        "asset_name": "Jonathan India",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 41171
+      },
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-8",
+        "trade_date": "2026-03-17",
+        "sending_owner": "Tim",
+        "from_team_id": 1,
+        "receiving_owner": "Alex",
+        "to_team_id": 8,
+        "asset_type": "Player",
+        "asset_name": "Cristopher Sanchez",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 42359
+      }
+    ]
+  },
+  {
+    "unique_id": "2026_espn_7",
+    "season_year": 2026,
+    "trade_id": "ESPN-7",
+    "trade_date": "2026-03-17",
+    "espn_root_id": "dd531b06-c105-4a7d-b278-2333c598b254",
+    "is_espn_player_only": true,
+    "participants": [
+      "Dan",
+      "Garrett"
+    ],
+    "owner_packages": {
+      "Dan": {
+        "owner": "Dan",
+        "team_id": 5,
+        "sent": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-7",
+            "trade_date": "2026-03-17",
+            "sending_owner": "Dan",
+            "from_team_id": 5,
+            "receiving_owner": "Garrett",
+            "to_team_id": 3,
+            "asset_type": "Player",
+            "asset_name": "Heliot Ramos",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 39642
+          }
+        ],
+        "received": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-7",
+            "trade_date": "2026-03-17",
+            "sending_owner": "Garrett",
+            "from_team_id": 3,
+            "receiving_owner": "Dan",
+            "to_team_id": 5,
+            "asset_type": "Player",
+            "asset_name": "Corey Seager",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 32691
+          }
+        ]
+      },
+      "Garrett": {
+        "owner": "Garrett",
+        "team_id": 3,
+        "sent": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-7",
+            "trade_date": "2026-03-17",
+            "sending_owner": "Garrett",
+            "from_team_id": 3,
+            "receiving_owner": "Dan",
+            "to_team_id": 5,
+            "asset_type": "Player",
+            "asset_name": "Corey Seager",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 32691
+          }
+        ],
+        "received": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-7",
+            "trade_date": "2026-03-17",
+            "sending_owner": "Dan",
+            "from_team_id": 5,
+            "receiving_owner": "Garrett",
+            "to_team_id": 3,
+            "asset_type": "Player",
+            "asset_name": "Heliot Ramos",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 39642
+          }
+        ]
+      }
+    },
+    "items": [
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-7",
+        "trade_date": "2026-03-17",
+        "sending_owner": "Dan",
+        "from_team_id": 5,
+        "receiving_owner": "Garrett",
+        "to_team_id": 3,
+        "asset_type": "Player",
+        "asset_name": "Heliot Ramos",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 39642
+      },
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-7",
+        "trade_date": "2026-03-17",
+        "sending_owner": "Garrett",
+        "from_team_id": 3,
+        "receiving_owner": "Dan",
+        "to_team_id": 5,
+        "asset_type": "Player",
+        "asset_name": "Corey Seager",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 32691
+      }
+    ]
+  },
+  {
+    "unique_id": "2026_espn_6",
+    "season_year": 2026,
+    "trade_id": "ESPN-6",
+    "trade_date": "2026-03-17",
+    "espn_root_id": "8663a30e-6abe-4ec5-a4e2-dfb25f52c347",
+    "is_espn_player_only": true,
+    "participants": [
+      "Anil",
+      "Mark"
+    ],
+    "owner_packages": {
+      "Anil": {
+        "owner": "Anil",
+        "team_id": 6,
+        "sent": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-6",
+            "trade_date": "2026-03-17",
+            "sending_owner": "Anil",
+            "from_team_id": 6,
+            "receiving_owner": "Mark",
+            "to_team_id": 13,
+            "asset_type": "Player",
+            "asset_name": "Tommy Edman",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 39907
+          }
+        ],
+        "received": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-6",
+            "trade_date": "2026-03-17",
+            "sending_owner": "Mark",
+            "from_team_id": 13,
+            "receiving_owner": "Anil",
+            "to_team_id": 6,
+            "asset_type": "Player",
+            "asset_name": "Konnor Griffin",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 5218285
+          }
+        ]
+      },
+      "Mark": {
+        "owner": "Mark",
+        "team_id": 13,
+        "sent": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-6",
+            "trade_date": "2026-03-17",
+            "sending_owner": "Mark",
+            "from_team_id": 13,
+            "receiving_owner": "Anil",
+            "to_team_id": 6,
+            "asset_type": "Player",
+            "asset_name": "Konnor Griffin",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 5218285
+          }
+        ],
+        "received": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-6",
+            "trade_date": "2026-03-17",
+            "sending_owner": "Anil",
+            "from_team_id": 6,
+            "receiving_owner": "Mark",
+            "to_team_id": 13,
+            "asset_type": "Player",
+            "asset_name": "Tommy Edman",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 39907
+          }
+        ]
+      }
+    },
+    "items": [
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-6",
+        "trade_date": "2026-03-17",
+        "sending_owner": "Mark",
+        "from_team_id": 13,
+        "receiving_owner": "Anil",
+        "to_team_id": 6,
+        "asset_type": "Player",
+        "asset_name": "Konnor Griffin",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 5218285
+      },
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-6",
+        "trade_date": "2026-03-17",
+        "sending_owner": "Anil",
+        "from_team_id": 6,
+        "receiving_owner": "Mark",
+        "to_team_id": 13,
+        "asset_type": "Player",
+        "asset_name": "Tommy Edman",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 39907
+      }
+    ]
+  },
+  {
+    "unique_id": "2026_espn_5",
+    "season_year": 2026,
+    "trade_id": "ESPN-5",
+    "trade_date": "2026-03-16",
+    "espn_root_id": "300bef22-adc0-4c55-af7a-4fa6a8d6e09a",
+    "is_espn_player_only": true,
+    "participants": [
+      "Alex",
+      "Garrett"
+    ],
+    "owner_packages": {
+      "Alex": {
+        "owner": "Alex",
+        "team_id": 8,
+        "sent": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-5",
+            "trade_date": "2026-03-16",
+            "sending_owner": "Alex",
+            "from_team_id": 8,
+            "receiving_owner": "Garrett",
+            "to_team_id": 3,
+            "asset_type": "Player",
+            "asset_name": "Manny Machado",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 31097
+          }
+        ],
+        "received": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-5",
+            "trade_date": "2026-03-16",
+            "sending_owner": "Garrett",
+            "from_team_id": 3,
+            "receiving_owner": "Alex",
+            "to_team_id": 8,
+            "asset_type": "Player",
+            "asset_name": "Pablo Lopez",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 39671
+          }
+        ]
+      },
+      "Garrett": {
+        "owner": "Garrett",
+        "team_id": 3,
+        "sent": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-5",
+            "trade_date": "2026-03-16",
+            "sending_owner": "Garrett",
+            "from_team_id": 3,
+            "receiving_owner": "Alex",
+            "to_team_id": 8,
+            "asset_type": "Player",
+            "asset_name": "Pablo Lopez",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 39671
+          }
+        ],
+        "received": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-5",
+            "trade_date": "2026-03-16",
+            "sending_owner": "Alex",
+            "from_team_id": 8,
+            "receiving_owner": "Garrett",
+            "to_team_id": 3,
+            "asset_type": "Player",
+            "asset_name": "Manny Machado",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 31097
+          }
+        ]
+      }
+    },
+    "items": [
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-5",
+        "trade_date": "2026-03-16",
+        "sending_owner": "Alex",
+        "from_team_id": 8,
+        "receiving_owner": "Garrett",
+        "to_team_id": 3,
+        "asset_type": "Player",
+        "asset_name": "Manny Machado",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 31097
+      },
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-5",
+        "trade_date": "2026-03-16",
+        "sending_owner": "Garrett",
+        "from_team_id": 3,
+        "receiving_owner": "Alex",
+        "to_team_id": 8,
+        "asset_type": "Player",
+        "asset_name": "Pablo Lopez",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 39671
+      }
+    ]
+  },
+  {
+    "unique_id": "2026_espn_4",
+    "season_year": 2026,
+    "trade_id": "ESPN-4",
+    "trade_date": "2026-03-11",
+    "espn_root_id": "ed111ef6-70d7-4372-bf51-65e8828c1e01",
+    "is_espn_player_only": true,
+    "participants": [
+      "Adrian",
+      "Garrett"
+    ],
+    "owner_packages": {
+      "Adrian": {
+        "owner": "Adrian",
+        "team_id": 2,
+        "sent": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-4",
+            "trade_date": "2026-03-11",
+            "sending_owner": "Adrian",
+            "from_team_id": 2,
+            "receiving_owner": "Garrett",
+            "to_team_id": 3,
+            "asset_type": "Player",
+            "asset_name": "Gunnar Henderson",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 42507
+          }
+        ],
+        "received": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-4",
+            "trade_date": "2026-03-11",
+            "sending_owner": "Garrett",
+            "from_team_id": 3,
+            "receiving_owner": "Adrian",
+            "to_team_id": 2,
+            "asset_type": "Player",
+            "asset_name": "Cole Ragans",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 41054
+          }
+        ]
+      },
+      "Garrett": {
+        "owner": "Garrett",
+        "team_id": 3,
+        "sent": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-4",
+            "trade_date": "2026-03-11",
+            "sending_owner": "Garrett",
+            "from_team_id": 3,
+            "receiving_owner": "Adrian",
+            "to_team_id": 2,
+            "asset_type": "Player",
+            "asset_name": "Cole Ragans",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 41054
+          }
+        ],
+        "received": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-4",
+            "trade_date": "2026-03-11",
+            "sending_owner": "Adrian",
+            "from_team_id": 2,
+            "receiving_owner": "Garrett",
+            "to_team_id": 3,
+            "asset_type": "Player",
+            "asset_name": "Gunnar Henderson",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 42507
+          }
+        ]
+      }
+    },
+    "items": [
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-4",
+        "trade_date": "2026-03-11",
+        "sending_owner": "Adrian",
+        "from_team_id": 2,
+        "receiving_owner": "Garrett",
+        "to_team_id": 3,
+        "asset_type": "Player",
+        "asset_name": "Gunnar Henderson",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 42507
+      },
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-4",
+        "trade_date": "2026-03-11",
+        "sending_owner": "Garrett",
+        "from_team_id": 3,
+        "receiving_owner": "Adrian",
+        "to_team_id": 2,
+        "asset_type": "Player",
+        "asset_name": "Cole Ragans",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 41054
+      }
+    ]
+  },
+  {
+    "unique_id": "2026_espn_3",
+    "season_year": 2026,
+    "trade_id": "ESPN-3",
+    "trade_date": "2026-03-11",
+    "espn_root_id": "a013538d-e5c3-47e6-9b53-de361f3b9b72",
+    "is_espn_player_only": true,
+    "participants": [
+      "Adrian",
+      "Dan"
+    ],
+    "owner_packages": {
+      "Adrian": {
+        "owner": "Adrian",
+        "team_id": 2,
+        "sent": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-3",
+            "trade_date": "2026-03-11",
+            "sending_owner": "Adrian",
+            "from_team_id": 2,
+            "receiving_owner": "Dan",
+            "to_team_id": 5,
+            "asset_type": "Player",
+            "asset_name": "Logan Webb",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 41216
+          }
+        ],
+        "received": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-3",
+            "trade_date": "2026-03-11",
+            "sending_owner": "Dan",
+            "from_team_id": 5,
+            "receiving_owner": "Adrian",
+            "to_team_id": 2,
+            "asset_type": "Player",
+            "asset_name": "Logan Gilbert",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 41221
+          }
+        ]
+      },
+      "Dan": {
+        "owner": "Dan",
+        "team_id": 5,
+        "sent": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-3",
+            "trade_date": "2026-03-11",
+            "sending_owner": "Dan",
+            "from_team_id": 5,
+            "receiving_owner": "Adrian",
+            "to_team_id": 2,
+            "asset_type": "Player",
+            "asset_name": "Logan Gilbert",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 41221
+          }
+        ],
+        "received": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-3",
+            "trade_date": "2026-03-11",
+            "sending_owner": "Adrian",
+            "from_team_id": 2,
+            "receiving_owner": "Dan",
+            "to_team_id": 5,
+            "asset_type": "Player",
+            "asset_name": "Logan Webb",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 41216
+          }
+        ]
+      }
+    },
+    "items": [
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-3",
+        "trade_date": "2026-03-11",
+        "sending_owner": "Dan",
+        "from_team_id": 5,
+        "receiving_owner": "Adrian",
+        "to_team_id": 2,
+        "asset_type": "Player",
+        "asset_name": "Logan Gilbert",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 41221
+      },
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-3",
+        "trade_date": "2026-03-11",
+        "sending_owner": "Adrian",
+        "from_team_id": 2,
+        "receiving_owner": "Dan",
+        "to_team_id": 5,
+        "asset_type": "Player",
+        "asset_name": "Logan Webb",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 41216
+      }
+    ]
+  },
+  {
+    "unique_id": "2026_espn_2",
+    "season_year": 2026,
+    "trade_id": "ESPN-2",
+    "trade_date": "2026-03-11",
+    "espn_root_id": "97783389-46cd-415e-8b0b-55699cdc49ec",
+    "is_espn_player_only": true,
+    "participants": [
+      "Anil",
+      "Dan"
+    ],
+    "owner_packages": {
+      "Anil": {
+        "owner": "Anil",
+        "team_id": 6,
+        "sent": [],
+        "received": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-2",
+            "trade_date": "2026-03-11",
+            "sending_owner": "Dan",
+            "from_team_id": 5,
+            "receiving_owner": "Anil",
+            "to_team_id": 6,
+            "asset_type": "Player",
+            "asset_name": "Bryan Woo",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 4629089
+          }
+        ]
+      },
+      "Dan": {
+        "owner": "Dan",
+        "team_id": 5,
+        "sent": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-2",
+            "trade_date": "2026-03-11",
+            "sending_owner": "Dan",
+            "from_team_id": 5,
+            "receiving_owner": "Anil",
+            "to_team_id": 6,
+            "asset_type": "Player",
+            "asset_name": "Bryan Woo",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 4629089
+          }
+        ],
+        "received": []
+      }
+    },
+    "items": [
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-2",
+        "trade_date": "2026-03-11",
+        "sending_owner": "Dan",
+        "from_team_id": 5,
+        "receiving_owner": "Anil",
+        "to_team_id": 6,
+        "asset_type": "Player",
+        "asset_name": "Bryan Woo",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 4629089
+      }
+    ]
+  },
+  {
+    "unique_id": "2026_espn_1",
+    "season_year": 2026,
+    "trade_id": "ESPN-1",
+    "trade_date": "2026-03-06",
+    "espn_root_id": "0926c2e9-df41-416f-9b84-d42b523d222b",
+    "is_espn_player_only": true,
+    "participants": [
+      "Preston",
+      "Tim"
+    ],
+    "owner_packages": {
+      "Preston": {
+        "owner": "Preston",
+        "team_id": 14,
+        "sent": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-1",
+            "trade_date": "2026-03-06",
+            "sending_owner": "Preston",
+            "from_team_id": 14,
+            "receiving_owner": "Tim",
+            "to_team_id": 1,
+            "asset_type": "Player",
+            "asset_name": "Yordan Alvarez",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 36018
+          }
+        ],
+        "received": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-1",
+            "trade_date": "2026-03-06",
+            "sending_owner": "Tim",
+            "from_team_id": 1,
+            "receiving_owner": "Preston",
+            "to_team_id": 14,
+            "asset_type": "Player",
+            "asset_name": "Trea Turner",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 33710,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 638.0,
+              "AB": 597.0,
+              "H": 144.0,
+              "R": 94.0,
+              "HR": 19.0,
+              "RBI": 57.0,
+              "SB": 19.0,
+              "BB": 41.0,
+              "OBP": 0.29,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
+          }
+        ]
+      },
+      "Tim": {
+        "owner": "Tim",
+        "team_id": 1,
+        "sent": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-1",
+            "trade_date": "2026-03-06",
+            "sending_owner": "Tim",
+            "from_team_id": 1,
+            "receiving_owner": "Preston",
+            "to_team_id": 14,
+            "asset_type": "Player",
+            "asset_name": "Trea Turner",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 33710,
+            "stats": {
+              "is_pitcher": false,
+              "PA": 638.0,
+              "AB": 597.0,
+              "H": 144.0,
+              "R": 94.0,
+              "HR": 19.0,
+              "RBI": 57.0,
+              "SB": 19.0,
+              "BB": 41.0,
+              "OBP": 0.29,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
+          }
+        ],
+        "received": [
+          {
+            "season_year": 2026,
+            "trade_id": "ESPN-1",
+            "trade_date": "2026-03-06",
+            "sending_owner": "Preston",
+            "from_team_id": 14,
+            "receiving_owner": "Tim",
+            "to_team_id": 1,
+            "asset_type": "Player",
+            "asset_name": "Yordan Alvarez",
+            "pick_number": null,
+            "round_number": null,
+            "budget_amount": 0.0,
+            "original_pick": "",
+            "espn_player_id": 36018
+          }
+        ]
+      }
+    },
+    "items": [
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-1",
+        "trade_date": "2026-03-06",
+        "sending_owner": "Preston",
+        "from_team_id": 14,
+        "receiving_owner": "Tim",
+        "to_team_id": 1,
+        "asset_type": "Player",
+        "asset_name": "Yordan Alvarez",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 36018
+      },
+      {
+        "season_year": 2026,
+        "trade_id": "ESPN-1",
+        "trade_date": "2026-03-06",
+        "sending_owner": "Tim",
+        "from_team_id": 1,
+        "receiving_owner": "Preston",
+        "to_team_id": 14,
+        "asset_type": "Player",
+        "asset_name": "Trea Turner",
+        "pick_number": null,
+        "round_number": null,
+        "budget_amount": 0.0,
+        "original_pick": "",
+        "espn_player_id": 33710,
+        "stats": {
+          "is_pitcher": false,
+          "PA": 638.0,
+          "AB": 597.0,
+          "H": 144.0,
+          "R": 94.0,
+          "HR": 19.0,
+          "RBI": 57.0,
+          "SB": 19.0,
+          "BB": 41.0,
+          "OBP": 0.29,
           "IP": 0.0,
           "ER": 0.0,
           "K": 0.0,

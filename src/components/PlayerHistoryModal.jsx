@@ -3,6 +3,7 @@ import { TEAMS, getDateFromPeriodId } from '../schedule';
 import { SCORING_CATS, LINEUP_SLOTS, aggregateStats } from '../utils/scoring';
 import { supabase } from '../supabaseClient';
 import TeamAvatar from './TeamAvatar';
+import { getPlayerAcquisition } from '../utils/acquisition';
 
 // In-memory cache for full MLB season stats to avoid redundant network calls
 const overallStatsCache = new Map();
@@ -130,11 +131,13 @@ async function fetchPlayerOverallStats(playerName, isPitcher, seasonYear = 2026,
   return null;
 }
 
-export default function PlayerHistoryModal({ playerId, playerName, allStats, selectedSeason = 2026, onClose }) {
+export default function PlayerHistoryModal({ playerId, playerName, teamId = null, allStats, selectedSeason = 2026, onClose }) {
   const [selectedTeamId, setSelectedTeamId] = useState(null);
   const [gameLogSlotFilter, setGameLogSlotFilter] = useState('ALL'); // 'ALL' | 'STARTER' | 'BENCH'
   const [overallStats, setOverallStats] = useState(null);
   const [loadingOverall, setLoadingOverall] = useState(false);
+  const [activeModalTab, setActiveModalTab] = useState('summary'); // 'summary' | 'splits' | 'starts'
+  const [showLineage, setShowLineage] = useState(false);
 
   // 1. Helper: Determine if a record is an appearance (played on active roster or bench)
   const isActiveAppearance = (record) => {
@@ -187,6 +190,59 @@ export default function PlayerHistoryModal({ playerId, playerName, allStats, sel
   const displayCats = displayMode === 'batting' ? batCats : pitchCats;
 
   const seasonYear = selectedSeason || fullGameLog[0]?.season_year || 2026;
+
+  // Acquisition details
+  const acquisition = useMemo(() => {
+    const tid = teamId || selectedTeamId || fullGameLog[0]?.team_id;
+    return getPlayerAcquisition(playerId, tid);
+  }, [playerId, teamId, selectedTeamId, fullGameLog]);
+
+  // Starting pitcher detection (specifically accounts for 1-2 starts/week cadence)
+  const isSP = useMemo(() => {
+    return isPitcher && fullGameLog.some(r => {
+      const s = r.stats || {};
+      const gs = parseFloat(s.GS ?? s['33'] ?? 0);
+      const qs = parseFloat(s.QS ?? s['63'] ?? 0);
+      const ipRaw = parseFloat(s.IP_raw ?? s.IP ?? s['34'] ?? 0);
+      return gs > 0 || qs > 0 || ipRaw >= 9 || r.lineup_slot_id === 14;
+    });
+  }, [isPitcher, fullGameLog]);
+
+  // Chronological Outing-by-Outing starts log for Starting Pitchers
+  const spStartsLog = useMemo(() => {
+    if (!isSP) return [];
+    return fullGameLog.filter(r => {
+      const s = r.stats || {};
+      const gs = parseFloat(s.GS ?? s['33'] ?? 0);
+      const qs = parseFloat(s.QS ?? s['63'] ?? 0);
+      const ipRaw = parseFloat(s.IP_raw ?? s.IP ?? s['34'] ?? 0);
+      return gs > 0 || qs > 0 || ipRaw >= 9 || r.lineup_slot_id === 14;
+    });
+  }, [isSP, fullGameLog]);
+
+  // Recent splits: Last 3/5 Starts for SPs vs Last 7/15/30 Days for Hitters/Relievers
+  const recentSplits = useMemo(() => {
+    if (isSP) {
+      const last3 = spStartsLog.slice(0, 3);
+      const last5 = spStartsLog.slice(0, 5);
+      return [
+        { label: 'Last 3 Starts', games: last3.length, stats: aggregateStats(last3, { includeAll: true }) },
+        { label: 'Last 5 Starts', games: last5.length, stats: aggregateStats(last5, { includeAll: true }) },
+        { label: `Full Season (${spStartsLog.length} Starts)`, games: spStartsLog.length, stats: aggregateStats(spStartsLog, { includeAll: true }) }
+      ];
+    } else {
+      const maxPeriod = fullGameLog.reduce((max, r) => Math.max(max, r.scoring_period_id || 0), 0) || 195;
+      const last7 = fullGameLog.filter(r => r.scoring_period_id >= maxPeriod - 7);
+      const last15 = fullGameLog.filter(r => r.scoring_period_id >= maxPeriod - 15);
+      const last30 = fullGameLog.filter(r => r.scoring_period_id >= maxPeriod - 30);
+      return [
+        { label: 'Last 7 Days', games: last7.length, stats: aggregateStats(last7, { includeAll: true }) },
+        { label: 'Last 15 Days', games: last15.length, stats: aggregateStats(last15, { includeAll: true }) },
+        { label: 'Last 30 Days', games: last30.length, stats: aggregateStats(last30, { includeAll: true }) },
+        { label: `Full Season (${fullGameLog.length} G)`, games: fullGameLog.length, stats: aggregateStats(fullGameLog, { includeAll: true }) }
+      ];
+    }
+  }, [isSP, spStartsLog, fullGameLog]);
 
   // Completed games cutoff: For active 2026 season, synchronize through yesterday's completed games
   // to avoid attributing in-progress or same-day unfinalized games to unrostered performance.
@@ -443,11 +499,106 @@ export default function PlayerHistoryModal({ playerId, playerName, allStats, sel
           <button onClick={onClose} className="text-blue-300 hover:text-white text-3xl leading-none font-light cursor-pointer">&times;</button>
         </div>
 
+        {/* --- ACQUISITION BANNER --- */}
+        {acquisition && (
+          <div className="bg-slate-900 text-white px-5 py-3 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3 shrink-0">
+            <div className="flex items-center gap-2.5">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Acquisition:</span>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-500/20 text-blue-300 border border-blue-400/30">
+                <span>{acquisition.badgeText}</span>
+              </span>
+              <span className="text-xs text-slate-300 font-medium">
+                {acquisition.detailText}
+              </span>
+            </div>
+
+            {acquisition.history?.length > 1 && (
+              <button
+                type="button"
+                onClick={() => setShowLineage(prev => !prev)}
+                className="text-[11px] font-bold text-blue-400 hover:text-blue-200 transition cursor-pointer flex items-center gap-1"
+              >
+                <span>📜 {showLineage ? 'Hide' : 'View'} Timeline ({acquisition.history.length} moves)</span>
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* --- EXPANDABLE TRANSACTION TIMELINE --- */}
+        {showLineage && acquisition?.history?.length > 0 && (
+          <div className="bg-slate-950 px-5 py-3 border-b border-slate-800 text-xs text-slate-300 space-y-1.5 animate-fade-in shrink-0">
+            <div className="font-bold text-slate-400 uppercase tracking-wider text-[10px] mb-1">
+              Transaction History in 2026:
+            </div>
+            {acquisition.history.map((tx, idx) => (
+              <div key={idx} className="flex items-center justify-between border-l-2 border-blue-500/50 pl-3 py-0.5">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-slate-400">{tx.transaction_date?.split('T')[0]}</span>
+                  <span className="font-bold text-white uppercase text-[10px] px-1.5 py-0.2 rounded bg-slate-800">
+                    {tx.transaction_type}
+                  </span>
+                  <span>
+                    {tx.transaction_type === 'TRADE'
+                      ? `Traded: Team ${tx.from_team_id} ➔ Team ${tx.to_team_id}`
+                      : tx.transaction_type === 'ADD'
+                      ? `Added by Team ${tx.to_team_id}`
+                      : tx.transaction_type === 'DROP'
+                      ? `Dropped by Team ${tx.from_team_id}`
+                      : `Drafted`}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* --- MODAL TABS --- */}
+        {!selectedTeamId && (
+          <div className="bg-white border-b border-gray-200 px-5 py-2.5 flex items-center justify-between gap-4 shrink-0 shadow-xs">
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setActiveModalTab('summary')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer ${
+                  activeModalTab === 'summary' ? 'bg-blue-600 text-white shadow-xs' : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                Owner Summary
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveModalTab('splits')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer ${
+                  activeModalTab === 'splits' ? 'bg-blue-600 text-white shadow-xs' : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                Recent Splits & Form
+              </button>
+              {isSP && (
+                <button
+                  type="button"
+                  onClick={() => setActiveModalTab('starts')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
+                    activeModalTab === 'starts' ? 'bg-emerald-600 text-white shadow-xs' : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <span>⚾ Starts Log</span>
+                  <span className={`text-[10px] font-mono px-1.5 rounded-full ${
+                    activeModalTab === 'starts' ? 'bg-emerald-700 text-white' : 'bg-gray-200 text-gray-700'
+                  }`}>
+                    {spStartsLog.length}
+                  </span>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* --- CONTENT --- */}
         <div className="overflow-y-auto p-0 flex-1 bg-gray-50">
           
-          {/* VIEW 1: OWNER SUMMARY */}
-          {!selectedTeamId && (
+          {/* VIEW 1A: OWNER SUMMARY */}
+          {!selectedTeamId && activeModalTab === 'summary' && (
             <table className="w-full text-sm border-collapse">
               <thead className="bg-gray-100 sticky top-0 shadow-sm z-10 text-xs text-gray-500 uppercase tracking-wider font-semibold">
                 <tr>
@@ -594,11 +745,9 @@ export default function PlayerHistoryModal({ playerId, playerName, allStats, sel
                         </div>
                       </div>
                     </td>
-                    <td className="p-3 text-center font-mono font-bold text-gray-700">
-                      {unrosteredRow.games}
-                    </td>
+                    <td className="p-3 text-center font-mono font-bold text-gray-700">{unrosteredRow.games}</td>
                     {displayCats.map(cat => (
-                      <td key={cat} className="p-3 text-center font-mono text-gray-700 font-semibold">
+                      <td key={cat} className="p-3 text-center font-mono text-gray-700 font-medium">
                         {formatStat(unrosteredRow.stats[cat], cat, unrosteredRow.games, unrosteredRow.stats)}
                       </td>
                     ))}
@@ -609,6 +758,137 @@ export default function PlayerHistoryModal({ playerId, playerName, allStats, sel
                 ) : null}
               </tbody>
             </table>
+          )}
+
+          {/* VIEW 1B: RECENT SPLITS */}
+          {!selectedTeamId && activeModalTab === 'splits' && (
+            <div className="p-5 space-y-4">
+              <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-xs">
+                <div className="bg-gray-50 px-5 py-3.5 border-b border-gray-200">
+                  <h3 className="text-sm font-bold text-gray-900">
+                    {isSP ? 'Starting Pitcher Outing Splits' : 'Recent Timeframe Splits'}
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {isSP 
+                      ? 'Performance across recent starts (accounts for 1-2 outings/week starting cadence)' 
+                      : 'Rolling performance windows across active games'}
+                  </p>
+                </div>
+
+                <table className="w-full text-sm border-collapse">
+                  <thead className="bg-gray-100 text-xs text-gray-500 uppercase tracking-wider font-semibold">
+                    <tr>
+                      <th className="p-3.5 text-left border-b border-gray-200">Split Window</th>
+                      <th className="p-3.5 text-center border-b border-gray-200 w-20">{isSP ? 'Starts' : 'Games'}</th>
+                      {displayCats.map(c => (
+                        <th key={c} className="p-3.5 text-center border-b border-gray-200 min-w-[50px]">
+                          {getLabel(c)}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 bg-white">
+                    {recentSplits.map((sp, idx) => (
+                      <tr key={idx} className={idx === recentSplits.length - 1 ? 'bg-gray-50/70 font-bold border-t-2 border-gray-200' : 'hover:bg-blue-50/40'}>
+                        <td className="p-3.5">
+                          <span className="font-bold text-gray-900">{sp.label}</span>
+                        </td>
+                        <td className="p-3.5 text-center font-mono font-bold text-gray-700">{sp.games}</td>
+                        {displayCats.map(cat => (
+                          <td key={cat} className="p-3.5 text-center font-mono font-semibold text-gray-800">
+                            {formatStat(sp.stats[cat], cat, sp.games, sp.stats)}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* VIEW 1C: STARTS LOG (SPs Only) */}
+          {!selectedTeamId && activeModalTab === 'starts' && isSP && (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm border-collapse">
+                <thead className="bg-gray-100 sticky top-0 shadow-sm z-10 text-xs text-gray-500 uppercase tracking-wider font-semibold">
+                  <tr>
+                    <th className="p-3 text-left border-b border-gray-200">Date & Period</th>
+                    <th className="p-3 text-left border-b border-gray-200">Owner</th>
+                    <th className="p-3 text-center border-b border-gray-200">Slot</th>
+                    <th className="p-3 text-center border-b border-gray-200">IP</th>
+                    <th className="p-3 text-center border-b border-gray-200">ER</th>
+                    <th className="p-3 text-center border-b border-gray-200">K</th>
+                    <th className="p-3 text-center border-b border-gray-200">QS</th>
+                    <th className="p-3 text-center border-b border-gray-200">H</th>
+                    <th className="p-3 text-center border-b border-gray-200">BB</th>
+                    <th className="p-3 text-right border-b border-gray-200">Game Score</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 bg-white">
+                  {spStartsLog.map((st, idx) => {
+                    const s = st.stats || {};
+                    const ipRaw = parseFloat(s.IP_raw ?? s.IP ?? s['34'] ?? 0);
+                    const ip = ipRaw > 50 ? ipRaw / 3 : ipRaw;
+                    const er = parseFloat(s.ER ?? s['45'] ?? 0);
+                    const k = parseFloat(s.K ?? s['48'] ?? 0);
+                    const h = parseFloat(s.H_Allowed ?? s['37'] ?? 0);
+                    const bb = parseFloat(s.BB_Allowed ?? s['39'] ?? 0);
+                    const isQS = (parseFloat(s.QS ?? s['63'] ?? 0) > 0) || (ip >= 6 && er <= 3);
+                    const gameScore = Math.round(50 + (ip * 3) + k - (er * 2) - h - bb + (isQS ? 4 : 0));
+                    const dateStr = getDateFromPeriodId(st.scoring_period_id, selectedSeason);
+                    const isBench = st.lineup_slot_id === 16 || st.lineup_slot_id === 17;
+
+                    return (
+                      <tr key={idx} className="hover:bg-blue-50/50 transition-colors">
+                        <td className="p-3">
+                          <div className="font-bold text-gray-900">{dateStr}</div>
+                          <div className="text-[11px] text-gray-400 font-mono">Period {st.scoring_period_id}</div>
+                        </td>
+                        <td className="p-3">
+                          <div className="flex items-center gap-2">
+                            <TeamAvatar team={{ id: st.team_id, name: TEAMS[st.team_id]?.name }} size="xs" />
+                            <span className="font-semibold text-gray-800">{TEAMS[st.team_id]?.name || `Team ${st.team_id}`}</span>
+                          </div>
+                        </td>
+                        <td className="p-3 text-center">
+                          <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${
+                            isBench ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'
+                          }`}>
+                            {isBench ? 'Bench' : 'Started'}
+                          </span>
+                        </td>
+                        <td className="p-3 text-center font-mono font-bold text-gray-900">
+                          {Math.floor(ip)}.{Math.round((ip % 1) * 3)}
+                        </td>
+                        <td className={`p-3 text-center font-mono font-bold ${er <= 2 ? 'text-emerald-600' : er >= 4 ? 'text-rose-600' : 'text-gray-700'}`}>
+                          {er}
+                        </td>
+                        <td className="p-3 text-center font-mono font-bold text-blue-700">{k}</td>
+                        <td className="p-3 text-center">
+                          {isQS ? (
+                            <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-amber-400 text-slate-950 shadow-2xs">
+                              QS
+                            </span>
+                          ) : (
+                            <span className="text-gray-300">-</span>
+                          )}
+                        </td>
+                        <td className="p-3 text-center font-mono text-gray-600">{h}</td>
+                        <td className="p-3 text-center font-mono text-gray-600">{bb}</td>
+                        <td className="p-3 text-right font-mono font-bold text-gray-900">
+                          <span className={`px-2 py-0.5 rounded text-xs ${
+                            gameScore >= 60 ? 'bg-emerald-100 text-emerald-800' : gameScore <= 40 ? 'bg-rose-100 text-rose-800' : 'bg-gray-100 text-gray-700'
+                          }`}>
+                            {gameScore} pts
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
 
           {/* VIEW 2: GAME LOG (Filtered) */}
