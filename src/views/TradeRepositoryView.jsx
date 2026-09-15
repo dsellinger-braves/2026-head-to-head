@@ -300,7 +300,7 @@ export default function TradeRepositoryView({ onPlayerClick, onOwnerClick }) {
                             onClick={() => onOwnerClick && onOwnerClick(teamObj)}
                             className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition"
                           >
-                            <TeamAvatar teamId={pkg.team_id} className="w-10 h-10 rounded-full border border-slate-700" />
+                            <TeamAvatar team={teamObj} teamId={pkg.team_id} size="sm" />
                             <div>
                               <div className="text-sm font-black text-white flex items-center gap-1.5">
                                 <span>{owner}</span>

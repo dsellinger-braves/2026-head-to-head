@@ -60,7 +60,7 @@ export function AuthProvider({ children }) {
   // Commissioner override: allows Dan (Team 5) and Adrian (Team 2) to manage any team
   const [overrideTeamId, setOverrideTeamId] = useState(null);
 
-  // Fetch all profiles from Supabase with safe 4s timeout
+  // Fetch all profiles from Supabase with safe 8s timeout and static fallback
   const fetchProfiles = useCallback(async () => {
     try {
       const queryPromise = supabase
@@ -68,17 +68,25 @@ export function AuthProvider({ children }) {
         .select('*')
         .order('team_id', { ascending: true });
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('fetchProfiles timeout')), 4000)
+        setTimeout(() => reject(new Error('fetchProfiles timeout')), 8000)
       );
       const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
-      if (!error && data) {
+      if (!error && data && data.length > 0) {
         setAllProfiles(data);
         return data;
       }
     } catch (err) {
-      console.warn('Could not fetch league profiles:', err);
+      console.warn('Could not fetch remote league profiles; falling back to static roster profiles:', err?.message || err);
     }
-    return [];
+
+    const fallbackProfiles = Object.entries(STATIC_LEAGUE_PROFILES).map(([username, p]) => ({
+      discord_username: username,
+      team_id: p.team_id,
+      owner_name: p.owner_name,
+      role: p.role
+    }));
+    setAllProfiles(fallbackProfiles);
+    return fallbackProfiles;
   }, []);
 
   // Sync Supabase user with league_profiles
