@@ -29,7 +29,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 4619649
+            "espn_player_id": 4619649,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 14,
+              "PA": 34.0,
+              "AB": 29.0,
+              "H": 6.0,
+              "R": 2.0,
+              "HR": 1.0,
+              "RBI": 2.0,
+              "SB": 2.0,
+              "BB": 5.0,
+              "OBP": 0.324,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ],
         "received": [
@@ -47,7 +66,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 30442
+            "espn_player_id": 30442,
+            "stats": {
+              "is_pitcher": true,
+              "games_post_trade": 14,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 5.0,
+              "ER": 2.0,
+              "K": 8.0,
+              "QS": 0.0,
+              "SV": 4.0,
+              "HD": 0.0
+            }
           }
         ]
       },
@@ -69,7 +107,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 30442
+            "espn_player_id": 30442,
+            "stats": {
+              "is_pitcher": true,
+              "games_post_trade": 14,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 5.0,
+              "ER": 2.0,
+              "K": 8.0,
+              "QS": 0.0,
+              "SV": 4.0,
+              "HD": 0.0
+            }
           }
         ],
         "received": [
@@ -87,7 +144,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 4619649
+            "espn_player_id": 4619649,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 14,
+              "PA": 34.0,
+              "AB": 29.0,
+              "H": 6.0,
+              "R": 2.0,
+              "HR": 1.0,
+              "RBI": 2.0,
+              "SB": 2.0,
+              "BB": 5.0,
+              "OBP": 0.324,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ]
       }
@@ -107,7 +183,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 4619649
+        "espn_player_id": 4619649,
+        "stats": {
+          "is_pitcher": false,
+          "games_post_trade": 14,
+          "PA": 34.0,
+          "AB": 29.0,
+          "H": 6.0,
+          "R": 2.0,
+          "HR": 1.0,
+          "RBI": 2.0,
+          "SB": 2.0,
+          "BB": 5.0,
+          "OBP": 0.324,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2026,
@@ -123,7 +218,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 30442
+        "espn_player_id": 30442,
+        "stats": {
+          "is_pitcher": true,
+          "games_post_trade": 14,
+          "PA": 0.0,
+          "AB": 0.0,
+          "H": 0.0,
+          "R": 0.0,
+          "HR": 0.0,
+          "RBI": 0.0,
+          "SB": 0.0,
+          "BB": 0.0,
+          "OBP": 0.0,
+          "IP": 5.0,
+          "ER": 2.0,
+          "K": 8.0,
+          "QS": 0.0,
+          "SV": 4.0,
+          "HD": 0.0
+        }
       }
     ]
   },
@@ -157,7 +271,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 5182933
+            "espn_player_id": 5182933,
+            "stats": {
+              "is_pitcher": true,
+              "games_post_trade": 21,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 18.3,
+              "ER": 12.0,
+              "K": 12.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -173,7 +306,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 5148964
+            "espn_player_id": 5148964,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 32,
+              "PA": 95.0,
+              "AB": 85.0,
+              "H": 24.0,
+              "R": 14.0,
+              "HR": 2.0,
+              "RBI": 13.0,
+              "SB": 5.0,
+              "BB": 10.0,
+              "OBP": 0.358,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ],
         "received": [
@@ -191,7 +343,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 4987382
+            "espn_player_id": 4987382,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 32,
+              "PA": 74.0,
+              "AB": 72.0,
+              "H": 18.0,
+              "R": 4.0,
+              "HR": 0.0,
+              "RBI": 7.0,
+              "SB": 1.0,
+              "BB": 2.0,
+              "OBP": 0.27,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -207,7 +378,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 32082
+            "espn_player_id": 32082,
+            "stats": {
+              "is_pitcher": true,
+              "games_post_trade": 32,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 24.0,
+              "ER": 9.0,
+              "K": 23.0,
+              "QS": 2.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ]
       },
@@ -229,7 +419,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 4987382
+            "espn_player_id": 4987382,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 32,
+              "PA": 74.0,
+              "AB": 72.0,
+              "H": 18.0,
+              "R": 4.0,
+              "HR": 0.0,
+              "RBI": 7.0,
+              "SB": 1.0,
+              "BB": 2.0,
+              "OBP": 0.27,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -245,7 +454,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 32082
+            "espn_player_id": 32082,
+            "stats": {
+              "is_pitcher": true,
+              "games_post_trade": 32,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 24.0,
+              "ER": 9.0,
+              "K": 23.0,
+              "QS": 2.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ],
         "received": [
@@ -263,7 +491,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 5182933
+            "espn_player_id": 5182933,
+            "stats": {
+              "is_pitcher": true,
+              "games_post_trade": 21,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 18.3,
+              "ER": 12.0,
+              "K": 12.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -279,7 +526,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 5148964
+            "espn_player_id": 5148964,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 32,
+              "PA": 95.0,
+              "AB": 85.0,
+              "H": 24.0,
+              "R": 14.0,
+              "HR": 2.0,
+              "RBI": 13.0,
+              "SB": 5.0,
+              "BB": 10.0,
+              "OBP": 0.358,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ]
       }
@@ -299,7 +565,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 4987382
+        "espn_player_id": 4987382,
+        "stats": {
+          "is_pitcher": false,
+          "games_post_trade": 32,
+          "PA": 74.0,
+          "AB": 72.0,
+          "H": 18.0,
+          "R": 4.0,
+          "HR": 0.0,
+          "RBI": 7.0,
+          "SB": 1.0,
+          "BB": 2.0,
+          "OBP": 0.27,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2026,
@@ -315,7 +600,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 32082
+        "espn_player_id": 32082,
+        "stats": {
+          "is_pitcher": true,
+          "games_post_trade": 32,
+          "PA": 0.0,
+          "AB": 0.0,
+          "H": 0.0,
+          "R": 0.0,
+          "HR": 0.0,
+          "RBI": 0.0,
+          "SB": 0.0,
+          "BB": 0.0,
+          "OBP": 0.0,
+          "IP": 24.0,
+          "ER": 9.0,
+          "K": 23.0,
+          "QS": 2.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2026,
@@ -331,7 +635,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 5182933
+        "espn_player_id": 5182933,
+        "stats": {
+          "is_pitcher": true,
+          "games_post_trade": 21,
+          "PA": 0.0,
+          "AB": 0.0,
+          "H": 0.0,
+          "R": 0.0,
+          "HR": 0.0,
+          "RBI": 0.0,
+          "SB": 0.0,
+          "BB": 0.0,
+          "OBP": 0.0,
+          "IP": 18.3,
+          "ER": 12.0,
+          "K": 12.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2026,
@@ -347,7 +670,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 5148964
+        "espn_player_id": 5148964,
+        "stats": {
+          "is_pitcher": false,
+          "games_post_trade": 32,
+          "PA": 95.0,
+          "AB": 85.0,
+          "H": 24.0,
+          "R": 14.0,
+          "HR": 2.0,
+          "RBI": 13.0,
+          "SB": 5.0,
+          "BB": 10.0,
+          "OBP": 0.358,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       }
     ]
   },
@@ -382,6 +724,7 @@
             "espn_player_id": 32760,
             "stats": {
               "is_pitcher": true,
+              "games_post_trade": 44,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -391,11 +734,11 @@
               "SB": 0.0,
               "BB": 0.0,
               "OBP": 0.0,
-              "IP": 41.3,
-              "ER": 4.0,
-              "K": 54.0,
+              "IP": 18.3,
+              "ER": 1.0,
+              "K": 20.0,
               "QS": 0.0,
-              "SV": 25.0,
+              "SV": 10.0,
               "HD": 0.0
             }
           },
@@ -447,7 +790,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 33816
+            "espn_player_id": 33816,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 0,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ]
       },
@@ -485,7 +847,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 33816
+            "espn_player_id": 33816,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 0,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ],
         "received": [
@@ -506,6 +887,7 @@
             "espn_player_id": 32760,
             "stats": {
               "is_pitcher": true,
+              "games_post_trade": 44,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -515,11 +897,11 @@
               "SB": 0.0,
               "BB": 0.0,
               "OBP": 0.0,
-              "IP": 41.3,
-              "ER": 4.0,
-              "K": 54.0,
+              "IP": 18.3,
+              "ER": 1.0,
+              "K": 20.0,
               "QS": 0.0,
-              "SV": 25.0,
+              "SV": 10.0,
               "HD": 0.0
             }
           },
@@ -560,6 +942,7 @@
         "espn_player_id": 32760,
         "stats": {
           "is_pitcher": true,
+          "games_post_trade": 44,
           "PA": 0.0,
           "AB": 0.0,
           "H": 0.0,
@@ -569,11 +952,11 @@
           "SB": 0.0,
           "BB": 0.0,
           "OBP": 0.0,
-          "IP": 41.3,
-          "ER": 4.0,
-          "K": 54.0,
+          "IP": 18.3,
+          "ER": 1.0,
+          "K": 20.0,
           "QS": 0.0,
-          "SV": 25.0,
+          "SV": 10.0,
           "HD": 0.0
         }
       },
@@ -623,7 +1006,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 33816
+        "espn_player_id": 33816,
+        "stats": {
+          "is_pitcher": false,
+          "games_post_trade": 0,
+          "PA": 0.0,
+          "AB": 0.0,
+          "H": 0.0,
+          "R": 0.0,
+          "HR": 0.0,
+          "RBI": 0.0,
+          "SB": 0.0,
+          "BB": 0.0,
+          "OBP": 0.0,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       }
     ]
   },
@@ -658,15 +1060,16 @@
             "espn_player_id": 41205,
             "stats": {
               "is_pitcher": false,
-              "PA": 148.0,
-              "AB": 137.0,
-              "H": 32.0,
-              "R": 15.0,
-              "HR": 6.0,
-              "RBI": 17.0,
+              "games_post_trade": 52,
+              "PA": 129.0,
+              "AB": 120.0,
+              "H": 26.0,
+              "R": 11.0,
+              "HR": 5.0,
+              "RBI": 14.0,
               "SB": 0.0,
-              "BB": 11.0,
-              "OBP": 0.291,
+              "BB": 9.0,
+              "OBP": 0.271,
               "IP": 0.0,
               "ER": 0.0,
               "K": 0.0,
@@ -710,15 +1113,16 @@
             "espn_player_id": 42453,
             "stats": {
               "is_pitcher": false,
-              "PA": 600.0,
-              "AB": 521.0,
-              "H": 128.0,
-              "R": 89.0,
-              "HR": 28.0,
-              "RBI": 75.0,
-              "SB": 17.0,
-              "BB": 79.0,
-              "OBP": 0.345,
+              "games_post_trade": 59,
+              "PA": 229.0,
+              "AB": 196.0,
+              "H": 51.0,
+              "R": 32.0,
+              "HR": 10.0,
+              "RBI": 22.0,
+              "SB": 8.0,
+              "BB": 33.0,
+              "OBP": 0.367,
               "IP": 0.0,
               "ER": 0.0,
               "K": 0.0,
@@ -766,15 +1170,16 @@
             "espn_player_id": 42453,
             "stats": {
               "is_pitcher": false,
-              "PA": 600.0,
-              "AB": 521.0,
-              "H": 128.0,
-              "R": 89.0,
-              "HR": 28.0,
-              "RBI": 75.0,
-              "SB": 17.0,
-              "BB": 79.0,
-              "OBP": 0.345,
+              "games_post_trade": 59,
+              "PA": 229.0,
+              "AB": 196.0,
+              "H": 51.0,
+              "R": 32.0,
+              "HR": 10.0,
+              "RBI": 22.0,
+              "SB": 8.0,
+              "BB": 33.0,
+              "OBP": 0.367,
               "IP": 0.0,
               "ER": 0.0,
               "K": 0.0,
@@ -818,15 +1223,16 @@
             "espn_player_id": 41205,
             "stats": {
               "is_pitcher": false,
-              "PA": 148.0,
-              "AB": 137.0,
-              "H": 32.0,
-              "R": 15.0,
-              "HR": 6.0,
-              "RBI": 17.0,
+              "games_post_trade": 52,
+              "PA": 129.0,
+              "AB": 120.0,
+              "H": 26.0,
+              "R": 11.0,
+              "HR": 5.0,
+              "RBI": 14.0,
               "SB": 0.0,
-              "BB": 11.0,
-              "OBP": 0.291,
+              "BB": 9.0,
+              "OBP": 0.271,
               "IP": 0.0,
               "ER": 0.0,
               "K": 0.0,
@@ -872,15 +1278,16 @@
         "espn_player_id": 41205,
         "stats": {
           "is_pitcher": false,
-          "PA": 148.0,
-          "AB": 137.0,
-          "H": 32.0,
-          "R": 15.0,
-          "HR": 6.0,
-          "RBI": 17.0,
+          "games_post_trade": 52,
+          "PA": 129.0,
+          "AB": 120.0,
+          "H": 26.0,
+          "R": 11.0,
+          "HR": 5.0,
+          "RBI": 14.0,
           "SB": 0.0,
-          "BB": 11.0,
-          "OBP": 0.291,
+          "BB": 9.0,
+          "OBP": 0.271,
           "IP": 0.0,
           "ER": 0.0,
           "K": 0.0,
@@ -922,15 +1329,16 @@
         "espn_player_id": 42453,
         "stats": {
           "is_pitcher": false,
-          "PA": 600.0,
-          "AB": 521.0,
-          "H": 128.0,
-          "R": 89.0,
-          "HR": 28.0,
-          "RBI": 75.0,
-          "SB": 17.0,
-          "BB": 79.0,
-          "OBP": 0.345,
+          "games_post_trade": 59,
+          "PA": 229.0,
+          "AB": 196.0,
+          "H": 51.0,
+          "R": 32.0,
+          "HR": 10.0,
+          "RBI": 22.0,
+          "SB": 8.0,
+          "BB": 33.0,
+          "OBP": 0.367,
           "IP": 0.0,
           "ER": 0.0,
           "K": 0.0,
@@ -988,15 +1396,16 @@
             "espn_player_id": 4719511,
             "stats": {
               "is_pitcher": false,
-              "PA": 300.0,
-              "AB": 274.0,
-              "H": 61.0,
-              "R": 31.0,
-              "HR": 7.0,
-              "RBI": 24.0,
-              "SB": 7.0,
-              "BB": 26.0,
-              "OBP": 0.29,
+              "games_post_trade": 60,
+              "PA": 196.0,
+              "AB": 180.0,
+              "H": 43.0,
+              "R": 21.0,
+              "HR": 5.0,
+              "RBI": 21.0,
+              "SB": 3.0,
+              "BB": 16.0,
+              "OBP": 0.301,
               "IP": 0.0,
               "ER": 0.0,
               "K": 0.0,
@@ -1022,6 +1431,7 @@
             "espn_player_id": 4918156,
             "stats": {
               "is_pitcher": true,
+              "games_post_trade": 60,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -1031,10 +1441,10 @@
               "SB": 0.0,
               "BB": 0.0,
               "OBP": 0.0,
-              "IP": 85.7,
-              "ER": 39.0,
-              "K": 100.0,
-              "QS": 5.0,
+              "IP": 45.7,
+              "ER": 21.0,
+              "K": 52.0,
+              "QS": 4.0,
               "SV": 0.0,
               "HD": 0.0
             }
@@ -1074,6 +1484,7 @@
             "espn_player_id": 35241,
             "stats": {
               "is_pitcher": true,
+              "games_post_trade": 60,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -1083,10 +1494,10 @@
               "SB": 0.0,
               "BB": 0.0,
               "OBP": 0.0,
-              "IP": 205.0,
-              "ER": 88.0,
-              "K": 149.0,
-              "QS": 21.0,
+              "IP": 68.3,
+              "ER": 29.0,
+              "K": 42.0,
+              "QS": 6.0,
               "SV": 0.0,
               "HD": 0.0
             }
@@ -1108,6 +1519,7 @@
             "espn_player_id": 39667,
             "stats": {
               "is_pitcher": true,
+              "games_post_trade": 60,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -1117,10 +1529,10 @@
               "SB": 0.0,
               "BB": 0.0,
               "OBP": 0.0,
-              "IP": 178.7,
-              "ER": 57.0,
-              "K": 221.0,
-              "QS": 17.0,
+              "IP": 63.3,
+              "ER": 13.0,
+              "K": 78.0,
+              "QS": 7.0,
               "SV": 0.0,
               "HD": 0.0
             }
@@ -1164,6 +1576,7 @@
             "espn_player_id": 35241,
             "stats": {
               "is_pitcher": true,
+              "games_post_trade": 60,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -1173,10 +1586,10 @@
               "SB": 0.0,
               "BB": 0.0,
               "OBP": 0.0,
-              "IP": 205.0,
-              "ER": 88.0,
-              "K": 149.0,
-              "QS": 21.0,
+              "IP": 68.3,
+              "ER": 29.0,
+              "K": 42.0,
+              "QS": 6.0,
               "SV": 0.0,
               "HD": 0.0
             }
@@ -1198,6 +1611,7 @@
             "espn_player_id": 39667,
             "stats": {
               "is_pitcher": true,
+              "games_post_trade": 60,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -1207,10 +1621,10 @@
               "SB": 0.0,
               "BB": 0.0,
               "OBP": 0.0,
-              "IP": 178.7,
-              "ER": 57.0,
-              "K": 221.0,
-              "QS": 17.0,
+              "IP": 63.3,
+              "ER": 13.0,
+              "K": 78.0,
+              "QS": 7.0,
               "SV": 0.0,
               "HD": 0.0
             }
@@ -1250,15 +1664,16 @@
             "espn_player_id": 4719511,
             "stats": {
               "is_pitcher": false,
-              "PA": 300.0,
-              "AB": 274.0,
-              "H": 61.0,
-              "R": 31.0,
-              "HR": 7.0,
-              "RBI": 24.0,
-              "SB": 7.0,
-              "BB": 26.0,
-              "OBP": 0.29,
+              "games_post_trade": 60,
+              "PA": 196.0,
+              "AB": 180.0,
+              "H": 43.0,
+              "R": 21.0,
+              "HR": 5.0,
+              "RBI": 21.0,
+              "SB": 3.0,
+              "BB": 16.0,
+              "OBP": 0.301,
               "IP": 0.0,
               "ER": 0.0,
               "K": 0.0,
@@ -1284,6 +1699,7 @@
             "espn_player_id": 4918156,
             "stats": {
               "is_pitcher": true,
+              "games_post_trade": 60,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -1293,10 +1709,10 @@
               "SB": 0.0,
               "BB": 0.0,
               "OBP": 0.0,
-              "IP": 85.7,
-              "ER": 39.0,
-              "K": 100.0,
-              "QS": 5.0,
+              "IP": 45.7,
+              "ER": 21.0,
+              "K": 52.0,
+              "QS": 4.0,
               "SV": 0.0,
               "HD": 0.0
             }
@@ -1338,15 +1754,16 @@
         "espn_player_id": 4719511,
         "stats": {
           "is_pitcher": false,
-          "PA": 300.0,
-          "AB": 274.0,
-          "H": 61.0,
-          "R": 31.0,
-          "HR": 7.0,
-          "RBI": 24.0,
-          "SB": 7.0,
-          "BB": 26.0,
-          "OBP": 0.29,
+          "games_post_trade": 60,
+          "PA": 196.0,
+          "AB": 180.0,
+          "H": 43.0,
+          "R": 21.0,
+          "HR": 5.0,
+          "RBI": 21.0,
+          "SB": 3.0,
+          "BB": 16.0,
+          "OBP": 0.301,
           "IP": 0.0,
           "ER": 0.0,
           "K": 0.0,
@@ -1372,6 +1789,7 @@
         "espn_player_id": 4918156,
         "stats": {
           "is_pitcher": true,
+          "games_post_trade": 60,
           "PA": 0.0,
           "AB": 0.0,
           "H": 0.0,
@@ -1381,10 +1799,10 @@
           "SB": 0.0,
           "BB": 0.0,
           "OBP": 0.0,
-          "IP": 85.7,
-          "ER": 39.0,
-          "K": 100.0,
-          "QS": 5.0,
+          "IP": 45.7,
+          "ER": 21.0,
+          "K": 52.0,
+          "QS": 4.0,
           "SV": 0.0,
           "HD": 0.0
         }
@@ -1422,6 +1840,7 @@
         "espn_player_id": 35241,
         "stats": {
           "is_pitcher": true,
+          "games_post_trade": 60,
           "PA": 0.0,
           "AB": 0.0,
           "H": 0.0,
@@ -1431,10 +1850,10 @@
           "SB": 0.0,
           "BB": 0.0,
           "OBP": 0.0,
-          "IP": 205.0,
-          "ER": 88.0,
-          "K": 149.0,
-          "QS": 21.0,
+          "IP": 68.3,
+          "ER": 29.0,
+          "K": 42.0,
+          "QS": 6.0,
           "SV": 0.0,
           "HD": 0.0
         }
@@ -1456,6 +1875,7 @@
         "espn_player_id": 39667,
         "stats": {
           "is_pitcher": true,
+          "games_post_trade": 60,
           "PA": 0.0,
           "AB": 0.0,
           "H": 0.0,
@@ -1465,10 +1885,10 @@
           "SB": 0.0,
           "BB": 0.0,
           "OBP": 0.0,
-          "IP": 178.7,
-          "ER": 57.0,
-          "K": 221.0,
-          "QS": 17.0,
+          "IP": 63.3,
+          "ER": 13.0,
+          "K": 78.0,
+          "QS": 7.0,
           "SV": 0.0,
           "HD": 0.0
         }
@@ -1519,7 +1939,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": 4949041,
+            "stats": {
+              "is_pitcher": true,
+              "games_post_trade": 66,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 18.7,
+              "ER": 7.0,
+              "K": 22.0,
+              "QS": 2.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -1538,15 +1977,16 @@
             "espn_player_id": 35066,
             "stats": {
               "is_pitcher": false,
-              "PA": 595.0,
-              "AB": 553.0,
-              "H": 149.0,
-              "R": 57.0,
-              "HR": 10.0,
-              "RBI": 50.0,
-              "SB": 27.0,
-              "BB": 42.0,
-              "OBP": 0.321,
+              "games_post_trade": 66,
+              "PA": 212.0,
+              "AB": 200.0,
+              "H": 60.0,
+              "R": 22.0,
+              "HR": 2.0,
+              "RBI": 14.0,
+              "SB": 9.0,
+              "BB": 12.0,
+              "OBP": 0.34,
               "IP": 0.0,
               "ER": 0.0,
               "K": 0.0,
@@ -1590,6 +2030,7 @@
             "espn_player_id": 42584,
             "stats": {
               "is_pitcher": true,
+              "games_post_trade": 66,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -1599,10 +2040,10 @@
               "SB": 0.0,
               "BB": 0.0,
               "OBP": 0.0,
-              "IP": 160.3,
-              "ER": 50.0,
-              "K": 160.0,
-              "QS": 17.0,
+              "IP": 61.0,
+              "ER": 14.0,
+              "K": 62.0,
+              "QS": 7.0,
               "SV": 0.0,
               "HD": 0.0
             }
@@ -1624,15 +2065,16 @@
             "espn_player_id": 32767,
             "stats": {
               "is_pitcher": false,
-              "PA": 647.0,
-              "AB": 584.0,
-              "H": 145.0,
-              "R": 96.0,
-              "HR": 39.0,
-              "RBI": 85.0,
-              "SB": 4.0,
-              "BB": 63.0,
-              "OBP": 0.321,
+              "games_post_trade": 66,
+              "PA": 236.0,
+              "AB": 213.0,
+              "H": 46.0,
+              "R": 32.0,
+              "HR": 14.0,
+              "RBI": 27.0,
+              "SB": 2.0,
+              "BB": 23.0,
+              "OBP": 0.292,
               "IP": 0.0,
               "ER": 0.0,
               "K": 0.0,
@@ -1680,6 +2122,7 @@
             "espn_player_id": 42584,
             "stats": {
               "is_pitcher": true,
+              "games_post_trade": 66,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -1689,10 +2132,10 @@
               "SB": 0.0,
               "BB": 0.0,
               "OBP": 0.0,
-              "IP": 160.3,
-              "ER": 50.0,
-              "K": 160.0,
-              "QS": 17.0,
+              "IP": 61.0,
+              "ER": 14.0,
+              "K": 62.0,
+              "QS": 7.0,
               "SV": 0.0,
               "HD": 0.0
             }
@@ -1714,15 +2157,16 @@
             "espn_player_id": 32767,
             "stats": {
               "is_pitcher": false,
-              "PA": 647.0,
-              "AB": 584.0,
-              "H": 145.0,
-              "R": 96.0,
-              "HR": 39.0,
-              "RBI": 85.0,
-              "SB": 4.0,
-              "BB": 63.0,
-              "OBP": 0.321,
+              "games_post_trade": 66,
+              "PA": 236.0,
+              "AB": 213.0,
+              "H": 46.0,
+              "R": 32.0,
+              "HR": 14.0,
+              "RBI": 27.0,
+              "SB": 2.0,
+              "BB": 23.0,
+              "OBP": 0.292,
               "IP": 0.0,
               "ER": 0.0,
               "K": 0.0,
@@ -1763,7 +2207,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": null
+            "espn_player_id": 4949041,
+            "stats": {
+              "is_pitcher": true,
+              "games_post_trade": 66,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 18.7,
+              "ER": 7.0,
+              "K": 22.0,
+              "QS": 2.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -1782,15 +2245,16 @@
             "espn_player_id": 35066,
             "stats": {
               "is_pitcher": false,
-              "PA": 595.0,
-              "AB": 553.0,
-              "H": 149.0,
-              "R": 57.0,
-              "HR": 10.0,
-              "RBI": 50.0,
-              "SB": 27.0,
-              "BB": 42.0,
-              "OBP": 0.321,
+              "games_post_trade": 66,
+              "PA": 212.0,
+              "AB": 200.0,
+              "H": 60.0,
+              "R": 22.0,
+              "HR": 2.0,
+              "RBI": 14.0,
+              "SB": 9.0,
+              "BB": 12.0,
+              "OBP": 0.34,
               "IP": 0.0,
               "ER": 0.0,
               "K": 0.0,
@@ -1833,7 +2297,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": null
+        "espn_player_id": 4949041,
+        "stats": {
+          "is_pitcher": true,
+          "games_post_trade": 66,
+          "PA": 0.0,
+          "AB": 0.0,
+          "H": 0.0,
+          "R": 0.0,
+          "HR": 0.0,
+          "RBI": 0.0,
+          "SB": 0.0,
+          "BB": 0.0,
+          "OBP": 0.0,
+          "IP": 18.7,
+          "ER": 7.0,
+          "K": 22.0,
+          "QS": 2.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2026,
@@ -1852,15 +2335,16 @@
         "espn_player_id": 35066,
         "stats": {
           "is_pitcher": false,
-          "PA": 595.0,
-          "AB": 553.0,
-          "H": 149.0,
-          "R": 57.0,
-          "HR": 10.0,
-          "RBI": 50.0,
-          "SB": 27.0,
-          "BB": 42.0,
-          "OBP": 0.321,
+          "games_post_trade": 66,
+          "PA": 212.0,
+          "AB": 200.0,
+          "H": 60.0,
+          "R": 22.0,
+          "HR": 2.0,
+          "RBI": 14.0,
+          "SB": 9.0,
+          "BB": 12.0,
+          "OBP": 0.34,
           "IP": 0.0,
           "ER": 0.0,
           "K": 0.0,
@@ -1902,6 +2386,7 @@
         "espn_player_id": 42584,
         "stats": {
           "is_pitcher": true,
+          "games_post_trade": 66,
           "PA": 0.0,
           "AB": 0.0,
           "H": 0.0,
@@ -1911,10 +2396,10 @@
           "SB": 0.0,
           "BB": 0.0,
           "OBP": 0.0,
-          "IP": 160.3,
-          "ER": 50.0,
-          "K": 160.0,
-          "QS": 17.0,
+          "IP": 61.0,
+          "ER": 14.0,
+          "K": 62.0,
+          "QS": 7.0,
           "SV": 0.0,
           "HD": 0.0
         }
@@ -1936,15 +2421,16 @@
         "espn_player_id": 32767,
         "stats": {
           "is_pitcher": false,
-          "PA": 647.0,
-          "AB": 584.0,
-          "H": 145.0,
-          "R": 96.0,
-          "HR": 39.0,
-          "RBI": 85.0,
-          "SB": 4.0,
-          "BB": 63.0,
-          "OBP": 0.321,
+          "games_post_trade": 66,
+          "PA": 236.0,
+          "AB": 213.0,
+          "H": 46.0,
+          "R": 32.0,
+          "HR": 14.0,
+          "RBI": 27.0,
+          "SB": 2.0,
+          "BB": 23.0,
+          "OBP": 0.292,
           "IP": 0.0,
           "ER": 0.0,
           "K": 0.0,
@@ -1999,7 +2485,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 5129618
+            "espn_player_id": 5129618,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 0,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -2036,15 +2541,16 @@
             "espn_player_id": 32512,
             "stats": {
               "is_pitcher": false,
-              "PA": 564.0,
-              "AB": 517.0,
-              "H": 129.0,
-              "R": 71.0,
-              "HR": 22.0,
-              "RBI": 73.0,
-              "SB": 4.0,
-              "BB": 47.0,
-              "OBP": 0.312,
+              "games_post_trade": 66,
+              "PA": 164.0,
+              "AB": 146.0,
+              "H": 34.0,
+              "R": 20.0,
+              "HR": 5.0,
+              "RBI": 19.0,
+              "SB": 0.0,
+              "BB": 18.0,
+              "OBP": 0.317,
               "IP": 0.0,
               "ER": 0.0,
               "K": 0.0,
@@ -2092,15 +2598,16 @@
             "espn_player_id": 32512,
             "stats": {
               "is_pitcher": false,
-              "PA": 564.0,
-              "AB": 517.0,
-              "H": 129.0,
-              "R": 71.0,
-              "HR": 22.0,
-              "RBI": 73.0,
-              "SB": 4.0,
-              "BB": 47.0,
-              "OBP": 0.312,
+              "games_post_trade": 66,
+              "PA": 164.0,
+              "AB": 146.0,
+              "H": 34.0,
+              "R": 20.0,
+              "HR": 5.0,
+              "RBI": 19.0,
+              "SB": 0.0,
+              "BB": 18.0,
+              "OBP": 0.317,
               "IP": 0.0,
               "ER": 0.0,
               "K": 0.0,
@@ -2141,7 +2648,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 5129618
+            "espn_player_id": 5129618,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 0,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -2177,7 +2703,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 5129618
+        "espn_player_id": 5129618,
+        "stats": {
+          "is_pitcher": false,
+          "games_post_trade": 0,
+          "PA": 0.0,
+          "AB": 0.0,
+          "H": 0.0,
+          "R": 0.0,
+          "HR": 0.0,
+          "RBI": 0.0,
+          "SB": 0.0,
+          "BB": 0.0,
+          "OBP": 0.0,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2026,
@@ -2212,15 +2757,16 @@
         "espn_player_id": 32512,
         "stats": {
           "is_pitcher": false,
-          "PA": 564.0,
-          "AB": 517.0,
-          "H": 129.0,
-          "R": 71.0,
-          "HR": 22.0,
-          "RBI": 73.0,
-          "SB": 4.0,
-          "BB": 47.0,
-          "OBP": 0.312,
+          "games_post_trade": 66,
+          "PA": 164.0,
+          "AB": 146.0,
+          "H": 34.0,
+          "R": 20.0,
+          "HR": 5.0,
+          "RBI": 19.0,
+          "SB": 0.0,
+          "BB": 18.0,
+          "OBP": 0.317,
           "IP": 0.0,
           "ER": 0.0,
           "K": 0.0,
@@ -2277,7 +2823,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 41889
+            "espn_player_id": 41889,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 115,
+              "PA": 353.0,
+              "AB": 319.0,
+              "H": 72.0,
+              "R": 49.0,
+              "HR": 9.0,
+              "RBI": 36.0,
+              "SB": 5.0,
+              "BB": 34.0,
+              "OBP": 0.3,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -2293,7 +2858,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 42450
+            "espn_player_id": 42450,
+            "stats": {
+              "is_pitcher": true,
+              "games_post_trade": 115,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 51.3,
+              "ER": 34.0,
+              "K": 54.0,
+              "QS": 2.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ],
         "received": [
@@ -2311,7 +2895,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 4872595
+            "espn_player_id": 4872595,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 115,
+              "PA": 252.0,
+              "AB": 211.0,
+              "H": 36.0,
+              "R": 32.0,
+              "HR": 11.0,
+              "RBI": 24.0,
+              "SB": 0.0,
+              "BB": 41.0,
+              "OBP": 0.306,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -2327,7 +2930,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 31127
+            "espn_player_id": 31127,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 3,
+              "PA": 12.0,
+              "AB": 12.0,
+              "H": 1.0,
+              "R": 1.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.083,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ]
       },
@@ -2349,7 +2971,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 4872595
+            "espn_player_id": 4872595,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 115,
+              "PA": 252.0,
+              "AB": 211.0,
+              "H": 36.0,
+              "R": 32.0,
+              "HR": 11.0,
+              "RBI": 24.0,
+              "SB": 0.0,
+              "BB": 41.0,
+              "OBP": 0.306,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -2365,7 +3006,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 31127
+            "espn_player_id": 31127,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 3,
+              "PA": 12.0,
+              "AB": 12.0,
+              "H": 1.0,
+              "R": 1.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.083,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ],
         "received": [
@@ -2383,7 +3043,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 41889
+            "espn_player_id": 41889,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 115,
+              "PA": 353.0,
+              "AB": 319.0,
+              "H": 72.0,
+              "R": 49.0,
+              "HR": 9.0,
+              "RBI": 36.0,
+              "SB": 5.0,
+              "BB": 34.0,
+              "OBP": 0.3,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -2399,7 +3078,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 42450
+            "espn_player_id": 42450,
+            "stats": {
+              "is_pitcher": true,
+              "games_post_trade": 115,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 51.3,
+              "ER": 34.0,
+              "K": 54.0,
+              "QS": 2.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ]
       }
@@ -2419,7 +3117,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 4872595
+        "espn_player_id": 4872595,
+        "stats": {
+          "is_pitcher": false,
+          "games_post_trade": 115,
+          "PA": 252.0,
+          "AB": 211.0,
+          "H": 36.0,
+          "R": 32.0,
+          "HR": 11.0,
+          "RBI": 24.0,
+          "SB": 0.0,
+          "BB": 41.0,
+          "OBP": 0.306,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2026,
@@ -2435,7 +3152,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 41889
+        "espn_player_id": 41889,
+        "stats": {
+          "is_pitcher": false,
+          "games_post_trade": 115,
+          "PA": 353.0,
+          "AB": 319.0,
+          "H": 72.0,
+          "R": 49.0,
+          "HR": 9.0,
+          "RBI": 36.0,
+          "SB": 5.0,
+          "BB": 34.0,
+          "OBP": 0.3,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2026,
@@ -2451,7 +3187,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 31127
+        "espn_player_id": 31127,
+        "stats": {
+          "is_pitcher": false,
+          "games_post_trade": 3,
+          "PA": 12.0,
+          "AB": 12.0,
+          "H": 1.0,
+          "R": 1.0,
+          "HR": 0.0,
+          "RBI": 0.0,
+          "SB": 0.0,
+          "BB": 0.0,
+          "OBP": 0.083,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2026,
@@ -2467,7 +3222,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 42450
+        "espn_player_id": 42450,
+        "stats": {
+          "is_pitcher": true,
+          "games_post_trade": 115,
+          "PA": 0.0,
+          "AB": 0.0,
+          "H": 0.0,
+          "R": 0.0,
+          "HR": 0.0,
+          "RBI": 0.0,
+          "SB": 0.0,
+          "BB": 0.0,
+          "OBP": 0.0,
+          "IP": 51.3,
+          "ER": 34.0,
+          "K": 54.0,
+          "QS": 2.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       }
     ]
   },
@@ -2501,7 +3275,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 33039
+            "espn_player_id": 33039,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 79,
+              "PA": 197.0,
+              "AB": 184.0,
+              "H": 48.0,
+              "R": 26.0,
+              "HR": 7.0,
+              "RBI": 19.0,
+              "SB": 1.0,
+              "BB": 13.0,
+              "OBP": 0.31,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ],
         "received": [
@@ -2519,7 +3312,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 41509
+            "espn_player_id": 41509,
+            "stats": {
+              "is_pitcher": true,
+              "games_post_trade": 116,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 31.7,
+              "ER": 16.0,
+              "K": 31.0,
+              "QS": 0.0,
+              "SV": 20.0,
+              "HD": 0.0
+            }
           }
         ]
       },
@@ -2541,7 +3353,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 41509
+            "espn_player_id": 41509,
+            "stats": {
+              "is_pitcher": true,
+              "games_post_trade": 116,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 31.7,
+              "ER": 16.0,
+              "K": 31.0,
+              "QS": 0.0,
+              "SV": 20.0,
+              "HD": 0.0
+            }
           }
         ],
         "received": [
@@ -2559,7 +3390,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 33039
+            "espn_player_id": 33039,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 79,
+              "PA": 197.0,
+              "AB": 184.0,
+              "H": 48.0,
+              "R": 26.0,
+              "HR": 7.0,
+              "RBI": 19.0,
+              "SB": 1.0,
+              "BB": 13.0,
+              "OBP": 0.31,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ]
       }
@@ -2579,7 +3429,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 41509
+        "espn_player_id": 41509,
+        "stats": {
+          "is_pitcher": true,
+          "games_post_trade": 116,
+          "PA": 0.0,
+          "AB": 0.0,
+          "H": 0.0,
+          "R": 0.0,
+          "HR": 0.0,
+          "RBI": 0.0,
+          "SB": 0.0,
+          "BB": 0.0,
+          "OBP": 0.0,
+          "IP": 31.7,
+          "ER": 16.0,
+          "K": 31.0,
+          "QS": 0.0,
+          "SV": 20.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2026,
@@ -2595,7 +3464,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 33039
+        "espn_player_id": 33039,
+        "stats": {
+          "is_pitcher": false,
+          "games_post_trade": 79,
+          "PA": 197.0,
+          "AB": 184.0,
+          "H": 48.0,
+          "R": 26.0,
+          "HR": 7.0,
+          "RBI": 19.0,
+          "SB": 1.0,
+          "BB": 13.0,
+          "OBP": 0.31,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       }
     ]
   },
@@ -2646,15 +3534,16 @@
             "espn_player_id": 41217,
             "stats": {
               "is_pitcher": false,
-              "PA": 327.0,
-              "AB": 312.0,
-              "H": 71.0,
-              "R": 30.0,
+              "games_post_trade": 88,
+              "PA": 223.0,
+              "AB": 213.0,
+              "H": 48.0,
+              "R": 18.0,
               "HR": 5.0,
-              "RBI": 28.0,
-              "SB": 9.0,
-              "BB": 15.0,
-              "OBP": 0.263,
+              "RBI": 20.0,
+              "SB": 4.0,
+              "BB": 10.0,
+              "OBP": 0.26,
               "IP": 0.0,
               "ER": 0.0,
               "K": 0.0,
@@ -2682,15 +3571,16 @@
             "espn_player_id": 33912,
             "stats": {
               "is_pitcher": false,
-              "PA": 515.0,
-              "AB": 459.0,
-              "H": 123.0,
-              "R": 69.0,
-              "HR": 15.0,
-              "RBI": 69.0,
-              "SB": 11.0,
-              "BB": 56.0,
-              "OBP": 0.348,
+              "games_post_trade": 64,
+              "PA": 149.0,
+              "AB": 135.0,
+              "H": 32.0,
+              "R": 13.0,
+              "HR": 2.0,
+              "RBI": 10.0,
+              "SB": 2.0,
+              "BB": 14.0,
+              "OBP": 0.309,
               "IP": 0.0,
               "ER": 0.0,
               "K": 0.0,
@@ -2722,15 +3612,16 @@
             "espn_player_id": 33912,
             "stats": {
               "is_pitcher": false,
-              "PA": 515.0,
-              "AB": 459.0,
-              "H": 123.0,
-              "R": 69.0,
-              "HR": 15.0,
-              "RBI": 69.0,
-              "SB": 11.0,
-              "BB": 56.0,
-              "OBP": 0.348,
+              "games_post_trade": 64,
+              "PA": 149.0,
+              "AB": 135.0,
+              "H": 32.0,
+              "R": 13.0,
+              "HR": 2.0,
+              "RBI": 10.0,
+              "SB": 2.0,
+              "BB": 14.0,
+              "OBP": 0.309,
               "IP": 0.0,
               "ER": 0.0,
               "K": 0.0,
@@ -2774,15 +3665,16 @@
             "espn_player_id": 41217,
             "stats": {
               "is_pitcher": false,
-              "PA": 327.0,
-              "AB": 312.0,
-              "H": 71.0,
-              "R": 30.0,
+              "games_post_trade": 88,
+              "PA": 223.0,
+              "AB": 213.0,
+              "H": 48.0,
+              "R": 18.0,
               "HR": 5.0,
-              "RBI": 28.0,
-              "SB": 9.0,
-              "BB": 15.0,
-              "OBP": 0.263,
+              "RBI": 20.0,
+              "SB": 4.0,
+              "BB": 10.0,
+              "OBP": 0.26,
               "IP": 0.0,
               "ER": 0.0,
               "K": 0.0,
@@ -2812,15 +3704,16 @@
         "espn_player_id": 33912,
         "stats": {
           "is_pitcher": false,
-          "PA": 515.0,
-          "AB": 459.0,
-          "H": 123.0,
-          "R": 69.0,
-          "HR": 15.0,
-          "RBI": 69.0,
-          "SB": 11.0,
-          "BB": 56.0,
-          "OBP": 0.348,
+          "games_post_trade": 64,
+          "PA": 149.0,
+          "AB": 135.0,
+          "H": 32.0,
+          "R": 13.0,
+          "HR": 2.0,
+          "RBI": 10.0,
+          "SB": 2.0,
+          "BB": 14.0,
+          "OBP": 0.309,
           "IP": 0.0,
           "ER": 0.0,
           "K": 0.0,
@@ -2862,15 +3755,16 @@
         "espn_player_id": 41217,
         "stats": {
           "is_pitcher": false,
-          "PA": 327.0,
-          "AB": 312.0,
-          "H": 71.0,
-          "R": 30.0,
+          "games_post_trade": 88,
+          "PA": 223.0,
+          "AB": 213.0,
+          "H": 48.0,
+          "R": 18.0,
           "HR": 5.0,
-          "RBI": 28.0,
-          "SB": 9.0,
-          "BB": 15.0,
-          "OBP": 0.263,
+          "RBI": 20.0,
+          "SB": 4.0,
+          "BB": 10.0,
+          "OBP": 0.26,
           "IP": 0.0,
           "ER": 0.0,
           "K": 0.0,
@@ -2911,7 +3805,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 33192
+            "espn_player_id": 33192,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 119,
+              "PA": 22.0,
+              "AB": 21.0,
+              "H": 4.0,
+              "R": 2.0,
+              "HR": 1.0,
+              "RBI": 3.0,
+              "SB": 0.0,
+              "BB": 1.0,
+              "OBP": 0.227,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ],
         "received": [
@@ -2932,15 +3845,16 @@
             "espn_player_id": 32767,
             "stats": {
               "is_pitcher": false,
-              "PA": 647.0,
-              "AB": 584.0,
-              "H": 145.0,
-              "R": 96.0,
-              "HR": 39.0,
-              "RBI": 85.0,
-              "SB": 4.0,
-              "BB": 63.0,
-              "OBP": 0.321,
+              "games_post_trade": 53,
+              "PA": 125.0,
+              "AB": 113.0,
+              "H": 30.0,
+              "R": 17.0,
+              "HR": 8.0,
+              "RBI": 11.0,
+              "SB": 0.0,
+              "BB": 12.0,
+              "OBP": 0.336,
               "IP": 0.0,
               "ER": 0.0,
               "K": 0.0,
@@ -2972,15 +3886,16 @@
             "espn_player_id": 32767,
             "stats": {
               "is_pitcher": false,
-              "PA": 647.0,
-              "AB": 584.0,
-              "H": 145.0,
-              "R": 96.0,
-              "HR": 39.0,
-              "RBI": 85.0,
-              "SB": 4.0,
-              "BB": 63.0,
-              "OBP": 0.321,
+              "games_post_trade": 53,
+              "PA": 125.0,
+              "AB": 113.0,
+              "H": 30.0,
+              "R": 17.0,
+              "HR": 8.0,
+              "RBI": 11.0,
+              "SB": 0.0,
+              "BB": 12.0,
+              "OBP": 0.336,
               "IP": 0.0,
               "ER": 0.0,
               "K": 0.0,
@@ -3005,7 +3920,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 33192
+            "espn_player_id": 33192,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 119,
+              "PA": 22.0,
+              "AB": 21.0,
+              "H": 4.0,
+              "R": 2.0,
+              "HR": 1.0,
+              "RBI": 3.0,
+              "SB": 0.0,
+              "BB": 1.0,
+              "OBP": 0.227,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ]
       }
@@ -3025,7 +3959,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 33192
+        "espn_player_id": 33192,
+        "stats": {
+          "is_pitcher": false,
+          "games_post_trade": 119,
+          "PA": 22.0,
+          "AB": 21.0,
+          "H": 4.0,
+          "R": 2.0,
+          "HR": 1.0,
+          "RBI": 3.0,
+          "SB": 0.0,
+          "BB": 1.0,
+          "OBP": 0.227,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2026,
@@ -3044,15 +3997,16 @@
         "espn_player_id": 32767,
         "stats": {
           "is_pitcher": false,
-          "PA": 647.0,
-          "AB": 584.0,
-          "H": 145.0,
-          "R": 96.0,
-          "HR": 39.0,
-          "RBI": 85.0,
-          "SB": 4.0,
-          "BB": 63.0,
-          "OBP": 0.321,
+          "games_post_trade": 53,
+          "PA": 125.0,
+          "AB": 113.0,
+          "H": 30.0,
+          "R": 17.0,
+          "HR": 8.0,
+          "RBI": 11.0,
+          "SB": 0.0,
+          "BB": 12.0,
+          "OBP": 0.336,
           "IP": 0.0,
           "ER": 0.0,
           "K": 0.0,
@@ -3093,7 +4047,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 40939
+            "espn_player_id": 40939,
+            "stats": {
+              "is_pitcher": true,
+              "games_post_trade": 129,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 33.3,
+              "ER": 14.0,
+              "K": 52.0,
+              "QS": 0.0,
+              "SV": 18.0,
+              "HD": 0.0
+            }
           }
         ],
         "received": [
@@ -3111,7 +4084,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 41199
+            "espn_player_id": 41199,
+            "stats": {
+              "is_pitcher": true,
+              "games_post_trade": 129,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 68.0,
+              "ER": 30.0,
+              "K": 56.0,
+              "QS": 3.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ]
       },
@@ -3133,7 +4125,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 41199
+            "espn_player_id": 41199,
+            "stats": {
+              "is_pitcher": true,
+              "games_post_trade": 129,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 68.0,
+              "ER": 30.0,
+              "K": 56.0,
+              "QS": 3.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ],
         "received": [
@@ -3151,7 +4162,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 40939
+            "espn_player_id": 40939,
+            "stats": {
+              "is_pitcher": true,
+              "games_post_trade": 129,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 33.3,
+              "ER": 14.0,
+              "K": 52.0,
+              "QS": 0.0,
+              "SV": 18.0,
+              "HD": 0.0
+            }
           }
         ]
       }
@@ -3171,7 +4201,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 41199
+        "espn_player_id": 41199,
+        "stats": {
+          "is_pitcher": true,
+          "games_post_trade": 129,
+          "PA": 0.0,
+          "AB": 0.0,
+          "H": 0.0,
+          "R": 0.0,
+          "HR": 0.0,
+          "RBI": 0.0,
+          "SB": 0.0,
+          "BB": 0.0,
+          "OBP": 0.0,
+          "IP": 68.0,
+          "ER": 30.0,
+          "K": 56.0,
+          "QS": 3.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2026,
@@ -3187,7 +4236,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 40939
+        "espn_player_id": 40939,
+        "stats": {
+          "is_pitcher": true,
+          "games_post_trade": 129,
+          "PA": 0.0,
+          "AB": 0.0,
+          "H": 0.0,
+          "R": 0.0,
+          "HR": 0.0,
+          "RBI": 0.0,
+          "SB": 0.0,
+          "BB": 0.0,
+          "OBP": 0.0,
+          "IP": 33.3,
+          "ER": 14.0,
+          "K": 52.0,
+          "QS": 0.0,
+          "SV": 18.0,
+          "HD": 0.0
+        }
       }
     ]
   },
@@ -3221,7 +4289,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 5080761
+            "espn_player_id": 5080761,
+            "stats": {
+              "is_pitcher": true,
+              "games_post_trade": 134,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 104.3,
+              "ER": 23.0,
+              "K": 148.0,
+              "QS": 13.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -3237,7 +4324,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 5007707
+            "espn_player_id": 5007707,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 134,
+              "PA": 365.0,
+              "AB": 324.0,
+              "H": 77.0,
+              "R": 39.0,
+              "HR": 9.0,
+              "RBI": 44.0,
+              "SB": 12.0,
+              "BB": 41.0,
+              "OBP": 0.323,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -3253,7 +4359,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 42507
+            "espn_player_id": 42507,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 134,
+              "PA": 417.0,
+              "AB": 367.0,
+              "H": 81.0,
+              "R": 59.0,
+              "HR": 12.0,
+              "RBI": 33.0,
+              "SB": 4.0,
+              "BB": 50.0,
+              "OBP": 0.314,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ],
         "received": [
@@ -3271,7 +4396,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 33192
+            "espn_player_id": 33192,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 15,
+              "PA": 26.0,
+              "AB": 22.0,
+              "H": 5.0,
+              "R": 2.0,
+              "HR": 0.0,
+              "RBI": 6.0,
+              "SB": 0.0,
+              "BB": 4.0,
+              "OBP": 0.346,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -3287,7 +4431,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 4142424
+            "espn_player_id": 4142424,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 134,
+              "PA": 416.0,
+              "AB": 359.0,
+              "H": 100.0,
+              "R": 69.0,
+              "HR": 17.0,
+              "RBI": 64.0,
+              "SB": 3.0,
+              "BB": 57.0,
+              "OBP": 0.377,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ]
       },
@@ -3309,7 +4472,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 33192
+            "espn_player_id": 33192,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 15,
+              "PA": 26.0,
+              "AB": 22.0,
+              "H": 5.0,
+              "R": 2.0,
+              "HR": 0.0,
+              "RBI": 6.0,
+              "SB": 0.0,
+              "BB": 4.0,
+              "OBP": 0.346,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -3325,7 +4507,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 4142424
+            "espn_player_id": 4142424,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 134,
+              "PA": 416.0,
+              "AB": 359.0,
+              "H": 100.0,
+              "R": 69.0,
+              "HR": 17.0,
+              "RBI": 64.0,
+              "SB": 3.0,
+              "BB": 57.0,
+              "OBP": 0.377,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ],
         "received": [
@@ -3343,7 +4544,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 5080761
+            "espn_player_id": 5080761,
+            "stats": {
+              "is_pitcher": true,
+              "games_post_trade": 134,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 104.3,
+              "ER": 23.0,
+              "K": 148.0,
+              "QS": 13.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -3359,7 +4579,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 5007707
+            "espn_player_id": 5007707,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 134,
+              "PA": 365.0,
+              "AB": 324.0,
+              "H": 77.0,
+              "R": 39.0,
+              "HR": 9.0,
+              "RBI": 44.0,
+              "SB": 12.0,
+              "BB": 41.0,
+              "OBP": 0.323,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           },
           {
             "season_year": 2026,
@@ -3375,7 +4614,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 42507
+            "espn_player_id": 42507,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 134,
+              "PA": 417.0,
+              "AB": 367.0,
+              "H": 81.0,
+              "R": 59.0,
+              "HR": 12.0,
+              "RBI": 33.0,
+              "SB": 4.0,
+              "BB": 50.0,
+              "OBP": 0.314,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ]
       }
@@ -3395,7 +4653,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 33192
+        "espn_player_id": 33192,
+        "stats": {
+          "is_pitcher": false,
+          "games_post_trade": 15,
+          "PA": 26.0,
+          "AB": 22.0,
+          "H": 5.0,
+          "R": 2.0,
+          "HR": 0.0,
+          "RBI": 6.0,
+          "SB": 0.0,
+          "BB": 4.0,
+          "OBP": 0.346,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2026,
@@ -3411,7 +4688,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 5080761
+        "espn_player_id": 5080761,
+        "stats": {
+          "is_pitcher": true,
+          "games_post_trade": 134,
+          "PA": 0.0,
+          "AB": 0.0,
+          "H": 0.0,
+          "R": 0.0,
+          "HR": 0.0,
+          "RBI": 0.0,
+          "SB": 0.0,
+          "BB": 0.0,
+          "OBP": 0.0,
+          "IP": 104.3,
+          "ER": 23.0,
+          "K": 148.0,
+          "QS": 13.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2026,
@@ -3427,7 +4723,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 5007707
+        "espn_player_id": 5007707,
+        "stats": {
+          "is_pitcher": false,
+          "games_post_trade": 134,
+          "PA": 365.0,
+          "AB": 324.0,
+          "H": 77.0,
+          "R": 39.0,
+          "HR": 9.0,
+          "RBI": 44.0,
+          "SB": 12.0,
+          "BB": 41.0,
+          "OBP": 0.323,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2026,
@@ -3443,7 +4758,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 42507
+        "espn_player_id": 42507,
+        "stats": {
+          "is_pitcher": false,
+          "games_post_trade": 134,
+          "PA": 417.0,
+          "AB": 367.0,
+          "H": 81.0,
+          "R": 59.0,
+          "HR": 12.0,
+          "RBI": 33.0,
+          "SB": 4.0,
+          "BB": 50.0,
+          "OBP": 0.314,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2026,
@@ -3459,7 +4793,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 4142424
+        "espn_player_id": 4142424,
+        "stats": {
+          "is_pitcher": false,
+          "games_post_trade": 134,
+          "PA": 416.0,
+          "AB": 359.0,
+          "H": 100.0,
+          "R": 69.0,
+          "HR": 17.0,
+          "RBI": 64.0,
+          "SB": 3.0,
+          "BB": 57.0,
+          "OBP": 0.377,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       }
     ]
   },
@@ -3493,7 +4846,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 42404
+            "espn_player_id": 42404,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 139,
+              "PA": 425.0,
+              "AB": 384.0,
+              "H": 85.0,
+              "R": 55.0,
+              "HR": 14.0,
+              "RBI": 43.0,
+              "SB": 15.0,
+              "BB": 41.0,
+              "OBP": 0.296,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ],
         "received": [
@@ -3511,7 +4883,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 4684778
+            "espn_player_id": 4684778,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 139,
+              "PA": 419.0,
+              "AB": 392.0,
+              "H": 107.0,
+              "R": 58.0,
+              "HR": 15.0,
+              "RBI": 66.0,
+              "SB": 12.0,
+              "BB": 27.0,
+              "OBP": 0.32,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ]
       },
@@ -3533,7 +4924,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 4684778
+            "espn_player_id": 4684778,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 139,
+              "PA": 419.0,
+              "AB": 392.0,
+              "H": 107.0,
+              "R": 58.0,
+              "HR": 15.0,
+              "RBI": 66.0,
+              "SB": 12.0,
+              "BB": 27.0,
+              "OBP": 0.32,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ],
         "received": [
@@ -3551,7 +4961,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 42404
+            "espn_player_id": 42404,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 139,
+              "PA": 425.0,
+              "AB": 384.0,
+              "H": 85.0,
+              "R": 55.0,
+              "HR": 14.0,
+              "RBI": 43.0,
+              "SB": 15.0,
+              "BB": 41.0,
+              "OBP": 0.296,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ]
       }
@@ -3571,7 +5000,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 42404
+        "espn_player_id": 42404,
+        "stats": {
+          "is_pitcher": false,
+          "games_post_trade": 139,
+          "PA": 425.0,
+          "AB": 384.0,
+          "H": 85.0,
+          "R": 55.0,
+          "HR": 14.0,
+          "RBI": 43.0,
+          "SB": 15.0,
+          "BB": 41.0,
+          "OBP": 0.296,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2026,
@@ -3587,7 +5035,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 4684778
+        "espn_player_id": 4684778,
+        "stats": {
+          "is_pitcher": false,
+          "games_post_trade": 139,
+          "PA": 419.0,
+          "AB": 392.0,
+          "H": 107.0,
+          "R": 58.0,
+          "HR": 15.0,
+          "RBI": 66.0,
+          "SB": 12.0,
+          "BB": 27.0,
+          "OBP": 0.32,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       }
     ]
   },
@@ -3624,6 +5091,7 @@
             "espn_player_id": 35241,
             "stats": {
               "is_pitcher": true,
+              "games_post_trade": 98,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -3633,10 +5101,10 @@
               "SB": 0.0,
               "BB": 0.0,
               "OBP": 0.0,
-              "IP": 205.0,
-              "ER": 88.0,
-              "K": 149.0,
-              "QS": 21.0,
+              "IP": 89.3,
+              "ER": 43.0,
+              "K": 76.0,
+              "QS": 10.0,
               "SV": 0.0,
               "HD": 0.0
             }
@@ -3657,7 +5125,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 38980
+            "espn_player_id": 38980,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 158,
+              "PA": 502.0,
+              "AB": 443.0,
+              "H": 120.0,
+              "R": 80.0,
+              "HR": 14.0,
+              "RBI": 52.0,
+              "SB": 8.0,
+              "BB": 59.0,
+              "OBP": 0.357,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ]
       },
@@ -3679,7 +5166,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 38980
+            "espn_player_id": 38980,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 158,
+              "PA": 502.0,
+              "AB": 443.0,
+              "H": 120.0,
+              "R": 80.0,
+              "HR": 14.0,
+              "RBI": 52.0,
+              "SB": 8.0,
+              "BB": 59.0,
+              "OBP": 0.357,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ],
         "received": [
@@ -3700,6 +5206,7 @@
             "espn_player_id": 35241,
             "stats": {
               "is_pitcher": true,
+              "games_post_trade": 98,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -3709,10 +5216,10 @@
               "SB": 0.0,
               "BB": 0.0,
               "OBP": 0.0,
-              "IP": 205.0,
-              "ER": 88.0,
-              "K": 149.0,
-              "QS": 21.0,
+              "IP": 89.3,
+              "ER": 43.0,
+              "K": 76.0,
+              "QS": 10.0,
               "SV": 0.0,
               "HD": 0.0
             }
@@ -3738,6 +5245,7 @@
         "espn_player_id": 35241,
         "stats": {
           "is_pitcher": true,
+          "games_post_trade": 98,
           "PA": 0.0,
           "AB": 0.0,
           "H": 0.0,
@@ -3747,10 +5255,10 @@
           "SB": 0.0,
           "BB": 0.0,
           "OBP": 0.0,
-          "IP": 205.0,
-          "ER": 88.0,
-          "K": 149.0,
-          "QS": 21.0,
+          "IP": 89.3,
+          "ER": 43.0,
+          "K": 76.0,
+          "QS": 10.0,
           "SV": 0.0,
           "HD": 0.0
         }
@@ -3769,7 +5277,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 38980
+        "espn_player_id": 38980,
+        "stats": {
+          "is_pitcher": false,
+          "games_post_trade": 158,
+          "PA": 502.0,
+          "AB": 443.0,
+          "H": 120.0,
+          "R": 80.0,
+          "HR": 14.0,
+          "RBI": 52.0,
+          "SB": 8.0,
+          "BB": 59.0,
+          "OBP": 0.357,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       }
     ]
   },
@@ -3803,7 +5330,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 37515
+            "espn_player_id": 37515,
+            "stats": {
+              "is_pitcher": true,
+              "games_post_trade": 96,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 21.7,
+              "ER": 6.0,
+              "K": 27.0,
+              "QS": 1.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ],
         "received": [
@@ -3824,6 +5370,7 @@
             "espn_player_id": 32760,
             "stats": {
               "is_pitcher": true,
+              "games_post_trade": 125,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -3833,11 +5380,11 @@
               "SB": 0.0,
               "BB": 0.0,
               "OBP": 0.0,
-              "IP": 41.3,
-              "ER": 4.0,
-              "K": 54.0,
+              "IP": 23.0,
+              "ER": 3.0,
+              "K": 34.0,
               "QS": 0.0,
-              "SV": 25.0,
+              "SV": 15.0,
               "HD": 0.0
             }
           },
@@ -3855,7 +5402,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 41326
+            "espn_player_id": 41326,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 169,
+              "PA": 481.0,
+              "AB": 425.0,
+              "H": 116.0,
+              "R": 43.0,
+              "HR": 5.0,
+              "RBI": 46.0,
+              "SB": 18.0,
+              "BB": 56.0,
+              "OBP": 0.358,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ]
       },
@@ -3880,6 +5446,7 @@
             "espn_player_id": 32760,
             "stats": {
               "is_pitcher": true,
+              "games_post_trade": 125,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -3889,11 +5456,11 @@
               "SB": 0.0,
               "BB": 0.0,
               "OBP": 0.0,
-              "IP": 41.3,
-              "ER": 4.0,
-              "K": 54.0,
+              "IP": 23.0,
+              "ER": 3.0,
+              "K": 34.0,
               "QS": 0.0,
-              "SV": 25.0,
+              "SV": 15.0,
               "HD": 0.0
             }
           },
@@ -3911,7 +5478,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 41326
+            "espn_player_id": 41326,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 169,
+              "PA": 481.0,
+              "AB": 425.0,
+              "H": 116.0,
+              "R": 43.0,
+              "HR": 5.0,
+              "RBI": 46.0,
+              "SB": 18.0,
+              "BB": 56.0,
+              "OBP": 0.358,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ],
         "received": [
@@ -3929,7 +5515,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 37515
+            "espn_player_id": 37515,
+            "stats": {
+              "is_pitcher": true,
+              "games_post_trade": 96,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 21.7,
+              "ER": 6.0,
+              "K": 27.0,
+              "QS": 1.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ]
       }
@@ -3952,6 +5557,7 @@
         "espn_player_id": 32760,
         "stats": {
           "is_pitcher": true,
+          "games_post_trade": 125,
           "PA": 0.0,
           "AB": 0.0,
           "H": 0.0,
@@ -3961,11 +5567,11 @@
           "SB": 0.0,
           "BB": 0.0,
           "OBP": 0.0,
-          "IP": 41.3,
-          "ER": 4.0,
-          "K": 54.0,
+          "IP": 23.0,
+          "ER": 3.0,
+          "K": 34.0,
           "QS": 0.0,
-          "SV": 25.0,
+          "SV": 15.0,
           "HD": 0.0
         }
       },
@@ -3983,7 +5589,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 41326
+        "espn_player_id": 41326,
+        "stats": {
+          "is_pitcher": false,
+          "games_post_trade": 169,
+          "PA": 481.0,
+          "AB": 425.0,
+          "H": 116.0,
+          "R": 43.0,
+          "HR": 5.0,
+          "RBI": 46.0,
+          "SB": 18.0,
+          "BB": 56.0,
+          "OBP": 0.358,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2026,
@@ -3999,7 +5624,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 37515
+        "espn_player_id": 37515,
+        "stats": {
+          "is_pitcher": true,
+          "games_post_trade": 96,
+          "PA": 0.0,
+          "AB": 0.0,
+          "H": 0.0,
+          "R": 0.0,
+          "HR": 0.0,
+          "RBI": 0.0,
+          "SB": 0.0,
+          "BB": 0.0,
+          "OBP": 0.0,
+          "IP": 21.7,
+          "ER": 6.0,
+          "K": 27.0,
+          "QS": 1.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       }
     ]
   },
@@ -4033,7 +5677,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 41171
+            "espn_player_id": 41171,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 0,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ],
         "received": [
@@ -4051,7 +5714,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 42359
+            "espn_player_id": 42359,
+            "stats": {
+              "is_pitcher": true,
+              "games_post_trade": 195,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 187.3,
+              "ER": 58.0,
+              "K": 210.0,
+              "QS": 20.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ]
       },
@@ -4073,7 +5755,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 42359
+            "espn_player_id": 42359,
+            "stats": {
+              "is_pitcher": true,
+              "games_post_trade": 195,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 187.3,
+              "ER": 58.0,
+              "K": 210.0,
+              "QS": 20.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ],
         "received": [
@@ -4091,7 +5792,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 41171
+            "espn_player_id": 41171,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 0,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ]
       }
@@ -4111,7 +5831,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 41171
+        "espn_player_id": 41171,
+        "stats": {
+          "is_pitcher": false,
+          "games_post_trade": 0,
+          "PA": 0.0,
+          "AB": 0.0,
+          "H": 0.0,
+          "R": 0.0,
+          "HR": 0.0,
+          "RBI": 0.0,
+          "SB": 0.0,
+          "BB": 0.0,
+          "OBP": 0.0,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2026,
@@ -4127,7 +5866,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 42359
+        "espn_player_id": 42359,
+        "stats": {
+          "is_pitcher": true,
+          "games_post_trade": 195,
+          "PA": 0.0,
+          "AB": 0.0,
+          "H": 0.0,
+          "R": 0.0,
+          "HR": 0.0,
+          "RBI": 0.0,
+          "SB": 0.0,
+          "BB": 0.0,
+          "OBP": 0.0,
+          "IP": 187.3,
+          "ER": 58.0,
+          "K": 210.0,
+          "QS": 20.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       }
     ]
   },
@@ -4161,7 +5919,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 39642
+            "espn_player_id": 39642,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 63,
+              "PA": 194.0,
+              "AB": 183.0,
+              "H": 35.0,
+              "R": 11.0,
+              "HR": 1.0,
+              "RBI": 10.0,
+              "SB": 4.0,
+              "BB": 11.0,
+              "OBP": 0.237,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ],
         "received": [
@@ -4179,7 +5956,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 32691
+            "espn_player_id": 32691,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 167,
+              "PA": 378.0,
+              "AB": 334.0,
+              "H": 77.0,
+              "R": 54.0,
+              "HR": 18.0,
+              "RBI": 43.0,
+              "SB": 1.0,
+              "BB": 44.0,
+              "OBP": 0.32,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ]
       },
@@ -4201,7 +5997,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 32691
+            "espn_player_id": 32691,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 167,
+              "PA": 378.0,
+              "AB": 334.0,
+              "H": 77.0,
+              "R": 54.0,
+              "HR": 18.0,
+              "RBI": 43.0,
+              "SB": 1.0,
+              "BB": 44.0,
+              "OBP": 0.32,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ],
         "received": [
@@ -4219,7 +6034,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 39642
+            "espn_player_id": 39642,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 63,
+              "PA": 194.0,
+              "AB": 183.0,
+              "H": 35.0,
+              "R": 11.0,
+              "HR": 1.0,
+              "RBI": 10.0,
+              "SB": 4.0,
+              "BB": 11.0,
+              "OBP": 0.237,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ]
       }
@@ -4239,7 +6073,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 39642
+        "espn_player_id": 39642,
+        "stats": {
+          "is_pitcher": false,
+          "games_post_trade": 63,
+          "PA": 194.0,
+          "AB": 183.0,
+          "H": 35.0,
+          "R": 11.0,
+          "HR": 1.0,
+          "RBI": 10.0,
+          "SB": 4.0,
+          "BB": 11.0,
+          "OBP": 0.237,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2026,
@@ -4255,7 +6108,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 32691
+        "espn_player_id": 32691,
+        "stats": {
+          "is_pitcher": false,
+          "games_post_trade": 167,
+          "PA": 378.0,
+          "AB": 334.0,
+          "H": 77.0,
+          "R": 54.0,
+          "HR": 18.0,
+          "RBI": 43.0,
+          "SB": 1.0,
+          "BB": 44.0,
+          "OBP": 0.32,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       }
     ]
   },
@@ -4289,7 +6161,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 39907
+            "espn_player_id": 39907,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 0,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ],
         "received": [
@@ -4307,7 +6198,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 5218285
+            "espn_player_id": 5218285,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 195,
+              "PA": 279.0,
+              "AB": 261.0,
+              "H": 68.0,
+              "R": 39.0,
+              "HR": 5.0,
+              "RBI": 27.0,
+              "SB": 22.0,
+              "BB": 18.0,
+              "OBP": 0.308,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ]
       },
@@ -4329,7 +6239,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 5218285
+            "espn_player_id": 5218285,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 195,
+              "PA": 279.0,
+              "AB": 261.0,
+              "H": 68.0,
+              "R": 39.0,
+              "HR": 5.0,
+              "RBI": 27.0,
+              "SB": 22.0,
+              "BB": 18.0,
+              "OBP": 0.308,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ],
         "received": [
@@ -4347,7 +6276,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 39907
+            "espn_player_id": 39907,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 0,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ]
       }
@@ -4367,7 +6315,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 5218285
+        "espn_player_id": 5218285,
+        "stats": {
+          "is_pitcher": false,
+          "games_post_trade": 195,
+          "PA": 279.0,
+          "AB": 261.0,
+          "H": 68.0,
+          "R": 39.0,
+          "HR": 5.0,
+          "RBI": 27.0,
+          "SB": 22.0,
+          "BB": 18.0,
+          "OBP": 0.308,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2026,
@@ -4383,7 +6350,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 39907
+        "espn_player_id": 39907,
+        "stats": {
+          "is_pitcher": false,
+          "games_post_trade": 0,
+          "PA": 0.0,
+          "AB": 0.0,
+          "H": 0.0,
+          "R": 0.0,
+          "HR": 0.0,
+          "RBI": 0.0,
+          "SB": 0.0,
+          "BB": 0.0,
+          "OBP": 0.0,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       }
     ]
   },
@@ -4417,7 +6403,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 31097
+            "espn_player_id": 31097,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 195,
+              "PA": 616.0,
+              "AB": 543.0,
+              "H": 120.0,
+              "R": 78.0,
+              "HR": 28.0,
+              "RBI": 83.0,
+              "SB": 5.0,
+              "BB": 73.0,
+              "OBP": 0.313,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ],
         "received": [
@@ -4435,7 +6440,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 39671
+            "espn_player_id": 39671,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 0,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ]
       },
@@ -4457,7 +6481,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 39671
+            "espn_player_id": 39671,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 0,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ],
         "received": [
@@ -4475,7 +6518,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 31097
+            "espn_player_id": 31097,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 195,
+              "PA": 616.0,
+              "AB": 543.0,
+              "H": 120.0,
+              "R": 78.0,
+              "HR": 28.0,
+              "RBI": 83.0,
+              "SB": 5.0,
+              "BB": 73.0,
+              "OBP": 0.313,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ]
       }
@@ -4495,7 +6557,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 31097
+        "espn_player_id": 31097,
+        "stats": {
+          "is_pitcher": false,
+          "games_post_trade": 195,
+          "PA": 616.0,
+          "AB": 543.0,
+          "H": 120.0,
+          "R": 78.0,
+          "HR": 28.0,
+          "RBI": 83.0,
+          "SB": 5.0,
+          "BB": 73.0,
+          "OBP": 0.313,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2026,
@@ -4511,7 +6592,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 39671
+        "espn_player_id": 39671,
+        "stats": {
+          "is_pitcher": false,
+          "games_post_trade": 0,
+          "PA": 0.0,
+          "AB": 0.0,
+          "H": 0.0,
+          "R": 0.0,
+          "HR": 0.0,
+          "RBI": 0.0,
+          "SB": 0.0,
+          "BB": 0.0,
+          "OBP": 0.0,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       }
     ]
   },
@@ -4545,7 +6645,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 42507
+            "espn_player_id": 42507,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 61,
+              "PA": 236.0,
+              "AB": 221.0,
+              "H": 50.0,
+              "R": 27.0,
+              "HR": 11.0,
+              "RBI": 25.0,
+              "SB": 6.0,
+              "BB": 15.0,
+              "OBP": 0.275,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ],
         "received": [
@@ -4563,7 +6682,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 41054
+            "espn_player_id": 41054,
+            "stats": {
+              "is_pitcher": true,
+              "games_post_trade": 112,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 35.3,
+              "ER": 19.0,
+              "K": 45.0,
+              "QS": 3.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ]
       },
@@ -4585,7 +6723,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 41054
+            "espn_player_id": 41054,
+            "stats": {
+              "is_pitcher": true,
+              "games_post_trade": 112,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 35.3,
+              "ER": 19.0,
+              "K": 45.0,
+              "QS": 3.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ],
         "received": [
@@ -4603,7 +6760,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 42507
+            "espn_player_id": 42507,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 61,
+              "PA": 236.0,
+              "AB": 221.0,
+              "H": 50.0,
+              "R": 27.0,
+              "HR": 11.0,
+              "RBI": 25.0,
+              "SB": 6.0,
+              "BB": 15.0,
+              "OBP": 0.275,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ]
       }
@@ -4623,7 +6799,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 42507
+        "espn_player_id": 42507,
+        "stats": {
+          "is_pitcher": false,
+          "games_post_trade": 61,
+          "PA": 236.0,
+          "AB": 221.0,
+          "H": 50.0,
+          "R": 27.0,
+          "HR": 11.0,
+          "RBI": 25.0,
+          "SB": 6.0,
+          "BB": 15.0,
+          "OBP": 0.275,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2026,
@@ -4639,7 +6834,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 41054
+        "espn_player_id": 41054,
+        "stats": {
+          "is_pitcher": true,
+          "games_post_trade": 112,
+          "PA": 0.0,
+          "AB": 0.0,
+          "H": 0.0,
+          "R": 0.0,
+          "HR": 0.0,
+          "RBI": 0.0,
+          "SB": 0.0,
+          "BB": 0.0,
+          "OBP": 0.0,
+          "IP": 35.3,
+          "ER": 19.0,
+          "K": 45.0,
+          "QS": 3.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       }
     ]
   },
@@ -4673,7 +6887,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 41216
+            "espn_player_id": 41216,
+            "stats": {
+              "is_pitcher": true,
+              "games_post_trade": 193,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 160.7,
+              "ER": 77.0,
+              "K": 134.0,
+              "QS": 17.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ],
         "received": [
@@ -4691,7 +6924,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 41221
+            "espn_player_id": 41221,
+            "stats": {
+              "is_pitcher": true,
+              "games_post_trade": 195,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 172.0,
+              "ER": 71.0,
+              "K": 187.0,
+              "QS": 13.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ]
       },
@@ -4713,7 +6965,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 41221
+            "espn_player_id": 41221,
+            "stats": {
+              "is_pitcher": true,
+              "games_post_trade": 195,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 172.0,
+              "ER": 71.0,
+              "K": 187.0,
+              "QS": 13.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ],
         "received": [
@@ -4731,7 +7002,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 41216
+            "espn_player_id": 41216,
+            "stats": {
+              "is_pitcher": true,
+              "games_post_trade": 193,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 160.7,
+              "ER": 77.0,
+              "K": 134.0,
+              "QS": 17.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ]
       }
@@ -4751,7 +7041,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 41221
+        "espn_player_id": 41221,
+        "stats": {
+          "is_pitcher": true,
+          "games_post_trade": 195,
+          "PA": 0.0,
+          "AB": 0.0,
+          "H": 0.0,
+          "R": 0.0,
+          "HR": 0.0,
+          "RBI": 0.0,
+          "SB": 0.0,
+          "BB": 0.0,
+          "OBP": 0.0,
+          "IP": 172.0,
+          "ER": 71.0,
+          "K": 187.0,
+          "QS": 13.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2026,
@@ -4767,7 +7076,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 41216
+        "espn_player_id": 41216,
+        "stats": {
+          "is_pitcher": true,
+          "games_post_trade": 193,
+          "PA": 0.0,
+          "AB": 0.0,
+          "H": 0.0,
+          "R": 0.0,
+          "HR": 0.0,
+          "RBI": 0.0,
+          "SB": 0.0,
+          "BB": 0.0,
+          "OBP": 0.0,
+          "IP": 160.7,
+          "ER": 77.0,
+          "K": 134.0,
+          "QS": 17.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       }
     ]
   },
@@ -4802,7 +7130,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 4629089
+            "espn_player_id": 4629089,
+            "stats": {
+              "is_pitcher": true,
+              "games_post_trade": 195,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 162.3,
+              "ER": 70.0,
+              "K": 163.0,
+              "QS": 16.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ]
       },
@@ -4824,7 +7171,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 4629089
+            "espn_player_id": 4629089,
+            "stats": {
+              "is_pitcher": true,
+              "games_post_trade": 195,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 162.3,
+              "ER": 70.0,
+              "K": 163.0,
+              "QS": 16.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ],
         "received": []
@@ -4845,7 +7211,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 4629089
+        "espn_player_id": 4629089,
+        "stats": {
+          "is_pitcher": true,
+          "games_post_trade": 195,
+          "PA": 0.0,
+          "AB": 0.0,
+          "H": 0.0,
+          "R": 0.0,
+          "HR": 0.0,
+          "RBI": 0.0,
+          "SB": 0.0,
+          "BB": 0.0,
+          "OBP": 0.0,
+          "IP": 162.3,
+          "ER": 70.0,
+          "K": 163.0,
+          "QS": 16.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       }
     ]
   },
@@ -4879,7 +7264,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 36018
+            "espn_player_id": 36018,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 195,
+              "PA": 624.0,
+              "AB": 523.0,
+              "H": 162.0,
+              "R": 95.0,
+              "HR": 38.0,
+              "RBI": 96.0,
+              "SB": 1.0,
+              "BB": 101.0,
+              "OBP": 0.421,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ],
         "received": [
@@ -4900,6 +7304,7 @@
             "espn_player_id": 33710,
             "stats": {
               "is_pitcher": false,
+              "games_post_trade": 195,
               "PA": 638.0,
               "AB": 597.0,
               "H": 144.0,
@@ -4940,6 +7345,7 @@
             "espn_player_id": 33710,
             "stats": {
               "is_pitcher": false,
+              "games_post_trade": 195,
               "PA": 638.0,
               "AB": 597.0,
               "H": 144.0,
@@ -4973,7 +7379,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 36018
+            "espn_player_id": 36018,
+            "stats": {
+              "is_pitcher": false,
+              "games_post_trade": 195,
+              "PA": 624.0,
+              "AB": 523.0,
+              "H": 162.0,
+              "R": 95.0,
+              "HR": 38.0,
+              "RBI": 96.0,
+              "SB": 1.0,
+              "BB": 101.0,
+              "OBP": 0.421,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0
+            }
           }
         ]
       }
@@ -4993,7 +7418,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 36018
+        "espn_player_id": 36018,
+        "stats": {
+          "is_pitcher": false,
+          "games_post_trade": 195,
+          "PA": 624.0,
+          "AB": 523.0,
+          "H": 162.0,
+          "R": 95.0,
+          "HR": 38.0,
+          "RBI": 96.0,
+          "SB": 1.0,
+          "BB": 101.0,
+          "OBP": 0.421,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0
+        }
       },
       {
         "season_year": 2026,
@@ -5012,6 +7456,7 @@
         "espn_player_id": 33710,
         "stats": {
           "is_pitcher": false,
+          "games_post_trade": 195,
           "PA": 638.0,
           "AB": 597.0,
           "H": 144.0,
@@ -8209,7 +10654,7 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 42403,
+            "espn_player_id": 42404,
             "stats": {
               "is_pitcher": false,
               "PA": 642.0,
@@ -8460,7 +10905,7 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 42403,
+            "espn_player_id": 42404,
             "stats": {
               "is_pitcher": false,
               "PA": 642.0,
@@ -8555,7 +11000,7 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 42403,
+        "espn_player_id": 42404,
         "stats": {
           "is_pitcher": false,
           "PA": 642.0,
@@ -10572,7 +13017,7 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 42537,
+            "espn_player_id": 42507,
             "stats": {
               "is_pitcher": false,
               "PA": 719.0,
@@ -10751,7 +13196,7 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 42537,
+            "espn_player_id": 42507,
             "stats": {
               "is_pitcher": false,
               "PA": 719.0,
@@ -11176,7 +13621,7 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 42537,
+        "espn_player_id": 42507,
         "stats": {
           "is_pitcher": false,
           "PA": 719.0,
@@ -11443,7 +13888,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 34914
+            "espn_player_id": 37515,
+            "stats": {
+              "is_pitcher": true,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0,
+              "games_post_trade": 0
+            }
           },
           {
             "season_year": 2024,
@@ -11540,7 +14004,26 @@
             "round_number": null,
             "budget_amount": 0.0,
             "original_pick": "",
-            "espn_player_id": 34914
+            "espn_player_id": 37515,
+            "stats": {
+              "is_pitcher": true,
+              "PA": 0.0,
+              "AB": 0.0,
+              "H": 0.0,
+              "R": 0.0,
+              "HR": 0.0,
+              "RBI": 0.0,
+              "SB": 0.0,
+              "BB": 0.0,
+              "OBP": 0.0,
+              "IP": 0.0,
+              "ER": 0.0,
+              "K": 0.0,
+              "QS": 0.0,
+              "SV": 0.0,
+              "HD": 0.0,
+              "games_post_trade": 0
+            }
           }
         ],
         "received": [
@@ -11786,7 +14269,26 @@
         "round_number": null,
         "budget_amount": 0.0,
         "original_pick": "",
-        "espn_player_id": 34914
+        "espn_player_id": 37515,
+        "stats": {
+          "is_pitcher": true,
+          "PA": 0.0,
+          "AB": 0.0,
+          "H": 0.0,
+          "R": 0.0,
+          "HR": 0.0,
+          "RBI": 0.0,
+          "SB": 0.0,
+          "BB": 0.0,
+          "OBP": 0.0,
+          "IP": 0.0,
+          "ER": 0.0,
+          "K": 0.0,
+          "QS": 0.0,
+          "SV": 0.0,
+          "HD": 0.0,
+          "games_post_trade": 0
+        }
       },
       {
         "season_year": 2024,

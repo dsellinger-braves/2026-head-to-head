@@ -124,83 +124,94 @@ export function calculatePlayerStatValue(playerName, seasonYear, statsData = [],
     }
   }
 
-  if (!hasStats || (ab === 0 && ip === 0 && k === 0 && r === 0 && hr === 0)) {
-    // Calibrate reasonable baseline from known player tiers
-    const elitePlayers = ['bobby witt jr.', 'corbin carroll', 'gunnar henderson', 'chris sale', 'mike trout', 'trea turner', 'gerrit cole', 'corbin burnes', 'cody bellinger', 'bryce harper', 'josh hader', 'matt olson'];
-    const midPlayers = ['austin riley', 'michael harris ii', 'kevin gausman', 'max fried', 'oneil cruz', 'bryce miller', 'randy arozarena', 'bo bichette', 'ketel marte', 'josh naylor', 'sandy alcantara', 'jesus luzardo'];
-    
-    let baselinePts = 22.0;
-    let baselineTier = 'Role Player / Streamer (estimated)';
-    if (elitePlayers.some(p => clean.includes(p))) {
-      baselinePts = 55.0;
-      baselineTier = 'Elite Performance (estimated)';
-    } else if (midPlayers.some(p => clean.includes(p))) {
-      baselinePts = 38.0;
-      baselineTier = 'Solid Starter (estimated)';
+  if (hasStats) {
+    if (isPitcher) {
+      if (ip > 0) {
+        const era = (er * 9) / ip;
+        const eraBonus = Math.max(-15, (4.00 - era) * (ip / 9) * 2.5);
+        const kPts = parseFloat((k * 0.4).toFixed(1));
+        const qsPts = parseFloat((qs * 3.5).toFixed(1));
+        const svHdPts = parseFloat(((sv + hd) * 3.0).toFixed(1));
+        const eraPts = parseFloat(eraBonus.toFixed(1));
+        const totalPts = parseFloat(Math.max(0, kPts + qsPts + svHdPts + eraPts).toFixed(1));
+
+        const statBreakdown = [
+          { cat: 'IP', val: ip.toFixed(1), pts: null, formula: `${ip.toFixed(1)} IP total` },
+          { cat: 'K', val: Math.round(k), pts: kPts, formula: `${Math.round(k)} K × 0.4` },
+          { cat: 'QS', val: Math.round(qs), pts: qsPts, formula: `${Math.round(qs)} QS × 3.5` },
+          { cat: 'SV+HD', val: Math.round(sv + hd), pts: svHdPts, formula: `${Math.round(sv + hd)} SV+HD × 3.0` },
+          { cat: 'ERA', val: era.toFixed(2), pts: eraPts, formula: `(4.00 - ${era.toFixed(2)}) × (${ip.toFixed(1)}/9) × 2.5` }
+        ];
+
+        return {
+          points: totalPts,
+          isPitcher: true,
+          summary: `${ip.toFixed(1)} IP · ${Math.round(k)} K · ${era.toFixed(2)} ERA · ${Math.round(qs)} QS · ${Math.round(sv + hd)} SV+H`,
+          statBreakdown,
+          isEstimated: false
+        };
+      } else {
+        return {
+          points: 0.0,
+          isPitcher: true,
+          summary: '0.0 IP · 0 K · 0 GS (0 post-trade appearances)',
+          statBreakdown: [
+            { cat: 'Post-Trade IP', val: '0.0 IP', pts: 0, formula: '0 innings pitched on acquiring team post-trade' }
+          ],
+          isEstimated: false
+        };
+      }
+    } else {
+      // Batter
+      if (ab > 0 || r > 0 || hr > 0 || h > 0 || bb > 0) {
+        const pa = ab + bb || 1;
+        const obp = (h + bb) / pa;
+        const obpBonus = (obp - 0.320) * pa * 0.2;
+        const rPts = parseFloat((r * 0.4).toFixed(1));
+        const hrPts = parseFloat((hr * 2.2).toFixed(1));
+        const rbiPts = parseFloat((rbi * 0.4).toFixed(1));
+        const sbPts = parseFloat((sb * 1.5).toFixed(1));
+        const obpPts = parseFloat(obpBonus.toFixed(1));
+        const totalPts = parseFloat(Math.max(0, rPts + hrPts + rbiPts + sbPts + obpPts).toFixed(1));
+
+        const obpDisplay = obp.toFixed(3).replace(/^0/, '');
+        const statBreakdown = [
+          { cat: 'R', val: Math.round(r), pts: rPts, formula: `${Math.round(r)} R × 0.4` },
+          { cat: 'HR', val: Math.round(hr), pts: hrPts, formula: `${Math.round(hr)} HR × 2.2` },
+          { cat: 'RBI', val: Math.round(rbi), pts: rbiPts, formula: `${Math.round(rbi)} RBI × 0.4` },
+          { cat: 'SB', val: Math.round(sb), pts: sbPts, formula: `${Math.round(sb)} SB × 1.5` },
+          { cat: 'OBP', val: obpDisplay, pts: obpPts, formula: `(${obpDisplay} - .320) × ${Math.round(pa)} PA × 0.2` }
+        ];
+
+        return {
+          points: totalPts,
+          isPitcher: false,
+          summary: `${Math.round(hr)} HR · ${Math.round(rbi)} RBI · ${Math.round(r)} R · ${Math.round(sb)} SB · ${obpDisplay} OBP`,
+          statBreakdown,
+          isEstimated: false
+        };
+      } else {
+        return {
+          points: 0.0,
+          isPitcher: false,
+          summary: '0 G · 0 PA · 0 HR (0 post-trade appearances)',
+          statBreakdown: [
+            { cat: 'Post-Trade PA', val: '0 PA', pts: 0, formula: '0 plate appearances on acquiring team post-trade' }
+          ],
+          isEstimated: false
+        };
+      }
     }
-
-    return {
-      points: baselinePts,
-      summary: baselineTier,
-      isEstimated: true,
-      statBreakdown: [
-        { cat: 'Baseline Tier', val: baselineTier, pts: baselinePts, formula: 'Calibrated Player Tier Equity' }
-      ]
-    };
   }
 
-  if (isPitcher && ip > 0) {
-    const era = (er * 9) / ip;
-    const eraBonus = Math.max(-15, (4.00 - era) * (ip / 9) * 2.5);
-    const kPts = parseFloat((k * 0.4).toFixed(1));
-    const qsPts = parseFloat((qs * 3.5).toFixed(1));
-    const svHdPts = parseFloat(((sv + hd) * 3.0).toFixed(1));
-    const eraPts = parseFloat(eraBonus.toFixed(1));
-    const totalPts = parseFloat(Math.max(10, kPts + qsPts + svHdPts + eraPts).toFixed(1));
-
-    const statBreakdown = [
-      { cat: 'IP', val: ip.toFixed(1), pts: null, formula: `${ip.toFixed(1)} IP total` },
-      { cat: 'K', val: Math.round(k), pts: kPts, formula: `${Math.round(k)} K × 0.4` },
-      { cat: 'QS', val: Math.round(qs), pts: qsPts, formula: `${Math.round(qs)} QS × 3.5` },
-      { cat: 'SV+HD', val: Math.round(sv + hd), pts: svHdPts, formula: `${Math.round(sv + hd)} SV+HD × 3.0` },
-      { cat: 'ERA', val: era.toFixed(2), pts: eraPts, formula: `(4.00 - ${era.toFixed(2)}) × (${ip.toFixed(1)}/9) × 2.5` }
-    ];
-
-    return {
-      points: totalPts,
-      isPitcher: true,
-      summary: `${ip.toFixed(1)} IP · ${Math.round(k)} K · ${era.toFixed(2)} ERA · ${Math.round(qs)} QS · ${Math.round(sv + hd)} SV+H`,
-      statBreakdown
-    };
-  } else if (ab > 0 || r > 0 || hr > 0) {
-    const pa = ab + bb || 1;
-    const obp = (h + bb) / pa;
-    const obpBonus = (obp - 0.320) * pa * 0.2;
-    const rPts = parseFloat((r * 0.4).toFixed(1));
-    const hrPts = parseFloat((hr * 2.2).toFixed(1));
-    const rbiPts = parseFloat((rbi * 0.4).toFixed(1));
-    const sbPts = parseFloat((sb * 1.5).toFixed(1));
-    const obpPts = parseFloat(obpBonus.toFixed(1));
-    const totalPts = parseFloat(Math.max(10, rPts + hrPts + rbiPts + sbPts + obpPts).toFixed(1));
-
-    const obpDisplay = obp.toFixed(3).replace(/^0/, '');
-    const statBreakdown = [
-      { cat: 'R', val: Math.round(r), pts: rPts, formula: `${Math.round(r)} R × 0.4` },
-      { cat: 'HR', val: Math.round(hr), pts: hrPts, formula: `${Math.round(hr)} HR × 2.2` },
-      { cat: 'RBI', val: Math.round(rbi), pts: rbiPts, formula: `${Math.round(rbi)} RBI × 0.4` },
-      { cat: 'SB', val: Math.round(sb), pts: sbPts, formula: `${Math.round(sb)} SB × 1.5` },
-      { cat: 'OBP', val: obpDisplay, pts: obpPts, formula: `(${obpDisplay} - .320) × ${Math.round(pa)} PA × 0.2` }
-    ];
-
-    return {
-      points: totalPts,
-      isPitcher: false,
-      summary: `${Math.round(hr)} HR · ${Math.round(rbi)} RBI · ${Math.round(r)} R · ${Math.round(sb)} SB · ${obpDisplay} OBP`,
-      statBreakdown
-    };
-  }
-
-  return { points: 25.0, summary: 'Standard Contributor', statBreakdown: [] };
+  return {
+    points: 0.0,
+    summary: '0 G · 0 PA (no recorded post-trade statistics)',
+    statBreakdown: [
+      { cat: 'Post-Trade Stats', val: '0 G', pts: 0, formula: 'No recorded stats on acquiring team post-trade' }
+    ],
+    isEstimated: false
+  };
 }
 
 /**

@@ -68,15 +68,15 @@ PLAYER_ID_MAP = {
     "mike trout": 30836,
     "trea turner": 33710,
     "bo bichette": 41258,
-    "brandon woodruff": 34914,
+    "brandon woodruff": 37515,
     "grayson rodriguez": 41285,
-    "gunnar henderson": 42537,
+    "gunnar henderson": 42507,
     "michael harris ii": 42426,
     "randy arozarena": 36563,
     "kevin gausman": 32667,
     "gerrit cole": 32081,
     "max fried": 32685,
-    "corbin carroll": 42403,
+    "corbin carroll": 42404,
     "bobby witt jr.": 42402,
     "bobby witt jr": 42402,
     "austin riley": 34961,
@@ -101,8 +101,44 @@ PLAYER_ID_MAP = {
     "miguel vargas": 42453,
     "josh hader": 32760,
     "tyron guerrero": 33816,
+    "trey yesavage": 4949041,
     "vladimir guerrero jr.": 35002,
-    "vladimir guerrero jr": 35002
+    "vladimir guerrero jr": 35002,
+    "chase delauter": 4619649,
+    "aroldis chapman": 30442,
+    "ceddanne rafaela": 4987382,
+    "sonny gray": 32082,
+    "keider montero": 5182933,
+    "max clark": 5148964,
+    "munetaka murakami": 4872595,
+    "ivan herrera": 41889,
+    "salvador perez": 31127,
+    "joe ryan": 42450,
+    "riley o'brien": 41509,
+    "riley obrien": 41509,
+    "mookie betts": 33039,
+    "aaron judge": 33192,
+    "shane mcclanahan": 41199,
+    "andres munoz": 40939,
+    "jacob misiorowski": 5080761,
+    "travis bazzana": 5007707,
+    "seiya suzuki": 4142424,
+    "jordan walker": 4684778,
+    "bryan reynolds": 38980,
+    "xavier edwards": 41326,
+    "jonathan india": 41171,
+    "cristopher sanchez": 42359,
+    "heliot ramos": 39642,
+    "corey seager": 32691,
+    "konnor griffin": 5218285,
+    "tommy edman": 39907,
+    "manny machado": 31097,
+    "pablo lopez": 39671,
+    "cole ragans": 41054,
+    "logan gilbert": 41221,
+    "logan webb": 41216,
+    "bryan woo": 4629089,
+    "yordan alvarez": 36018
 }
 
 
@@ -243,84 +279,130 @@ def load_draft_history():
     return picks_by_year_pick, players_by_year_name
 
 
-def load_2026_player_stats():
-    """Fetch 2026 cumulative player statistics from Supabase player_daily_stats."""
-    print("🌐 Fetching 2026 player stats from Supabase...")
-    stats_map = {}
+SEASON_START_2026 = datetime.date(2026, 3, 25)
+
+
+def load_2026_daily_records():
+    """Fetch 2026 daily player statistics from Supabase player_daily_stats for all traded players."""
+    print("🌐 Fetching 2026 player daily records from Supabase...")
+    records_by_player_team = defaultdict(list)
     try:
-        target_pids = [pid for pid in set(PLAYER_ID_MAP.values()) if pid]
-        pids_param = ",".join(str(p) for p in target_pids)
-        offset, page_size = 0, 1000
+        target_pids = sorted(list(set(PLAYER_ID_MAP.values())))
+        chunk_size = 25
         all_data = []
 
-        while True:
-            url = f"{SUPABASE_URL}/rest/v1/player_daily_stats?select=player_id,full_name,stats&player_id=in.({pids_param})&offset={offset}&limit={page_size}"
-            req = urllib.request.Request(url, headers={"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"})
-            with urllib.request.urlopen(req, timeout=30) as resp:
-                batch = json.loads(resp.read().decode("utf-8"))
-            all_data.extend(batch)
-            if len(batch) < page_size:
-                break
-            offset += page_size
+        for i in range(0, len(target_pids), chunk_size):
+            chunk = target_pids[i:i + chunk_size]
+            pids_param = ",".join(str(p) for p in chunk)
+            offset, page_size = 0, 1000
 
-        sums = defaultdict(lambda: {
-            "name": "", "AB": 0.0, "H": 0.0, "HR": 0.0, "R": 0.0, "RBI": 0.0, "SB": 0.0, "BB": 0.0,
-            "IP": 0.0, "K": 0.0, "SV": 0.0, "HD": 0.0, "QS": 0.0, "ER": 0.0
-        })
+            while True:
+                url = f"{SUPABASE_URL}/rest/v1/player_daily_stats?select=player_id,full_name,team_id,scoring_period_id,stats&player_id=in.({pids_param})&offset={offset}&limit={page_size}"
+                req = urllib.request.Request(url, headers={"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"})
+                with urllib.request.urlopen(req, timeout=30) as resp:
+                    batch = json.loads(resp.read().decode("utf-8"))
+                all_data.extend(batch)
+                if len(batch) < page_size:
+                    break
+                offset += page_size
 
         for r in all_data:
             pid = r.get("player_id")
-            if not pid:
-                continue
-            s = sums[pid]
-            s["name"] = r.get("full_name") or s["name"]
-            st = r.get("stats") or {}
-            if isinstance(st, str):
-                try:
-                    st = json.loads(st)
-                except Exception:
-                    st = {}
-            s["AB"] += float(st.get("0", st.get("AB", 0)))
-            s["H"] += float(st.get("1", st.get("H", 0)))
-            s["HR"] += float(st.get("5", st.get("HR", 0)))
-            s["R"] += float(st.get("20", st.get("R", 0)))
-            s["RBI"] += float(st.get("21", st.get("RBI", 0)))
-            s["SB"] += float(st.get("23", st.get("SB", 0)))
-            s["BB"] += float(st.get("10", st.get("BB", 0)))
-            s["IP"] += float(st.get("34", st.get("IP", 0))) / 3.0
-            s["K"] += float(st.get("48", st.get("K", 0)))
-            s["ER"] += float(st.get("45", st.get("ER", 0)))
-            s["SV"] += float(st.get("57", st.get("SV", 0)))
-            s["HD"] += float(st.get("60", st.get("HD", 0)))
-            s["QS"] += float(st.get("63", st.get("QS", 0)))
+            tid = r.get("team_id")
+            if pid and tid is not None:
+                records_by_player_team[(pid, tid)].append(r)
 
-        for pid, s in sums.items():
-            ab, bb, h = s["AB"], s["BB"], s["H"]
-            obp = round((h + bb) / (ab + bb), 3) if (ab + bb) > 0 else 0.0
-            is_pitcher = (s["IP"] > 0 or s["K"] > 0 or s["SV"] > 0)
-            stats_map[pid] = {
-                "is_pitcher": is_pitcher,
-                "PA": round(ab + bb, 0),
-                "AB": round(ab, 0),
-                "H": round(h, 0),
-                "R": round(s["R"], 0),
-                "HR": round(s["HR"], 0),
-                "RBI": round(s["RBI"], 0),
-                "SB": round(s["SB"], 0),
-                "BB": round(bb, 0),
-                "OBP": obp,
-                "IP": round(s["IP"], 1),
-                "ER": round(s["ER"], 0),
-                "K": round(s["K"], 0),
-                "QS": round(s["QS"], 0),
-                "SV": round(s["SV"], 0),
-                "HD": round(s["HD"], 0)
-            }
-        print(f"✅ Loaded 2026 stats for {len(stats_map)} players")
+        print(f"✅ Loaded {len(all_data)} daily records across {len(records_by_player_team)} player-team combinations")
     except Exception as e:
-        print(f"⚠️ Could not load 2026 stats from Supabase: {e}")
+        print(f"⚠️ Could not load 2026 daily records from Supabase: {e}")
 
-    return stats_map
+    return records_by_player_team
+
+
+def compute_post_trade_stats(pid, to_team_id, trade_date_str, records_by_player_team):
+    """Compute player statistics accumulated strictly on the receiving team AFTER the trade took place."""
+    try:
+        t_dt = datetime.datetime.strptime(trade_date_str, "%Y-%m-%d").date()
+    except Exception:
+        t_dt = SEASON_START_2026
+
+    # If traded pre-season or on opening day, count from period 1
+    if t_dt <= SEASON_START_2026:
+        min_sp = 1
+    else:
+        min_sp = max(1, (t_dt - SEASON_START_2026).days + 1)
+
+    team_recs = records_by_player_team.get((pid, to_team_id), [])
+    post_recs = [r for r in team_recs if r.get("scoring_period_id", 0) >= min_sp]
+
+    ab, h, r, hr, rbi, sb, bb = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+    ip, k, er, qs, sv, hd = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+    is_pitcher = False
+
+    for rec in post_recs:
+        st = rec.get("stats") or {}
+        if isinstance(st, str):
+            try:
+                st = json.loads(st)
+            except Exception:
+                st = {}
+
+        ip_raw = float(st.get("34", st.get("IP_raw", st.get("IP", 0))))
+        k_val = float(st.get("48", st.get("K", 0)))
+        sv_val = float(st.get("57", st.get("SV", 0)))
+        hd_val = float(st.get("60", st.get("HD", 0)))
+        er_val = float(st.get("45", st.get("ER", 0)))
+        qs_val = float(st.get("63", st.get("QS", 0)))
+
+        ab_val = float(st.get("0", st.get("AB", 0)))
+        h_val = float(st.get("1", st.get("H", 0)))
+        hr_val = float(st.get("5", st.get("HR", 0)))
+        r_val = float(st.get("20", st.get("R", 0)))
+        rbi_val = float(st.get("21", st.get("RBI", 0)))
+        sb_val = float(st.get("23", st.get("SB", 0)))
+        bb_val = float(st.get("10", st.get("BB", 0)))
+
+        # ESPN '34' encodes total outs pitched
+        cur_ip = ip_raw / 3.0
+        if cur_ip > 0 or k_val > 0 or sv_val > 0:
+            is_pitcher = True
+
+        ab += ab_val
+        h += h_val
+        r += r_val
+        hr += hr_val
+        rbi += rbi_val
+        sb += sb_val
+        bb += bb_val
+        ip += cur_ip
+        k += k_val
+        er += er_val
+        qs += qs_val
+        sv += sv_val
+        hd += hd_val
+
+    pa = ab + bb
+    obp = round((h + bb) / pa, 3) if pa > 0 else 0.0
+
+    return {
+        "is_pitcher": is_pitcher,
+        "games_post_trade": len(post_recs),
+        "PA": round(pa, 0),
+        "AB": round(ab, 0),
+        "H": round(h, 0),
+        "R": round(r, 0),
+        "HR": round(hr, 0),
+        "RBI": round(rbi, 0),
+        "SB": round(sb, 0),
+        "BB": round(bb, 0),
+        "OBP": obp,
+        "IP": round(ip, 1),
+        "ER": round(er, 0),
+        "K": round(k, 0),
+        "QS": round(qs, 0),
+        "SV": round(sv, 0),
+        "HD": round(hd, 0)
+    }
 
 
 def process_sheet(sheet_conf, picks_by_year_pick, players_by_year_name, stats_2026_map):
@@ -405,12 +487,22 @@ def process_sheet(sheet_conf, picks_by_year_pick, players_by_year_name, stats_20
             espn_player_id = PLAYER_ID_MAP.get(p_clean)
             cname = normalize_name(asset_name)
 
+            to_tid = OWNER_TO_TEAM_ID.get(receiving)
+
             if season_year in (2024, 2025):
                 player_match = players_by_year_name.get((season_year, cname))
                 if player_match:
                     stats = extract_stats_from_draft_record(player_match)
+                else:
+                    # Player was injured/DNP all season (e.g. Brandon Woodruff in 2024)
+                    stats = {
+                        "is_pitcher": True if "woodruff" in cname else False,
+                        "PA": 0.0, "AB": 0.0, "H": 0.0, "R": 0.0, "HR": 0.0, "RBI": 0.0, "SB": 0.0, "BB": 0.0, "OBP": 0.0,
+                        "IP": 0.0, "ER": 0.0, "K": 0.0, "QS": 0.0, "SV": 0.0, "HD": 0.0,
+                        "games_post_trade": 0
+                    }
             elif season_year == 2026 and espn_player_id:
-                stats = stats_2026_map.get(espn_player_id)
+                stats = compute_post_trade_stats(espn_player_id, to_tid, trade_date, stats_2026_map)
 
         item_dict = {
             "season_year": season_year,
@@ -568,8 +660,9 @@ def process_espn_trades(existing_trades, stats_2026_map):
             rcv = TEAM_ID_TO_OWNER.get(i["to_team_id"], f"Team {i['to_team_id']}")
             pid = i.get("player_id")
             pname = i.get("player_name")
+            to_tid = i["to_team_id"]
 
-            p_stats = stats_2026_map.get(pid)
+            p_stats = compute_post_trade_stats(pid, to_tid, deal_date, stats_2026_map)
 
             trade_item = {
                 "season_year": 2026,
@@ -628,15 +721,15 @@ def process_espn_trades(existing_trades, stats_2026_map):
 
 def main():
     picks_by_year_pick, players_by_year_name = load_draft_history()
-    stats_2026_map = load_2026_player_stats()
+    daily_records_2026 = load_2026_daily_records()
 
     all_trades = []
     for sheet in SHEETS:
-        trades = process_sheet(sheet, picks_by_year_pick, players_by_year_name, stats_2026_map)
+        trades = process_sheet(sheet, picks_by_year_pick, players_by_year_name, daily_records_2026)
         print(f"Season {sheet['season_year']}: Processed {len(trades)} trades.")
         all_trades.extend(trades)
 
-    espn_trades = process_espn_trades(all_trades, stats_2026_map)
+    espn_trades = process_espn_trades(all_trades, daily_records_2026)
     all_trades.extend(espn_trades)
 
     all_trades.sort(key=lambda x: (x["trade_date"], x["unique_id"]), reverse=True)

@@ -154,7 +154,7 @@ function AssetRow({ item, isIncoming, isExpanded, onToggle, onPlayerClick }) {
   );
 }
 
-export default function TradeRepositoryView({ onPlayerClick, onOwnerClick }) {
+export default function TradeRepositoryView({ onPlayerClick, onOwnerClick, allStats = [] }) {
   const [selectedSeason, setSelectedSeason] = useState('all');
   const [selectedManager, setSelectedManager] = useState('All Managers');
   const [sortBy, setSortBy] = useState('newest');
@@ -168,8 +168,8 @@ export default function TradeRepositoryView({ onPlayerClick, onOwnerClick }) {
 
   // Grade all historical trades using the trade grading engine
   const gradedTrades = useMemo(() => {
-    return (historicalTrades || []).map(t => gradeTrade(t));
-  }, []);
+    return (historicalTrades || []).map(t => gradeTrade(t, allStats));
+  }, [allStats]);
 
   // Filter & sort trades
   const filteredTrades = useMemo(() => {

@@ -1312,6 +1312,7 @@ function App() {
               )}
               {currentView === 'trades' && (
                 <TradeRepositoryView
+                  allStats={rawData}
                   onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
                   onOwnerClick={(team) => setSelectedOwner(team)}
                 />
