@@ -18,6 +18,14 @@ from historical import (
     format_league_champions,
     format_all_active_owner_summaries,
 )
+try:
+    from pipelines.build_recap_context import format_recap_context
+except ImportError:
+    try:
+        from build_recap_context import format_recap_context
+    except ImportError:
+        def format_recap_context(*args, **kwargs): return ""
+
 
 # ---------------------------------------------------------------------------
 # CONFIGURATION
@@ -585,17 +593,30 @@ def build_daily_prompt(
         if block:
             trades_section = f"\n{block}\n"
 
+    # Ingest real MLB news overlap and league context lore
+    involved_tids = []
+    if top_hr and top_hr.get("team_id"): involved_tids.append(top_hr["team_id"])
+    if top_k and top_k.get("team_id"): involved_tids.append(top_k["team_id"])
+    if top_rbi and top_rbi.get("team_id"): involved_tids.append(top_rbi["team_id"])
+    for tid, d in (delta or {}).items():
+        if abs(d.get("rank_change", 0)) > 0 or abs(d.get("points_change", 0)) >= 2.0:
+            involved_tids.append(tid)
+
+    recap_context = format_recap_context(today_records, involved_tids)
+    context_section = f"\n{recap_context}\n" if recap_context else ""
+
     return f"""You are the commissioner's snarky, trash-talking fantasy baseball bot for the HEFTYSTRONG league.
 Write a short narrative daily recap for {period_date.strftime('%A, %B %d, %Y')}.
 
-Keep it under 250 words and fun — roast the losers, hype the winners.
+Keep it under 275 words and fun — roast the losers, hype the winners.
 Do NOT include a title. Format for Discord (plain text, no markdown headers).
 
-IMPORTANT: Specific stat tables and standings changes will be shown separately in Discord.
-Do NOT list every team's stat line. Instead, tell the story — reference 2-3 notable things
-and weave in what the day meant for the roto race. If there were recent trades, you can
-reference them briefly (e.g. "still settling in after last week's deal").
-All stats reflect active lineup players only (bench/IL excluded).
+CRITICAL INSTRUCTIONS:
+- Tell the story of the day — reference 2-3 notable performances and weave in what the day meant for the roto race.
+- Weave real MLB news and headlines with fantasy roster performance when relevant (e.g. real-life walk-offs, milestones, or injuries).
+- Leverage league manager personas, running rivalries, and trade lore for authentic, spicy commissioner banter.
+- Specific stat tables and standings changes will be shown separately in Discord, so do NOT list every team's line.
+- All stats reflect active lineup players only (bench/IL excluded).
 
 TOP INDIVIDUAL PERFORMANCES TODAY:
 {standouts}
@@ -603,7 +624,7 @@ TOP INDIVIDUAL PERFORMANCES TODAY:
 {format_standings_block(standings)}
 
 {format_delta_block(standings, delta)}
-{trades_section}
+{trades_section}{context_section}
 Write the narrative recap now:"""
 
 def compute_weekly_team_rates(records: list[dict]) -> dict[int, dict]:
@@ -691,6 +712,7 @@ def build_weekly_prompt(
     weekly_trades: list[dict] | None = None,
     history_block: str = "",
     mover_histories: list[str] | None = None,
+    records: list[dict] | None = None,
 ) -> str:
     n_teams = len(standings)
 
@@ -723,6 +745,11 @@ def build_weekly_prompt(
     history_section = f"\n{history_block}\n" if history_block else ""
     movers_hist_section = f"\n{chr(10).join(mover_histories)}\n" if mover_histories else ""
 
+    # Ingest real MLB news overlap and league context lore
+    involved_tids = list(weekly_delta.keys())
+    recap_context = format_recap_context(records or [], involved_tids)
+    context_section = f"\n{recap_context}\n" if recap_context else ""
+
     return f"""You are the commissioner's snarky, trash-talking fantasy baseball bot for the HEFTYSTRONG league.
 Generate a WEEKLY RECAP for the week of {week_start_date.strftime('%b %d')} – {week_end_date.strftime('%b %d, %Y')}.
 
@@ -734,6 +761,8 @@ CRITICAL INSTRUCTIONS:
 - DO NOT list every team's stats. Tell the story of the week!
 - Reference 2-3 standout individual players from this week (e.g. {best_h[0]['name'] if best_h else 'top hitters'}).
 - Call out who dominated categories this week, who had an embarrassing collapse, and who gained/lost the most roto ground.
+- Weave real MLB news and headlines with fantasy roster performance when relevant.
+- Leverage league manager personas, ongoing rivalries, and trade lore for authentic, spicy commissioner banter.
 - IMPORTANT: Use the WEEKLY TEAM PRODUCTION and CATEGORY LEADERS tables below for THIS WEEK'S stats.
 - The CUMULATIVE SEASON STANDINGS table at the bottom shows season-long cumulative totals — DO NOT confuse or cite season totals as this week's numbers!
 - Use historical context for spicy banter (e.g. championships, past collapses).
@@ -750,7 +779,7 @@ TOP INDIVIDUAL STANDOUTS THIS WEEK:
 
 WEEK-OVER-WEEK ROTO STANDINGS MOVEMENT:
 {movers_text}
-{trades_section}{history_section}{movers_hist_section}
+{trades_section}{context_section}{history_section}{movers_hist_section}
 CUMULATIVE SEASON ROTO STANDINGS (Reference for overall title race):
 {format_standings_block(standings)}
 
@@ -934,6 +963,7 @@ def run_weekly_recap(week_end_date: date | None = None):
         weekly_trades=weekly_trades,
         history_block=history_block,
         mover_histories=mover_histories,
+        records=records,
     )
 
     # --- Post 1: AI narrative recap ---

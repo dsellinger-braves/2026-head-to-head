@@ -20,12 +20,151 @@ const ALL_MANAGERS = [
   'Patrick'
 ];
 
+function AssetRow({ item, isIncoming, isExpanded, onToggle, onPlayerClick }) {
+  const isPick = item.asset_type === 'Pick';
+  const isPlayer = item.asset_type === 'Player';
+  const isBudget = item.asset_type === 'Budget';
+  const dp = item.drafted_player;
+  const hasBreakdown = Array.isArray(item.statBreakdown) && item.statBreakdown.length > 0;
+
+  return (
+    <div className={`rounded-xl border transition p-2.5 text-xs ${
+      isIncoming ? 'bg-slate-900/80 border-slate-800' : 'bg-slate-900/40 border-slate-800/60'
+    }`}>
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-start gap-2 min-w-0">
+          <span className="text-sm shrink-0 mt-0.5">
+            {isPlayer ? '⚾' : isPick ? '🎟️' : '💰'}
+          </span>
+          <div className="min-w-0">
+            {/* Title line */}
+            <div className="font-black text-white truncate flex items-center gap-1.5 flex-wrap">
+              {isPlayer && (
+                <span
+                  onClick={() => item.espn_player_id && onPlayerClick && onPlayerClick(item.espn_player_id, item.asset_name)}
+                  className={item.espn_player_id ? 'hover:text-cyan-300 cursor-pointer transition' : ''}
+                >
+                  {item.asset_name}
+                </span>
+              )}
+
+              {isPick && (
+                <span>
+                  Pick #{item.pick_number || item.asset_name} <span className="text-slate-400 font-normal">(R{item.round_number || '?'})</span>
+                </span>
+              )}
+
+              {isBudget && (
+                <span>${item.budget_amount} Budget Cash</span>
+              )}
+
+              {/* Keeper Badge */}
+              {item.isKept && (
+                <span className="text-[9px] bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded border border-purple-500/30 font-bold">
+                  🔒 {item.keeperLabel} (+{item.keeperBonus} pts)
+                </span>
+              )}
+
+              {/* Drafted Player Badge on Pick */}
+              {isPick && dp && (
+                <span
+                  onClick={() => dp.player_id && onPlayerClick && onPlayerClick(dp.player_id, dp.player_name)}
+                  className="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-lg border border-indigo-500/30 font-bold flex items-center gap-1 hover:text-indigo-200 cursor-pointer transition"
+                >
+                  <span>Drafted:</span>
+                  <span className="text-white underline decoration-indigo-400/50">{dp.player_name}</span>
+                </span>
+              )}
+
+              {/* Surplus vs curve badge */}
+              {isPick && item.surplus !== undefined && (
+                <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${
+                  item.surplus >= 0
+                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                    : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                }`}>
+                  {item.surplus >= 0 ? `+${item.surplus}` : item.surplus} vs curve
+                </span>
+              )}
+            </div>
+
+            {/* Subtitle / summary */}
+            <div className="text-[10px] text-slate-400 font-medium mt-0.5 leading-snug">
+              {item.statSummary ? (
+                <span>{item.statSummary}</span>
+              ) : (
+                <span>{item.detail}</span>
+              )}
+              {isPick && dp && dp.team_owner && (
+                <span className="text-slate-500 ml-1">· Picked by {dp.team_owner}</span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Right side value and breakdown toggle */}
+        <div className="text-right shrink-0 ml-2 flex flex-col items-end gap-1">
+          <span className={`text-xs font-black ${isIncoming ? 'text-emerald-400' : 'text-slate-400'}`}>
+            {isIncoming ? `+${item.value}` : `-${item.value}`}
+          </span>
+          {hasBreakdown && (
+            <button
+              onClick={onToggle}
+              className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700/60 transition flex items-center gap-1"
+            >
+              <span>{isExpanded ? 'Hide' : 'Breakdown'}</span>
+              <span className="text-[8px]">{isExpanded ? '▲' : '▼'}</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Expanded Stat Breakdown Chips */}
+      {isExpanded && hasBreakdown && (
+        <div className="mt-2.5 pt-2 border-t border-slate-800/80 space-y-1.5 animate-fadeIn">
+          <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+            <span>Cumulative Scoring Math</span>
+            <span className="text-slate-500">Total: {item.value} pts</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {item.statBreakdown.map((b, bIdx) => (
+              <div
+                key={bIdx}
+                title={b.formula}
+                className="px-2 py-1 rounded-lg bg-slate-950 border border-slate-800 flex items-center gap-1.5 text-[10px]"
+              >
+                <span className="font-semibold text-slate-400">{b.cat}:</span>
+                <span className="font-bold text-white">{b.val}</span>
+                {b.pts !== null && (
+                  <span className={`font-mono text-[9px] font-black ${b.pts >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    ({b.pts >= 0 ? `+${b.pts}` : b.pts})
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+          {isPick && item.curveValue !== undefined && (
+            <div className="text-[9px] text-slate-500 italic mt-1">
+              Expected Pick Baseline: {item.curveValue} pts · Actual Realized Selection: {item.value} pts
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function TradeRepositoryView({ onPlayerClick, onOwnerClick }) {
   const [selectedSeason, setSelectedSeason] = useState('all');
   const [selectedManager, setSelectedManager] = useState('All Managers');
   const [sortBy, setSortBy] = useState('newest');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedTradeId, setExpandedTradeId] = useState(null);
+  const [expandedBreakdowns, setExpandedBreakdowns] = useState({});
+
+  const toggleBreakdown = (key) => {
+    setExpandedBreakdowns(prev => ({ ...prev, [key]: !prev[key] }));
+  };
 
   // Grade all historical trades using the trade grading engine
   const gradedTrades = useMemo(() => {
@@ -345,41 +484,20 @@ export default function TradeRepositoryView({ onPlayerClick, onOwnerClick }) {
                             <div className="text-xs text-slate-500 italic">No incoming assets</div>
                           ) : (
                             <div className="space-y-1.5">
-                              {pkg.received.map((item, idx) => (
-                                <div
-                                  key={idx}
-                                  className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs"
-                                >
-                                  <div className="flex items-center gap-2 min-w-0">
-                                    <span className="text-sm shrink-0">
-                                      {item.asset_type === 'Player' ? '⚾' : item.asset_type === 'Pick' ? '🎟️' : '💰'}
-                                    </span>
-                                    <div className="min-w-0">
-                                      <div className="font-black text-white truncate flex items-center gap-1.5 flex-wrap">
-                                        <span
-                                          onClick={() => item.espn_player_id && onPlayerClick && onPlayerClick(item.espn_player_id, item.asset_name)}
-                                          className={item.asset_type === 'Player' ? 'hover:text-cyan-300 cursor-pointer transition' : ''}
-                                        >
-                                          {item.asset_name}
-                                        </span>
-                                        {item.isKept && (
-                                          <span className="text-[9px] bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded border border-purple-500/30 font-bold">
-                                            🔒 {item.keeperLabel}
-                                          </span>
-                                        )}
-                                      </div>
-                                      <div className="text-[10px] text-slate-400 font-medium truncate">
-                                        {item.detail}
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div className="text-right shrink-0 ml-2">
-                                    <span className="text-xs font-black text-emerald-400">
-                                      +{item.value}
-                                    </span>
-                                  </div>
-                                </div>
-                              ))}
+                              {pkg.received.map((item, idx) => {
+                                const itemKey = `${trade.unique_id}_${owner}_rec_${idx}`;
+                                return (
+                                  <AssetRow
+                                    key={idx}
+                                    item={item}
+                                    isIncoming={true}
+                                    itemKey={itemKey}
+                                    isExpanded={Boolean(expandedBreakdowns[itemKey])}
+                                    onToggle={() => toggleBreakdown(itemKey)}
+                                    onPlayerClick={onPlayerClick}
+                                  />
+                                );
+                              })}
                             </div>
                           )}
                         </div>
@@ -394,31 +512,20 @@ export default function TradeRepositoryView({ onPlayerClick, onOwnerClick }) {
                             <div className="text-xs text-slate-500 italic">No outgoing assets</div>
                           ) : (
                             <div className="space-y-1.5">
-                              {pkg.sent.map((item, idx) => (
-                                <div
-                                  key={idx}
-                                  className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/40 border border-slate-800/60 text-xs"
-                                >
-                                  <div className="flex items-center gap-2 min-w-0">
-                                    <span className="text-sm shrink-0">
-                                      {item.asset_type === 'Player' ? '⚾' : item.asset_type === 'Pick' ? '🎟️' : '💰'}
-                                    </span>
-                                    <div className="min-w-0">
-                                      <div className="font-bold text-slate-300 truncate">
-                                        {item.asset_name}
-                                      </div>
-                                      <div className="text-[10px] text-slate-500 font-medium truncate">
-                                        {item.detail}
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div className="text-right shrink-0 ml-2">
-                                    <span className="text-xs font-black text-slate-400">
-                                      -{item.value}
-                                    </span>
-                                  </div>
-                                </div>
-                              ))}
+                              {pkg.sent.map((item, idx) => {
+                                const itemKey = `${trade.unique_id}_${owner}_sent_${idx}`;
+                                return (
+                                  <AssetRow
+                                    key={idx}
+                                    item={item}
+                                    isIncoming={false}
+                                    itemKey={itemKey}
+                                    isExpanded={Boolean(expandedBreakdowns[itemKey])}
+                                    onToggle={() => toggleBreakdown(itemKey)}
+                                    onPlayerClick={onPlayerClick}
+                                  />
+                                );
+                              })}
                             </div>
                           )}
                         </div>
