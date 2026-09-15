@@ -415,6 +415,23 @@ export default function TransactionsView({ onPlayerClick, onOwnerClick }) {
           </div>
         </div>
 
+        {/* Quick Link to Multi-Year Trade Repository */}
+        <div className="mt-4 p-3.5 rounded-xl bg-gradient-to-r from-indigo-50 via-purple-50 to-blue-50 border border-indigo-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <span className="text-xl">🤝</span>
+            <div>
+              <div className="text-xs font-black text-indigo-900">Multi-Year Trade Repository & Return Grading</div>
+              <div className="text-[11px] text-indigo-700">Analyze blockbuster deals with draft pick curves, keeper surplus equity, and A+ to F grades.</div>
+            </div>
+          </div>
+          <a
+            href="#/trades"
+            className="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-xs transition whitespace-nowrap text-center"
+          >
+            Open Trade Repository →
+          </a>
+        </div>
+
         {/* Filter Toolbar */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
           {/* Search Bar */}

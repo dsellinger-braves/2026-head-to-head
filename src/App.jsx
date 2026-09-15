@@ -18,6 +18,7 @@ import OwnerDetailModal from './components/OwnerDetailModal';
 import PlayerHistoryModal from './components/PlayerHistoryModal';
 import LiveScoreboardView from './views/LiveScoreboardView';
 import TransactionsView from './views/TransactionsView';
+import TradeRepositoryView from './views/TradeRepositoryView';
 import DraftRoomView from './views/DraftRoomView';
 import PlayerValuationsView from './views/PlayerValuationsView';
 import PickemView from './views/PickemView';
@@ -37,6 +38,7 @@ const VIEW_TO_HASH = {
   summary: 'standings',
   teams: 'teams',
   transactions: 'transactions',
+  trades: 'trades',
   players: 'players',
   disparities: 'disparities',
   progression: 'progression',
@@ -75,6 +77,10 @@ const HASH_TO_VIEW = {
   'players/stats': 'players',
   transactions: 'transactions',
   'players/transactions': 'transactions',
+  trades: 'trades',
+  'trade-repository': 'trades',
+  'trades/history': 'trades',
+  'players/trades': 'trades',
   disparities: 'disparities',
   'players/disparities': 'disparities',
   'keeper-prices': 'keepers',
@@ -904,7 +910,7 @@ function App() {
                       type="button"
                       onClick={() => setOpenDropdown(prev => prev === 'players' ? null : 'players')}
                       className={`px-3.5 py-1.5 rounded-xl font-black flex items-center gap-1.5 transition-all cursor-pointer ${
-                        ['players', 'transactions', 'disparities'].includes(currentView)
+                        ['players', 'transactions', 'trades', 'disparities'].includes(currentView)
                           ? 'bg-blue-600 text-white shadow-md ring-1 ring-blue-400'
                           : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'
                       }`}
@@ -936,6 +942,16 @@ function App() {
                         >
                           <span className="flex items-center gap-2"><span>📋</span><span>Transactions</span></span>
                           {currentView === 'transactions' && <span className="text-[10px] text-blue-200">●</span>}
+                        </a>
+                        <a
+                          href="#/trades"
+                          onClick={(e) => { e.preventDefault(); setCurrentView('trades'); setOpenDropdown(null); }}
+                          className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-between transition cursor-pointer ${
+                            currentView === 'trades' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2"><span>🤝</span><span>Trade Repository</span></span>
+                          {currentView === 'trades' && <span className="text-[10px] text-blue-200">●</span>}
                         </a>
                         <a
                           href="#/disparities"
@@ -1264,6 +1280,12 @@ function App() {
               )}
               {currentView === 'transactions' && (
                 <TransactionsView
+                  onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
+                  onOwnerClick={(team) => setSelectedOwner(team)}
+                />
+              )}
+              {currentView === 'trades' && (
+                <TradeRepositoryView
                   onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
                   onOwnerClick={(team) => setSelectedOwner(team)}
                 />

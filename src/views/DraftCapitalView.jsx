@@ -1275,6 +1275,13 @@ export default function DraftCapitalView({
                 </span>
               ) : null}
             </button>
+            <a
+              href="#/trades"
+              className="px-3.5 py-2 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 text-indigo-300 hover:text-white hover:bg-indigo-950/60 border border-indigo-500/40 text-xs font-black"
+              title="View Graded Multi-Year Trade Archive"
+            >
+              <span>🏛️ Graded Trade Archive</span>
+            </a>
           </div>
         </div>
 

@@ -5,6 +5,7 @@ import { aggregateStats, calculateRotoPoints, SCORING_CATS } from '../utils/scor
 import { useAuth } from '../context/useAuth';
 import TeamAvatar from '../components/TeamAvatar';
 import { getPlayerHeadshotUrl, handleHeadshotError } from '../utils/headshotUtils';
+import { evaluatePlayerCapital, findWaiverReplacements } from '../utils/replacementRecommender';
 
 const MLB_TEAMS = {
   0: { abbreviation: 'FA', name: 'Free Agent', shortName: 'FA' },
@@ -122,9 +123,12 @@ export default function OwnerLandingView({
   const [espnLoading, setEspnLoading] = useState(true);
   const [rosterData, setRosterData] = useState([]);
   const [newsArticles, setNewsArticles] = useState([]);
+  const [freeAgentPool, setFreeAgentPool] = useState([]);
+  const [draftPicks, setDraftPicks] = useState([]);
+  const [expandedColdId, setExpandedColdId] = useState(null);
   const [lastRefreshed, setLastRefreshed] = useState(null);
 
-  // Fetch ESPN Live Rosters, PR 15, and News
+  // Fetch ESPN Live Rosters, PR 15, News, Free Agents, and Draft Details
   const fetchLiveEspnData = useCallback(async () => {
     setEspnLoading(true);
     try {
@@ -151,6 +155,41 @@ export default function OwnerLandingView({
       }
     } catch (err) {
       console.warn('Could not fetch ESPN news:', err);
+    }
+
+    try {
+      // 3. Fetch Top Free Agents for Cold Player Replacements
+      const faFilter = JSON.stringify({
+        players: {
+          filterStatus: { value: ['FREEAGENT', 'WAIVERS'] },
+          sortPercOwned: { sortPriority: 1, sortAsc: false },
+          limit: 80
+        }
+      });
+      const faRes = await fetch(
+        'https://lm-api-reads.fantasy.espn.com/apis/v3/games/flb/seasons/2026/segments/0/leagues/130215?scoringPeriodId=0&view=kona_player_info',
+        { headers: { 'x-fantasy-filter': faFilter }, cache: 'no-store' }
+      );
+      if (faRes.ok) {
+        const faData = await faRes.json();
+        setFreeAgentPool(faData.players || []);
+      }
+    } catch (err) {
+      console.warn('Could not fetch free agent pool:', err);
+    }
+
+    try {
+      // 4. Fetch 2026 Draft Detail for Capital Invested Checks
+      const draftRes = await fetch(
+        'https://lm-api-reads.fantasy.espn.com/apis/v3/games/flb/seasons/2026/segments/0/leagues/130215?view=mDraftDetail',
+        { cache: 'no-store' }
+      );
+      if (draftRes.ok) {
+        const draftData = await draftRes.json();
+        setDraftPicks(draftData.draftDetail?.picks || []);
+      }
+    } catch (err) {
+      console.warn('Could not fetch draft details:', err);
     } finally {
       setEspnLoading(false);
       setLastRefreshed(new Date());
@@ -905,45 +944,157 @@ export default function OwnerLandingView({
 
             {coldPlayers.length > 0 ? (
               <div className="space-y-2">
-                {coldPlayers.map((p, idx) => (
-                  <div
-                    key={p.id}
-                    onClick={() => onPlayerClick && onPlayerClick(p.id, p.name)}
-                    className="group flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-cyan-950/20 via-slate-950/40 to-slate-950/60 border border-cyan-500/20 hover:border-cyan-400/50 transition cursor-pointer"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="relative shrink-0">
-                        <img
-                          src={getPlayerHeadshotUrl(p._raw || p)}
-                          alt={p.name}
-                          onError={(e) => handleHeadshotError(e, p._raw || p)}
-                          className="w-10 h-10 rounded-full object-cover border-2 border-cyan-500/40 bg-slate-800 shadow"
-                        />
-                        <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-cyan-500 text-slate-950 font-black text-[10px] flex items-center justify-center shadow">
-                          {idx + 1}
-                        </span>
-                      </div>
-                      <div className="min-w-0">
-                        <div className="text-sm font-black text-white group-hover:text-cyan-300 transition flex items-center gap-1.5 flex-wrap">
-                          <span className="truncate">{p.name}</span>
-                          <span className="text-[10px] text-cyan-400 font-bold bg-cyan-500/10 px-1.5 py-0.5 rounded border border-cyan-500/20">{p.position}</span>
-                        </div>
-                        <div className="text-xs text-slate-400 font-medium mt-0.5 flex items-center gap-1.5">
-                          {p.teamLogo && (
-                            <img src={p.teamLogo} alt="" className="w-3.5 h-3.5 object-contain shrink-0" />
-                          )}
-                          <span className="truncate">{p.statSummary}</span>
-                        </div>
-                      </div>
-                    </div>
+                {coldPlayers.map((p, idx) => {
+                  const capitalInfo = evaluatePlayerCapital(p, draftPicks);
+                  const replacements = findWaiverReplacements(p, freeAgentPool, rotoStandings?.weaknesses || [], capitalInfo);
+                  const isExpanded = expandedColdId === p.id;
 
-                    <div className="text-right shrink-0 ml-2">
-                      <span className={`px-2.5 py-1 rounded-xl font-black text-xs whitespace-nowrap border ${p.pr < 0 ? 'bg-rose-500/20 text-rose-400 border-rose-500/30' : 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30'}`}>
-                        {p.pr} PR
-                      </span>
+                  return (
+                    <div
+                      key={p.id}
+                      className="rounded-2xl bg-gradient-to-r from-cyan-950/20 via-slate-950/40 to-slate-950/60 border border-cyan-500/20 overflow-hidden transition"
+                    >
+                      {/* Top Player Row */}
+                      <div className="flex items-center justify-between p-3.5">
+                        <div
+                          onClick={() => onPlayerClick && onPlayerClick(p.id, p.name)}
+                          className="flex items-center gap-3 min-w-0 cursor-pointer flex-1"
+                        >
+                          <div className="relative shrink-0">
+                            <img
+                              src={getPlayerHeadshotUrl(p._raw || p)}
+                              alt={p.name}
+                              onError={(e) => handleHeadshotError(e, p._raw || p)}
+                              className="w-10 h-10 rounded-full object-cover border-2 border-cyan-500/40 bg-slate-800 shadow"
+                            />
+                            <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-cyan-500 text-slate-950 font-black text-[10px] flex items-center justify-center shadow">
+                              {idx + 1}
+                            </span>
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-sm font-black text-white group-hover:text-cyan-300 transition flex items-center gap-1.5 flex-wrap">
+                              <span className="truncate">{p.name}</span>
+                              <span className="text-[10px] text-cyan-400 font-bold bg-cyan-500/10 px-1.5 py-0.5 rounded border border-cyan-500/20">{p.position}</span>
+                              <span className={`text-[9px] font-black px-1.5 py-0.5 rounded border ${
+                                capitalInfo.tier === 'HIGH'
+                                  ? 'bg-purple-500/20 text-purple-300 border-purple-500/30'
+                                  : capitalInfo.tier === 'MODERATE'
+                                  ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
+                                  : 'bg-rose-500/20 text-rose-300 border-rose-500/30'
+                              }`}>
+                                {capitalInfo.badgeText}
+                              </span>
+                            </div>
+                            <div className="text-xs text-slate-400 font-medium mt-0.5 flex items-center gap-1.5">
+                              {p.teamLogo && (
+                                <img src={p.teamLogo} alt="" className="w-3.5 h-3.5 object-contain shrink-0" />
+                              )}
+                              <span className="truncate">{p.statSummary}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0 ml-2">
+                          <span className={`px-2.5 py-1 rounded-xl font-black text-xs whitespace-nowrap border ${p.pr < 0 ? 'bg-rose-500/20 text-rose-400 border-rose-500/30' : 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30'}`}>
+                            {p.pr} PR
+                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setExpandedColdId(isExpanded ? null : p.id);
+                            }}
+                            className={`px-2.5 py-1 rounded-xl text-xs font-bold transition flex items-center gap-1 ${
+                              isExpanded
+                                ? 'bg-cyan-600 text-white shadow-xs'
+                                : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                            }`}
+                            title="View waiver replacements"
+                          >
+                            <span>💡</span>
+                            <span>{isExpanded ? 'Hide' : 'Options'}</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Expandable Waiver Replacements & Strategy Advice */}
+                      {isExpanded && (
+                        <div className="px-3.5 pb-3.5 pt-1 border-t border-slate-800/80 bg-slate-950/70 animate-fadeIn space-y-3">
+                          {/* Strategic Guidance Box */}
+                          <div className={`p-2.5 rounded-xl border text-xs leading-relaxed ${
+                            capitalInfo.tier === 'HIGH'
+                              ? 'bg-purple-950/40 border-purple-500/30 text-purple-200'
+                              : capitalInfo.tier === 'MODERATE'
+                              ? 'bg-cyan-950/40 border-cyan-500/30 text-cyan-200'
+                              : 'bg-rose-950/40 border-rose-500/30 text-rose-200'
+                          }`}>
+                            <div className="font-black flex items-center gap-1.5 mb-1">
+                              <span>{capitalInfo.tier === 'HIGH' ? '🛡️' : capitalInfo.tier === 'MODERATE' ? '⚠️' : '✂️'}</span>
+                              <span>Capital Strategy: {capitalInfo.headline}</span>
+                            </div>
+                            <p className="text-[11px] opacity-90">{capitalInfo.advice}</p>
+                          </div>
+
+                          {/* Recommended Free Agents */}
+                          <div className="space-y-1.5">
+                            <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-wider text-slate-400">
+                              <span>Recommended Free Agent Targets ({replacements.length})</span>
+                              <span>Positional Match</span>
+                            </div>
+
+                            {replacements.length === 0 ? (
+                              <div className="p-3 text-center text-xs text-slate-500 rounded-xl bg-slate-900/40">
+                                {espnLoading ? 'Scanning waiver wire...' : 'No active unrostered match found.'}
+                              </div>
+                            ) : (
+                              replacements.map((rep) => (
+                                <div
+                                  key={rep.id}
+                                  onClick={() => onPlayerClick && onPlayerClick(rep.id, rep.name)}
+                                  className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-cyan-500/40 transition cursor-pointer"
+                                >
+                                  <div className="flex items-center gap-2.5 min-w-0">
+                                    <img
+                                      src={getPlayerHeadshotUrl(rep._raw || rep)}
+                                      alt={rep.name}
+                                      onError={(e) => handleHeadshotError(e, rep._raw || rep)}
+                                      className="w-8 h-8 rounded-full object-cover border border-cyan-500/30 bg-slate-800 shrink-0"
+                                    />
+                                    <div className="min-w-0">
+                                      <div className="font-bold text-white text-xs flex items-center gap-1.5 truncate">
+                                        <span>{rep.name}</span>
+                                        <span className="text-[9px] text-cyan-300 font-bold bg-cyan-950/60 px-1 py-0.2 rounded border border-cyan-500/20">{rep.position}</span>
+                                      </div>
+                                      <div className="text-[10px] text-slate-400 truncate">
+                                        {rep.statSummary}
+                                      </div>
+                                      <div className="text-[9px] text-emerald-400 font-semibold mt-0.5 truncate">
+                                        {rep.fitReason}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <div className="text-right shrink-0 ml-2">
+                                    <span className="text-[11px] font-black text-cyan-300 bg-cyan-950/60 px-2 py-0.5 rounded-lg border border-cyan-500/30 block mb-1">
+                                      +{rep.pr15} PR
+                                    </span>
+                                    <span className={`text-[9px] font-black px-1.5 py-0.5 rounded ${
+                                      rep.actionType === 'BENCH_STREAM'
+                                        ? 'bg-amber-500/20 text-amber-300'
+                                        : 'bg-rose-500/20 text-rose-300'
+                                    }`}>
+                                      {rep.actionType === 'BENCH_STREAM' ? 'Stream & Bench' : 'Cut & Add'}
+                                    </span>
+                                  </div>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="p-6 rounded-2xl bg-slate-950/40 border border-slate-800 text-center text-xs text-slate-400">
