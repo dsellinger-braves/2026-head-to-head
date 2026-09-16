@@ -136,20 +136,128 @@ def find_news_roster_overlap(news_articles: List[Dict[str, str]], player_map: Di
     return overlaps
 
 
+CAT_HIGHER_IS_BETTER = {
+    "R": True, "HR": True, "RBI": True, "OBP": True, "SB": True,
+    "QS": True, "ERA": False, "WHIP": False, "K": True, "SV_HD": True,
+}
+
+CAT_THRESHOLDS = {
+    "OBP": 0.0035,
+    "ERA": 0.15,
+    "WHIP": 0.030,
+    "SB": 3,
+    "HR": 3,
+    "SV_HD": 3,
+    "QS": 2,
+    "R": 6,
+    "RBI": 6,
+    "K": 8,
+}
+
+
+def fmt_cat_val(cat: str, val: float) -> str:
+    """Format a category stat value cleanly."""
+    if cat == "OBP":
+        return f"{val:.4f}".replace("0.", ".")
+    if cat in ("ERA", "WHIP"):
+        return f"{val:.2f}"
+    return f"{int(round(val))}"
+
+
+def detect_active_roto_battles(
+    standings: Optional[dict] = None,
+    delta: Optional[dict] = None,
+    limit: int = 4
+) -> List[str]:
+    """
+    Dynamically identify active category dogfights and standings tug-of-wars
+    where managers are separated by razor-thin margins and actively trading roto points.
+    """
+    if not standings or not isinstance(standings, dict):
+        return []
+
+    battles = []
+
+    # 1. Category Point Battles (adjacent teams within striking distance of flipping a point)
+    for cat, higher in CAT_HIGHER_IS_BETTER.items():
+        thresh = CAT_THRESHOLDS.get(cat, 3)
+        teams_with_cat = []
+        for tid, data in standings.items():
+            if cat in data and isinstance(data[cat], (int, float)):
+                pts = data.get("cat_points", {}).get(cat, 0.0)
+                teams_with_cat.append((tid, float(data[cat]), float(pts)))
+
+        # Sort teams best to worst in this category
+        teams_with_cat.sort(key=lambda x: x[1], reverse=higher)
+
+        for i in range(len(teams_with_cat) - 1):
+            t1_id, t1_val, t1_pts = teams_with_cat[i]
+            t2_id, t2_val, t2_pts = teams_with_cat[i + 1]
+
+            diff = abs(t1_val - t2_val)
+            if diff <= thresh:
+                m1 = TEAM_NAMES.get(t1_id, f"Team {t1_id}")
+                m2 = TEAM_NAMES.get(t2_id, f"Team {t2_id}")
+
+                # Check if delta reflects an active flip or movement
+                flipped = False
+                if delta:
+                    d1_pt = delta.get(t1_id, {}).get("cat_delta", {}).get(cat, 0)
+                    d2_pt = delta.get(t2_id, {}).get("cat_delta", {}).get(cat, 0)
+                    if (d1_pt > 0 and d2_pt < 0) or (d1_pt < 0 and d2_pt > 0):
+                        flipped = True
+
+                t1_str = f"{m1} ({fmt_cat_val(cat, t1_val)}, {t1_pts:.1f} pts)"
+                t2_str = f"{m2} ({fmt_cat_val(cat, t2_val)}, {t2_pts:.1f} pts)"
+                diff_str = f"{diff:.4f}".replace("0.", ".") if cat == "OBP" else f"{diff:.2f}" if cat in ("ERA", "WHIP") else f"{int(round(diff))}"
+
+                if flipped:
+                    battles.append(
+                        f"  - ⚡ ACTIVE POINT FLIP in {cat}: {m1} and {m2} just traded roto points! Separated by only {diff_str} in {cat} ({t1_str} vs {t2_str})."
+                    )
+                else:
+                    battles.append(
+                        f"  - ⚔️ {cat} TUG-OF-WAR (Margin: {diff_str}): {t1_str} vs {t2_str} — neck-and-neck for this roto point, actively trading it back and forth!"
+                    )
+
+    # 2. Overall Standings Logjams (teams within 1.5 total roto points)
+    ranked_teams = sorted(
+        [(tid, d.get("roto_points", 0.0), d.get("standing", 0)) for tid, d in standings.items()],
+        key=lambda x: x[1],
+        reverse=True
+    )
+    for i in range(len(ranked_teams) - 1):
+        t1_id, t1_pts, t1_rank = ranked_teams[i]
+        t2_id, t2_pts, t2_rank = ranked_teams[i + 1]
+        pt_gap = round(t1_pts - t2_pts, 1)
+        if pt_gap <= 1.5:
+            m1 = TEAM_NAMES.get(t1_id, f"Team {t1_id}")
+            m2 = TEAM_NAMES.get(t2_id, f"Team {t2_id}")
+            battles.append(
+                f"  - 🏆 STANDINGS DEADLOCK: #{t1_rank} {m1} ({t1_pts:.1f} pts) vs #{t2_rank} {m2} ({t2_pts:.1f} pts) — separated by just {pt_gap} total point; one category swing flips their podium rank!"
+            )
+
+    return battles[:limit]
+
+
 def format_recap_context(
     today_records: Optional[List[dict]] = None,
-    involved_team_ids: Optional[List[int]] = None
+    involved_team_ids: Optional[List[int]] = None,
+    standings: Optional[dict] = None,
+    delta: Optional[dict] = None,
 ) -> str:
     """
-    Generate comprehensive context injection text including:
-    1. Real MLB headlines matched to fantasy owners
-    2. Manager personas & banter triggers
-    3. Active rivalries & historical trade lore
+    Generate comprehensive context injection text prioritizing:
+    1. Real MLB headlines matched to fantasy rosters
+    2. Dynamic active category battlegrounds & roto point tug-of-wars
+    3. Season-long category battlegrounds and volatility patterns
+    4. Manager personas, in-season pacing tendencies, and banter triggers
     """
     context_data = load_league_context()
     personas = context_data.get("manager_personas", {})
-    rivalries = context_data.get("rivalries", [])
-    trade_lore = context_data.get("trade_lore", [])
+    battlegrounds = context_data.get("category_battlegrounds", [])
+    season_patterns = context_data.get("season_trends_and_patterns", [])
+    rivalries = context_data.get("in_season_rivalries", []) or context_data.get("rivalries", [])
 
     # 1. Real MLB News Overlap
     news_articles = fetch_mlb_news(limit=15)
@@ -168,7 +276,23 @@ def format_recap_context(
 
     news_block = "\n".join(news_lines) if news_lines else "  (No breaking MLB news matches today)"
 
-    # 2. Manager Lore & Personas
+    # 2. Dynamic Live Category Battles & Point Tug-of-Wars
+    active_battles = detect_active_roto_battles(standings, delta, limit=5)
+    active_battles_block = "\n".join(active_battles) if active_battles else "  (Standings margins evenly distributed today)"
+
+    # 3. Persistent Season-Long Category Battlegrounds & Trends
+    bg_lines = []
+    if battlegrounds:
+        for bg in battlegrounds[:3]:
+            bg_lines.append(f"  - {bg['title']} ({bg['category']}): {bg['dynamic']}")
+
+    if season_patterns:
+        for sp in season_patterns[:2]:
+            bg_lines.append(f"  - Pattern: {sp['pattern']} — {sp['description']}")
+
+    patterns_block = "\n".join(bg_lines) if bg_lines else ""
+
+    # 4. Manager Personas & In-Season Pacing
     persona_lines = []
     target_teams = list(dict.fromkeys(involved_team_ids or list(TEAM_NAMES.keys())))
     for tid in target_teams[:5]:
@@ -176,38 +300,42 @@ def format_recap_context(
         p = personas.get(m_name)
         if p:
             arch = p.get("archetype", "")
+            tendencies = p.get("in_season_tendencies", p.get("tendencies", [""]))
+            t_str = tendencies[0] if tendencies else ""
             banter = p.get("banter_triggers", [""])[0]
-            persona_lines.append(f"  - {m_name} ({p.get('team_name', '')}): {arch}. Banter: {banter}")
+            persona_lines.append(f"  - {m_name} ({p.get('team_name', '')}): {arch}. Tendency: {t_str}. Banter: {banter}")
 
     personas_block = "\n".join(persona_lines) if persona_lines else ""
 
-    # 3. Notable Rivalries & Trade Lore
-    lore_lines = []
+    # 5. In-Season Rivalries
+    rivalry_lines = []
     if rivalries:
         for r in rivalries[:2]:
-            lore_lines.append(f"  - Rivalry: {r['name']} ({', '.join(r['managers'])}) — {r['narrative']}")
-    if trade_lore:
-        for t in trade_lore[:2]:
-            lore_lines.append(f"  - Trade Lore ({t['deal']}): {t['summary']} -> Result: {t['outcome']}")
+            rivalry_lines.append(f"  - Clash: {r['name']} ({', '.join(r['managers'])}) — {r['narrative']}")
 
-    lore_block = "\n".join(lore_lines) if lore_lines else ""
+    rivalries_block = "\n".join(rivalry_lines) if rivalry_lines else ""
 
     output = f"""
 REAL MLB NEWS & FANTASY ROSTER OVERLAP:
 {news_block}
 
-LEAGUE MANAGER PERSONAS & BANTER LORE:
+ACTIVE CATEGORY BATTLEGROUNDS & ROTO POINT TUG-OF-WARS (LIVE):
+{active_battles_block}
+
+SEASON-LONG CATEGORY BATTLEGROUNDS & PATTERNS:
+{patterns_block}
+
+LEAGUE MANAGER PERSONAS & IN-SEASON TENDENCIES:
 {personas_block}
 
-HISTORICAL RIVALRIES & TRADE LORE:
-{lore_block}
+SEASON RIVALRIES & CATEGORY CLASHES:
+{rivalries_block}
 """
     return output.strip()
 
 
 if __name__ == "__main__":
-    print("Testing recap context generator...")
-    # Mock records for testing
+    print("Testing recap context generator with mock standings...")
     mock_records = [
         {"full_name": "Aaron Judge", "team_id": 14},
         {"full_name": "Pete Alonso", "team_id": 1},
@@ -215,6 +343,20 @@ if __name__ == "__main__":
         {"full_name": "Corbin Carroll", "team_id": 13},
         {"full_name": "Gunnar Henderson", "team_id": 3}
     ]
-    ctx = format_recap_context(mock_records, [1, 14, 6])
+
+    mock_standings = {
+        12: {"R": 1150, "HR": 270, "RBI": 950, "OBP": 0.3306, "SB": 140, "QS": 85, "ERA": 3.90, "WHIP": 1.210, "K": 1500, "SV_HD": 90, "roto_points": 58.0, "standing": 2, "cat_points": {"OBP": 6.0, "SV_HD": 8.0}},
+        3:  {"R": 1180, "HR": 320, "RBI": 1050, "OBP": 0.3287, "SB": 110, "QS": 80, "ERA": 4.10, "WHIP": 1.250, "K": 1450, "SV_HD": 60, "roto_points": 57.0, "standing": 3, "cat_points": {"OBP": 5.0, "SV_HD": 4.0}},
+        14: {"R": 1140, "HR": 310, "RBI": 990, "OBP": 0.3285, "SB": 95, "QS": 70, "ERA": 3.85, "WHIP": 1.205, "K": 1400, "SV_HD": 92, "roto_points": 51.0, "standing": 5, "cat_points": {"OBP": 4.0, "SV_HD": 9.0}},
+        1:  {"R": 1210, "HR": 290, "RBI": 1010, "OBP": 0.3401, "SB": 130, "QS": 95, "ERA": 3.75, "WHIP": 1.180, "K": 1600, "SV_HD": 91, "roto_points": 72.0, "standing": 1, "cat_points": {"OBP": 8.0, "SV_HD": 8.5}},
+    }
+
+    mock_delta = {
+        12: {"points_change": 1.0, "rank_change": 0, "cat_delta": {"OBP": 1.0}},
+        3:  {"points_change": -1.0, "rank_change": 0, "cat_delta": {"OBP": -1.0}},
+    }
+
+    ctx = format_recap_context(mock_records, [12, 3, 14, 1], standings=mock_standings, delta=mock_delta)
     print("\n--- GENERATED CONTEXT INJECTION BLOCK ---")
     print(ctx)
+
