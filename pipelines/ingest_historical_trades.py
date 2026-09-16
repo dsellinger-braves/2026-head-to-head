@@ -591,11 +591,11 @@ def compute_historical_post_trade_stats(player_id, to_team_id, trade_date, seaso
         min_sp = 1
 
     headers = {
-        "apikey": DEFAULT_SUPABASE_KEY,
-        "Authorization": f"Bearer {DEFAULT_SUPABASE_KEY}"
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}"
     }
     url = (
-        f"{DEFAULT_SUPABASE_URL}/rest/v1/historical_data?"
+        f"{SUPABASE_URL}/rest/v1/historical_data?"
         f"season_year=eq.{season_year}&id=eq.{player_id}&team_id=eq.{to_team_id}&"
         f"scoring_period_id=gte.{min_sp}&select=*"
     )
@@ -609,7 +609,7 @@ def compute_historical_post_trade_stats(player_id, to_team_id, trade_date, seaso
 
     if not rows:
         url2 = (
-            f"{DEFAULT_SUPABASE_URL}/rest/v1/historical_data?"
+            f"{SUPABASE_URL}/rest/v1/historical_data?"
             f"season_year=eq.{season_year}&id=eq.{player_id}&"
             f"scoring_period_id=gte.{min_sp}&select=*"
         )
