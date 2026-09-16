@@ -5128,7 +5128,7 @@
             "espn_player_id": 38980,
             "stats": {
               "is_pitcher": false,
-              "games_post_trade": 158,
+              "games_post_trade": 156,
               "PA": 506.0,
               "AB": 447.0,
               "H": 120.0,
@@ -5169,7 +5169,7 @@
             "espn_player_id": 38980,
             "stats": {
               "is_pitcher": false,
-              "games_post_trade": 158,
+              "games_post_trade": 156,
               "PA": 506.0,
               "AB": 447.0,
               "H": 120.0,
@@ -5280,7 +5280,7 @@
         "espn_player_id": 38980,
         "stats": {
           "is_pitcher": false,
-          "games_post_trade": 158,
+          "games_post_trade": 156,
           "PA": 506.0,
           "AB": 447.0,
           "H": 120.0,
