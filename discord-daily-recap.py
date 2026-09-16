@@ -602,7 +602,7 @@ def build_daily_prompt(
         if abs(d.get("rank_change", 0)) > 0 or abs(d.get("points_change", 0)) >= 2.0:
             involved_tids.append(tid)
 
-    recap_context = format_recap_context(today_records, involved_tids)
+    recap_context = format_recap_context(today_records, involved_tids, standings=standings, delta=delta)
     context_section = f"\n{recap_context}\n" if recap_context else ""
 
     return f"""You are the commissioner's snarky, trash-talking fantasy baseball bot for the HEFTYSTRONG league.
@@ -614,7 +614,8 @@ Do NOT include a title. Format for Discord (plain text, no markdown headers).
 CRITICAL INSTRUCTIONS:
 - Tell the story of the day — reference 2-3 notable performances and weave in what the day meant for the roto race.
 - Weave real MLB news and headlines with fantasy roster performance when relevant (e.g. real-life walk-offs, milestones, or injuries).
-- Leverage league manager personas, running rivalries, and trade lore for authentic, spicy commissioner banter.
+- Focus heavily on active in-season trends, category battlegrounds, and roto points being traded back and forth between rival managers (e.g. decimal OBP wars, single-point swings, surging vs fading teams).
+- Leverage manager in-season personas and category rivalries for authentic, spicy commissioner banter.
 - Specific stat tables and standings changes will be shown separately in Discord, so do NOT list every team's line.
 - All stats reflect active lineup players only (bench/IL excluded).
 
@@ -747,7 +748,7 @@ def build_weekly_prompt(
 
     # Ingest real MLB news overlap and league context lore
     involved_tids = list(weekly_delta.keys())
-    recap_context = format_recap_context(records or [], involved_tids)
+    recap_context = format_recap_context(records or [], involved_tids, standings=standings, delta=weekly_delta)
     context_section = f"\n{recap_context}\n" if recap_context else ""
 
     return f"""You are the commissioner's snarky, trash-talking fantasy baseball bot for the HEFTYSTRONG league.
@@ -762,7 +763,8 @@ CRITICAL INSTRUCTIONS:
 - Reference 2-3 standout individual players from this week (e.g. {best_h[0]['name'] if best_h else 'top hitters'}).
 - Call out who dominated categories this week, who had an embarrassing collapse, and who gained/lost the most roto ground.
 - Weave real MLB news and headlines with fantasy roster performance when relevant.
-- Leverage league manager personas, ongoing rivalries, and trade lore for authentic, spicy commissioner banter.
+- Focus heavily on in-season trends, pattern shifts over the course of the season, and neck-and-neck category battlegrounds where managers are actively trading roto points back and forth.
+- Leverage manager personas and category rivalries for authentic, spicy commissioner banter.
 - IMPORTANT: Use the WEEKLY TEAM PRODUCTION and CATEGORY LEADERS tables below for THIS WEEK'S stats.
 - The CUMULATIVE SEASON STANDINGS table at the bottom shows season-long cumulative totals — DO NOT confuse or cite season totals as this week's numbers!
 - Use historical context for spicy banter (e.g. championships, past collapses).

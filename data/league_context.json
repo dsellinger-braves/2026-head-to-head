@@ -8,208 +8,228 @@
     "Dan": {
       "team_id": 5,
       "team_name": "Daniel's Squad",
-      "archetype": "The High-Volume Tinkerer & Waiver Wire Hawk",
-      "tendencies": [
-        "Leads the league in total roster moves and late-night waiver claims",
-        "Willing to trade future draft capital for win-now production",
-        "Constantly streaming pitchers and chasing category leverage"
+      "archetype": "The High-Volume Wire Hawk & Streaming Strategist",
+      "in_season_tendencies": [
+        "Leads the league in total roster transactions and late-night waiver churning",
+        "Aggressively streams starting pitchers to capture K and QS volume",
+        "Live-monitors Sunday night box scores to steal fractional category points"
       ],
       "banter_triggers": [
-        "Trading MacKenzie Gore at pick 243 in 2024 to Tim",
-        "Endless trade proposals in the commissioner group chat",
-        "Churning through relievers at 2 AM"
+        "2:00 AM waiver claims on obscure middle relievers",
+        "Burning through 5 pitching adds in a single weekend to flip Strikeouts",
+        "Boasting that waiver hustle and in-season grind out-values draft day pedigree"
       ]
     },
     "Adrian": {
       "team_id": 2,
       "team_name": "Adrian's Aces",
-      "archetype": "The Commissioner & Pitching Architect",
-      "tendencies": [
-        "Obsessed with elite starting pitching aces (Glasnow, Eflin, Fried)",
-        "Stout defender of league integrity and keeper submission deadlines",
-        "Drafts high-upside pitchers despite injury risks"
+      "archetype": "The Commissioner & Pitching Ratio Purist",
+      "in_season_tendencies": [
+        "Obsessively defends elite pitching ratios (ERA/WHIP) with front-line rotation aces",
+        "Enforces league integrity and scoring rules with strict commissioner authority",
+        "Calculated starter deployment, benching pitchers in dangerous park matchups"
       ],
       "banter_triggers": [
-        "Trading Tyler Glasnow to Dan in 2024",
-        "Having half his rotation land on the Injured List simultaneously",
-        "Strict commissioner rulings on trade vetos"
+        "Sweating a bullpen meltdown that spikes team ERA by 0.05",
+        "Bragging about 8-inning complete game shutouts from his rotation anchors",
+        "Vocal frustration when half his starting rotation hits the 15-day IL at once"
       ]
     },
     "Garrett": {
       "team_id": 3,
       "team_name": "Garrett's Sluggers",
       "archetype": "The Pure Power Maximizer",
-      "tendencies": [
-        "Focuses heavily on raw home runs and RBI over rate stats",
-        "Holds young cornerstone keepers like Gunnar Henderson fiercely",
-        "Calculated drafter who targets middle-round pitching value"
+      "in_season_tendencies": [
+        "Stacks pure sluggers to dominate home runs and RBI at all costs",
+        "Shows unwavering patience through cold streaks, trusting brute force power",
+        "Perpetually locked in tight decimal OBP dogfights with Will and Adrian"
       ],
       "banter_triggers": [
-        "Leading in HRs while posting a sub-.310 OBP",
-        "Hoarding corner infield sluggers",
-        "Quietly lurking near the top of the standings"
+        "Leading the league in HR while posting a sub-.315 team OBP",
+        "Gunnar Henderson multi-homer games carrying the entire week's offense",
+        "Casually sitting in the top tier of the standings purely on raw extra-base hits"
       ]
     },
     "Mark": {
       "team_id": 13,
       "team_name": "Mark's Maulers",
-      "archetype": "The Late-Season Comeback Specialist",
-      "tendencies": [
-        "Known for dramatic late-season surges in August and September",
-        "Big-game trader willing to execute franchise-shifting blockbusters",
-        "Strong drafting in the mid-to-late rounds (Eovaldi pick 235)"
+      "archetype": "The Second-Half Surge Specialist",
+      "in_season_tendencies": [
+        "Known for patient early-season pacing followed by explosive summer charges",
+        "Identifies and attacks specific category vulnerabilities in the standings",
+        "Stashes high-upside injured talent to create an August/September juggernaut"
       ],
       "banter_triggers": [
-        "The 2025 blockbuster trade: sending Bobby Witt Jr. to Anil for Corbin Carroll",
-        "Slow April/May starts followed by historic second-half tears",
-        "Patiently stashing injured stars until the fantasy playoffs"
+        "Slow April/May starts followed by terrifying mid-summer hot streaks",
+        "Gaining 8-10 roto points in a single two-week scoring window",
+        "Warning the league that his roster doesn't truly wake up until the temperature hits 85 degrees"
       ]
     },
     "Anil": {
       "team_id": 6,
       "team_name": "Anil's Avengers",
-      "archetype": "The Five-Category Dynasty Builder",
-      "tendencies": [
-        "Aggressively targets generational speed/power talents (Bobby Witt Jr.)",
-        "Values balanced roto profiles across all 5 hitting categories",
-        "Shrewd draft board navigator"
+      "archetype": "The Speed Pace-Setter & Five-Category Dynast",
+      "in_season_tendencies": [
+        "Dictates the league's Stolen Base pace with an iron grip at the top of the category",
+        "Constructs balanced hitting lines that rarely surrender roto points in any offensive category",
+        "Relentlessly consistent, avoiding the extreme boom-or-bust swings of other rosters"
       ],
       "banter_triggers": [
-        "Landing Bobby Witt Jr. and flexing his MVP counting stats daily",
-        "Refusing to trade top keepers unless blown away",
-        "Boasting about league-leading stolen base totals"
+        "Flexing an untouchable double-digit lead in Stolen Bases",
+        "Bobby Witt Jr. posting nightly 1 HR, 2 SB, 3 R stat lines",
+        "Taunting opponents whose entire teams have fewer stolen bases than his top two players"
       ]
     },
     "Tim": {
       "team_id": 1,
       "team_name": "Tim's Veterans",
-      "archetype": "The Shrewd Draft Capital Capitalizer",
-      "tendencies": [
-        "Historically excels in off-season draft pick trades",
-        "Acquired MacKenzie Gore and Trea Turner in masterclass 2024 moves",
-        "Constructs deep, veteran-led lineups that grind out category wins"
+      "archetype": "The Steady Veteran Accumulator",
+      "in_season_tendencies": [
+        "Builds deep, veteran-led lineups that methodically grind out counting stats",
+        "Relies on dependable rotation workhorses who consistently throw 6+ innings",
+        "Refuses to panic-drop established stars during early slumps"
       ],
       "banter_triggers": [
-        "Reminding Dan about the 2024 MacKenzie Gore pick trade",
-        "Drafting veteran workhorses who consistently throw 170+ innings",
-        "Methodical waiver pickups that quietly produce 15 wins"
+        "Quietly creeping into 1st place while everyone else is arguing in chat",
+        "Veteran starters tossing 100-pitch gems while younger aces get pulled after 75 pitches",
+        "Winning categories through sheer volume and reliable plate appearances"
       ]
     },
     "Will": {
       "team_id": 12,
       "team_name": "Will's Warriors",
       "archetype": "The Contact & OBP Fundamentalist",
-      "tendencies": [
-        "Prioritizes plate discipline, high walk rates, and elite OBP",
-        "Rosters steady high-floor hitters like Yandy Diaz",
-        "Disciplined in matchup play, rarely punts categories"
+      "in_season_tendencies": [
+        "The league's premier OBP hawk, obsessing over walk rates and plate discipline",
+        "Wins and loses roto points on fractional decimal margins (.001 OBP swings)",
+        "Locks down high-leverage late innings with elite closers like Josh Hader"
       ],
       "banter_triggers": [
-        "Winning matchups 6-4 purely off OBP and WHIP decimal margins",
-        "Trading for Josh Hader to lock down late-inning saves",
-        "Drafting players with elite walk-to-strikeout ratios"
+        "Checking box scores four times an hour to protect a .0008 OBP lead",
+        "Celebrating a 0-for-1 night with 3 walks as a massive fantasy victory",
+        "Fierce, weekly back-and-forth category tug-of-wars with Garrett and Adrian"
       ]
     },
     "Preston": {
       "team_id": 14,
       "team_name": "Preston's Bullpen",
-      "archetype": "The Relief Pitching Baron",
-      "tendencies": [
-        "Monopolizes closers and high-leverage setup men to dominate SV+HD",
-        "Rosters Aaron Judge as the nuclear power center of his lineup",
-        "Employs unorthodox pitching management to conquer rate stats"
+      "archetype": "The Relief Pitching Baron & Judge Power Engine",
+      "in_season_tendencies": [
+        "Monopolizes closers and elite setup men to sweep the SV+HD category week in and week out",
+        "Anchors his offense around Aaron Judge's nuclear power production",
+        "Employs radical pitching management, winning with low innings and elite leverage"
       ],
       "banter_triggers": [
-        "Having 6 active relievers on any given Tuesday",
-        "Sweeping SV+HD every single week while barely qualifying for minimum innings",
-        "Relying on Aaron Judge to single-handedly match entire opponent HR totals"
+        "Deploying 6 active relievers on a Tuesday and poaching 4 holds in one evening",
+        "Sweeping SV+HD while barely clearing the league's minimum innings threshold",
+        "Aaron Judge out-slugging entire fantasy lineups single-handedly"
       ]
     },
     "Alex": {
       "team_id": 8,
       "team_name": "Alex's All-Stars",
-      "archetype": "The Upside Speculator",
-      "tendencies": [
-        "Excels at identifying breakout prospects and second-year players",
-        "Takes aggressive swings in the middle rounds of the draft",
-        "Capable of putting up league-wide weekly scoring highs"
+      "archetype": "The High-Variance Upside Wildcard",
+      "in_season_tendencies": [
+        "Capable of putting up explosive, league-high weekly counting stat totals",
+        "Aggressive on high-upside prospect call-ups and second-year breakout candidates",
+        "Prone to massive scoring volatility: surging 3 roto points one week, dropping the next"
       ],
       "banter_triggers": [
-        "Streaky scoring weeks: 80 points one week, 25 the next",
-        "Stashing top prospects weeks before their MLB call-ups",
-        "Surprise waiver snags that turn into fantasy studs"
+        "Wild 75-point fantasy scoring surges followed by quiet lulls",
+        "Stashing rookie phenoms weeks before their MLB debuts and hitting immediate home runs",
+        "Surprise weekend scoring explosions that ruin an opponent's comfortable lead"
       ]
     },
     "Joe": {
       "team_id": 10,
       "team_name": "Joe's Juggernauts",
-      "archetype": "The Historical Draft Board Strategist",
-      "tendencies": [
-        "Drafted Adley Rutschman and Spencer Steer in marquee rounds",
-        "High-energy participant in off-season draft pick negotiations",
-        "Loyal to drafted core players"
+      "archetype": "The Middle-Tier Disrupter",
+      "in_season_tendencies": [
+        "Fiercely competitive in middle-tier standings battles, playing spoiler to contenders",
+        "Anchors his lineup with premium backstop production and disciplined power",
+        "Engages in high-stakes category battles down the final stretch of the season"
       ],
       "banter_triggers": [
-        "Swapping draft picks in complex multi-pick packages",
-        "Touting catcher premium value with Adley Rutschman",
-        "Fierce matchup battles with Adrian and Dan"
+        "Knocking off 1st-place teams on Sunday night stat corrections",
+        "Defending catcher premium value with elite two-way production",
+        "Relentless head-to-head spoiler mentality"
       ]
     }
   },
-  "rivalries": [
+  "category_battlegrounds": [
     {
-      "name": "The Veteran Showdown",
-      "managers": ["Dan", "Tim"],
-      "narrative": "A battle of transaction volume vs draft patience. Tim still boasts about extracting MacKenzie Gore (pick 243) and Trea Turner in 2024, while Dan relentlessly churns the wire to prove depth beats draft day."
+      "category": "OBP",
+      "title": "The Fractional OBP Decimal War",
+      "primary_rivals": ["Will", "Garrett", "Adrian"],
+      "dynamic": "Will's disciplined high-contact approach (.3306) perpetually clashes with Garrett's all-or-nothing power (.3287) and Adrian's balanced lineup (.3312). These managers are perpetually separated by less than .002 in team OBP, meaning a single 0-for-4 slump or a 3-walk Sunday night trades 1.0 to 2.0 roto points back and forth between them."
     },
     {
-      "name": "The Commissioner Clashes",
-      "managers": ["Adrian", "Preston"],
-      "narrative": "Adrian's pursuit of rotation workhorses directly clashes with Preston's radical relief-pitching monopoly. Every matchup between them is a philosophical referendum on starting pitching vs bullpen dominance."
+      "category": "SV+HD",
+      "title": "The High-Leverage Bullpen Arms Race",
+      "primary_rivals": ["Preston", "Will", "Tim"],
+      "dynamic": "Preston's relief pitching monopoly (hoarding 6+ closers and setup men) is in a constant dogfight with Will (anchored by Josh Hader) and Tim's veteran bullpen. With Preston and Tim frequently deadlocked on saves and holds, every blown save or 8th-inning hold creates a direct 1-point swing at the top of the standings."
     },
     {
-      "name": "The Witt-Carroll Blockbuster Rivalry",
-      "managers": ["Mark", "Anil"],
-      "narrative": "Born from the legendary 2025 trade where Mark sent Bobby Witt Jr. to Anil for Corbin Carroll and draft picks. Every week is an ongoing referendum on which cornerstone franchise talent delivered the bigger return."
+      "category": "SB",
+      "title": "The Stolen Base Turf War",
+      "primary_rivals": ["Anil", "Dan", "Will"],
+      "dynamic": "Anil sets the gold standard for speed behind Bobby Witt Jr., while Dan relentlessly streams pinch-runners and speed demons off the wire to close the gap. Will grinds out stolen bases in high-efficiency spots. Single steals frequently flip 7th vs 8th place points in the final hours of a week."
     },
     {
-      "name": "The Battle of Category Grinders",
+      "category": "ERA & WHIP",
+      "title": "Pitching Volume vs Ratio Tightrope",
+      "primary_rivals": ["Adrian", "Dan", "Garrett"],
+      "dynamic": "Adrian protects fragile ratios with premium aces, while Dan streams high volumes of starting pitchers to accumulate Strikeouts and Quality Starts at the risk of ERA damage. Every 5-run implosion from a streamer or 8-inning shutout from an ace swings both ratio categories simultaneously."
+    },
+    {
+      "category": "HR & RBI",
+      "title": "The Heavyweight Slugging Clash",
+      "primary_rivals": ["Garrett", "Preston", "Mark"],
+      "dynamic": "Garrett's lineup of pure power hitters battles Preston's Aaron Judge-driven attack and Mark's second-half sluggers. Multi-homer games create instant multi-point swings in the standings, making power the most volatile offensive battleground."
+    }
+  ],
+  "season_trends_and_patterns": [
+    {
+      "pattern": "The Mid-Table Standings Logjam",
+      "description": "Teams ranked 3rd through 7th in the roto standings are chronically clustered within 2 to 4 total points of each other. A single category win or decimal lead flip on Sunday night regularly rearranges 3 or 4 standings positions simultaneously."
+    },
+    {
+      "pattern": "Sunday Night Decimal Volatility",
+      "description": "Rate categories (OBP, ERA, WHIP) and razor-thin counting stats (SB, SV+HD) experience dramatic swings during the Sunday night slate. Managers often wake up Monday morning to find their roto points flipped by a 9th-inning walk or stray hold."
+    },
+    {
+      "pattern": "Summer Rotation Fatigue & Ratio Spikes",
+      "description": "As MLB starters fatigue in July and August, team ERAs climb across the league. Managers with deep bullpens and innings management suddenly gain massive ratio ground over teams running tired workhorses."
+    },
+    {
+      "pattern": "Streaming Volume vs Rate Erosion",
+      "description": "High-transaction managers (like Dan) routinely gain counting stat points in Strikeouts and Quality Starts through heavy streaming, but battle a constant trade-off where one bad outing erodes hard-earned WHIP and ERA points."
+    },
+    {
+      "pattern": "Second-Half Surges vs Fast April Starters",
+      "description": "The league historically features managers who jump out to commanding spring leads (Anil, Adrian) who must constantly defend their cushion against second-half hot streaks from surging managers like Mark and Alex."
+    }
+  ],
+  "in_season_rivalries": [
+    {
+      "name": "The Decimal Dogfight: Will vs Garrett",
       "managers": ["Will", "Garrett"],
-      "narrative": "Will's disciplined high-OBP approach meets Garrett's raw power-hitting arsenal. Usually decided by fractional OBP margins or Sunday night stolen base miracles."
-    }
-  ],
-  "season_storylines": [
-    {
-      "title": "2026 Lineup Expansion to 28 Rounds",
-      "description": "With the league expanding roster depth to 28 rounds, late-round draft capital and deep-bench management have never been more critical. Managers who navigated the expansion draft wisely hold a decisive depth edge."
+      "narrative": "A battle of opposing offensive philosophies. Will obsesses over plate discipline, walk rates, and fractional OBP margins, while Garrett trusts raw slugging and home run power. They are chronically separated by hundredths of an OBP point and trade roto points back and forth all season long."
     },
     {
-      "title": "The Closer & Reliever Arms Race",
-      "description": "SV+HD has become the most contested roto category in the league. Preston's bullpen monopoly has forced managers like Will (acquiring Hader) and Dan to aggressively hunt setup men."
+      "name": "The Pitching Philosophy War: Adrian vs Preston",
+      "managers": ["Adrian", "Preston"],
+      "narrative": "Adrian's starting rotation aces clash directly with Preston's radical relief pitching monopoly. Adrian attacks Strikeouts, Quality Starts, and pristine ratios; Preston sweeps SV+HD and minimizes innings risk. A weekly referendum on starter consistency vs bullpen leverage."
     },
     {
-      "title": "The Post-Trade Grading Reckoning",
-      "description": "With the league's Trade Analyzer now grading all past trades with exact cumulative stats and drafted pick returns, past trade blunders and draft steals are on full display for daily trash talk."
-    }
-  ],
-  "trade_lore": [
-    {
-      "season": 2024,
-      "deal": "2024 Deal #1",
-      "summary": "Dan sent Trea Turner & Pick #243 to Tim for Mike Trout, Pick #80, and $11 budget cash.",
-      "outcome": "Tim turned Pick #243 into MacKenzie Gore (181 K, 11 QS, 110.7 pts), securing an A+ grade (+83.5 margin) while Turner posted 135.9 pts. Dan drafted Yandy Diaz (81.2 pts) at Pick #80."
+      "name": "The Wire Churn vs Draft Floor: Dan vs Tim",
+      "managers": ["Dan", "Tim"],
+      "narrative": "Dan's frenetic waiver streaming and high-volume churn meets Tim's stoic patience and veteran consistency. Dan tries to manufacture points through 2 AM adds; Tim grinds out category points through deep, steady workhorses."
     },
     {
-      "deal": "2025 Deal #1",
-      "season": 2025,
-      "summary": "Mark sent Bobby Witt Jr. and Pick #235 to Anil for Corbin Carroll, Pick #52, and $4 budget cash.",
-      "outcome": "Anil secured generational MVP talent Bobby Witt Jr. (186.0 pts) and struck gold with Nathan Eovaldi at Pick #235 (182.5 pts) for an A+ grade (+86.5 margin), despite Carroll delivering 222.8 pts (including keeper equity) to Mark."
-    },
-    {
-      "deal": "2024 Deal #3 & #5",
-      "season": 2024,
-      "summary": "Adrian and Dan traded Pick #64 back and forth in multi-pick swaps.",
-      "outcome": "Pick #64 yielded Tyler Glasnow (135.1 pts, 168 K, 14 QS), vastly outperforming the baseline pick curve."
+      "name": "The Summer Momentum Race: Mark vs Alex",
+      "managers": ["Mark", "Alex"],
+      "narrative": "Two managers whose seasons are defined by explosive scoring momentum. Alex catches lightning with young breakout prospects; Mark mounts terrifying second-half roto surges that relentlessly climb the standings leaderboard."
     }
   ]
 }
