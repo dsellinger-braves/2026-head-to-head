@@ -23,7 +23,8 @@ const SLOT_TO_POS = {
   12: 'UTIL',
   13: 'P',
   14: 'SP',
-  15: 'RP'
+  15: 'RP',
+  19: 'IF'
 };
 
 /**

@@ -13,8 +13,10 @@ const BATTER_SLOT_ORDER = {
   4: 4,   // SS
   6: 5,   // 2B/SS
   7: 6,   // 1B/3B
-  5: 7,   // OF
-  12: 8,  // UTIL
+  19: 7,  // IF
+  5: 8,   // OF
+  11: 9,  // DH
+  12: 10, // UTIL
 };
 
 const PITCHER_SLOT_ORDER = {

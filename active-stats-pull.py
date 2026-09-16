@@ -27,6 +27,7 @@ STAT_MAPPING = {
     '5': 'HR',
     '10': 'BB',
     '12': 'HBP',
+    '13': 'SF',
     '16': 'PA',
     '17': 'OBP',
     '20': 'R',
@@ -43,8 +44,11 @@ STAT_MAPPING = {
 }
 
 # Explicitly isolate batting vs pitching numeric IDs from ESPN
-HITTING_STAT_IDS  = {'0', '1', '2', '3', '4', '5', '10', '12', '16', '17', '20', '21', '23'}
+HITTING_STAT_IDS  = {'0', '1', '2', '3', '4', '5', '10', '12', '13', '16', '17', '20', '21', '23'}
 PITCHING_STAT_IDS = {'34', '45', '37', '39', '63', '48', '57', '60'}
+
+HITTING_SLOT_IDS  = {0, 1, 2, 3, 4, 5, 6, 7, 11, 12, 19}
+PITCHING_SLOT_IDS = {13, 14, 15}
 
 def get_espn_data(league_id, team_ids, scoring_period_ids):
     all_data = []
@@ -82,11 +86,11 @@ def get_espn_data(league_id, team_ids, scoring_period_ids):
                              
                              for stat_id, value in game_stats.items():
                                  # --- ENFORCE SLOT RESTRICTIONS ---
-                                 # 1. If in a hitting slot (0-12), discard pitching stats
-                                 if lineup_slot_id in set(range(13)) and str(stat_id) in PITCHING_STAT_IDS:
+                                 # 1. If in a hitting slot (0-12, 19), discard pitching stats
+                                 if lineup_slot_id in HITTING_SLOT_IDS and str(stat_id) in PITCHING_STAT_IDS:
                                      continue
                                  # 2. If in a pitching slot (13-15), discard batting stats
-                                 if lineup_slot_id in {13, 14, 15} and str(stat_id) in HITTING_STAT_IDS:
+                                 if lineup_slot_id in PITCHING_SLOT_IDS and str(stat_id) in HITTING_STAT_IDS:
                                      continue
                                  
                                  raw_stats[stat_id] = raw_stats.get(stat_id, 0) + value
