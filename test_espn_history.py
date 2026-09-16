@@ -41,31 +41,31 @@ for view in ["", "?view=mStatus", "?view=mSettings", "?view=mTransactions2", "?v
     except Exception as e:
         print(f"  Exception: {e}")
 
-# 2. Test specific historical seasons with sort filter
-print("\n--- 2. Testing seasons/{yr} with view=mTransactions2 and sortMessageDate ---")
-headers = {
-    "x-fantasy-filter": json.dumps({
-        "transactions": {
-            "sortMessageDate": {"sortPriority": 1, "sortAsc": False},
-            "limit": 5000
-        }
-    })
-}
+# 3. Test concurrent scoring periods fetch for 2024 and 2023
+from concurrent.futures import ThreadPoolExecutor
 
-for yr in [2025, 2024, 2023, 2022, 2021]:
-    base = f"https://lm-api-reads.fantasy.espn.com/apis/v3/games/flb/seasons/{yr}/segments/0/leagues/{LEAGUE_ID}?view=mTransactions2"
+print("\n--- 3. Testing concurrent scoring periods fetch for 2024 & 2023 ---")
+
+def fetch_period(args):
+    yr, sp = args
+    url = f"https://lm-api-reads.fantasy.espn.com/apis/v3/games/flb/seasons/{yr}/segments/0/leagues/{LEAGUE_ID}?view=mTransactions2&scoringPeriodId={sp}"
     try:
-        r = session.get(base, headers=headers, timeout=15)
-        print(f"Season {yr} mTransactions2 (sorted filter): Status {r.status_code}")
+        r = session.get(url, timeout=10)
         if r.status_code == 200:
-            txs = r.json().get("transactions", [])
-            print(f"  Found {len(txs)} total transactions for Season {yr}!")
-            trades = [t for t in txs if "TRADE" in t.get("type", "")]
-            print(f"  Trades in {yr}: {len(trades)}")
-            if trades:
-                sample = trades[0]
-                print(f"  Sample trade ID: {sample.get('id')}, items: {len(sample.get('items', []))}")
-        else:
-            print(f"  Error: {r.text[:200]}")
-    except Exception as e:
-        print(f"  Exception: {e}")
+            return r.json().get("transactions", [])
+    except Exception:
+        pass
+    return []
+
+for yr in [2024, 2023]:
+    tasks = [(yr, sp) for sp in range(0, 186)]
+    with ThreadPoolExecutor(max_workers=25) as executor:
+        results = list(executor.map(fetch_period, tasks))
+    all_txs = [t for sub in results for t in sub]
+    trades = [t for t in all_txs if "TRADE" in t.get("type", "")]
+    adds = [t for t in all_txs if "ADD" in t.get("type", "") or any(it.get("type") == "ADD" for it in t.get("items", []))]
+    print(f"Season {yr} SUCCESS: Total transactions: {len(all_txs)}, Trades: {len(trades)}, Adds: {len(adds)}")
+    if trades:
+        print(f"  Sample Trade in {yr}: ID {trades[0].get('id')}, Date {trades[0].get('proposedDate') or trades[0].get('executionDate')}")
+        for it in trades[0].get("items", []):
+            print(f"    Item: player {it.get('playerId')}, from {it.get('fromTeamId')} -> to {it.get('toTeamId')}")
