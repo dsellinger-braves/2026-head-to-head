@@ -68,28 +68,50 @@ def fetch_transactions() -> List[Dict]:
 
     return all_transactions
 
-def parse_transactions(raw: List[Dict]) -> List[Dict]:
-    """Parse standard adds/drops. (Trades are handled separately)"""
-    rows: List[Dict] = []
-    for txn in raw:
-        status = txn.get("status", "")
-        if status != "EXECUTED":
+def parse_standard_transactions(txns: List[Dict], yr: int = YEAR, include_trades: bool = False) -> List[Dict]:
+    """Parse standard add, drop, waiver claim, and trade transactions from mTransactions2."""
+    rows = []
+    for txn in txns:
+        txn_id = txn.get("id")
+        if not txn_id:
             continue
 
-        txn_id   = txn.get("id", "")
         raw_type = txn.get("type", "UNKNOWN")
 
         # Skip roster lineup changes completely here
         if raw_type in ("ROSTER", "FUTURE_ROSTER"):
             continue
-            
-        # Skip trade objects here (we will grab them from the activity feed instead)
-        if "TRADE" in raw_type:
-            continue
 
         executed_ms = txn.get("executedDate") or txn.get("proposedDate", 0)
         txn_date    = datetime.fromtimestamp(executed_ms / 1000, tz=timezone.utc)
         period_id   = txn.get("scoringPeriodId", 0)
+
+        # Handle trade objects if requested
+        if "TRADE" in raw_type:
+            if not include_trades:
+                continue
+            if txn.get("status") != "EXECUTED":
+                continue
+            for item in txn.get("items", []):
+                to_team_id   = item.get("toTeamId", -1)
+                from_team_id = item.get("fromTeamId", -1)
+                player_id    = item.get("playerId")
+                if not player_id or to_team_id <= 0 or from_team_id <= 0:
+                    continue
+                rows.append({
+                    "espn_transaction_id": f"{txn_id}_{player_id}_{to_team_id}",
+                    "league_id":           LEAGUE_ID,
+                    "season_year":         yr,
+                    "transaction_type":    "TRADE",
+                    "transaction_date":    txn_date.isoformat(),
+                    "scoring_period_id":   period_id,
+                    "to_team_id":          to_team_id,
+                    "from_team_id":        from_team_id,
+                    "player_id":           player_id,
+                    "player_name":         item.get("playerNote") or f"Player {player_id}",
+                    "raw_type":            raw_type,
+                })
+            continue
 
         for item in txn.get("items", []):
             item_type    = item.get("type", raw_type)
@@ -104,12 +126,15 @@ def parse_transactions(raw: List[Dict]) -> List[Dict]:
                 txn_type = "WAIVER_ADD" if txn.get("executionType") == "WAIVER" else "ADD"
             elif item_type == "DROP" or raw_type == "DROP":
                 txn_type = "DROP"
+            elif "TRADE" in item_type or "TRADE" in raw_type:
+                txn_type = "TRADE"
             else:
                 txn_type = item_type or raw_type
 
             rows.append({
                 "espn_transaction_id": f"{txn_id}_{player_id}_{to_team_id}",
                 "league_id":           LEAGUE_ID,
+                "season_year":         yr,
                 "transaction_type":    txn_type,
                 "transaction_date":    txn_date.isoformat(),
                 "scoring_period_id":   period_id,
@@ -138,10 +163,8 @@ def fetch_activity_trades() -> List[Dict]:
     offset = 0
     limit = 200
     
-    print("  Paging through activity feed for trades...")
-    
-    while True:
-        filters = {
+    headers = {
+        "x-fantasy-filter": json.dumps({
             "communication": {
                 "topics": {
                     "filterType": {"value": ["ACTIVITY_TRANSACTIONS"]},
@@ -151,31 +174,26 @@ def fetch_activity_trades() -> List[Dict]:
                     "sortMessageDate": {"sortPriority": 1, "sortAsc": False}
                 }
             }
-        }
-        
-        headers = {
-            "x-fantasy-filter": json.dumps(filters, separators=(',', ':')),
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "Accept": "application/json"
-        }
-        
+        })
+    }
+
+    print("Paging through activity feed for trades...")
+    while True:
         try:
             resp = requests.get(url, headers=headers, cookies=cookies, timeout=10)
             resp.raise_for_status()
-            
-            topics = resp.json().get("communication", {}).get("topics", [])
+            data = resp.json()
+            topics = data.get("communication", {}).get("topics", [])
             if not topics:
                 break
                 
-            for t in topics:
-                if t.get("author") == "TradeTaskProcessor":
-                    all_topics.append(t)
-            
-            if len(topics) < limit:
-                break
-                
+            all_topics.extend(topics)
             offset += limit
-            time.sleep(0.2)
+            
+            # Update filter for next page
+            filters = json.loads(headers["x-fantasy-filter"])
+            filters["communication"]["topics"]["offset"] = offset
+            headers["x-fantasy-filter"] = json.dumps(filters)
             
         except requests.exceptions.HTTPError as e:
             print(f"Failed to fetch activity trades at offset {offset}: {e}")
@@ -213,6 +231,7 @@ def parse_activity_trades(topics: List[Dict]) -> List[Dict]:
                 rows.append({
                     "espn_transaction_id": f"{topic_id}_{player_id}_{to_team_id}",
                     "league_id":           LEAGUE_ID,
+                    "season_year":         YEAR,
                     "transaction_type":    "TRADE",
                     "transaction_date":    txn_date.isoformat(),
                     "scoring_period_id":   0,
@@ -226,6 +245,7 @@ def parse_activity_trades(topics: List[Dict]) -> List[Dict]:
                 rows.append({
                     "espn_transaction_id": f"{topic_id}_{player_id}_0",
                     "league_id":           LEAGUE_ID,
+                    "season_year":         YEAR,
                     "transaction_type":    "DROP",
                     "transaction_date":    txn_date.isoformat(),
                     "scoring_period_id":   0,
@@ -238,11 +258,12 @@ def parse_activity_trades(topics: List[Dict]) -> List[Dict]:
     return rows
 
 # ---------------------------------------------------------------------------
-# HISTORICAL ESPN TRADES SCRAPER (2018–2025)
+# HISTORICAL ESPN TRANSACTIONS & TRADES SCRAPER (2018–2025)
 # ---------------------------------------------------------------------------
 
-def fetch_historical_trades(years: List[int] = None) -> List[Dict]:
-    """Fetch executed trades across historical seasons from ESPN API."""
+def fetch_historical_transactions(years: List[int] = None) -> List[Dict]:
+    """Fetch all historical transactions (adds, drops, waivers, trades) across seasons using parallel scoring periods."""
+    from concurrent.futures import ThreadPoolExecutor
     if years is None:
         years = [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
 
@@ -250,90 +271,39 @@ def fetch_historical_trades(years: List[int] = None) -> List[Dict]:
     session = requests.Session()
     session.cookies.update(cookies)
 
-    all_historical_trades: List[Dict] = []
+    all_historical_txns: List[Dict] = []
 
-    for yr in years:
-        print(f"Checking ESPN historical season {yr} for trades...")
-        candidates = [
-            f"https://lm-api-reads.fantasy.espn.com/apis/v3/games/flb/seasons/{yr}/segments/0/leagues/{LEAGUE_ID}?view=mTransactions2",
-            f"https://lm-api-reads.fantasy.espn.com/apis/v3/games/flb/leagueHistory/{LEAGUE_ID}?seasonId={yr}&view=mTransactions2"
-        ]
-        txns = []
-        for url in candidates:
-            try:
-                resp = session.get(url, timeout=10)
-                if resp.status_code == 200:
-                    d = resp.json()
-                    if isinstance(d, list) and len(d) > 0:
-                        txns = d[0].get("transactions", [])
-                    elif isinstance(d, dict):
-                        txns = d.get("transactions", [])
-                    if txns:
-                        break
-            except Exception:
-                pass
+    def fetch_period(args):
+        yr, sp = args
+        url = f"https://lm-api-reads.fantasy.espn.com/apis/v3/games/flb/seasons/{yr}/segments/0/leagues/{LEAGUE_ID}?view=mTransactions2&scoringPeriodId={sp}"
+        try:
+            r = session.get(url, timeout=10)
+            if r.status_code == 200:
+                return r.json().get("transactions", [])
+        except Exception:
+            pass
+        return []
 
-        yr_trade_count = 0
-        for txn in txns:
-            status = txn.get("status", "")
-            raw_type = txn.get("type", "")
-            if status != "EXECUTED" or "TRADE" not in raw_type:
-                continue
+    for yr in sorted(years):
+        print(f"Fetching complete transaction history for Season {yr}...")
+        tasks = [(yr, sp) for sp in range(0, 186)]
+        with ThreadPoolExecutor(max_workers=25) as executor:
+            results = list(executor.map(fetch_period, tasks))
+        raw_txns = [t for sub in results for t in sub]
+        parsed_rows = parse_standard_transactions(raw_txns, yr=yr, include_trades=True)
 
-            txn_id = txn.get("id", "")
-            date_ms = txn.get("executedDate") or txn.get("proposedDate", 0)
-            txn_date = datetime.fromtimestamp(date_ms / 1000, tz=timezone.utc)
-            period_id = txn.get("scoringPeriodId", 0)
+        # Deduplicate
+        unique_yr = {}
+        for r in parsed_rows:
+            unique_yr[r["espn_transaction_id"]] = r
+        yr_rows = list(unique_yr.values())
+        trade_count = len([r for r in yr_rows if r.get("transaction_type") == "TRADE"])
+        print(f"  Season {yr}: Parsed {len(yr_rows)} unique transactions (Trades: {trade_count})")
+        all_historical_txns.extend(yr_rows)
 
-            for item in txn.get("items", []):
-                pid = item.get("playerId")
-                to_tid = item.get("toTeamId", -1)
-                from_tid = item.get("fromTeamId", -1)
-                if pid and to_tid > 0 and from_tid > 0:
-                    all_historical_trades.append({
-                        "espn_transaction_id": f"{txn_id}_{pid}_{to_tid}",
-                        "league_id": LEAGUE_ID,
-                        "season_year": yr,
-                        "transaction_type": "TRADE",
-                        "transaction_date": txn_date.isoformat(),
-                        "scoring_period_id": period_id,
-                        "to_team_id": to_tid,
-                        "from_team_id": from_tid,
-                        "player_id": pid,
-                        "player_name": f"Player {pid}",
-                        "raw_type": "TRADE"
-                    })
-                    yr_trade_count += 1
+    return all_historical_txns
 
-        print(f"  Season {yr}: Found {yr_trade_count} trade items from mTransactions2.")
-
-        # Also attempt activity feed if activity was maintained
-        if yr_trade_count == 0:
-            act_url = f"https://lm-api-reads.fantasy.espn.com/apis/v3/games/flb/seasons/{yr}/segments/0/leagues/{LEAGUE_ID}?view=kona_league_communication"
-            filters = {
-                "communication": {
-                    "topics": {
-                        "filterType": {"value": ["ACTIVITY_TRANSACTIONS"]},
-                        "limit": 200,
-                        "limitPerMessageSet": {"value": 50},
-                        "offset": 0,
-                        "sortMessageDate": {"sortPriority": 1, "sortAsc": False}
-                    }
-                }
-            }
-            try:
-                r = session.get(act_url, headers={"x-fantasy-filter": json.dumps(filters)}, timeout=10)
-                if r.status_code == 200:
-                    topics = [t for t in r.json().get("communication", {}).get("topics", []) if t.get("author") == "TradeTaskProcessor"]
-                    act_rows = parse_activity_trades(topics)
-                    for ar in act_rows:
-                        ar["season_year"] = yr
-                    all_historical_trades.extend(act_rows)
-                    print(f"  Season {yr}: Found {len(act_rows)} trade items from activity feed.")
-            except Exception:
-                pass
-
-    return all_historical_trades
+fetch_historical_trades = fetch_historical_transactions
 
 # ---------------------------------------------------------------------------
 # PLAYER NAME ENRICHMENT
@@ -429,7 +399,7 @@ if __name__ == "__main__":
 
     print(f"Fetching standard transactions for league {LEAGUE_ID} (Season {YEAR})...")
     raw_txns = fetch_transactions()
-    base_rows = parse_transactions(raw_txns)
+    base_rows = parse_standard_transactions(raw_txns, yr=YEAR)
     print(f"  Parsed standard rows: {len(base_rows)}")
 
     print(f"Fetching trade transactions from activity feed...")

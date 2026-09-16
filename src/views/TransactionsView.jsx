@@ -3,6 +3,7 @@ import { TEAMS } from '../schedule';
 import TeamAvatar from '../components/TeamAvatar';
 import { supabase } from '../supabaseClient';
 import defaultTransactions2026 from '../data/transactions2026.json';
+import defaultTransactionsHistorical from '../data/transactions_historical.json';
 import defaultDraftAssetTrades from '../data/draftAssetTrades2026.json';
 
 const TYPE_CONFIG = {
@@ -70,7 +71,7 @@ function groupTransactions(rawTransactions, draftTrades = []) {
   for (const [baseId, items] of groups.entries()) {
     const first = items[0];
     const date = first.transaction_date;
-    const year = first.season_year || 2026;
+    const year = first.season_year || (first.transaction_date ? new Date(first.transaction_date).getFullYear() : 2026);
     const period = items.find(i => i.scoring_period_id > 0)?.scoring_period_id || first.scoring_period_id || 0;
 
     const types = new Set(items.map(i => i.transaction_type));
@@ -224,15 +225,21 @@ export default function TransactionsView({ onPlayerClick, onOwnerClick }) {
   const [selectedTeam, setSelectedTeam] = useState('ALL');
   const [selectedYear, setSelectedYear] = useState('ALL');
   const [currentPage, setCurrentPage] = useState(1);
-  const [rawTransactions, setRawTransactions] = useState(defaultTransactions2026 || []);
+  const initialTransactions = useMemo(() => {
+    const map = new Map();
+    (defaultTransactions2026 || []).forEach(t => map.set(t.espn_transaction_id, t));
+    (defaultTransactionsHistorical || []).forEach(t => map.set(t.espn_transaction_id, t));
+    return Array.from(map.values()).sort(
+      (a, b) => new Date(b.transaction_date) - new Date(a.transaction_date)
+    );
+  }, []);
+
+  const [rawTransactions, setRawTransactions] = useState(initialTransactions);
   const [draftTrades, setDraftTrades] = useState(defaultDraftAssetTrades || []);
   const [isLoadingSupabase, setIsLoadingSupabase] = useState(false);
 
-  // Optional Supabase sync (disabled by default because project wczdkcdqgtzlsbssogoz is currently paused)
+  // Supabase sync to fetch latest live and multi-year transactions
   useEffect(() => {
-    const syncEnabled = import.meta.env.VITE_SYNC_SUPABASE_TRANSACTIONS === 'true';
-    if (!syncEnabled) return;
-
     let isMounted = true;
     async function loadSupabaseTxns() {
       try {
@@ -242,7 +249,7 @@ export default function TransactionsView({ onPlayerClick, onOwnerClick }) {
             .from('transactions')
             .select('*')
             .order('transaction_date', { ascending: false })
-            .limit(2000),
+            .limit(25000),
           supabase
             .from('draft_asset_trades')
             .select('*')
@@ -251,7 +258,7 @@ export default function TransactionsView({ onPlayerClick, onOwnerClick }) {
         if (isMounted) {
           if (!txnsRes.error && txnsRes.data && txnsRes.data.length > 0) {
             const map = new Map();
-            (defaultTransactions2026 || []).forEach(t => map.set(t.espn_transaction_id, t));
+            initialTransactions.forEach(t => map.set(t.espn_transaction_id, t));
             txnsRes.data.forEach(t => map.set(t.espn_transaction_id, t));
             const merged = Array.from(map.values()).sort(
               (a, b) => new Date(b.transaction_date) - new Date(a.transaction_date)
@@ -264,14 +271,14 @@ export default function TransactionsView({ onPlayerClick, onOwnerClick }) {
           }
         }
       } catch (err) {
-        console.warn('Transactions Supabase fetch skipped or errored, using bundled transactions:', err);
+        console.warn('Transactions Supabase fetch note:', err);
       } finally {
         if (isMounted) setIsLoadingSupabase(false);
       }
     }
     loadSupabaseTxns();
     return () => { isMounted = false; };
-  }, []);
+  }, [initialTransactions]);
 
   // Group raw transactions into flattened single-row trades and add/drops
   const flattenedTransactions = useMemo(() => {

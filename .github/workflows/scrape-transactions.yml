@@ -37,7 +37,6 @@ jobs:
           ESPN_SWID:     ${{ secrets.ESPN_SWID }}
           SCRAPE_HISTORICAL: ${{ github.event.inputs.scrape_historical || 'false' }}
         run: |
-          python test_espn_history.py
           if [ "$SCRAPE_HISTORICAL" = "true" ]; then
             python transaction-scraper.py --historical
             python pipelines/ingest_historical_trades.py
