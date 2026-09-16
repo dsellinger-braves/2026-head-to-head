@@ -563,13 +563,21 @@ function App() {
         const numTeams = 9; // 9 human teams in the league
 
         // Divide counting components by 9 to get the average
-        const fieldsToDivide = ['R', 'HR', 'RBI', 'SB', 'K', 'QS', 'SV+HDs', 'ER', 'IP', 'BB_Allowed', 'H_Allowed', 'OBP_num', 'PA'];
+        const fieldsToDivide = [
+          'R', 'HR', 'RBI', 'SB', 'K', 'QS', 'SV+HDs', 'ER', 'IP',
+          'BB_Allowed', 'H_Allowed', 'OBP_num', 'OBP_denom', 'PA',
+          'AB', 'H', 'BB', 'HBP', 'SF'
+        ];
         fieldsToDivide.forEach(key => {
           if (avgStats[key]) avgStats[key] = avgStats[key] / numTeams;
         });
 
         // Recalculate rate stats from the divided components
-        avgStats.OBP = avgStats.PA > 0 ? (avgStats.OBP_num / avgStats.PA).toFixed(3) : ".000";
+        const obpDenom = (avgStats.AB + avgStats.BB + avgStats.HBP + avgStats.SF) || avgStats.OBP_denom || avgStats.PA;
+        const obpNum = (avgStats.H + avgStats.BB + avgStats.HBP) || avgStats.OBP_num;
+        const obpRaw = obpDenom > 0 ? obpNum / obpDenom : 0;
+        avgStats.OBP_raw = obpRaw;
+        avgStats.OBP = obpDenom > 0 ? obpRaw.toFixed(4) : ".0000";
         avgStats.ERA = avgStats.IP > 0 ? ((avgStats.ER * 9) / avgStats.IP).toFixed(2) : "0.00";
         avgStats.WHIP = avgStats.IP > 0 ? ((avgStats.BB_Allowed + avgStats.H_Allowed) / avgStats.IP).toFixed(2) : "0.00";
 

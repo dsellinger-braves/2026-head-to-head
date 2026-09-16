@@ -75,7 +75,7 @@ export default function OwnerDetailModal({ team, allStats, onClose, onPlayerClic
     }
     if (catKey === 'OBP') {
       const n = parseFloat(val);
-      return isNaN(n) ? '-' : n.toFixed(3).replace(/^0/, '');
+      return isNaN(n) ? '-' : n.toFixed(4).replace(/^0/, '');
     }
     if (SCORING_CATS[catKey]?.isRate) {
       const num = parseFloat(val);

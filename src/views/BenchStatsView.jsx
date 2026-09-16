@@ -823,7 +823,7 @@ export default function BenchStatsView({ allStats = [], selectedSeason = 2026, o
                             {row.bench.SB || 0}
                           </td>
                           <td className="py-3 px-3 text-center font-mono text-slate-300">
-                            {row.bench.OBP || '.000'}
+                            {row.bench.OBP || '.0000'}
                           </td>
                           <td className="py-3 px-3 text-center font-mono text-slate-300">
                             {row.bench.OPS || '.000'}

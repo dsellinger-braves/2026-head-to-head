@@ -384,7 +384,7 @@ export default function PlayerHistoryModal({ playerId, playerName, teamId = null
       let obp = '-';
       if (unrosteredPa > 0) {
         const rawObp = Math.min(1.0, (unrosteredH + unrosteredBb + unrosteredHbp) / unrosteredPa);
-        obp = rawObp.toFixed(3).replace(/^0/, '');
+        obp = rawObp.toFixed(4).replace(/^0/, '');
       }
 
       return {
@@ -418,7 +418,7 @@ export default function PlayerHistoryModal({ playerId, playerName, teamId = null
     if (catKey === 'OBP') {
       if (statsObj && (parseFloat(statsObj.PA) || 0) === 0) return '-';
       const n = parseFloat(val);
-      return isNaN(n) ? '-' : n.toFixed(3).replace(/^0/, '');
+      return isNaN(n) ? '-' : n.toFixed(4).replace(/^0/, '');
     }
     if (catKey === 'QS_PCT') {
       if (statsObj && (parseFloat(statsObj.GS) || 0) === 0) return '-';

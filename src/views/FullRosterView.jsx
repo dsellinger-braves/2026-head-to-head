@@ -24,9 +24,9 @@ const PITCHER_SLOT_ORDER = {
 };
 
 function formatOBP(val) {
-  if (val == null) return '.000';
+  if (val == null) return '.0000';
   const n = typeof val === 'number' ? val : parseFloat(val);
-  return !isNaN(n) ? n.toFixed(3).replace(/^0/, '') : String(val);
+  return !isNaN(n) ? n.toFixed(4).replace(/^0/, '') : String(val);
 }
 
 function formatRate(val, decimals = 2) {
@@ -44,7 +44,7 @@ function getBatterDailyScore(stats) {
   const sb = parseFloat(stats.SB ?? stats['23'] ?? 0);
   const h = parseFloat(stats.H ?? stats['1'] ?? 0);
   const bb = parseFloat(stats.BB ?? stats['10'] ?? 0);
-  const so = parseFloat(stats.SO ?? stats['27'] ?? stats['13'] ?? 0);
+  const so = parseFloat(stats.SO ?? stats['27'] ?? 0);
   const pa = parseFloat(stats.PA ?? stats['16'] ?? 0);
 
   if (pa === 0 && h === 0 && r === 0 && rbi === 0 && bb === 0) return 0;

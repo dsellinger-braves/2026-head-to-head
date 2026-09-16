@@ -85,7 +85,7 @@ const ESPN_STAT_IDS = {
   '8':  'TB',
   '10': 'BB',
   '12': 'HBP',
-  '13': 'SO_raw',
+  '13': 'SF',
   '16': 'PA',
   '17': 'OBP',
   '20': 'R',
@@ -125,17 +125,21 @@ export const calculateTrioMatchupResult = (teamStats, teamIds) => {
 
   // Award 2/1/0 pts per category; tied positions share their points equally
   CATEGORIES.forEach(cat => {
-    const vals = teamIds.map(id => ({
-      id,
-      val: parseFloat(teamStats[id]?.[cat.id] || 0)
-    }));
+    const vals = teamIds.map(id => {
+      const st = teamStats[id];
+      const raw = st?.[`${cat.id}_raw`];
+      return {
+        id,
+        val: raw !== undefined ? parseFloat(raw) : parseFloat(st?.[cat.id] || 0)
+      };
+    });
     vals.sort((a, b) => cat.higherIsBetter ? b.val - a.val : a.val - b.val);
 
     const ptMap = [2, 1, 0];
     let i = 0;
     while (i < vals.length) {
       let j = i;
-      while (j < vals.length && Math.abs(vals[j].val - vals[i].val) < 0.0001) j++;
+      while (j < vals.length && Math.abs(vals[j].val - vals[i].val) < 0.00001) j++;
       const avgPts = ptMap.slice(i, j).reduce((s, p) => s + p, 0) / (j - i);
       for (let k = i; k < j; k++) points[vals[k].id] += avgPts;
       i = j;
@@ -157,15 +161,17 @@ export function aggregateStats(dailyRecords, options = {}) {
     // Primary Categories
     R: 0, HR: 0, RBI: 0, SB: 0, K: 0, QS: 0, 'SV+HDs': 0,
     ER: 0, IP: 0, BB_Allowed: 0, H_Allowed: 0,
-    OBP_num: 0, PA: 0, GS: 0,
+    OBP_num: 0, OBP_denom: 0, PA: 0, GS: 0,
 
     // Deep / Minutiae Hitting Stats
-    AB: 0, H: 0, '2B': 0, '3B': 0, BB: 0, SO: 0, HBP: 0,
+    AB: 0, H: 0, '2B': 0, '3B': 0, BB: 0, SO: 0, HBP: 0, SF: 0,
     CS: 0, E: 0, GDP: 0, TB: 0,
 
     // Deep / Minutiae Pitching Stats
     W: 0, L: 0, SV: 0, HD: 0, BS: 0, R_Allowed: 0, HR_Allowed: 0, WP: 0, UER: 0
   };
+
+  let legacyObpNum = 0;
 
   dailyRecords.forEach(record => {
     if (options.includeBenchOnly) {
@@ -201,29 +207,28 @@ export function aggregateStats(dailyRecords, options = {}) {
       parseFloat(s.SB ?? espnStats['23']) > 0
     ));
 
-    const pa  = parseFloat(s.PA)  || 0;
-    const obp = parseFloat(s.OBP) || 0;
+    const pa  = parseFloat(s.PA ?? espnStats['16'])  || 0;
+    const obp = parseFloat(s.OBP ?? espnStats['17']) || 0;
     
     // Determine Games Started strictly by ESPN Stat 33
     const gs = parseFloat(espnStats['33']) > 0 ? parseFloat(espnStats['33']) : 0;
 
     totals.GS        += gs;
-    totals.R         += parseFloat(s.R)  || 0;
-    totals.HR        += parseFloat(s.HR) || 0;
-    totals.RBI       += parseFloat(s.RBI) || 0;
-    totals.SB        += parseFloat(s.SB)  || 0;
-    totals.K         += parseFloat(s.K)   || 0;
-    totals.QS        += parseFloat(s.QS)  || 0;
-    totals['SV+HDs'] += (parseFloat(s.SV) || 0) + (parseFloat(s.HD) || 0);
+    totals.R         += parseFloat(s.R ?? espnStats['20'])  || 0;
+    totals.HR        += parseFloat(s.HR ?? espnStats['5']) || 0;
+    totals.RBI       += parseFloat(s.RBI ?? espnStats['21']) || 0;
+    totals.SB        += parseFloat(s.SB ?? espnStats['23'])  || 0;
+    totals.K         += parseFloat(s.K ?? espnStats['48'])   || 0;
+    totals.QS        += parseFloat(s.QS ?? espnStats['63'])  || 0;
+    totals['SV+HDs'] += (parseFloat(s.SV ?? espnStats['57']) || 0) + (parseFloat(s.HD ?? espnStats['60']) || 0);
 
-    // OBP: accumulate PA-weighted so we can average correctly across days
-    totals.OBP_num += obp * pa;
-    totals.PA      += pa;
+    legacyObpNum += obp * pa;
+    totals.PA    += pa;
 
-    const er       = parseFloat(s.ER) || 0;
-    const ip       = (parseFloat(s.IP_raw ?? s.IP) || 0) / 3;
-    const bbAll    = parseFloat(s.BB_Allowed) || 0;
-    const hAll     = parseFloat(s.H_Allowed)  || 0;
+    const er       = parseFloat(s.ER ?? espnStats['45']) || 0;
+    const ip       = (parseFloat(s.IP_raw ?? s.IP ?? espnStats['34']) || 0) / 3;
+    const bbAll    = parseFloat(s.BB_Allowed ?? espnStats['39']) || 0;
+    const hAll     = parseFloat(s.H_Allowed ?? espnStats['37'])  || 0;
     const rAll     = parseFloat(s.R_Allowed ?? espnStats['44']) || 0;
 
     totals.ER         += er;
@@ -238,8 +243,9 @@ export function aggregateStats(dailyRecords, options = {}) {
       const d3  = parseFloat(s['3B'] ?? espnStats['4']) || 0;
       const hr  = parseFloat(s.HR ?? espnStats['5']) || 0;
       const bb  = parseFloat(s.BB ?? espnStats['10']) || 0;
-      const so  = parseFloat(s.SO ?? espnStats['27'] ?? espnStats['13']) || 0;
+      const so  = parseFloat(s.SO ?? espnStats['27']) || 0;
       const hbp = parseFloat(s.HBP ?? espnStats['12']) || 0;
+      const sf  = parseFloat(s.SF ?? espnStats['13']) || 0;
       const cs  = parseFloat(s.CS ?? espnStats['24']) || 0;
       const e   = parseFloat(s.E ?? espnStats['72']) || 0;
       const gdp = parseFloat(s.GDP ?? espnStats['26'] ?? espnStats['14']) || 0;
@@ -253,6 +259,7 @@ export function aggregateStats(dailyRecords, options = {}) {
       totals.BB  += bb;
       totals.SO  += so;
       totals.HBP += hbp;
+      totals.SF  += sf;
       totals.CS  += cs;
       totals.E   += e;
       totals.GDP += gdp;
@@ -272,8 +279,19 @@ export function aggregateStats(dailyRecords, options = {}) {
     }
   });
 
+  // Official MLB & ESPN OBP formula: (H + BB + HBP) / (AB + BB + HBP + SF)
+  const obpNum = totals.H + totals.BB + totals.HBP;
+  const obpDenom = totals.AB + totals.BB + totals.HBP + totals.SF;
+  const obpRaw = obpDenom > 0
+    ? (obpNum / obpDenom)
+    : (totals.PA > 0 ? (legacyObpNum / totals.PA) : 0);
+
+  totals.OBP_num = obpDenom > 0 ? obpNum : legacyObpNum;
+  totals.OBP_denom = obpDenom > 0 ? obpDenom : totals.PA;
+
   const calculated = { ...totals };
-  calculated.OBP  = totals.PA > 0 ? (totals.OBP_num / totals.PA).toFixed(3) : ".000";
+  calculated.OBP  = (obpDenom > 0 || totals.PA > 0) ? obpRaw.toFixed(4) : ".0000";
+  calculated.OBP_raw = obpRaw;
   calculated.ERA  = totals.IP > 0 ? ((totals.ER * 9) / totals.IP).toFixed(2) : "0.00";
   calculated.WHIP = totals.IP > 0 ? ((totals.BB_Allowed + totals.H_Allowed) / totals.IP).toFixed(2) : "0.00";
   calculated.QS_PCT = totals.GS > 0 ? ((totals.QS / totals.GS) * 100).toFixed(1) : "0.0";
@@ -283,8 +301,7 @@ export function aggregateStats(dailyRecords, options = {}) {
   calculated.SLG    = totals.AB > 0 ? (totals.TB / totals.AB).toFixed(3) : ".000";
   const avgNum      = totals.AB > 0 ? totals.H / totals.AB : 0;
   const slgNum      = totals.AB > 0 ? totals.TB / totals.AB : 0;
-  const obpNum      = totals.PA > 0 ? totals.OBP_num / totals.PA : 0;
-  calculated.OPS    = (obpNum + slgNum).toFixed(3);
+  calculated.OPS    = (obpRaw + slgNum).toFixed(3);
   calculated.SB_PCT = (totals.SB + totals.CS) > 0 ? ((totals.SB / (totals.SB + totals.CS)) * 100).toFixed(1) : "0.0";
 
   calculated['K/9']   = totals.IP > 0 ? ((totals.K * 9) / totals.IP).toFixed(2) : "0.00";
@@ -296,12 +313,12 @@ export function aggregateStats(dailyRecords, options = {}) {
   calculated.UER_PCT   = totals.ER > 0 ? ((totals.UER / totals.ER) * 100).toFixed(1) : "0.0";
 
   // Unrounded values for tooltips and precise display
-  calculated.OBP_raw      = obpNum;
+  calculated.OBP_raw      = obpRaw;
   calculated.ERA_raw      = totals.IP > 0 ? (totals.ER * 9) / totals.IP : 0;
   calculated.WHIP_raw     = totals.IP > 0 ? (totals.BB_Allowed + totals.H_Allowed) / totals.IP : 0;
   calculated.AVG_raw      = avgNum;
   calculated.SLG_raw      = slgNum;
-  calculated.OPS_raw      = obpNum + slgNum;
+  calculated.OPS_raw      = obpRaw + slgNum;
   calculated['UER/9_raw'] = totals.IP > 0 ? (totals.UER * 9) / totals.IP : 0;
   calculated.UER_PCT_raw  = totals.ER > 0 ? (totals.UER / totals.ER) * 100 : 0;
 
@@ -312,7 +329,7 @@ export function aggregateBenchStats(dailyRecords) {
   return aggregateStats(dailyRecords, { includeBenchOnly: true });
 }
 
-// 3. Determine the "Score" (e.g. 6-3-1)
+// 4. Calculate Matchup Result between two teams
 export function calculateMatchupResult(homeStats, awayStats) {
   let homeScore = 0;
   let awayScore = 0;
@@ -320,10 +337,10 @@ export function calculateMatchupResult(homeStats, awayStats) {
 
   Object.keys(SCORING_CATS).forEach(cat => {
     const config = SCORING_CATS[cat];
-    const hVal = parseFloat(homeStats[cat]);
-    const aVal = parseFloat(awayStats[cat]);
+    const hVal = homeStats[`${cat}_raw`] !== undefined ? parseFloat(homeStats[`${cat}_raw`]) : parseFloat(homeStats[cat]);
+    const aVal = awayStats[`${cat}_raw`] !== undefined ? parseFloat(awayStats[`${cat}_raw`]) : parseFloat(awayStats[cat]);
 
-    if (hVal === aVal) {
+    if (Math.abs(hVal - aVal) < 0.00001) {
       ties++;
     } else if (config.type === 'high') {
       hVal > aVal ? homeScore++ : awayScore++;
@@ -336,7 +353,7 @@ export function calculateMatchupResult(homeStats, awayStats) {
   return { homeScore, awayScore, ties };
 }
 
-// 4. Calculate Roto Points across a league
+// 5. Calculate Roto Points across a league
 export function calculateRotoPoints(teamStatsMap) {
   const teamIds = Object.keys(teamStatsMap);
   const rotoPoints = {};
@@ -345,10 +362,14 @@ export function calculateRotoPoints(teamStatsMap) {
   const cats = Object.keys(SCORING_CATS);
   cats.forEach(cat => {
     const config = SCORING_CATS[cat];
-    const vals = teamIds.map(id => ({
-      id,
-      val: parseFloat(teamStatsMap[id]?.[cat] || 0)
-    }));
+    const vals = teamIds.map(id => {
+      const st = teamStatsMap[id];
+      const raw = st?.[`${cat}_raw`];
+      return {
+        id,
+        val: raw !== undefined ? parseFloat(raw) : parseFloat(st?.[cat] || 0)
+      };
+    });
     
     // Sort: 1 pt for worst, N pts for best
     vals.sort((a, b) => config.type === 'high' ? a.val - b.val : b.val - a.val);
@@ -357,7 +378,7 @@ export function calculateRotoPoints(teamStatsMap) {
     let i = 0;
     while (i < vals.length) {
       let j = i;
-      while (j < vals.length && Math.abs(vals[j].val - vals[i].val) < 0.0001) j++;
+      while (j < vals.length && Math.abs(vals[j].val - vals[i].val) < 0.00001) j++;
       
       let sum = 0;
       for (let k = i; k < j; k++) sum += (k + 1);

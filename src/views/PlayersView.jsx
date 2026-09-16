@@ -17,7 +17,7 @@ const formatStat = (val, cat) => {
   }
   if (cat === 'OBP') {
     const n = parseFloat(val);
-    return isNaN(n) ? '-' : n.toFixed(3).replace(/^0/, '');
+    return isNaN(n) ? '-' : n.toFixed(4).replace(/^0/, '');
   }
   if (cat === 'QS_PCT') {
     const n = parseFloat(val);

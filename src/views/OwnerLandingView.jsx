@@ -254,7 +254,7 @@ export default function OwnerLandingView({
 
       const formatVal = (v) => {
         if (v === undefined || v === null) return '-';
-        if (cat === 'OBP') return (parseFloat(v) || 0).toFixed(3).replace(/^0/, '');
+        if (cat === 'OBP') return (parseFloat(v) || 0).toFixed(4).replace(/^0/, '');
         if (cat === 'ERA' || cat === 'WHIP') return (parseFloat(v) || 0).toFixed(2);
         return Math.round(parseFloat(v) || 0);
       };

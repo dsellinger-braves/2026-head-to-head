@@ -665,7 +665,7 @@ export default function PlayerValuationsView({
                                       <StatBox label="SB" val={player.projected_stats?.SB ?? '-'} />
                                       <StatBox
                                         label="OBP"
-                                        val={player.projected_stats?.OBP != null ? Number(player.projected_stats.OBP).toFixed(3).replace(/^0/, '') : '-'}
+                                        val={player.projected_stats?.OBP != null ? Number(player.projected_stats.OBP).toFixed(4).replace(/^0/, '') : '-'}
                                       />
                                     </>
                                   ) : (
