@@ -5,6 +5,12 @@ on:
     # Every 2 hours during baseball hours (noon–midnight ET = 16:00–04:00 UTC)
     - cron: "0 16,18,20,22,0,2,4 * * *"
   workflow_dispatch:
+    inputs:
+      scrape_historical:
+        description: 'Scrape historical ESPN trades (2018-2025)'
+        required: false
+        default: 'true'
+        type: string
 
 jobs:
   scrape-transactions:
@@ -12,6 +18,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -27,4 +35,24 @@ jobs:
           SUPABASE_KEY:  ${{ secrets.SUPABASE_KEY }}
           ESPN_S2:       ${{ secrets.ESPN_S2 }}
           ESPN_SWID:     ${{ secrets.ESPN_SWID }}
-        run: python transaction-scraper.py
+          SCRAPE_HISTORICAL: ${{ github.event.inputs.scrape_historical || 'false' }}
+        run: |
+          if [ "$SCRAPE_HISTORICAL" = "true" ]; then
+            python transaction-scraper.py --historical
+            python pipelines/ingest_historical_trades.py
+          else
+            python transaction-scraper.py
+            python pipelines/ingest_historical_trades.py
+          fi
+
+      - name: Commit and push updated trade datasets
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add src/data/transactions2026.json src/data/transactions_historical.json src/data/historicalTrades.json || true
+          if git diff --staged --quiet; then
+            echo "No trade dataset changes to commit"
+          else
+            git commit -m "chore(data): auto-update transactions and trade repository [skip ci]"
+            git push origin main
+          fi

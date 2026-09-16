@@ -238,20 +238,134 @@ def parse_activity_trades(topics: List[Dict]) -> List[Dict]:
     return rows
 
 # ---------------------------------------------------------------------------
+# HISTORICAL ESPN TRADES SCRAPER (2018–2025)
+# ---------------------------------------------------------------------------
+
+def fetch_historical_trades(years: List[int] = None) -> List[Dict]:
+    """Fetch executed trades across historical seasons from ESPN API."""
+    if years is None:
+        years = [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
+
+    cookies = {"espn_s2": ESPN_S2, "SWID": ESPN_SWID} if ESPN_S2 else {}
+    session = requests.Session()
+    session.cookies.update(cookies)
+
+    all_historical_trades: List[Dict] = []
+
+    for yr in years:
+        print(f"Checking ESPN historical season {yr} for trades...")
+        candidates = [
+            f"https://lm-api-reads.fantasy.espn.com/apis/v3/games/flb/seasons/{yr}/segments/0/leagues/{LEAGUE_ID}?view=mTransactions2",
+            f"https://lm-api-reads.fantasy.espn.com/apis/v3/games/flb/leagueHistory/{LEAGUE_ID}?seasonId={yr}&view=mTransactions2"
+        ]
+        txns = []
+        for url in candidates:
+            try:
+                resp = session.get(url, timeout=10)
+                if resp.status_code == 200:
+                    d = resp.json()
+                    if isinstance(d, list) and len(d) > 0:
+                        txns = d[0].get("transactions", [])
+                    elif isinstance(d, dict):
+                        txns = d.get("transactions", [])
+                    if txns:
+                        break
+            except Exception:
+                pass
+
+        yr_trade_count = 0
+        for txn in txns:
+            status = txn.get("status", "")
+            raw_type = txn.get("type", "")
+            if status != "EXECUTED" or "TRADE" not in raw_type:
+                continue
+
+            txn_id = txn.get("id", "")
+            date_ms = txn.get("executedDate") or txn.get("proposedDate", 0)
+            txn_date = datetime.fromtimestamp(date_ms / 1000, tz=timezone.utc)
+            period_id = txn.get("scoringPeriodId", 0)
+
+            for item in txn.get("items", []):
+                pid = item.get("playerId")
+                to_tid = item.get("toTeamId", -1)
+                from_tid = item.get("fromTeamId", -1)
+                if pid and to_tid > 0 and from_tid > 0:
+                    all_historical_trades.append({
+                        "espn_transaction_id": f"{txn_id}_{pid}_{to_tid}",
+                        "league_id": LEAGUE_ID,
+                        "season_year": yr,
+                        "transaction_type": "TRADE",
+                        "transaction_date": txn_date.isoformat(),
+                        "scoring_period_id": period_id,
+                        "to_team_id": to_tid,
+                        "from_team_id": from_tid,
+                        "player_id": pid,
+                        "player_name": f"Player {pid}",
+                        "raw_type": "TRADE"
+                    })
+                    yr_trade_count += 1
+
+        print(f"  Season {yr}: Found {yr_trade_count} trade items from mTransactions2.")
+
+        # Also attempt activity feed if activity was maintained
+        if yr_trade_count == 0:
+            act_url = f"https://lm-api-reads.fantasy.espn.com/apis/v3/games/flb/seasons/{yr}/segments/0/leagues/{LEAGUE_ID}?view=kona_league_communication"
+            filters = {
+                "communication": {
+                    "topics": {
+                        "filterType": {"value": ["ACTIVITY_TRANSACTIONS"]},
+                        "limit": 200,
+                        "limitPerMessageSet": {"value": 50},
+                        "offset": 0,
+                        "sortMessageDate": {"sortPriority": 1, "sortAsc": False}
+                    }
+                }
+            }
+            try:
+                r = session.get(act_url, headers={"x-fantasy-filter": json.dumps(filters)}, timeout=10)
+                if r.status_code == 200:
+                    topics = [t for t in r.json().get("communication", {}).get("topics", []) if t.get("author") == "TradeTaskProcessor"]
+                    act_rows = parse_activity_trades(topics)
+                    for ar in act_rows:
+                        ar["season_year"] = yr
+                    all_historical_trades.extend(act_rows)
+                    print(f"  Season {yr}: Found {len(act_rows)} trade items from activity feed.")
+            except Exception:
+                pass
+
+    return all_historical_trades
+
+# ---------------------------------------------------------------------------
 # PLAYER NAME ENRICHMENT
 # ---------------------------------------------------------------------------
 
 def fetch_all_player_names() -> Dict[int, str]:
-    """Fetch all MLB player names in a single bulk request."""
+    """Fetch MLB player names from ESPN and database fallback."""
+    name_map: Dict[int, str] = {}
     url = f"https://lm-api-reads.fantasy.espn.com/apis/v3/games/flb/seasons/{YEAR}/players?view=players_wl"
     headers = {"x-fantasy-filter": '{"filterActive":null}'}
     try:
         resp = requests.get(url, headers=headers, timeout=15)
         if resp.status_code == 200:
-            return {p["id"]: p.get("fullName", f"Player {p['id']}") for p in resp.json()}
+            for p in resp.json():
+                name_map[p["id"]] = p.get("fullName", f"Player {p['id']}")
     except Exception as e:
-        print(f"Error bulk fetching player names: {e}")
-    return {}
+        print(f"Error bulk fetching player names from ESPN: {e}")
+
+    # Fallback to Supabase dim_players table
+    if SUPABASE_URL and SUPABASE_KEY:
+        try:
+            supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+            res = supabase.table("dim_players").select("player_id, player_name").execute()
+            for r in res.data or []:
+                pid = r.get("player_id")
+                pname = r.get("player_name")
+                if pid and pname and int(pid) not in name_map:
+                    name_map[int(pid)] = pname
+        except Exception:
+            pass
+
+    return name_map
 
 def enrich_player_names(rows: List[Dict]) -> List[Dict]:
     name_map = fetch_all_player_names()
@@ -277,54 +391,43 @@ def upsert_transactions(rows: List[Dict], overwrite: bool = TRANSACTIONS_OVERWRI
     rows = list(unique.values())
     print(f"  After dedupe: {len(rows)} rows")
 
-    if overwrite:
-        delete_success = False
-        max_retries = 3
-        for attempt in range(1, max_retries + 1):
-            try:
-                print(f"Attempt {attempt}: Clearing existing transactions table...")
-                supabase.table("transactions").delete().neq("espn_transaction_id", "").execute()
-                delete_success = True
-                print("Existing transactions deleted.")
-                break
-            except Exception as e:
-                print(f"Error clearing table on attempt {attempt}: {e}")
-                if attempt < max_retries: time.sleep(1 * attempt)
+    batch_size = 200
+    upserted = 0
+    for i in range(0, len(rows), batch_size):
+        batch = rows[i : i + batch_size]
+        try:
+            supabase.table("transactions").upsert(batch, on_conflict="espn_transaction_id").execute()
+            upserted += len(batch)
+        except Exception as e:
+            print(f"Error on upsert batch {i}: {e}")
 
-        batch_size = 200
-        inserted, upserted = 0, 0
-        for i in range(0, len(rows), batch_size):
-            batch = rows[i : i + batch_size]
-            try:
-                supabase.table("transactions").insert(batch).execute()
-                inserted += len(batch)
-            except Exception as e:
-                try:
-                    supabase.table("transactions").upsert(batch, on_conflict="espn_transaction_id").execute()
-                    upserted += len(batch)
-                except Exception as e2:
-                    print(f"Fallback upsert failed: {e2}")
-
-        print(f"Upload complete. Inserted: {inserted}, Upserted (fallback): {upserted}.")
-    else:
-        batch_size = 200
-        upserted = 0
-        for i in range(0, len(rows), batch_size):
-            batch = rows[i : i + batch_size]
-            try:
-                supabase.table("transactions").upsert(batch, on_conflict="espn_transaction_id").execute()
-                upserted += len(batch)
-            except Exception as e:
-                print(f"Error on upsert batch {i}: {e}")
-
-        print(f"Upload complete. Upserted: {upserted}.")
+    print(f"Upload complete. Upserted: {upserted}.")
 
 # ---------------------------------------------------------------------------
 # ENTRY POINT
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    print(f"Fetching standard transactions for league {LEAGUE_ID}...")
+    import sys
+
+    run_historical = "--historical" in sys.argv or os.environ.get("SCRAPE_HISTORICAL", "").lower() in ("1", "true", "yes")
+
+    if run_historical:
+        print(f"🚀 Scraping HISTORICAL ESPN trade transactions (2018–2025)...")
+        historical_trades = fetch_historical_trades()
+        print(f"🎯 Total historical trades retrieved: {len(historical_trades)}")
+        if historical_trades:
+            historical_trades = enrich_player_names(historical_trades)
+            upsert_transactions(historical_trades, overwrite=False)
+
+            out_dir = os.path.join(os.path.dirname(__file__), "src", "data")
+            os.makedirs(out_dir, exist_ok=True)
+            hist_json = os.path.join(out_dir, "transactions_historical.json")
+            with open(hist_json, "w", encoding="utf-8") as f:
+                json.dump(historical_trades, f, indent=2)
+            print(f"✅ Saved historical transactions to {hist_json}")
+
+    print(f"Fetching standard transactions for league {LEAGUE_ID} (Season {YEAR})...")
     raw_txns = fetch_transactions()
     base_rows = parse_transactions(raw_txns)
     print(f"  Parsed standard rows: {len(base_rows)}")
@@ -352,4 +455,4 @@ if __name__ == "__main__":
             except Exception as e:
                 print(f"Failed to update local JSON: {e}")
     else:
-        print("  No transactions found.")
+        print("  No 2026 transactions found.")
