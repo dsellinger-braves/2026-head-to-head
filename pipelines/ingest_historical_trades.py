@@ -42,7 +42,8 @@ OWNER_TO_TEAM_ID = {
     "Preston": 14,
     "Joe": 10,       # Historical owner in 2024/2025
     "Joseph": 10,
-    "Patrick": 7      # Historical owner in 2025
+    "Patrick": 7,     # Historical owner in 2025
+    "Michael": 11
 }
 
 SHEETS = [
@@ -720,9 +721,12 @@ def process_espn_trades(existing_trades, stats_2026_map):
         1: "Tim",
         2: "Adrian",
         3: "Garrett",
-        5: "Dan",
+        5: "Daniel",
         6: "Anil",
+        7: "Patrick",
         8: "Alex",
+        10: "Joe",
+        11: "Michael",
         12: "Will",
         13: "Mark",
         14: "Preston"

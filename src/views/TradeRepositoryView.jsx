@@ -17,7 +17,8 @@ const ALL_MANAGERS = [
   'Preston',
   'Alex',
   'Joe',
-  'Patrick'
+  'Patrick',
+  'Michael'
 ];
 
 function AssetRow({ item, isIncoming, isExpanded, onToggle, onPlayerClick }) {
@@ -171,6 +172,13 @@ export default function TradeRepositoryView({ onPlayerClick, onOwnerClick, allSt
     return (historicalTrades || []).map(t => gradeTrade(t, allStats));
   }, [allStats]);
 
+  // Dynamic Available Seasons from data
+  const availableSeasons = useMemo(() => {
+    const years = new Set((historicalTrades || []).map(t => t.season_year).filter(Boolean));
+    const sortedYears = Array.from(years).sort((a, b) => b - a);
+    return [{ id: 'all', label: 'All Seasons' }, ...sortedYears.map(y => ({ id: String(y), label: String(y) }))];
+  }, []);
+
   // Filter & sort trades
   const filteredTrades = useMemo(() => {
     let list = [...gradedTrades];
@@ -183,7 +191,13 @@ export default function TradeRepositoryView({ onPlayerClick, onOwnerClick, allSt
 
     // Manager Filter
     if (selectedManager !== 'All Managers') {
-      list = list.filter(t => t.participants?.includes(selectedManager));
+      const matchManager = (name) => {
+        if (!name) return false;
+        if (selectedManager === 'Daniel' && (name === 'Dan' || name === 'Daniel')) return true;
+        if (selectedManager === 'Joe' && (name === 'Joe' || name === 'Joseph')) return true;
+        return name.toLowerCase() === selectedManager.toLowerCase();
+      };
+      list = list.filter(t => t.participants?.some(matchManager));
     }
 
     // Search Query Filter
@@ -225,8 +239,10 @@ export default function TradeRepositoryView({ onPlayerClick, onOwnerClick, allSt
     let totalPicks = 0;
     let totalCash = 0;
     const managerCounts = {};
+    const years = [];
 
     gradedTrades.forEach(t => {
+      if (t.season_year) years.push(t.season_year);
       totalItems += t.items?.length || 0;
       t.items?.forEach(i => {
         if (i.asset_type === 'Pick') totalPicks++;
@@ -238,6 +254,8 @@ export default function TradeRepositoryView({ onPlayerClick, onOwnerClick, allSt
     });
 
     const topTrader = Object.entries(managerCounts).sort((a, b) => b[1] - a[1])[0] || ['None', 0];
+    const minYear = years.length ? Math.min(...years) : 2018;
+    const maxYear = years.length ? Math.max(...years) : 2026;
 
     return {
       totalTrades,
@@ -245,7 +263,9 @@ export default function TradeRepositoryView({ onPlayerClick, onOwnerClick, allSt
       totalPicks,
       totalCash,
       topTraderName: topTrader[0],
-      topTraderCount: topTrader[1]
+      topTraderCount: topTrader[1],
+      minYear,
+      maxYear
     };
   }, [gradedTrades]);
 
@@ -276,7 +296,7 @@ export default function TradeRepositoryView({ onPlayerClick, onOwnerClick, allSt
             <div className="p-3.5 rounded-2xl bg-slate-950/60 border border-indigo-500/20 backdrop-blur-md">
               <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Trades</div>
               <div className="text-2xl font-black text-white mt-0.5">{kpis.totalTrades}</div>
-              <div className="text-[10px] text-indigo-400 font-semibold mt-0.5">2024 – 2026</div>
+              <div className="text-[10px] text-indigo-400 font-semibold mt-0.5">{kpis.minYear} – {kpis.maxYear}</div>
             </div>
             <div className="p-3.5 rounded-2xl bg-slate-950/60 border border-indigo-500/20 backdrop-blur-md">
               <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Draft Picks</div>
@@ -300,17 +320,12 @@ export default function TradeRepositoryView({ onPlayerClick, onOwnerClick, allSt
       {/* 2. FILTER CONTROLS BAR */}
       <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-slate-900/60 border border-slate-800 backdrop-blur-md">
         {/* Season Filter Pills */}
-        <div className="flex items-center gap-1.5 bg-slate-950/60 p-1 rounded-xl border border-slate-800">
-          {[
-            { id: 'all', label: 'All Seasons' },
-            { id: '2026', label: '2026' },
-            { id: '2025', label: '2025' },
-            { id: '2024', label: '2024' }
-          ].map(tab => (
+        <div className="flex items-center gap-1.5 bg-slate-950/60 p-1 rounded-xl border border-slate-800 overflow-x-auto max-w-full">
+          {availableSeasons.map(tab => (
             <button
               key={tab.id}
               onClick={() => setSelectedSeason(tab.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition shrink-0 ${
                 selectedSeason === tab.id
                   ? 'bg-indigo-600 text-white shadow-md'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
