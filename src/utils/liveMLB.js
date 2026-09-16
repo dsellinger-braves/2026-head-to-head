@@ -34,7 +34,7 @@ export const buildRosterDictionary = (todaysRecords) => {
     // We can also store the lineup slot so the UI knows if they are benched
     dict[cleanName] = {
       teamId: record.team_id,
-      isBench: record.lineup_slot_id >= 16
+      isBench: record.lineup_slot_id === 16 || record.lineup_slot_id === 17
     };
   });
   return dict;

@@ -2,9 +2,9 @@
 
 export const LINEUP_SLOTS = {
   0: 'C', 1: '1B', 2: '2B', 3: '3B', 4: 'SS', 
-  5: 'OF', 6: '2B/SS', 7: '1B/3B', 12: 'UTIL',
+  5: 'OF', 6: '2B/SS', 7: '1B/3B', 11: 'DH', 12: 'UTIL',
   13: 'P', 14: 'SP', 15: 'RP',
-  16: 'Bench', 17: 'IL'
+  16: 'Bench', 17: 'IL', 19: 'IF'
 };
 
 // 1. Define your scoring categories
@@ -197,7 +197,7 @@ export function aggregateStats(dailyRecords, options = {}) {
       parseFloat(s.HD ?? espnStats['60']) > 0
     ));
 
-    const isBatter = (slot >= 0 && slot <= 12) || ((options.includeBenchOnly || options.includeAll) && (
+    const isBatter = ((slot >= 0 && slot <= 12) || slot === 19) || ((options.includeBenchOnly || options.includeAll) && (
       parseFloat(s.PA ?? espnStats['16']) > 0 ||
       parseFloat(s.AB ?? espnStats['0']) > 0 ||
       parseFloat(s.H ?? espnStats['1']) > 0 ||
