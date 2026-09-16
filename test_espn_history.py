@@ -41,41 +41,31 @@ for view in ["", "?view=mStatus", "?view=mSettings", "?view=mTransactions2", "?v
     except Exception as e:
         print(f"  Exception: {e}")
 
-# 2. Test specific historical seasons (2023, 2024, 2025) with seasons/{yr}
-print("\n--- 2. Testing seasons/{yr} with view=mTransactions2 and scoringPeriodId ---")
-for yr in [2025, 2024, 2023]:
-    base = f"https://lm-api-reads.fantasy.espn.com/apis/v3/games/flb/seasons/{yr}/segments/0/leagues/{LEAGUE_ID}"
-    # Test mStatus
-    try:
-        r = session.get(f"{base}?view=mStatus", timeout=10)
-        print(f"Season {yr} mStatus: {r.status_code}")
-        if r.status_code == 200:
-            print(f"  Status json: {r.json().get('status')}")
-    except Exception as e:
-        print(f"Season {yr} mStatus exception: {e}")
+# 2. Test specific historical seasons with sort filter
+print("\n--- 2. Testing seasons/{yr} with view=mTransactions2 and sortMessageDate ---")
+headers = {
+    "x-fantasy-filter": json.dumps({
+        "transactions": {
+            "sortMessageDate": {"sortPriority": 1, "sortAsc": False},
+            "limit": 5000
+        }
+    })
+}
 
-    # Test mTransactions2 with x-fantasy-filter
-    headers = {"x-fantasy-filter": '{"transactions": {"limit": 100}}'}
+for yr in [2025, 2024, 2023, 2022, 2021]:
+    base = f"https://lm-api-reads.fantasy.espn.com/apis/v3/games/flb/seasons/{yr}/segments/0/leagues/{LEAGUE_ID}?view=mTransactions2"
     try:
-        r = session.get(f"{base}?view=mTransactions2", headers=headers, timeout=10)
-        print(f"Season {yr} mTransactions2 (filter limit 100): {r.status_code}")
+        r = session.get(base, headers=headers, timeout=15)
+        print(f"Season {yr} mTransactions2 (sorted filter): Status {r.status_code}")
         if r.status_code == 200:
             txs = r.json().get("transactions", [])
-            print(f"  Found {len(txs)} transactions!")
-            trades = [t for t in txs if t.get("type") == "TRADE"]
-            print(f"  Trades: {len(trades)}")
+            print(f"  Found {len(txs)} total transactions for Season {yr}!")
+            trades = [t for t in txs if "TRADE" in t.get("type", "")]
+            print(f"  Trades in {yr}: {len(trades)}")
+            if trades:
+                sample = trades[0]
+                print(f"  Sample trade ID: {sample.get('id')}, items: {len(sample.get('items', []))}")
         else:
             print(f"  Error: {r.text[:200]}")
     except Exception as e:
-        print(f"Season {yr} mTransactions2 exception: {e}")
-
-    # Test scoringPeriodId=1, 50, 100
-    for sp in [1, 50, 100]:
-        try:
-            r = session.get(f"{base}?view=mTransactions2&scoringPeriodId={sp}", timeout=10)
-            if r.status_code == 200:
-                txs = r.json().get("transactions", [])
-                if txs:
-                    print(f"  Season {yr} SP {sp}: {len(txs)} transactions")
-        except Exception:
-            pass
+        print(f"  Exception: {e}")
