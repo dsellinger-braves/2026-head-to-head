@@ -56,7 +56,7 @@ function getBatterDailyScore(stats) {
 function getSPStartScore(stats) {
   if (!stats) return 0;
   const ipRaw = parseFloat(stats.IP_raw ?? stats.IP ?? stats['34'] ?? 0);
-  const ip = ipRaw > 50 ? ipRaw / 3 : ipRaw; // outs vs innings
+  const ip = ipRaw / 3; // outs vs innings
   const er = parseFloat(stats.ER ?? stats['45'] ?? 0);
   const k = parseFloat(stats.K ?? stats['48'] ?? 0);
   const h = parseFloat(stats.H_Allowed ?? stats['37'] ?? 0);
@@ -72,7 +72,7 @@ function getSPStartScore(stats) {
 function getRPDailyScore(stats) {
   if (!stats) return 0;
   const ipRaw = parseFloat(stats.IP_raw ?? stats.IP ?? stats['34'] ?? 0);
-  const ip = ipRaw > 50 ? ipRaw / 3 : ipRaw;
+  const ip = ipRaw / 3;
   const er = parseFloat(stats.ER ?? stats['45'] ?? 0);
   const k = parseFloat(stats.K ?? stats['48'] ?? 0);
   const sv = parseFloat(stats.SV ?? stats['57'] ?? 0);
@@ -229,10 +229,19 @@ export default function FullRosterView({ allStats = [], onOwnerClick, onPlayerCl
   const [positionFilter, setPositionFilter] = useState('ALL'); // 'ALL' | 'HITTERS' | 'PITCHERS' | 'STARTERS' | 'BENCH' | 'IL'
   const [searchQuery, setSearchQuery] = useState('');
 
-  // 1. Identify latest scoring period in the loaded season
+  // 1. Identify latest scoring period with actual active gameplay in the loaded season
   const latestPeriod = useMemo(() => {
-    if (!allStats.length) return 195;
-    return allStats.reduce((max, r) => Math.max(max, r.scoring_period_id || 0), 0) || 195;
+    if (!allStats.length) return 174;
+    return allStats.reduce((max, r) => {
+      const s = r.stats || {};
+      const hasPlay = (
+        (parseFloat(s.PA ?? s['16'] ?? s.AB ?? s['0'] ?? 0) > 0) ||
+        (parseFloat(s.IP_raw ?? s.IP ?? s['34'] ?? 0) > 0) ||
+        (parseFloat(s.H ?? s['1'] ?? 0) > 0) ||
+        (parseFloat(s.K ?? s['48'] ?? 0) > 0)
+      );
+      return hasPlay ? Math.max(max, r.scoring_period_id || 0) : max;
+    }, 0) || 174;
   }, [allStats]);
 
   // 2. Identify active roster for the selected team
@@ -346,7 +355,7 @@ export default function FullRosterView({ allStats = [], onOwnerClick, onPlayerCl
           const shortDate = dateStr ? dateStr.slice(5) : `P${st.scoring_period_id}`;
           const val = getSPStartScore(s);
           const ipRaw = parseFloat(s.IP_raw ?? s.IP ?? s['34'] ?? 0);
-          const ip = ipRaw > 50 ? ipRaw / 3 : ipRaw;
+          const ip = ipRaw / 3;
           const er = parseFloat(s.ER ?? s['45'] ?? 0);
           const k = parseFloat(s.K ?? s['48'] ?? 0);
           const isQS = (parseFloat(s.QS ?? s['63'] ?? 0) > 0) || (ip >= 6 && er <= 3);
@@ -355,7 +364,7 @@ export default function FullRosterView({ allStats = [], onOwnerClick, onPlayerCl
             date: shortDate,
             val,
             isQS,
-            summary: `${ip.toFixed(1)} IP · ${er} ER · ${k} K${isQS ? ' (QS)' : ''}`
+            summary: `${formatRate(ip, 1)} IP · ${er} ER · ${k} K${isQS ? ' (QS)' : ''}`
           };
         });
 
@@ -363,7 +372,7 @@ export default function FullRosterView({ allStats = [], onOwnerClick, onPlayerCl
         const qsCount = filteredStarts.filter(st => {
           const s = st.stats || {};
           const ipRaw = parseFloat(s.IP_raw ?? s.IP ?? s['34'] ?? 0);
-          const ip = ipRaw > 50 ? ipRaw / 3 : ipRaw;
+          const ip = ipRaw / 3;
           const er = parseFloat(s.ER ?? s['45'] ?? 0);
           return (parseFloat(s.QS ?? s['63'] ?? 0) > 0) || (ip >= 6 && er <= 3);
         }).length;
@@ -373,13 +382,25 @@ export default function FullRosterView({ allStats = [], onOwnerClick, onPlayerCl
       } else if (isPitcher) {
         // --- RELIEF PITCHER CADENCE ---
         const minPeriod = timeframe === '14d' ? Math.max(1, latestPeriod - 14) : timeframe === '30d' ? Math.max(1, latestPeriod - 30) : 1;
-        const recentRecords = records.filter(r => r.scoring_period_id >= minPeriod);
+        let recentRecords = records.filter(r => r.scoring_period_id >= minPeriod);
 
         // Active appearances with work
-        const appRecords = recentRecords.filter(r => {
+        let appRecords = recentRecords.filter(r => {
           const s = r.stats || {};
           return (parseFloat(s.IP_raw ?? s.IP ?? s['34'] ?? 0) > 0) || (parseFloat(s.K ?? s['48'] ?? 0) > 0) || (parseFloat(s.SV ?? s['57'] ?? 0) > 0);
         });
+
+        // Fallback: If no work in calendar window (e.g. IL), take player's last active relief appearances
+        if (appRecords.length === 0 && timeframe !== 'season') {
+          const allActive = records.filter(r => {
+            const s = r.stats || {};
+            return (parseFloat(s.IP_raw ?? s.IP ?? s['34'] ?? 0) > 0) || (parseFloat(s.K ?? s['48'] ?? 0) > 0) || (parseFloat(s.SV ?? s['57'] ?? 0) > 0);
+          });
+          allActive.sort((a, b) => a.scoring_period_id - b.scoring_period_id);
+          const sliceCount = timeframe === '14d' ? 5 : 10;
+          appRecords = allActive.slice(-sliceCount);
+          recentRecords = appRecords;
+        }
 
         sparklineData = appRecords.map(r => {
           const s = r.stats || {};
@@ -387,7 +408,7 @@ export default function FullRosterView({ allStats = [], onOwnerClick, onPlayerCl
           const shortDate = dateStr ? dateStr.slice(5) : `P${r.scoring_period_id}`;
           const val = getRPDailyScore(s);
           const ipRaw = parseFloat(s.IP_raw ?? s.IP ?? s['34'] ?? 0);
-          const ip = ipRaw > 50 ? ipRaw / 3 : ipRaw;
+          const ip = ipRaw / 3;
           const k = parseFloat(s.K ?? s['48'] ?? 0);
           const sv = parseFloat(s.SV ?? s['57'] ?? 0);
           const hd = parseFloat(s.HD ?? s['60'] ?? 0);
@@ -396,7 +417,7 @@ export default function FullRosterView({ allStats = [], onOwnerClick, onPlayerCl
             date: shortDate,
             val,
             isQS: false,
-            summary: `${ip.toFixed(1)} IP · ${k} K · ${(sv + hd)} SV+HD`
+            summary: `${formatRate(ip, 1)} IP · ${k} K · ${(sv + hd)} SV+HD`
           };
         });
 
@@ -406,13 +427,25 @@ export default function FullRosterView({ allStats = [], onOwnerClick, onPlayerCl
       } else {
         // --- BATTER CADENCE ---
         const minPeriod = timeframe === '14d' ? Math.max(1, latestPeriod - 14) : timeframe === '30d' ? Math.max(1, latestPeriod - 30) : 1;
-        const recentRecords = records.filter(r => r.scoring_period_id >= minPeriod);
+        let recentRecords = records.filter(r => r.scoring_period_id >= minPeriod);
 
         // Days with actual plate appearances / appearances
-        const appRecords = recentRecords.filter(r => {
+        let appRecords = recentRecords.filter(r => {
           const s = r.stats || {};
-          return (parseFloat(s.PA ?? s['16'] ?? 0) > 0) || (parseFloat(s.AB ?? s['0'] ?? 0) > 0);
+          return (parseFloat(s.PA ?? s['16'] ?? 0) > 0) || (parseFloat(s.AB ?? s['0'] ?? 0) > 0) || (parseFloat(s.H ?? s['1'] ?? 0) > 0);
         });
+
+        // Fallback: If no games in exact calendar window (e.g. recent IL return), show player's last active games
+        if (appRecords.length === 0 && timeframe !== 'season') {
+          const allActive = records.filter(r => {
+            const s = r.stats || {};
+            return (parseFloat(s.PA ?? s['16'] ?? 0) > 0) || (parseFloat(s.AB ?? s['0'] ?? 0) > 0) || (parseFloat(s.H ?? s['1'] ?? 0) > 0);
+          });
+          allActive.sort((a, b) => a.scoring_period_id - b.scoring_period_id);
+          const sliceCount = timeframe === '14d' ? 10 : 20;
+          appRecords = allActive.slice(-sliceCount);
+          recentRecords = appRecords;
+        }
 
         sparklineData = appRecords.map(r => {
           const s = r.stats || {};
