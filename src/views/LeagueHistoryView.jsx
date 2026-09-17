@@ -105,6 +105,10 @@ export default function LeagueHistoryView({
   const [sortField, setSortField] = useState('points');
   const [sortDirection, setSortDirection] = useState('desc');
 
+  // Sorting state for Franchise Hall leaderboard table
+  const [hallSortField, setHallSortField] = useState('titles');
+  const [hallSortDirection, setHallSortDirection] = useState('desc');
+
   // Close methodology modal on Escape key
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -595,13 +599,19 @@ export default function LeagueHistoryView({
       if (r.place > s.worstPlace) s.worstPlace = r.place;
     });
 
-    const list = Object.values(summaryByOwner).map(s => ({
-      ...s,
-      avgPlace: s.places.length ? (s.places.reduce((a, b) => a + b, 0) / s.places.length).toFixed(2) : '-',
-      ptsPerSeason: s.seasons ? (s.totalPoints / s.seasons).toFixed(1) : '-',
-    }));
+    const list = Object.values(summaryByOwner).map(s => {
+      const avgNum = s.places.length ? (s.places.reduce((a, b) => a + b, 0) / s.places.length) : 99;
+      const ptsPerSeasonNum = s.seasons ? (s.totalPoints / s.seasons) : 0;
+      return {
+        ...s,
+        avgPlace: s.places.length ? avgNum.toFixed(2) : '-',
+        avgPlaceNum: avgNum,
+        ptsPerSeason: s.seasons ? ptsPerSeasonNum.toFixed(1) : '-',
+        ptsPerSeasonNum: ptsPerSeasonNum,
+      };
+    });
 
-    // Sort by championships desc, then podiums desc, then total points desc
+    // Default baseline sort: championships desc, then podiums desc, then total points desc
     list.sort((a, b) => {
       if (b.titles !== a.titles) return b.titles - a.titles;
       if (b.podiums !== a.podiums) return b.podiums - a.podiums;
@@ -610,6 +620,87 @@ export default function LeagueHistoryView({
 
     return list;
   }, [augmentedFinishes]);
+
+  // Sorting handler for Franchise Hall leaderboard table
+  const handleHallSort = (field) => {
+    if (hallSortField === field) {
+      setHallSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setHallSortField(field);
+      const preferAsc = field === 'owner' || field === 'avgPlace' || field === 'bestPlace';
+      setHallSortDirection(preferAsc ? 'asc' : 'desc');
+    }
+  };
+
+  // Sorted list for Franchise Career Leaderboard
+  const sortedFranchiseRecords = useMemo(() => {
+    const list = [...franchiseRecords];
+    list.sort((a, b) => {
+      let valA, valB;
+      if (hallSortField === 'owner') {
+        valA = a.owner.toLowerCase();
+        valB = b.owner.toLowerCase();
+        return hallSortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+      }
+      if (hallSortField === 'titles') {
+        valA = a.titles;
+        valB = b.titles;
+        if (valA === valB) {
+          if (b.podiums !== a.podiums) return b.podiums - a.podiums;
+          return b.totalPoints - a.totalPoints;
+        }
+      } else if (hallSortField === 'podiums') {
+        valA = a.podiums;
+        valB = b.podiums;
+        if (valA === valB) return b.titles - a.titles;
+      } else if (hallSortField === 'seasons') {
+        valA = a.seasons;
+        valB = b.seasons;
+      } else if (hallSortField === 'avgPlace') {
+        valA = a.avgPlaceNum;
+        valB = b.avgPlaceNum;
+        if (valA === valB) return b.titles - a.titles;
+      } else if (hallSortField === 'bestPlace') {
+        valA = a.bestPlace;
+        valB = b.bestPlace;
+        if (valA === valB) return a.avgPlaceNum - b.avgPlaceNum;
+      } else if (hallSortField === 'worstPlace') {
+        valA = a.worstPlace;
+        valB = b.worstPlace;
+        if (valA === valB) return a.avgPlaceNum - b.avgPlaceNum;
+      } else if (hallSortField === 'totalPoints') {
+        valA = a.totalPoints;
+        valB = b.totalPoints;
+      } else if (hallSortField === 'ptsPerSeason') {
+        valA = a.ptsPerSeasonNum;
+        valB = b.ptsPerSeasonNum;
+      } else {
+        valA = a[hallSortField];
+        valB = b[hallSortField];
+      }
+
+      if (valA < valB) return hallSortDirection === 'asc' ? -1 : 1;
+      if (valA > valB) return hallSortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+    return list;
+  }, [franchiseRecords, hallSortField, hallSortDirection]);
+
+  // Label for current Franchise Hall sort
+  const hallSortLabel = useMemo(() => {
+    const labels = {
+      titles: 'Championships',
+      podiums: 'Podiums',
+      seasons: 'Seasons',
+      avgPlace: 'Average Finish',
+      bestPlace: 'Best Finish',
+      worstPlace: 'Worst Finish',
+      totalPoints: 'Total Points',
+      ptsPerSeason: 'Points / Season',
+      owner: 'Owner Name',
+    };
+    return labels[hallSortField] || hallSortField;
+  }, [hallSortField]);
 
   // Find team object for onOwnerClick
   const getOwnerTeamObj = (ownerName) => {
@@ -1507,27 +1598,137 @@ export default function LeagueHistoryView({
                 </h2>
                 <p className="text-xs text-gray-500 mt-0.5">Cumulative statistics across all 14 seasons (2012–2025)</p>
               </div>
-              <span className="text-xs font-mono font-bold text-gray-400">Sorted by Championships</span>
+              <span className="text-xs font-mono font-bold text-gray-500">
+                Sorted by <span className="text-blue-600 font-black">{hallSortLabel}</span> ({hallSortDirection === 'desc' ? 'High to Low' : 'Low to High'}) • Click headers to sort
+              </span>
             </div>
 
             <div className="overflow-x-auto">
-              <table className="min-w-full text-xs text-left">
+              <table className="min-w-full text-xs text-left select-none">
                 <thead className="bg-gray-100/90 text-gray-700 font-black uppercase text-[10px] tracking-wider border-b border-gray-200">
                   <tr>
                     <th className="py-3 px-3">#</th>
-                    <th className="py-3 px-4">Owner</th>
-                    <th className="py-3 px-3 text-center bg-amber-50/80 text-amber-950">🏆 Titles</th>
-                    <th className="py-3 px-3 text-center">Podiums (1-3)</th>
-                    <th className="py-3 px-3 text-center">Seasons</th>
-                    <th className="py-3 px-3 text-center">Avg Finish</th>
-                    <th className="py-3 px-3 text-center">Best</th>
-                    <th className="py-3 px-3 text-center">Worst</th>
-                    <th className="py-3 px-4 text-right">All-Time Pts</th>
-                    <th className="py-3 px-3 text-right">Pts/Season</th>
+                    <th
+                      onClick={() => handleHallSort('owner')}
+                      className={`py-3 px-4 cursor-pointer hover:bg-gray-200 transition ${
+                        hallSortField === 'owner' ? 'bg-blue-50 text-blue-900' : ''
+                      }`}
+                    >
+                      <div className="flex items-center gap-1">
+                        <span>Owner</span>
+                        {hallSortField === 'owner' && (
+                          <span className="text-blue-600 font-black">{hallSortDirection === 'asc' ? '▲' : '▼'}</span>
+                        )}
+                      </div>
+                    </th>
+                    <th
+                      onClick={() => handleHallSort('titles')}
+                      className={`py-3 px-3 text-center cursor-pointer hover:bg-amber-100 transition ${
+                        hallSortField === 'titles' ? 'bg-amber-100/90 text-amber-950 font-black' : 'bg-amber-50/80 text-amber-950'
+                      }`}
+                    >
+                      <div className="flex items-center justify-center gap-1">
+                        <span>🏆 Titles</span>
+                        {hallSortField === 'titles' && (
+                          <span className="text-amber-900 font-black">{hallSortDirection === 'asc' ? '▲' : '▼'}</span>
+                        )}
+                      </div>
+                    </th>
+                    <th
+                      onClick={() => handleHallSort('podiums')}
+                      className={`py-3 px-3 text-center cursor-pointer hover:bg-gray-200 transition ${
+                        hallSortField === 'podiums' ? 'bg-blue-50 text-blue-900' : ''
+                      }`}
+                    >
+                      <div className="flex items-center justify-center gap-1">
+                        <span>Podiums (1-3)</span>
+                        {hallSortField === 'podiums' && (
+                          <span className="text-blue-600 font-black">{hallSortDirection === 'asc' ? '▲' : '▼'}</span>
+                        )}
+                      </div>
+                    </th>
+                    <th
+                      onClick={() => handleHallSort('seasons')}
+                      className={`py-3 px-3 text-center cursor-pointer hover:bg-gray-200 transition ${
+                        hallSortField === 'seasons' ? 'bg-blue-50 text-blue-900' : ''
+                      }`}
+                    >
+                      <div className="flex items-center justify-center gap-1">
+                        <span>Seasons</span>
+                        {hallSortField === 'seasons' && (
+                          <span className="text-blue-600 font-black">{hallSortDirection === 'asc' ? '▲' : '▼'}</span>
+                        )}
+                      </div>
+                    </th>
+                    <th
+                      onClick={() => handleHallSort('avgPlace')}
+                      className={`py-3 px-3 text-center cursor-pointer hover:bg-gray-200 transition ${
+                        hallSortField === 'avgPlace' ? 'bg-blue-50 text-blue-900' : ''
+                      }`}
+                    >
+                      <div className="flex items-center justify-center gap-1">
+                        <span>Avg Finish</span>
+                        {hallSortField === 'avgPlace' && (
+                          <span className="text-blue-600 font-black">{hallSortDirection === 'asc' ? '▲' : '▼'}</span>
+                        )}
+                      </div>
+                    </th>
+                    <th
+                      onClick={() => handleHallSort('bestPlace')}
+                      className={`py-3 px-3 text-center cursor-pointer hover:bg-gray-200 transition ${
+                        hallSortField === 'bestPlace' ? 'bg-blue-50 text-blue-900' : ''
+                      }`}
+                    >
+                      <div className="flex items-center justify-center gap-1">
+                        <span>Best</span>
+                        {hallSortField === 'bestPlace' && (
+                          <span className="text-blue-600 font-black">{hallSortDirection === 'asc' ? '▲' : '▼'}</span>
+                        )}
+                      </div>
+                    </th>
+                    <th
+                      onClick={() => handleHallSort('worstPlace')}
+                      className={`py-3 px-3 text-center cursor-pointer hover:bg-gray-200 transition ${
+                        hallSortField === 'worstPlace' ? 'bg-blue-50 text-blue-900' : ''
+                      }`}
+                    >
+                      <div className="flex items-center justify-center gap-1">
+                        <span>Worst</span>
+                        {hallSortField === 'worstPlace' && (
+                          <span className="text-blue-600 font-black">{hallSortDirection === 'asc' ? '▲' : '▼'}</span>
+                        )}
+                      </div>
+                    </th>
+                    <th
+                      onClick={() => handleHallSort('totalPoints')}
+                      className={`py-3 px-4 text-right cursor-pointer hover:bg-gray-200 transition ${
+                        hallSortField === 'totalPoints' ? 'bg-blue-50 text-blue-900' : ''
+                      }`}
+                    >
+                      <div className="flex items-center justify-end gap-1">
+                        <span>All-Time Pts</span>
+                        {hallSortField === 'totalPoints' && (
+                          <span className="text-blue-600 font-black">{hallSortDirection === 'asc' ? '▲' : '▼'}</span>
+                        )}
+                      </div>
+                    </th>
+                    <th
+                      onClick={() => handleHallSort('ptsPerSeason')}
+                      className={`py-3 px-3 text-right cursor-pointer hover:bg-gray-200 transition ${
+                        hallSortField === 'ptsPerSeason' ? 'bg-blue-50 text-blue-900' : ''
+                      }`}
+                    >
+                      <div className="flex items-center justify-end gap-1">
+                        <span>Pts/Season</span>
+                        {hallSortField === 'ptsPerSeason' && (
+                          <span className="text-blue-600 font-black">{hallSortDirection === 'asc' ? '▲' : '▼'}</span>
+                        )}
+                      </div>
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {franchiseRecords.map((f, i) => (
+                  {sortedFranchiseRecords.map((f, i) => (
                     <tr
                       key={f.owner}
                       className={`hover:bg-blue-50/40 transition-colors ${
