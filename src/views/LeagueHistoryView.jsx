@@ -37,7 +37,7 @@ const formatRawStat = (key, val) => {
   if (val === null || val === undefined || val === '') return '—';
   const n = parseFloat(val);
   if (isNaN(n)) return '—';
-  if (key === 'OBP') {
+  if (key === 'OBP' || key === 'AVG') {
     return n < 1 ? n.toFixed(3).replace(/^0/, '') : n.toFixed(3);
   }
   if (key === 'ERA' || key === 'WHIP') {
@@ -46,22 +46,83 @@ const formatRawStat = (key, val) => {
   return Math.round(n).toLocaleString();
 };
 
+const getDisplayRawStat = (catKey, row) => {
+  if (!row.rawStats) return { text: '—', badge: null, title: '' };
+
+  if (catKey === 'OBP') {
+    if (row.year === 2012) {
+      return {
+        text: formatRawStat('AVG', row.rawStats.AVG),
+        badge: 'BA',
+        title: '2012 scored Batting Average instead of OBP',
+      };
+    }
+    return {
+      text: formatRawStat('OBP', row.rawStats.OBP),
+      badge: null,
+      title: '',
+    };
+  }
+
+  if (catKey === 'QS') {
+    if (row.year <= 2013) {
+      return {
+        text: formatRawStat('W', row.rawStats.W),
+        badge: 'W',
+        title: `${row.year} scored Wins instead of Quality Starts`,
+      };
+    }
+    return {
+      text: formatRawStat('QS', row.rawStats.QS),
+      badge: null,
+      title: '',
+    };
+  }
+
+  if (catKey === 'SVHLD') {
+    if (row.year <= 2018) {
+      return {
+        text: formatRawStat('SV', row.rawStats.SV),
+        badge: 'SV',
+        title: `${row.year} scored Saves instead of Saves+Holds`,
+      };
+    }
+    return {
+      text: formatRawStat('SVHLD', row.rawStats.SVHLD),
+      badge: null,
+      title: '',
+    };
+  }
+
+  return {
+    text: formatRawStat(catKey, row.rawStats[catKey]),
+    badge: null,
+    title: '',
+  };
+};
+
 const AVAILABLE_SEASONS = [
   'ALL',
   2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015, 2014, 2013, 2012
 ];
 
 const CATEGORIES = [
-  { key: 'R', label: 'R', name: 'Runs', type: 'bat', higherIsBetter: true },
-  { key: 'HR', label: 'HR', name: 'Home Runs', type: 'bat', higherIsBetter: true },
-  { key: 'RBI', label: 'RBI', name: 'Runs Batted In', type: 'bat', higherIsBetter: true },
-  { key: 'OBP', label: 'OBP', name: 'On-Base %', type: 'bat', higherIsBetter: true },
-  { key: 'SB', label: 'SB', name: 'Stolen Bases', type: 'bat', higherIsBetter: true },
-  { key: 'K', label: 'K', name: 'Strikeouts', type: 'pitch', higherIsBetter: true },
-  { key: 'QS', label: 'QS', name: 'Quality Starts', type: 'pitch', higherIsBetter: true },
-  { key: 'SVHLD', label: 'SV+H', name: 'Saves + Holds', type: 'pitch', higherIsBetter: true },
-  { key: 'ERA', label: 'ERA', name: 'Earned Run Avg', type: 'pitch', higherIsBetter: false },
-  { key: 'WHIP', label: 'WHIP', name: 'WHIP', type: 'pitch', higherIsBetter: false },
+  { key: 'R', label: 'R', name: 'Runs', type: 'bat', higherIsBetter: true, activeYears: [2012, 2026] },
+  { key: 'HR', label: 'HR', name: 'Home Runs', type: 'bat', higherIsBetter: true, activeYears: [2012, 2026] },
+  { key: 'RBI', label: 'RBI', name: 'Runs Batted In', type: 'bat', higherIsBetter: true, activeYears: [2012, 2026] },
+  { key: 'OBP', label: 'OBP', name: 'On-Base %', type: 'bat', higherIsBetter: true, activeYears: [2013, 2026], legacyNote: '2012 used Batting Average' },
+  { key: 'SB', label: 'SB', name: 'Stolen Bases', type: 'bat', higherIsBetter: true, activeYears: [2012, 2026] },
+  { key: 'K', label: 'K', name: 'Strikeouts', type: 'pitch', higherIsBetter: true, activeYears: [2012, 2026] },
+  { key: 'QS', label: 'QS', name: 'Quality Starts', type: 'pitch', higherIsBetter: true, activeYears: [2014, 2026], legacyNote: '2012–2013 used Wins' },
+  { key: 'SVHLD', label: 'SV+H', name: 'Saves + Holds', type: 'pitch', higherIsBetter: true, activeYears: [2019, 2026], legacyNote: '2012–2018 used Saves' },
+  { key: 'ERA', label: 'ERA', name: 'Earned Run Avg', type: 'pitch', higherIsBetter: false, activeYears: [2012, 2026] },
+  { key: 'WHIP', label: 'WHIP', name: 'WHIP', type: 'pitch', higherIsBetter: false, activeYears: [2012, 2026] },
+];
+
+const LEGACY_CATEGORIES = [
+  { key: 'AVG', label: 'BA', name: 'Batting Average', type: 'bat', higherIsBetter: true, activeYears: [2012, 2012], statField: 'AVG', rankField: 'OBP', legacyNote: 'Used in 2012 instead of OBP' },
+  { key: 'W', label: 'W', name: 'Wins', type: 'pitch', higherIsBetter: true, activeYears: [2012, 2013], statField: 'W', rankField: 'QS', legacyNote: 'Used in 2012–2013 instead of QS' },
+  { key: 'SV', label: 'SV', name: 'Saves', type: 'pitch', higherIsBetter: true, activeYears: [2012, 2018], statField: 'SV', rankField: 'SVHLD', legacyNote: 'Used in 2012–2018 instead of Saves+Holds' },
 ];
 
 const CAT_ICONS = {
@@ -75,6 +136,9 @@ const CAT_ICONS = {
   SVHLD: '🛡️',
   ERA: '📉',
   WHIP: '🔒',
+  AVG: '🎯',
+  W: '🏆',
+  SV: '🛡️',
 };
 
 const GCS_HISTORICAL_FINISHES = 'https://storage.googleapis.com/fantasy-draft-2026/historical-finish.json';
@@ -99,6 +163,7 @@ export default function LeagueHistoryView({
 
   // Standings display controls
   const [showRawStats, setShowRawStats] = useState(selectedYear === 'ALL');
+  const [currentCategoriesOnly, setCurrentCategoriesOnly] = useState(false);
 
   // Highlights stat records filter
   const [selectedStatCategory, setSelectedStatCategory] = useState('ALL'); // 'ALL' | 'R' | 'HR' | ...
@@ -336,11 +401,12 @@ export default function LeagueHistoryView({
   // Filtered finishes based on user selection
   const filteredFinishes = useMemo(() => {
     return augmentedFinishes.filter(r => {
+      if (currentCategoriesOnly && r.year < 2019) return false;
       if (selectedYear !== 'ALL' && r.year !== parseInt(selectedYear, 10)) return false;
       if (selectedOwner !== 'ALL' && normalizeOwner(r.owner).toLowerCase() !== normalizeOwner(selectedOwner).toLowerCase()) return false;
       return true;
     });
-  }, [augmentedFinishes, selectedYear, selectedOwner]);
+  }, [augmentedFinishes, selectedYear, selectedOwner, currentCategoriesOnly]);
 
   // Sorted finishes for Year-by-Year table
   const sortedFinishes = useMemo(() => {
@@ -364,9 +430,20 @@ export default function LeagueHistoryView({
       } else if (CATEGORIES.some(c => c.key === sortField)) {
         const isRawSort = showRawStats || selectedYear === 'ALL';
         if (isRawSort) {
-          const rawA = a.rawStats?.[sortField];
-          const rawB = b.rawStats?.[sortField];
-          if (rawA !== undefined && rawB !== undefined) {
+          let rawA = a.rawStats?.[sortField];
+          let rawB = b.rawStats?.[sortField];
+          if (rawA === undefined || rawA === null) {
+            if (sortField === 'OBP' && a.year === 2012) rawA = a.rawStats?.AVG;
+            else if (sortField === 'QS' && a.year <= 2013) rawA = a.rawStats?.W;
+            else if (sortField === 'SVHLD' && a.year <= 2018) rawA = a.rawStats?.SV;
+          }
+          if (rawB === undefined || rawB === null) {
+            if (sortField === 'OBP' && b.year === 2012) rawB = b.rawStats?.AVG;
+            else if (sortField === 'QS' && b.year <= 2013) rawB = b.rawStats?.W;
+            else if (sortField === 'SVHLD' && b.year <= 2018) rawB = b.rawStats?.SV;
+          }
+
+          if (rawA !== undefined && rawA !== null && rawB !== undefined && rawB !== null) {
             valA = parseFloat(rawA) || 0;
             valB = parseFloat(rawB) || 0;
           } else {
@@ -514,9 +591,14 @@ export default function LeagueHistoryView({
       const higherIsBetter = cat.higherIsBetter;
       const statKey = cat.key;
       const eraKey = statKey === 'SVHLD' ? 'SV+HDs' : statKey;
+      const minYear = cat.activeYears ? cat.activeYears[0] : 2012;
+      const maxYear = cat.activeYears ? cat.activeYears[1] : 2026;
 
       const validRecords = [];
       list.forEach(r => {
+        // Enforce active era boundaries for the category
+        if (r.year < minYear || r.year > maxYear) return;
+
         const rawVal = r.rawStats?.[statKey];
         if (rawVal !== undefined && rawVal !== null && rawVal > 0) {
           const adj = calculateEraAdjustedStat(eraKey, rawVal, r.year, { adjustRoster, adjustMlb });
@@ -557,6 +639,54 @@ export default function LeagueHistoryView({
       };
     });
 
+    // 8. Legacy Stat Records (BA in 2012, Wins in 2012-13, Saves in 2012-18)
+    const legacyStatRecords = {};
+    LEGACY_CATEGORIES.forEach(cat => {
+      const higherIsBetter = cat.higherIsBetter;
+      const statField = cat.statField;
+      const rankField = cat.rankField;
+      const minYear = cat.activeYears[0];
+      const maxYear = cat.activeYears[1];
+
+      const validRecords = [];
+      list.forEach(r => {
+        if (r.year < minYear || r.year > maxYear) return;
+        const rawVal = r.rawStats?.[statField];
+        if (rawVal !== undefined && rawVal !== null && rawVal > 0) {
+          validRecords.push({
+            year: r.year,
+            owner: r.owner,
+            teamName: r.teamName,
+            place: r.place,
+            rotoPoints: r.categoryRanks?.[rankField] || 0,
+            rawVal,
+            adjustedVal: rawVal,
+            isAdjusted: false,
+            sortVal: rawVal,
+          });
+        }
+      });
+
+      const highs = [...validRecords].sort((a, b) => {
+        return higherIsBetter ? b.sortVal - a.sortVal : a.sortVal - b.sortVal;
+      }).slice(0, 5);
+
+      const candidateLows = exclude2020Lowlights
+        ? validRecords.filter(r => r.year !== 2020)
+        : validRecords;
+
+      const lows = [...candidateLows].sort((a, b) => {
+        return higherIsBetter ? a.sortVal - b.sortVal : b.sortVal - a.sortVal;
+      }).slice(0, 5);
+
+      legacyStatRecords[cat.key] = {
+        cat,
+        highs,
+        lows,
+        totalTracked: validRecords.length,
+      };
+    });
+
     return {
       topScoring,
       lowestScoring,
@@ -565,6 +695,7 @@ export default function LeagueHistoryView({
       blowouts,
       hangovers,
       categoryStatRecords,
+      legacyStatRecords,
     };
   }, [augmentedFinishes, adjustRoster, adjustMlb, exclude2020Lowlights]);
 
@@ -731,9 +862,12 @@ export default function LeagueHistoryView({
 
   // Filtered categories for stat records
   const displayedStatCategories = useMemo(() => {
-    return selectedStatCategory === 'ALL'
-      ? CATEGORIES
-      : CATEGORIES.filter(c => c.key === selectedStatCategory);
+    if (selectedStatCategory === 'ALL') return CATEGORIES;
+    const cat = CATEGORIES.find(c => c.key === selectedStatCategory);
+    if (cat) return [cat];
+    const leg = LEGACY_CATEGORIES.find(c => c.key === selectedStatCategory);
+    if (leg) return [leg];
+    return CATEGORIES;
   }, [selectedStatCategory]);
 
   return (
@@ -842,12 +976,17 @@ export default function LeagueHistoryView({
                     if (yr === 'ALL') {
                       setShowRawStats(true);
                     }
+                    if (yr !== 'ALL' && parseInt(yr, 10) < 2019 && currentCategoriesOnly) {
+                      setCurrentCategoriesOnly(false);
+                    }
                   }}
                   className="bg-gray-50 border border-gray-300 text-gray-800 text-xs font-black rounded-xl px-3 py-2 focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-xs"
                 >
-                  {AVAILABLE_SEASONS.map(y => (
+                  {AVAILABLE_SEASONS.filter(y => !currentCategoriesOnly || y === 'ALL' || y >= 2019).map(y => (
                     <option key={y} value={y}>
-                      {y === 'ALL' ? '🌟 All Seasons (2012–2026)' : y === 2026 ? '⚾ 2026 (Regular Season)' : `🏛️ ${y} Season`}
+                      {y === 'ALL' 
+                        ? (currentCategoriesOnly ? '🌟 Modern Era (2019–2026)' : '🌟 All Seasons (2012–2026)')
+                        : y === 2026 ? '⚾ 2026 (Regular Season)' : `🏛️ ${y} Season`}
                     </option>
                   ))}
                 </select>
@@ -871,6 +1010,29 @@ export default function LeagueHistoryView({
 
             {/* Standings Controls & Toggles */}
             <div className="flex flex-wrap items-center gap-2.5">
+              {/* Current Categories Only Toggle */}
+              <button
+                type="button"
+                onClick={() => {
+                  setCurrentCategoriesOnly(prev => {
+                    const next = !prev;
+                    if (next && selectedYear !== 'ALL' && parseInt(selectedYear, 10) < 2019) {
+                      setSelectedYear('ALL');
+                    }
+                    return next;
+                  });
+                }}
+                className={`px-3 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 transition cursor-pointer shadow-xs ${
+                  currentCategoriesOnly
+                    ? 'bg-emerald-600 text-white shadow-md ring-1 ring-emerald-400'
+                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                }`}
+                title="Only include seasons (2019–2026) using the current 10 stat categories (OBP, QS, SV+H)"
+              >
+                <span>🎯</span>
+                <span>{currentCategoriesOnly ? 'Current Categories Only (2019–2026)' : 'Current Categories (2019+)'}</span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => setShowRawStats(prev => !prev)}
@@ -977,7 +1139,9 @@ export default function LeagueHistoryView({
               <h2 className="text-base font-black text-gray-900 flex items-center gap-2">
                 <span>📋</span>
                 <span>Standings & Category Breakdown</span>
-                <span className="text-xs text-gray-500 font-normal">({sortedFinishes.length} finishes found)</span>
+                <span className="text-xs text-gray-500 font-normal">
+                  ({sortedFinishes.length} finishes found {currentCategoriesOnly && '• 2019–2026 current format'})
+                </span>
               </h2>
               <div className="text-xs text-gray-500 hidden sm:block">
                 Click headers to sort • Click owner to view profile
@@ -996,23 +1160,36 @@ export default function LeagueHistoryView({
                     </th>
                     <th onClick={() => handleSort('hitting')} className="py-3 px-3 cursor-pointer hover:bg-gray-200 transition text-center">Hit Pts</th>
                     <th onClick={() => handleSort('pitching')} className="py-3 px-3 cursor-pointer hover:bg-gray-200 transition text-center">Pitch Pts</th>
-                    {CATEGORIES.map(cat => (
-                      <th
-                        key={cat.key}
-                        onClick={() => handleSort(cat.key)}
-                        className={`py-3 px-2 text-center cursor-pointer hover:bg-gray-200 transition ${
-                          cat.type === 'bat' ? 'bg-amber-50/40 text-amber-900' : 'bg-indigo-50/40 text-indigo-900'
-                        }`}
-                        title={cat.name}
-                      >
-                        <div>{cat.label}</div>
-                        {showRawStats && (
-                          <div className="text-[8px] font-normal text-gray-500 font-sans normal-case tracking-normal mt-0.5">
-                            pts / raw
-                          </div>
-                        )}
-                      </th>
-                    ))}
+                    {CATEGORIES.map(cat => {
+                      let legacySub = null;
+                      if (!currentCategoriesOnly) {
+                        if (cat.key === 'OBP') legacySub = "BA in '12";
+                        else if (cat.key === 'QS') legacySub = "W in '12–'13";
+                        else if (cat.key === 'SVHLD') legacySub = "SV in '12–'18";
+                      }
+
+                      return (
+                        <th
+                          key={cat.key}
+                          onClick={() => handleSort(cat.key)}
+                          className={`py-3 px-2 text-center cursor-pointer hover:bg-gray-200 transition ${
+                            cat.type === 'bat' ? 'bg-amber-50/40 text-amber-900' : 'bg-indigo-50/40 text-indigo-900'
+                          }`}
+                          title={cat.name + (cat.legacyNote ? ` • ${cat.legacyNote}` : '')}
+                        >
+                          <div>{cat.label}</div>
+                          {showRawStats && (
+                            <div className="text-[8px] font-normal text-gray-500 font-sans normal-case tracking-normal mt-0.5">
+                              {legacySub ? (
+                                <span className="text-amber-700 font-bold" title={cat.legacyNote}>{legacySub}</span>
+                              ) : (
+                                'pts / raw'
+                              )}
+                            </div>
+                          )}
+                        </th>
+                      );
+                    })}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -1096,7 +1273,7 @@ export default function LeagueHistoryView({
                           const val = row.categoryRanks[cat.key];
                           const maxCatVal = Math.max(...sortedFinishes.filter(f => f.year === row.year).map(f => f.categoryRanks[cat.key] || 0));
                           const isLeader = val && val === maxCatVal && val > 0;
-                          const rawFormatted = formatRawStat(cat.key, row.rawStats?.[cat.key]);
+                          const { text: rawFormatted, badge, title } = getDisplayRawStat(cat.key, row);
                           return (
                             <td
                               key={cat.key}
@@ -1106,8 +1283,16 @@ export default function LeagueHistoryView({
                             >
                               <div className="font-bold text-xs">{val !== undefined ? val : '-'}</div>
                               {showRawStats && (
-                                <div className="text-[10px] font-mono font-medium text-slate-500 mt-0.5 whitespace-nowrap">
-                                  {rawFormatted}
+                                <div
+                                  className="text-[10px] font-mono font-medium text-slate-500 mt-0.5 whitespace-nowrap flex items-center justify-center gap-1"
+                                  title={title || undefined}
+                                >
+                                  <span>{rawFormatted}</span>
+                                  {badge && (
+                                    <span className="text-[9px] px-1 py-0.2 rounded bg-amber-100 text-amber-900 font-sans font-bold border border-amber-300">
+                                      {badge}
+                                    </span>
+                                  )}
                                 </div>
                               )}
                             </td>
@@ -1205,10 +1390,10 @@ export default function LeagueHistoryView({
                 <div className="flex items-center gap-2 text-sm font-black text-gray-900 uppercase tracking-wider">
                   <span>📊</span>
                   <span>All-Time Category Stat Records (Highs & Lows)</span>
-                  <span className="text-xs text-gray-500 font-normal lowercase">(2012–2026 data tracked)</span>
+                  <span className="text-xs text-gray-500 font-normal lowercase">(Active era adjusted)</span>
                 </div>
                 <p className="text-xs text-gray-500 mt-0.5">
-                  All-time single-season benchmarks across all 10 roto categories. {adjustRoster || adjustMlb ? 'Era & roster adjustments applied.' : 'Raw seasonal totals shown.'}
+                  All-time single-season benchmarks across all 10 roto categories. Evaluates active seasons for each category (OBP: 2013+, QS: 2014+, SV+H: 2019+). {adjustRoster || adjustMlb ? 'Era & roster adjustments applied.' : 'Raw seasonal totals shown.'}
                 </p>
               </div>
 
@@ -1240,13 +1425,34 @@ export default function LeagueHistoryView({
                     <span>{cat.label}</span>
                   </button>
                 ))}
+
+                {/* Legacy Category Pills */}
+                <div className="hidden sm:inline-block w-px h-5 bg-gray-300 mx-1"></div>
+                {LEGACY_CATEGORIES.map(cat => (
+                  <button
+                    key={cat.key}
+                    type="button"
+                    onClick={() => setSelectedStatCategory(cat.key)}
+                    className={`px-2 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
+                      selectedStatCategory === cat.key
+                        ? 'bg-purple-700 text-white shadow-xs'
+                        : 'bg-purple-50 text-purple-800 border border-purple-200 hover:bg-purple-100'
+                    }`}
+                    title={`Legacy Category: ${cat.name} (${cat.activeYears[0]}${cat.activeYears[0] !== cat.activeYears[1] ? '–' + cat.activeYears[1] : ''})`}
+                  >
+                    <span>{CAT_ICONS[cat.key]}</span>
+                    <span>{cat.label} ({cat.activeYears[0] === cat.activeYears[1] ? `'${String(cat.activeYears[0]).slice(2)}` : `'${String(cat.activeYears[0]).slice(2)}–'${String(cat.activeYears[1]).slice(2)}`})</span>
+                  </button>
+                ))}
               </div>
             </div>
 
             {/* Category Records Cards Grid */}
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-              {displayedStatCategories.map(cat => {
-                const record = highlightsData.categoryStatRecords[cat.key];
+            {(() => {
+              const renderCategoryCard = (cat, isLegacy = false) => {
+                const record = isLegacy
+                  ? highlightsData.legacyStatRecords?.[cat.key]
+                  : highlightsData.categoryStatRecords?.[cat.key];
                 if (!record) return null;
                 const { highs, lows, totalTracked } = record;
                 const icon = CAT_ICONS[cat.key] || '⚾';
@@ -1269,24 +1475,45 @@ export default function LeagueHistoryView({
                             <h3 className="text-base font-black text-gray-900">{cat.name}</h3>
                             <span className="font-mono text-xs font-bold text-gray-500">({cat.label})</span>
                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                              isBat ? 'bg-amber-100 text-amber-800' : 'bg-indigo-100 text-indigo-800'
+                              isLegacy
+                                ? 'bg-purple-100 text-purple-800'
+                                : isBat ? 'bg-amber-100 text-amber-800' : 'bg-indigo-100 text-indigo-800'
                             }`}>
-                              {isBat ? 'Batting' : 'Pitching'}
+                              {isLegacy ? 'Legacy' : isBat ? 'Batting' : 'Pitching'}
                             </span>
                           </div>
-                          <div className="text-[11px] text-gray-400 mt-0.5 flex items-center gap-2">
+                          <div className="text-[11px] text-gray-400 mt-0.5 flex flex-wrap items-center gap-2">
                             <span>{cat.higherIsBetter ? '▲ Higher is better' : '▼ Lower is better'}</span>
                             <span>•</span>
                             <span>{totalTracked} team-seasons tracked</span>
+                            <span>•</span>
+                            <span className="font-mono text-gray-500">
+                              {cat.activeYears[0] === cat.activeYears[1] ? `Season: ${cat.activeYears[0]}` : `Active: ${cat.activeYears[0]}–${cat.activeYears[1]}`}
+                            </span>
+                            {cat.legacyNote && (
+                              <>
+                                <span>•</span>
+                                <span className="text-amber-700 font-semibold bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                                  ℹ️ {cat.legacyNote}
+                                </span>
+                              </>
+                            )}
                           </div>
                         </div>
                       </div>
 
-                      {(adjustRoster || adjustMlb) && !RATE_STATS.has(cat.key) && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-black px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-800 border border-amber-300/60 self-start sm:self-auto">
-                          <span>⚡</span>
-                          <span>Era Adjusted</span>
+                      {isLegacy ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-black px-2.5 py-1 rounded-lg bg-purple-100 text-purple-800 border border-purple-300 self-start sm:self-auto">
+                          <span>🏛️</span>
+                          <span>Discontinued</span>
                         </span>
+                      ) : (
+                        (adjustRoster || adjustMlb) && !RATE_STATS.has(cat.key) && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-black px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-800 border border-amber-300/60 self-start sm:self-auto">
+                            <span>⚡</span>
+                            <span>Era Adjusted</span>
+                          </span>
+                        )
                       )}
                     </div>
 
@@ -1310,7 +1537,7 @@ export default function LeagueHistoryView({
                               const isBronze = i === 2;
                               let dispVal = '';
                               let subRaw = null;
-                              if (rec.isAdjusted && !RATE_STATS.has(cat.key)) {
+                              if (!isLegacy && rec.isAdjusted && !RATE_STATS.has(cat.key)) {
                                 dispVal = cat.key === 'QS' || cat.key === 'SVHLD'
                                   ? rec.adjustedVal.toFixed(1)
                                   : Math.round(rec.adjustedVal).toLocaleString();
@@ -1381,7 +1608,7 @@ export default function LeagueHistoryView({
                             {lows.map((rec, i) => {
                               let dispVal = '';
                               let subRaw = null;
-                              if (rec.isAdjusted && !RATE_STATS.has(cat.key)) {
+                              if (!isLegacy && rec.isAdjusted && !RATE_STATS.has(cat.key)) {
                                 dispVal = cat.key === 'QS' || cat.key === 'SVHLD'
                                   ? rec.adjustedVal.toFixed(1)
                                   : Math.round(rec.adjustedVal).toLocaleString();
@@ -1433,8 +1660,40 @@ export default function LeagueHistoryView({
                     </div>
                   </div>
                 );
-              })}
-            </div>
+              };
+
+              return (
+                <>
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    {displayedStatCategories.map(cat => renderCategoryCard(cat, LEGACY_CATEGORIES.some(l => l.key === cat.key)))}
+                  </div>
+
+                  {/* Discontinued / Legacy categories spotlight when viewing All Stats */}
+                  {selectedStatCategory === 'ALL' && (
+                    <div className="mt-8 pt-6 border-t border-gray-200 space-y-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <div className="flex items-center gap-2 text-sm font-black text-purple-950 uppercase tracking-wider">
+                            <span>🏛️</span>
+                            <span>Discontinued & Legacy Category Records</span>
+                            <span className="text-xs text-purple-700 font-bold px-2 py-0.5 rounded-full bg-purple-100 border border-purple-200">
+                              Historical Formats
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            All-time single-season benchmarks for categories contested in earlier league seasons prior to standardizing on OBP, QS, and SV+H.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                        {LEGACY_CATEGORIES.map(cat => renderCategoryCard(cat, true))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
 
           {/* HIGHLIGHTS SECTION */}
