@@ -300,3 +300,76 @@ Garrett and Will were separated by **just 2 home runs**; Alex and Garrett were s
 
 ### 🛡️ Consolation Semi-Final B: #6 Anil (37.0 pts) vs #7 Alex (36.0 pts)
 - **The Storyline**: Separated by just 1.0 regular season roto point. Anil's Junior Caminero (40 HR) and Ben Rice (38 HR) battle Alex's Pete Crow-Armstrong (41 HR, 36 SB).
+
+---
+
+## 8. All-Time League History & Placement Finishes (2012–2025)
+
+The Heftystrong league traces its documented history back to **2012**, spanning **14 completed seasons** prior to 2026. Across those 14 seasons, four active franchises have hoisted championship trophies, establishing a storied legacy of dynastic runs and fierce rivalries.
+
+### Championship Roll of Honor (2012–2025)
+
+| Year | Champion | Team Name | Points | Runner-Up | 3rd Place | Teams |
+|:---:|:---|:---|:---:|:---|:---|:---:|
+| **2012** | **Tim** | *Layin Down The Lawrie* | **74.5** | Jordy (59.0 pts) | Garrett (57.0 pts) | 9 |
+| **2013** | **Mark** | *Third Wheel Specialist* | **63.0** | Jordy (62.0 pts) | Tim (57.5 pts) | 8 |
+| **2014** | **Mark** | *The Barves* | **92.0** | Tim (79.0 pts) | Garrett (73.0 pts) | 10 |
+| **2015** | **Mark** | *Tom Brady Is A Taint Licker* | **88.5** | Tim (73.0 pts) | Dan (71.5 pts) | 10 |
+| **2016** | **Tim** | *Team to be Named Later* | **90.5** | Adrian (77.5 pts) | Andrew Entwistle (70.0 pts) | 10 |
+| **2017** | **Tim** | *Team to be Named Later* | **89.0** | Adrian (66.0 pts) | Anil (63.0 pts) | 10 |
+| **2018** | **Tim** | *Albies There For You* | **86.0** | Dan (73.5 pts) | Garrett (68.5 pts) | 10 |
+| **2019** | **Tim** | *Me and the Boyds* | **89.0** | Garrett (87.5 pts) | Will (84.5 pts) | 11 |
+| **2020** | **Adrian** | *Sonny w/ chance of dongballs* | **86.0** | Tim (81.0 pts) | Will (70.0 pts) | 10 |
+| **2021** | **Adrian** | *Hooper My Pooper* | **88.0** | Anurag Komavarelli (73.0 pts) | Dan (71.0 pts) | 10 |
+| **2022** | **Will** | *José Can You See* | **87.5** | Adrian (67.0 pts) | Dan (62.5 pts) | 10 |
+| **2023** | **Tim** | *Itch Lockers* | **84.5** | Garrett (77.0 pts) | Dan (67.0 pts) | 10 |
+| **2024** | **Dan** | *Ramblin' Gamblin'* | **85.0** | Adrian (81.0 pts) | Will (75.0 pts) | 10 |
+| **2025** | **Tim** | *Campbell's Kristian Noodle Soup* | **77.5** | Dan (76.0 pts) | Will (74.5 pts) | 10 |
+
+### All-Time Owner Career Leaderboard
+
+Ranked by total championships won, followed by total podium finishes (top 3) and career average placement:
+
+| Rank | Owner | Titles | Championship Years | Podiums (Top 3) | Career Avg Finish | Seasons | Best / Worst |
+|:---:|:---|:---:|:---|:---:|:---:|:---:|:---:|
+| **1** | **Tim** | **7** | 2012, 2016, 2017, 2018, 2019, 2023, 2025 | 11 | **2.07** | 14 | #1 / #5 |
+| **2** | **Mark** | **3** | 2013, 2014, 2015 | 3 | **4.75** | 8 | #1 / #9 |
+| **3** | **Adrian** | **2** | 2020, 2021 | 6 | **3.79** | 14 | #1 / #8 |
+| **4** | **Dan** | **1** | 2024 | 7 | **4.00** | 14 | #1 / #7 |
+| **5** | **Will** | **1** | 2022 | 5 | **3.57** | 7 | #1 / #7 |
+| **6** | **Garrett** | **0** | — | 5 | **4.29** | 14 | #2 / #9 |
+| **7** | **Anil** | **0** | — | 1 | **8.20** | 10 | #3 / #10 |
+| **8** | **Alex** | **0** | — | 0 | **7.23** | 13 | #5 / #10 |
+| **9** | **Preston** | **0** | — | 0 | **—** | 0 | Inaugural (2026) |
+
+### Comprehensive Annual Placement Matrix (2012–2026)
+
+Tracking the exact final placement of all 9 current franchises across every season in league history:
+
+| Year | Tim | Mark | Adrian | Will | Dan | Garrett | Alex | Anil | Preston |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **2012** | **🥇 #1** | #5 | #8 | — | #6 | 🥉 #3 | #7 | — | — |
+| **2013** | 🥉 #3 | **🥇 #1** | #7 | — | #4 | #5 | — | — | — |
+| **2014** | 🥈 #2 | **🥇 #1** | #4 | — | #5 | 🥉 #3 | #10 | — | — |
+| **2015** | 🥈 #2 | **🥇 #1** | #7 | — | 🥉 #3 | #5 | #8 | — | — |
+| **2016** | **🥇 #1** | — | 🥈 #2 | — | #6 | #4 | #5 | #10 | — |
+| **2017** | **🥇 #1** | — | 🥈 #2 | — | #5 | #4 | #9 | 🥉 #3 | — |
+| **2018** | **🥇 #1** | — | #4 | — | 🥈 #2 | 🥉 #3 | #7 | #9 | — |
+| **2019** | **🥇 #1** | — | #5 | 🥉 #3 | #6 | 🥈 #2 | #8 | #9 | — |
+| **2020** | 🥈 #2 | — | **🥇 #1** | 🥉 #3 | #7 | #5 | #5 | #8 | — |
+| **2021** | #4 | — | **🥇 #1** | #5 | 🥉 #3 | #6 | #7 | #10 | — |
+| **2022** | #4 | #8 | 🥈 #2 | **🥇 #1** | 🥉 #3 | #9 | #10 | #5 | — |
+| **2023** | **🥇 #1** | #9 | #4 | #7 | 🥉 #3 | 🥈 #2 | #5 | #8 | — |
+| **2024** | #5 | #6 | 🥈 #2 | 🥉 #3 | **🥇 #1** | #4 | #7 | #10 | — |
+| **2025** | **🥇 #1** | #7 | #4 | 🥉 #3 | 🥈 #2 | #5 | #6 | #10 | — |
+| **2026 Reg** | 🥈 #2 | #9 | #4 | 🥉 #3 | **🥇 #1** | #5 | #7 | #6 | #8 |
+
+### Championship Pedigree in the 2026 Playoff Bracket
+
+The 2026 Championship Bracket represents an unprecedented clash of league royalty:
+- **Semi-Final A**: **#1 Dan (2024 Champion)** vs **#4 Adrian (2020 & 2021 Back-to-Back Champion)**  
+  Dan seeks his 2nd title in three seasons after his dominant +31.5 pt regular season charge; Adrian seeks his 3rd career championship.
+- **Semi-Final B**: **#2 Tim (7-Time Champion & Defending 2025 Champ)** vs **#3 Will (2022 Champion)**  
+  Tim, the most decorated owner in league history (7 titles, 11 podiums, 2.07 career average finish), looks to repeat against Will, fantasy baseball's most consistent podium contender (5 top-3 finishes in 7 career seasons).
+- **Combined Pedigree**: **100% of the 2026 Semi-Finalists are former league champions**, accounting for **11 of the 14 titles (78.6%)** in league history!
+- **Consolation Royalty**: In the Consolation bracket, **Mark (3-Time Champion, 2013-15 Three-Peat)** and **Garrett (5-Time Podium Finisher, 2-Time Runner-Up)** look to defend veteran honor against expansion newcomer Preston.
