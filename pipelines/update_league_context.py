@@ -432,6 +432,14 @@ def refresh_context_files(save_to_disk: bool = True) -> dict:
             json.dump(refreshed_context, f, indent=2)
         print(f"💾 Updated {context_path} (scoring period {max_period}, current week {current_week}).")
 
+        src_context_path = os.path.join(base_dir, "src", "data", "league_context.json")
+        try:
+            with open(src_context_path, "w", encoding="utf-8") as f:
+                json.dump(refreshed_context, f, indent=2)
+            print(f"💾 Also updated frontend {src_context_path}.")
+        except Exception as e:
+            print(f"⚠️ Could not write to {src_context_path}: {e}")
+
         # Update LEAGUE_STORYLINES.md with live playoff score callout if current_week >= 24
         if current_week >= 24 and os.path.exists(storylines_path):
             update_storylines_playoff_section(storylines_path, playoff_data, current_week)

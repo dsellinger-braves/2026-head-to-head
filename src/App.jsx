@@ -30,6 +30,7 @@ import FullRosterView from './views/FullRosterView';
 import UserNavWidget from './components/UserNavWidget';
 import CommishActiveBanner from './components/CommishActiveBanner';
 import { useAuth } from './context/useAuth';
+import LeagueHistoryView from './views/LeagueHistoryView';
 
 const AVAILABLE_SEASONS = [2027, ...Array.from({ length: 2026 - 2012 + 1 }, (_, i) => 2026 - i)];
 
@@ -45,6 +46,7 @@ const VIEW_TO_HASH = {
   disparities: 'disparities',
   progression: 'progression',
   highlights: 'highlights',
+  history: 'history',
   fantasycast: 'fantasycast',
   valuations: 'keeper-prices',
   draft: 'draft',
@@ -79,6 +81,11 @@ const HASH_TO_VIEW = {
   'teams/progression': 'progression',
   highlights: 'highlights',
   'teams/highlights': 'highlights',
+  history: 'history',
+  'league-history': 'history',
+  'teams/history': 'history',
+  finishes: 'history',
+  'draft/finishes': 'history',
   fantasycast: 'fantasycast',
   stats: 'players',
   players: 'players',
@@ -853,7 +860,7 @@ function App() {
                       type="button"
                       onClick={() => setOpenDropdown(prev => prev === 'teams' ? null : 'teams')}
                       className={`px-3.5 py-1.5 rounded-xl font-black flex items-center gap-1.5 transition-all cursor-pointer ${
-                        ['teams', 'rosters', 'summary', 'weekly', 'progression', 'highlights'].includes(currentView)
+                        ['teams', 'rosters', 'summary', 'weekly', 'progression', 'highlights', 'history'].includes(currentView)
                           ? 'bg-blue-600 text-white shadow-md ring-1 ring-blue-400'
                           : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'
                       }`}
@@ -925,6 +932,16 @@ function App() {
                         >
                           <span className="flex items-center gap-2"><span>⭐</span><span>Highlights</span></span>
                           {currentView === 'highlights' && <span className="text-[10px] text-blue-200">●</span>}
+                        </a>
+                        <a
+                          href="#/history"
+                          onClick={(e) => { e.preventDefault(); setCurrentView('history'); setOpenDropdown(null); }}
+                          className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-between transition cursor-pointer ${
+                            currentView === 'history' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2"><span>🏛️</span><span>League History</span></span>
+                          {currentView === 'history' && <span className="text-[10px] text-blue-200">●</span>}
                         </a>
                       </div>
                     )}
@@ -1079,7 +1096,7 @@ function App() {
                       type="button"
                       onClick={() => setOpenDropdown(prev => prev === 'draft' ? null : 'draft')}
                       className={`px-3.5 py-1.5 rounded-xl font-black flex items-center gap-1.5 transition-all cursor-pointer ${
-                        ['capital', 'drafthistory', 'draft'].includes(currentView)
+                        ['capital', 'drafthistory', 'draft', 'history'].includes(currentView)
                           ? 'bg-amber-600 text-white shadow-md ring-1 ring-amber-400'
                           : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'
                       }`}
@@ -1131,6 +1148,16 @@ function App() {
                         >
                           <span className="flex items-center gap-2"><span>📜</span><span>Draft History</span></span>
                           {currentView === 'drafthistory' && <span className="text-[10px] text-amber-200">●</span>}
+                        </a>
+                        <a
+                          href="#/history"
+                          onClick={(e) => { e.preventDefault(); setCurrentView('history'); setOpenDropdown(null); }}
+                          className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-between transition cursor-pointer ${
+                            currentView === 'history' ? 'bg-amber-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2"><span>🏛️</span><span>Historical Finishes</span></span>
+                          {currentView === 'history' && <span className="text-[10px] text-amber-200">●</span>}
                         </a>
                         <a
                           href="#/draft/lobby"
@@ -1351,6 +1378,12 @@ function App() {
                   onDownloadAll={downloadAllSeasons}
                   downloadAllProgress={downloadAllProgress}
                   onLoadSeason={loadSeason}
+                />
+              )}
+              {currentView === 'history' && (
+                <LeagueHistoryView
+                  selectedSeason={selectedSeason}
+                  onOwnerClick={(team) => setSelectedOwner(team)}
                 />
               )}
               {currentView === 'fantasycast' && (
