@@ -8,8 +8,42 @@ import {
   ROSTER_CAPACITIES,
   MLB_LEAGUE_AVERAGES,
   RATE_STATS,
+  calculateEraAdjustedStat,
 } from '../utils/eraAdjustments';
 import leagueContextData from '../data/league_context.json';
+import historicalRawStats from '../data/historicalRawStats.json';
+
+const CANONICAL_OWNERS = {
+  tim: 'Tim',
+  adrian: 'Adrian',
+  garrett: 'Garrett',
+  daniel: 'Dan',
+  dan: 'Dan',
+  anil: 'Anil',
+  alex: 'Alex',
+  will: 'Will',
+  mark: 'Mark',
+  preston: 'Preston'
+};
+
+const normalizeOwner = (raw) => {
+  if (!raw) return 'Unknown';
+  const k = raw.trim().toLowerCase();
+  return CANONICAL_OWNERS[k] || raw.trim();
+};
+
+const formatRawStat = (key, val) => {
+  if (val === null || val === undefined || val === '') return '—';
+  const n = parseFloat(val);
+  if (isNaN(n)) return '—';
+  if (key === 'OBP') {
+    return n < 1 ? n.toFixed(3).replace(/^0/, '') : n.toFixed(3);
+  }
+  if (key === 'ERA' || key === 'WHIP') {
+    return n.toFixed(2);
+  }
+  return Math.round(n).toLocaleString();
+};
 
 const AVAILABLE_SEASONS = [
   'ALL',
@@ -17,17 +51,30 @@ const AVAILABLE_SEASONS = [
 ];
 
 const CATEGORIES = [
-  { key: 'R', label: 'R', name: 'Runs', type: 'bat' },
-  { key: 'HR', label: 'HR', name: 'Home Runs', type: 'bat' },
-  { key: 'RBI', label: 'RBI', name: 'Runs Batted In', type: 'bat' },
-  { key: 'OBP', label: 'OBP', name: 'On-Base %', type: 'bat' },
-  { key: 'SB', label: 'SB', name: 'Stolen Bases', type: 'bat' },
-  { key: 'K', label: 'K', name: 'Strikeouts', type: 'pitch' },
-  { key: 'QS', label: 'QS', name: 'Quality Starts', type: 'pitch' },
-  { key: 'SVHLD', label: 'SV+H', name: 'Saves + Holds', type: 'pitch' },
-  { key: 'ERA', label: 'ERA', name: 'Earned Run Avg', type: 'pitch' },
-  { key: 'WHIP', label: 'WHIP', name: 'WHIP', type: 'pitch' },
+  { key: 'R', label: 'R', name: 'Runs', type: 'bat', higherIsBetter: true },
+  { key: 'HR', label: 'HR', name: 'Home Runs', type: 'bat', higherIsBetter: true },
+  { key: 'RBI', label: 'RBI', name: 'Runs Batted In', type: 'bat', higherIsBetter: true },
+  { key: 'OBP', label: 'OBP', name: 'On-Base %', type: 'bat', higherIsBetter: true },
+  { key: 'SB', label: 'SB', name: 'Stolen Bases', type: 'bat', higherIsBetter: true },
+  { key: 'K', label: 'K', name: 'Strikeouts', type: 'pitch', higherIsBetter: true },
+  { key: 'QS', label: 'QS', name: 'Quality Starts', type: 'pitch', higherIsBetter: true },
+  { key: 'SVHLD', label: 'SV+H', name: 'Saves + Holds', type: 'pitch', higherIsBetter: true },
+  { key: 'ERA', label: 'ERA', name: 'Earned Run Avg', type: 'pitch', higherIsBetter: false },
+  { key: 'WHIP', label: 'WHIP', name: 'WHIP', type: 'pitch', higherIsBetter: false },
 ];
+
+const CAT_ICONS = {
+  R: '🏃',
+  HR: '💣',
+  RBI: '💥',
+  OBP: '🎯',
+  SB: '⚡',
+  K: '💨',
+  QS: '💎',
+  SVHLD: '🛡️',
+  ERA: '📉',
+  WHIP: '🔒',
+};
 
 const GCS_HISTORICAL_FINISHES = 'https://storage.googleapis.com/fantasy-draft-2026/historical-finish.json';
 
@@ -47,6 +94,12 @@ export default function LeagueHistoryView({
   const [adjustMlb, setAdjustMlb] = useState(false);
   const [showMethodologyModal, setShowMethodologyModal] = useState(false);
   const [highlightFilter, setHighlightFilter] = useState('all'); // 'all' | 'highlights' | 'lowlights'
+
+  // Standings display controls
+  const [showRawStats, setShowRawStats] = useState(false);
+
+  // Highlights stat records filter
+  const [selectedStatCategory, setSelectedStatCategory] = useState('ALL'); // 'ALL' | 'R' | 'HR' | ...
 
   // Sorting state for standings table
   const [sortField, setSortField] = useState('points');
@@ -256,9 +309,19 @@ export default function LeagueHistoryView({
     };
   }, [teamsPerSeason, adjustRoster, adjustMlb]);
 
-  // Augmented finishes with adjustment metrics
+  // Augmented finishes with adjustment metrics and raw stats
   const augmentedFinishes = useMemo(() => {
-    return rawFinishes.map(getAdjustedRecord);
+    return rawFinishes.map(r => {
+      const baseAdj = getAdjustedRecord(r);
+      const rawSeason = historicalRawStats[String(r.year)];
+      const rawTeam = rawSeason
+        ? (rawSeason[r.owner] || rawSeason[normalizeOwner(r.owner)] || null)
+        : null;
+      return {
+        ...baseAdj,
+        rawStats: rawTeam,
+      };
+    });
   }, [rawFinishes, getAdjustedRecord]);
 
   // Filtered finishes based on user selection
@@ -290,8 +353,20 @@ export default function LeagueHistoryView({
         valA = a.pitchingPoints;
         valB = b.pitchingPoints;
       } else if (CATEGORIES.some(c => c.key === sortField)) {
-        valA = a.categoryRanks[sortField] || 0;
-        valB = b.categoryRanks[sortField] || 0;
+        if (showRawStats) {
+          const rawA = a.rawStats?.[sortField];
+          const rawB = b.rawStats?.[sortField];
+          if (rawA !== undefined && rawB !== undefined) {
+            valA = parseFloat(rawA) || 0;
+            valB = parseFloat(rawB) || 0;
+          } else {
+            valA = a.categoryRanks[sortField] || 0;
+            valB = b.categoryRanks[sortField] || 0;
+          }
+        } else {
+          valA = a.categoryRanks[sortField] || 0;
+          valB = b.categoryRanks[sortField] || 0;
+        }
       } else {
         valA = a[sortField];
         valB = b[sortField];
@@ -302,7 +377,7 @@ export default function LeagueHistoryView({
       return a.place - b.place;
     });
     return list;
-  }, [filteredFinishes, sortField, sortDirection]);
+  }, [filteredFinishes, sortField, sortDirection, showRawStats]);
 
   // Unique list of owners across history
   const allOwners = useMemo(() => {
@@ -319,7 +394,9 @@ export default function LeagueHistoryView({
       setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
     } else {
       setSortField(field);
-      setSortDirection(field === 'place' ? 'asc' : 'desc');
+      const cat = CATEGORIES.find(c => c.key === field);
+      const preferAsc = field === 'place' || (showRawStats && cat && !cat.higherIsBetter);
+      setSortDirection(preferAsc ? 'asc' : 'desc');
     }
   };
 
@@ -416,6 +493,51 @@ export default function LeagueHistoryView({
     });
     hangovers.sort((a, b) => b.rankDrop - a.rankDrop);
 
+    // 7. All-Time Highs and Lows in each individual stat
+    const categoryStatRecords = {};
+    CATEGORIES.forEach(cat => {
+      const higherIsBetter = cat.higherIsBetter;
+      const statKey = cat.key;
+      const eraKey = statKey === 'SVHLD' ? 'SV+HDs' : statKey;
+
+      const validRecords = [];
+      list.forEach(r => {
+        const rawVal = r.rawStats?.[statKey];
+        if (rawVal !== undefined && rawVal !== null && rawVal > 0) {
+          const adj = calculateEraAdjustedStat(eraKey, rawVal, r.year, { adjustRoster, adjustMlb });
+          const sortVal = (adjustRoster || adjustMlb) ? adj.adjustedVal : rawVal;
+          validRecords.push({
+            year: r.year,
+            owner: r.owner,
+            teamName: r.teamName,
+            place: r.place,
+            rotoPoints: r.categoryRanks?.[statKey] || 0,
+            rawVal,
+            adjustedVal: adj.adjustedVal,
+            isAdjusted: adj.isAdjusted,
+            sortVal,
+          });
+        }
+      });
+
+      // Highs (Best): For counting & OBP, highest sortVal. For ERA & WHIP, lowest sortVal.
+      const highs = [...validRecords].sort((a, b) => {
+        return higherIsBetter ? b.sortVal - a.sortVal : a.sortVal - b.sortVal;
+      }).slice(0, 5);
+
+      // Lows (Worst): For counting & OBP, lowest sortVal. For ERA & WHIP, highest sortVal.
+      const lows = [...validRecords].sort((a, b) => {
+        return higherIsBetter ? a.sortVal - b.sortVal : b.sortVal - a.sortVal;
+      }).slice(0, 5);
+
+      categoryStatRecords[statKey] = {
+        cat,
+        highs,
+        lows,
+        totalTracked: validRecords.length,
+      };
+    });
+
     return {
       topScoring,
       lowestScoring,
@@ -423,8 +545,9 @@ export default function LeagueHistoryView({
       topPitching,
       blowouts,
       hangovers,
+      categoryStatRecords,
     };
-  }, [augmentedFinishes]);
+  }, [augmentedFinishes, adjustRoster, adjustMlb]);
 
   // ---------------------------------------------------------------------------
   // ALL-TIME FRANCHISE LEADERBOARDS & MATRIX
@@ -492,6 +615,13 @@ export default function LeagueHistoryView({
   const getOwnerTeamObj = (ownerName) => {
     return Object.values(TEAMS).find(t => t.owner?.toLowerCase() === ownerName?.toLowerCase()) || { owner: ownerName, name: ownerName };
   };
+
+  // Filtered categories for stat records
+  const displayedStatCategories = useMemo(() => {
+    return selectedStatCategory === 'ALL'
+      ? CATEGORIES
+      : CATEGORIES.filter(c => c.key === selectedStatCategory);
+  }, [selectedStatCategory]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fade-in">
@@ -620,8 +750,22 @@ export default function LeagueHistoryView({
               </div>
             </div>
 
-            {/* Era Adjustment Quick Toggles */}
-            <div className="flex items-center gap-3">
+            {/* Standings Controls & Toggles */}
+            <div className="flex flex-wrap items-center gap-2.5">
+              <button
+                type="button"
+                onClick={() => setShowRawStats(prev => !prev)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 transition cursor-pointer shadow-xs ${
+                  showRawStats
+                    ? 'bg-blue-600 text-white shadow-md ring-1 ring-blue-400'
+                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                }`}
+                title="Toggle displaying the underlying raw statistics underneath the roto point ranks"
+              >
+                <span>🔢</span>
+                <span>{showRawStats ? 'Hide Raw Stats' : 'Show Raw Stats'}</span>
+              </button>
+
               <label className="flex items-center gap-1.5 text-xs font-bold text-gray-600 cursor-pointer bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-200 hover:bg-gray-100 transition">
                 <input
                   type="checkbox"
@@ -716,12 +860,17 @@ export default function LeagueHistoryView({
                       <th
                         key={cat.key}
                         onClick={() => handleSort(cat.key)}
-                        className={`py-3 px-2.5 text-center cursor-pointer hover:bg-gray-200 transition ${
+                        className={`py-3 px-2 text-center cursor-pointer hover:bg-gray-200 transition ${
                           cat.type === 'bat' ? 'bg-amber-50/40 text-amber-900' : 'bg-indigo-50/40 text-indigo-900'
                         }`}
                         title={cat.name}
                       >
-                        {cat.label}
+                        <div>{cat.label}</div>
+                        {showRawStats && (
+                          <div className="text-[8px] font-normal text-gray-500 font-sans normal-case tracking-normal mt-0.5">
+                            pts / raw
+                          </div>
+                        )}
                       </th>
                     ))}
                   </tr>
@@ -807,14 +956,20 @@ export default function LeagueHistoryView({
                           const val = row.categoryRanks[cat.key];
                           const maxCatVal = Math.max(...sortedFinishes.filter(f => f.year === row.year).map(f => f.categoryRanks[cat.key] || 0));
                           const isLeader = val && val === maxCatVal && val > 0;
+                          const rawFormatted = formatRawStat(cat.key, row.rawStats?.[cat.key]);
                           return (
                             <td
                               key={cat.key}
-                              className={`py-3 px-2.5 text-center font-mono font-bold ${
-                                isLeader ? 'bg-emerald-100 text-emerald-900 rounded font-black' : 'text-gray-700'
+                              className={`py-2 px-2 text-center font-mono ${
+                                isLeader ? 'bg-emerald-100/70 text-emerald-950 font-black' : 'text-gray-700'
                               }`}
                             >
-                              {val !== undefined ? val : '-'}
+                              <div className="font-bold text-xs">{val !== undefined ? val : '-'}</div>
+                              {showRawStats && (
+                                <div className="text-[10px] font-mono font-medium text-slate-500 mt-0.5 whitespace-nowrap">
+                                  {rawFormatted}
+                                </div>
+                              )}
                             </td>
                           );
                         })}
@@ -887,6 +1042,245 @@ export default function LeagueHistoryView({
                   ⚠️ Lowlights
                 </button>
               </div>
+            </div>
+          </div>
+
+          {/* ALL-TIME STAT RECORDS (HIGHS & LOWS BY STAT CATEGORY) */}
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-200 pb-3">
+              <div>
+                <div className="flex items-center gap-2 text-sm font-black text-gray-900 uppercase tracking-wider">
+                  <span>📊</span>
+                  <span>All-Time Category Stat Records (Highs & Lows)</span>
+                  <span className="text-xs text-gray-500 font-normal lowercase">(2018–2026 data tracked)</span>
+                </div>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  All-time single-season benchmarks across all 10 roto categories. {adjustRoster || adjustMlb ? 'Era & roster adjustments applied.' : 'Raw seasonal totals shown.'}
+                </p>
+              </div>
+
+              {/* Category filter pills */}
+              <div className="flex flex-wrap items-center gap-1.5 overflow-x-auto py-1">
+                <button
+                  type="button"
+                  onClick={() => setSelectedStatCategory('ALL')}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-black transition cursor-pointer ${
+                    selectedStatCategory === 'ALL'
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-100'
+                  }`}
+                >
+                  All Stats
+                </button>
+                {CATEGORIES.map(cat => (
+                  <button
+                    key={cat.key}
+                    type="button"
+                    onClick={() => setSelectedStatCategory(cat.key)}
+                    className={`px-2 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
+                      selectedStatCategory === cat.key
+                        ? (cat.type === 'bat' ? 'bg-amber-600 text-white shadow-xs' : 'bg-indigo-600 text-white shadow-xs')
+                        : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-100'
+                    }`}
+                  >
+                    <span>{CAT_ICONS[cat.key]}</span>
+                    <span>{cat.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Category Records Cards Grid */}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              {displayedStatCategories.map(cat => {
+                const record = highlightsData.categoryStatRecords[cat.key];
+                if (!record) return null;
+                const { highs, lows, totalTracked } = record;
+                const icon = CAT_ICONS[cat.key] || '⚾';
+                const isBat = cat.type === 'bat';
+                const showHighs = highlightFilter === 'all' || highlightFilter === 'highlights';
+                const showLows = highlightFilter === 'all' || highlightFilter === 'lowlights';
+                const twoCols = showHighs && showLows;
+
+                return (
+                  <div
+                    key={`stat-rec-${cat.key}`}
+                    className="bg-white border border-gray-200 rounded-3xl p-5 shadow-sm space-y-4 hover:shadow-md transition"
+                  >
+                    {/* Card Header */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-3">
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-2xl">{icon}</span>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-base font-black text-gray-900">{cat.name}</h3>
+                            <span className="font-mono text-xs font-bold text-gray-500">({cat.label})</span>
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                              isBat ? 'bg-amber-100 text-amber-800' : 'bg-indigo-100 text-indigo-800'
+                            }`}>
+                              {isBat ? 'Batting' : 'Pitching'}
+                            </span>
+                          </div>
+                          <div className="text-[11px] text-gray-400 mt-0.5 flex items-center gap-2">
+                            <span>{cat.higherIsBetter ? '▲ Higher is better' : '▼ Lower is better'}</span>
+                            <span>•</span>
+                            <span>{totalTracked} team-seasons tracked</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {(adjustRoster || adjustMlb) && !RATE_STATS.has(cat.key) && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-black px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-800 border border-amber-300/60 self-start sm:self-auto">
+                          <span>⚡</span>
+                          <span>Era Adjusted</span>
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Highs & Lows Columns */}
+                    <div className={`grid grid-cols-1 ${twoCols ? 'md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-100' : ''} gap-4`}>
+                      {/* HIGHS / BEST COLUMN */}
+                      {showHighs && (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between px-1">
+                            <span className="text-xs font-black text-emerald-800 flex items-center gap-1.5">
+                              <span>🥇</span>
+                              <span>All-Time Highs (Best)</span>
+                            </span>
+                            <span className="text-[10px] font-mono font-bold text-emerald-600">Top 5</span>
+                          </div>
+
+                          <div className="divide-y divide-gray-50 text-xs">
+                            {highs.map((rec, i) => {
+                              const isGold = i === 0;
+                              const isSilver = i === 1;
+                              const isBronze = i === 2;
+                              let dispVal = '';
+                              let subRaw = null;
+                              if (rec.isAdjusted && !RATE_STATS.has(cat.key)) {
+                                dispVal = cat.key === 'QS' || cat.key === 'SVHLD'
+                                  ? rec.adjustedVal.toFixed(1)
+                                  : Math.round(rec.adjustedVal).toLocaleString();
+                                subRaw = `raw: ${formatRawStat(cat.key, rec.rawVal)}`;
+                              } else {
+                                dispVal = formatRawStat(cat.key, rec.rawVal);
+                              }
+
+                              return (
+                                <div
+                                  key={`high-${cat.key}-${rec.year}-${rec.owner}-${i}`}
+                                  className="py-2 px-1.5 flex items-center justify-between hover:bg-emerald-50/50 rounded-xl transition"
+                                >
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <span className={`w-5 h-5 rounded-lg flex items-center justify-center font-mono font-black text-[10px] shrink-0 ${
+                                      isGold ? 'bg-amber-400 text-amber-950 ring-1 ring-amber-300' :
+                                      isSilver ? 'bg-slate-300 text-slate-900' :
+                                      isBronze ? 'bg-amber-700 text-amber-100' :
+                                      'bg-gray-100 text-gray-600'
+                                    }`}>
+                                      {isGold ? '🥇' : isSilver ? '🥈' : isBronze ? '🥉' : i + 1}
+                                    </span>
+                                    <TeamAvatar team={{ owner: rec.owner }} size="xs" />
+                                    <div className="min-w-0">
+                                      <div className="font-black text-gray-900 flex items-center gap-1 text-[11px] truncate">
+                                        <span className="truncate">{rec.owner}</span>
+                                        <span className="text-gray-400 font-normal shrink-0">({rec.year})</span>
+                                        {rec.place === 1 && <span className="text-amber-500 text-[10px] shrink-0">👑</span>}
+                                      </div>
+                                      <div className="text-[10px] text-gray-500 truncate max-w-[120px] sm:max-w-[150px]">
+                                        {rec.teamName}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <div className="text-right font-mono shrink-0 pl-2">
+                                    <div className="font-black text-emerald-700 text-xs sm:text-sm">
+                                      {dispVal}
+                                    </div>
+                                    {subRaw && (
+                                      <div className="text-[9px] text-gray-400">
+                                        {subRaw}
+                                      </div>
+                                    )}
+                                    <div className="text-[9px] text-gray-400">
+                                      {rec.rotoPoints} pts
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* LOWS / WORST COLUMN */}
+                      {showLows && (
+                        <div className={`space-y-2 ${twoCols ? 'pt-3 md:pt-0 md:pl-4' : ''}`}>
+                          <div className="flex items-center justify-between px-1">
+                            <span className="text-xs font-black text-rose-800 flex items-center gap-1.5">
+                              <span>⚠️</span>
+                              <span>All-Time Lows (Worst)</span>
+                            </span>
+                            <span className="text-[10px] font-mono font-bold text-rose-600">Bottom 5</span>
+                          </div>
+
+                          <div className="divide-y divide-gray-50 text-xs">
+                            {lows.map((rec, i) => {
+                              let dispVal = '';
+                              let subRaw = null;
+                              if (rec.isAdjusted && !RATE_STATS.has(cat.key)) {
+                                dispVal = cat.key === 'QS' || cat.key === 'SVHLD'
+                                  ? rec.adjustedVal.toFixed(1)
+                                  : Math.round(rec.adjustedVal).toLocaleString();
+                                subRaw = `raw: ${formatRawStat(cat.key, rec.rawVal)}`;
+                              } else {
+                                dispVal = formatRawStat(cat.key, rec.rawVal);
+                              }
+
+                              return (
+                                <div
+                                  key={`low-${cat.key}-${rec.year}-${rec.owner}-${i}`}
+                                  className="py-2 px-1.5 flex items-center justify-between hover:bg-rose-50/50 rounded-xl transition"
+                                >
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <span className="w-5 h-5 rounded-lg flex items-center justify-center font-mono font-black text-[10px] shrink-0 bg-rose-100 text-rose-900 font-bold">
+                                      {i + 1}
+                                    </span>
+                                    <TeamAvatar team={{ owner: rec.owner }} size="xs" />
+                                    <div className="min-w-0">
+                                      <div className="font-black text-gray-900 flex items-center gap-1 text-[11px] truncate">
+                                        <span className="truncate">{rec.owner}</span>
+                                        <span className="text-gray-400 font-normal shrink-0">({rec.year})</span>
+                                      </div>
+                                      <div className="text-[10px] text-gray-500 truncate max-w-[120px] sm:max-w-[150px]">
+                                        {rec.teamName}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <div className="text-right font-mono shrink-0 pl-2">
+                                    <div className="font-black text-rose-700 text-xs sm:text-sm">
+                                      {dispVal}
+                                    </div>
+                                    {subRaw && (
+                                      <div className="text-[9px] text-gray-400">
+                                        {subRaw}
+                                      </div>
+                                    )}
+                                    <div className="text-[9px] text-gray-400">
+                                      {rec.rotoPoints} pts
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
