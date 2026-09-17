@@ -1,235 +1,3848 @@
 {
   "league_id": 130215,
   "league_name": "2026 Head to Head Heftystrong",
+  "season_year": 2026,
   "scoring_format": "10-Category Head-to-Head Each Category / Points (R, HR, RBI, OBP, SB | K, QS, SV+HD, ERA, WHIP)",
-  "roster_expansion_year": 2026,
-  "roster_size": 28,
-  "manager_personas": {
-    "Dan": {
-      "team_id": 5,
-      "team_name": "Daniel's Squad",
-      "archetype": "The High-Volume Wire Hawk & Streaming Strategist",
-      "in_season_tendencies": [
-        "Leads the league in total roster transactions and late-night waiver churning",
-        "Aggressively streams starting pitchers to capture K and QS volume",
-        "Live-monitors Sunday night box scores to steal fractional category points"
-      ],
-      "banter_triggers": [
-        "2:00 AM waiver claims on obscure middle relievers",
-        "Burning through 5 pitching adds in a single weekend to flip Strikeouts",
-        "Boasting that waiver hustle and in-season grind out-values draft day pedigree"
-      ]
+  "season_structure": {
+    "phase_1": {
+      "name": "Triple Crown (Kirkman Trios)",
+      "weeks": "Weeks 1-12",
+      "scoring_periods": "1-89",
+      "format": "3-way matchups across 3 cycles of 4 weeks"
     },
-    "Adrian": {
-      "team_id": 2,
-      "team_name": "Adrian's Aces",
-      "archetype": "The Commissioner & Pitching Ratio Purist",
-      "in_season_tendencies": [
-        "Obsessively defends elite pitching ratios (ERA/WHIP) with front-line rotation aces",
-        "Enforces league integrity and scoring rules with strict commissioner authority",
-        "Calculated starter deployment, benching pitchers in dangerous park matchups"
+    "phase_2": {
+      "name": "Mid-Season Championship",
+      "weeks": "Weeks 13-14",
+      "scoring_periods": "90-103",
+      "format": "Top 3, Middle 3, Bottom 3 seeded trios determining Phase 3 split"
+    },
+    "phase_3": {
+      "name": "Split Leagues",
+      "weeks": "Weeks 15-23",
+      "scoring_periods": "104-173",
+      "format": "Winners League (Top 4 H2H) and Consolation League (Bottom 5 + Ghost H2H)"
+    },
+    "phase_4": {
+      "name": "Playoffs",
+      "weeks": "Weeks 24-25",
+      "scoring_periods": "174-187",
+      "format": "Semi-Finals and Championship Weeks"
+    }
+  },
+  "season_summary_2026": {
+    "champion_regular_season": {
+      "owner": "Dan",
+      "team_name": "The Silver Bullets",
+      "points": 73.0,
+      "seed": 1
+    },
+    "standings_week_23": [
+      {
+        "seed": 1,
+        "owner": "Dan",
+        "team_name": "The Silver Bullets",
+        "points": 73.0,
+        "stats": {
+          "R": 1274,
+          "HR": 338,
+          "RBI": 1086,
+          "OBP": 0.3424,
+          "SB": 185,
+          "K": 1986,
+          "QS": 135,
+          "SV_HD": 194,
+          "ERA": 3.8,
+          "WHIP": 1.2
+        },
+        "category_points": {
+          "R": 8.0,
+          "HR": 7.0,
+          "RBI": 5.0,
+          "OBP": 9.0,
+          "SB": 6.0,
+          "K": 9.0,
+          "QS": 9.0,
+          "SV+HDs": 9.0,
+          "ERA": 4.0,
+          "WHIP": 7.0
+        }
+      },
+      {
+        "seed": 2,
+        "owner": "Tim",
+        "team_name": "Anti-lock Brake Systems",
+        "points": 70.5,
+        "stats": {
+          "R": 1297,
+          "HR": 385,
+          "RBI": 1278,
+          "OBP": 0.3397,
+          "SB": 257,
+          "K": 1927,
+          "QS": 121,
+          "SV_HD": 191,
+          "ERA": 3.86,
+          "WHIP": 1.25
+        },
+        "category_points": {
+          "R": 9.0,
+          "HR": 9.0,
+          "RBI": 9.0,
+          "OBP": 8.0,
+          "SB": 9.0,
+          "K": 7.0,
+          "QS": 6.5,
+          "SV+HDs": 8.0,
+          "ERA": 2.0,
+          "WHIP": 3.0
+        }
+      },
+      {
+        "seed": 3,
+        "owner": "Will",
+        "team_name": "Jos\u00e9 Can You See",
+        "points": 66.0,
+        "stats": {
+          "R": 1262,
+          "HR": 323,
+          "RBI": 1067,
+          "OBP": 0.3311,
+          "SB": 233,
+          "K": 1957,
+          "QS": 118,
+          "SV_HD": 179,
+          "ERA": 3.53,
+          "WHIP": 1.14
+        },
+        "category_points": {
+          "R": 7.0,
+          "HR": 3.0,
+          "RBI": 4.0,
+          "OBP": 7.0,
+          "SB": 8.0,
+          "K": 8.0,
+          "QS": 5.0,
+          "SV+HDs": 7.0,
+          "ERA": 8.0,
+          "WHIP": 9.0
+        }
+      },
+      {
+        "seed": 4,
+        "owner": "Adrian",
+        "team_name": "D0ng Demolishers",
+        "points": 60.0,
+        "stats": {
+          "R": 1220,
+          "HR": 331,
+          "RBI": 1139,
+          "OBP": 0.3306,
+          "SB": 177,
+          "K": 1811,
+          "QS": 113,
+          "SV_HD": 177,
+          "ERA": 3.46,
+          "WHIP": 1.17
+        },
+        "category_points": {
+          "R": 6.0,
+          "HR": 6.0,
+          "RBI": 7.0,
+          "OBP": 5.0,
+          "SB": 5.0,
+          "K": 4.0,
+          "QS": 4.0,
+          "SV+HDs": 6.0,
+          "ERA": 9.0,
+          "WHIP": 8.0
+        }
+      },
+      {
+        "seed": 5,
+        "owner": "Garrett",
+        "team_name": "There's Always Next Year",
+        "points": 46.5,
+        "stats": {
+          "R": 1152,
+          "HR": 325,
+          "RBI": 1149,
+          "OBP": 0.3294,
+          "SB": 164,
+          "K": 1891,
+          "QS": 121,
+          "SV_HD": 120,
+          "ERA": 3.74,
+          "WHIP": 1.21
+        },
+        "category_points": {
+          "R": 4.0,
+          "HR": 4.0,
+          "RBI": 8.0,
+          "OBP": 4.0,
+          "SB": 3.0,
+          "K": 5.0,
+          "QS": 6.5,
+          "SV+HDs": 1.0,
+          "ERA": 5.0,
+          "WHIP": 6.0
+        }
+      },
+      {
+        "seed": 6,
+        "owner": "Anil",
+        "team_name": "Yeah Jeets",
+        "points": 37.0,
+        "stats": {
+          "R": 1108,
+          "HR": 344,
+          "RBI": 1059,
+          "OBP": 0.3308,
+          "SB": 140,
+          "K": 1330,
+          "QS": 68,
+          "SV_HD": 130,
+          "ERA": 3.66,
+          "WHIP": 1.21
+        },
+        "category_points": {
+          "R": 3.0,
+          "HR": 8.0,
+          "RBI": 3.0,
+          "OBP": 6.0,
+          "SB": 2.0,
+          "K": 1.0,
+          "QS": 1.0,
+          "SV+HDs": 2.0,
+          "ERA": 6.0,
+          "WHIP": 5.0
+        }
+      },
+      {
+        "seed": 7,
+        "owner": "Alex",
+        "team_name": "Raleigh Towels",
+        "points": 36.0,
+        "stats": {
+          "R": 1104,
+          "HR": 328,
+          "RBI": 1101,
+          "OBP": 0.3204,
+          "SB": 165,
+          "K": 1379,
+          "QS": 93,
+          "SV_HD": 131,
+          "ERA": 3.65,
+          "WHIP": 1.25
+        },
+        "category_points": {
+          "R": 2.0,
+          "HR": 5.0,
+          "RBI": 6.0,
+          "OBP": 1.0,
+          "SB": 4.0,
+          "K": 2.0,
+          "QS": 2.0,
+          "SV+HDs": 3.0,
+          "ERA": 7.0,
+          "WHIP": 4.0
+        }
+      },
+      {
+        "seed": 8,
+        "owner": "Preston",
+        "team_name": "Maikels Secret Stuff",
+        "points": 33.0,
+        "stats": {
+          "R": 1184,
+          "HR": 266,
+          "RBI": 1045,
+          "OBP": 0.3279,
+          "SB": 189,
+          "K": 1614,
+          "QS": 101,
+          "SV_HD": 144,
+          "ERA": 3.86,
+          "WHIP": 1.26
+        },
+        "category_points": {
+          "R": 5.0,
+          "HR": 2.0,
+          "RBI": 2.0,
+          "OBP": 2.0,
+          "SB": 7.0,
+          "K": 3.0,
+          "QS": 3.0,
+          "SV+HDs": 4.0,
+          "ERA": 3.0,
+          "WHIP": 2.0
+        }
+      },
+      {
+        "seed": 9,
+        "owner": "Mark",
+        "team_name": "Basement Boy",
+        "points": 28.0,
+        "stats": {
+          "R": 1005,
+          "HR": 250,
+          "RBI": 961,
+          "OBP": 0.3284,
+          "SB": 122,
+          "K": 1906,
+          "QS": 124,
+          "SV_HD": 157,
+          "ERA": 4.29,
+          "WHIP": 1.28
+        },
+        "category_points": {
+          "R": 1.0,
+          "HR": 1.0,
+          "RBI": 1.0,
+          "OBP": 3.0,
+          "SB": 1.0,
+          "K": 6.0,
+          "QS": 8.0,
+          "SV+HDs": 5.0,
+          "ERA": 1.0,
+          "WHIP": 1.0
+        }
+      }
+    ],
+    "category_champions": {
+      "R": {
+        "owner": "Tim",
+        "stat": 1297
+      },
+      "HR": {
+        "owner": "Tim",
+        "stat": 385
+      },
+      "RBI": {
+        "owner": "Tim",
+        "stat": 1278
+      },
+      "OBP": {
+        "owner": "Dan",
+        "stat": 0.3424
+      },
+      "SB": {
+        "owner": "Tim",
+        "stat": 257
+      },
+      "K": {
+        "owner": "Dan",
+        "stat": 1986
+      },
+      "QS": {
+        "owner": "Dan",
+        "stat": 135
+      },
+      "SV_HD": {
+        "owner": "Dan",
+        "stat": 194
+      },
+      "ERA": {
+        "owner": "Adrian",
+        "stat": 3.46
+      },
+      "WHIP": {
+        "owner": "Will",
+        "stat": 1.14
+      }
+    }
+  },
+  "team_profiles_2026": {
+    "Tim": {
+      "team_id": 1,
+      "team_name": "Anti-lock Brake Systems",
+      "owner": "Tim",
+      "regular_season_seed": 2,
+      "regular_season_points": 70.5,
+      "trajectory": {
+        "start_rank": 3,
+        "start_points": 53.5,
+        "peak_week": 19,
+        "peak_points": 77.5,
+        "low_week": 2,
+        "low_points": 52.0,
+        "final_rank": 2,
+        "final_points": 70.5,
+        "net_points_change": 17.0
+      },
+      "phase_finishes": {
+        "phase_1_trios": {
+          "rank": 1,
+          "points": 71.5
+        },
+        "phase_2_midseason": {
+          "rank": 2,
+          "points": 68.0
+        },
+        "phase_3_split_final": {
+          "rank": 2,
+          "points": 70.5
+        }
+      },
+      "archetype": "The Four-Category Offensive Juggernaut & Mid-Season Titan",
+      "season_narrative": "Dominated hitting across the entire summer, capturing four of the five offensive crowns: 1st in Runs (1297), 1st in Home Runs (385), 1st in RBI (1278), and 1st in Stolen Bases (257), while finishing 2nd in OBP (.3397). Held 1st place from Week 15 through Week 21 and peaked at a season-high 77.5 pts in Week 19 before being narrowly overtaken by Dan in Week 22.",
+      "category_strengths": [
+        "Runs (1st, 1297)",
+        "Home Runs (1st, 385)",
+        "RBI (1st, 1278)",
+        "Stolen Bases (1st, 257)",
+        "OBP (2nd, .3397)",
+        "Saves+Holds (2nd, 191)"
       ],
-      "banter_triggers": [
-        "Sweating a bullpen meltdown that spikes team ERA by 0.05",
-        "Bragging about 8-inning complete game shutouts from his rotation anchors",
-        "Vocal frustration when half his starting rotation hits the 15-day IL at once"
+      "category_vulnerabilities": [
+        "ERA (8th, 3.86)",
+        "WHIP (7th, 1.25)"
+      ],
+      "top_batters": [
+        {
+          "name": "CJ Abrams",
+          "days": 171,
+          "R": 88.0,
+          "HR": 30.0,
+          "RBI": 96.0,
+          "SB": 29.0,
+          "OBP": 0.339,
+          "AB": 542.0,
+          "score": 395.931484502447
+        },
+        {
+          "name": "Yordan Alvarez",
+          "days": 171,
+          "R": 95.0,
+          "HR": 38.0,
+          "RBI": 96.0,
+          "SB": 1.0,
+          "OBP": 0.427,
+          "AB": 523.0,
+          "score": 387.7230046948357
+        },
+        {
+          "name": "Pete Alonso",
+          "days": 171,
+          "R": 89.0,
+          "HR": 35.0,
+          "RBI": 100.0,
+          "SB": 5.0,
+          "OBP": 0.363,
+          "AB": 561.0,
+          "score": 375.3496932515337
+        },
+        {
+          "name": "Sal Stewart",
+          "days": 171,
+          "R": 81.0,
+          "HR": 31.0,
+          "RBI": 105.0,
+          "SB": 15.0,
+          "OBP": 0.339,
+          "AB": 570.0,
+          "score": 373.85093167701865
+        }
+      ],
+      "top_pitchers": [
+        {
+          "name": "George Kirby",
+          "days": 115,
+          "IP": 157.7,
+          "K": 129.0,
+          "QS": 14.0,
+          "SV+HD": 0.0,
+          "ERA": 4.4,
+          "WHIP": 1.38,
+          "score": 474.6899224806201
+        },
+        {
+          "name": "Louis Varland",
+          "days": 145,
+          "IP": 61.3,
+          "K": 74.0,
+          "QS": 0.0,
+          "SV+HD": 34.0,
+          "ERA": 1.47,
+          "WHIP": 0.99,
+          "score": 467.9963768115942
+        },
+        {
+          "name": "Kyle Bradish",
+          "days": 130,
+          "IP": 155.0,
+          "K": 142.0,
+          "QS": 12.0,
+          "SV+HD": 0.0,
+          "ERA": 4.12,
+          "WHIP": 1.46,
+          "score": 456.38709677419354
+        },
+        {
+          "name": "Eury Perez",
+          "days": 105,
+          "IP": 134.3,
+          "K": 146.0,
+          "QS": 11.0,
+          "SV+HD": 0.0,
+          "ERA": 4.15,
+          "WHIP": 1.27,
+          "score": 424.56410256410254
+        }
       ]
     },
     "Garrett": {
       "team_id": 3,
-      "team_name": "Garrett's Sluggers",
-      "archetype": "The Pure Power Maximizer",
-      "in_season_tendencies": [
-        "Stacks pure sluggers to dominate home runs and RBI at all costs",
-        "Shows unwavering patience through cold streaks, trusting brute force power",
-        "Perpetually locked in tight decimal OBP dogfights with Will and Adrian"
+      "team_name": "There's Always Next Year",
+      "owner": "Garrett",
+      "regular_season_seed": 5,
+      "regular_season_points": 46.5,
+      "trajectory": {
+        "start_rank": 6,
+        "start_points": 46.5,
+        "peak_week": 14,
+        "peak_points": 56.5,
+        "low_week": 20,
+        "low_points": 41.0,
+        "final_rank": 5,
+        "final_points": 46.5,
+        "net_points_change": 0.0
+      },
+      "phase_finishes": {
+        "phase_1_trios": {
+          "rank": 4,
+          "points": 54.5
+        },
+        "phase_2_midseason": {
+          "rank": 5,
+          "points": 56.5
+        },
+        "phase_3_split_final": {
+          "rank": 5,
+          "points": 46.5
+        }
+      },
+      "archetype": "The Cutline Heartbreak & Consolation League Sovereign",
+      "season_narrative": "Fought a dramatic Phase 2 cutline battle against Dan, falling just 2.0 roto points short of the Winners League in Week 14 (56.5 to 58.5). Responded by completely dominating the Consolation League in Phase 3, finishing 5th overall (46.5 pts) with elite power from Rafael Devers (37 HR, 98 RBI) and Brice Turang (95 R, 93 RBI), and tied Tim with 121 Quality Starts.",
+      "category_strengths": [
+        "RBI (2nd, 1149)",
+        "Quality Starts (T-3rd, 121)",
+        "WHIP (4th, 1.21)",
+        "ERA (5th, 3.74)"
       ],
-      "banter_triggers": [
-        "Leading the league in HR while posting a sub-.315 team OBP",
-        "Gunnar Henderson multi-homer games carrying the entire week's offense",
-        "Casually sitting in the top tier of the standings purely on raw extra-base hits"
+      "category_vulnerabilities": [
+        "Saves+Holds (9th, 120)",
+        "Stolen Bases (7th, 164)",
+        "OBP (6th, .3294)",
+        "Runs (6th, 1152)"
+      ],
+      "top_batters": [
+        {
+          "name": "Rafael Devers",
+          "days": 171,
+          "R": 88.0,
+          "HR": 37.0,
+          "RBI": 98.0,
+          "SB": 0.0,
+          "OBP": 0.339,
+          "AB": 554.0,
+          "score": 367.86327503974564
+        },
+        {
+          "name": "Brice Turang",
+          "days": 171,
+          "R": 95.0,
+          "HR": 19.0,
+          "RBI": 93.0,
+          "SB": 18.0,
+          "OBP": 0.365,
+          "AB": 539.0,
+          "score": 336.48
+        },
+        {
+          "name": "Manny Machado",
+          "days": 168,
+          "R": 76.0,
+          "HR": 26.0,
+          "RBI": 80.0,
+          "SB": 5.0,
+          "OBP": 0.312,
+          "AB": 532.0,
+          "score": 301.15823817292005
+        },
+        {
+          "name": "William Contreras",
+          "days": 173,
+          "R": 79.0,
+          "HR": 17.0,
+          "RBI": 86.0,
+          "SB": 1.0,
+          "OBP": 0.342,
+          "AB": 528.0,
+          "score": 269.1708542713568
+        }
+      ],
+      "top_pitchers": [
+        {
+          "name": "Nolan McLean",
+          "days": 110,
+          "IP": 161.7,
+          "K": 176.0,
+          "QS": 18.0,
+          "SV+HD": 0.0,
+          "ERA": 3.06,
+          "WHIP": 1.14,
+          "score": 592.3573883161512
+        },
+        {
+          "name": "Gavin Williams",
+          "days": 109,
+          "IP": 163.0,
+          "K": 217.0,
+          "QS": 10.0,
+          "SV+HD": 0.0,
+          "ERA": 3.81,
+          "WHIP": 1.09,
+          "score": 510.9509202453988
+        },
+        {
+          "name": "Parker Messick",
+          "days": 115,
+          "IP": 158.7,
+          "K": 167.0,
+          "QS": 11.0,
+          "SV+HD": 0.0,
+          "ERA": 2.67,
+          "WHIP": 1.05,
+          "score": 477.33683473389357
+        },
+        {
+          "name": "Drew Rasmussen",
+          "days": 67,
+          "IP": 99.3,
+          "K": 98.0,
+          "QS": 10.0,
+          "SV+HD": 0.0,
+          "ERA": 3.26,
+          "WHIP": 0.94,
+          "score": 331.02460850111856
+        }
       ]
     },
-    "Mark": {
-      "team_id": 13,
-      "team_name": "Mark's Maulers",
-      "archetype": "The Second-Half Surge Specialist",
-      "in_season_tendencies": [
-        "Known for patient early-season pacing followed by explosive summer charges",
-        "Identifies and attacks specific category vulnerabilities in the standings",
-        "Stashes high-upside injured talent to create an August/September juggernaut"
+    "Dan": {
+      "team_id": 5,
+      "team_name": "The Silver Bullets",
+      "owner": "Dan",
+      "regular_season_seed": 1,
+      "regular_season_points": 73.0,
+      "trajectory": {
+        "start_rank": 8,
+        "start_points": 41.5,
+        "peak_week": 23,
+        "peak_points": 73.0,
+        "low_week": 1,
+        "low_points": 41.5,
+        "final_rank": 1,
+        "final_points": 73.0,
+        "net_points_change": 31.5
+      },
+      "phase_finishes": {
+        "phase_1_trios": {
+          "rank": 5,
+          "points": 54.0
+        },
+        "phase_2_midseason": {
+          "rank": 4,
+          "points": 58.5
+        },
+        "phase_3_split_final": {
+          "rank": 1,
+          "points": 73.0
+        }
+      },
+      "archetype": "The High-Volume Volume Sweeper & Second-Half Juggernaut",
+      "season_narrative": "Mounted the defining campaign of the 2026 season: an epic +31.5 point comeback from 8th place (41.5 pts in Week 1) to claim the #1 overall seed (73.0 pts in Week 23). Dan completely swept all three pitching volume categories (1st in K with 1986, 1st in QS with 135, 1st in SV+HD with 194) while capturing the league OBP crown (.3424) behind James Wood, Shohei Ohtani, and Kazuma Okamoto.",
+      "category_strengths": [
+        "Strikeouts (1st, 1986)",
+        "Quality Starts (1st, 135)",
+        "Saves+Holds (1st, 194)",
+        "OBP (1st, .3424)",
+        "Runs (2nd, 1274)"
       ],
-      "banter_triggers": [
-        "Slow April/May starts followed by terrifying mid-summer hot streaks",
-        "Gaining 8-10 roto points in a single two-week scoring window",
-        "Warning the league that his roster doesn't truly wake up until the temperature hits 85 degrees"
-      ]
-    },
-    "Anil": {
-      "team_id": 6,
-      "team_name": "Anil's Avengers",
-      "archetype": "The Speed Pace-Setter & Five-Category Dynast",
-      "in_season_tendencies": [
-        "Dictates the league's Stolen Base pace with an iron grip at the top of the category",
-        "Constructs balanced hitting lines that rarely surrender roto points in any offensive category",
-        "Relentlessly consistent, avoiding the extreme boom-or-bust swings of other rosters"
+      "category_vulnerabilities": [
+        "ERA (6th, 3.80)",
+        "RBI (5th, 1086)",
+        "Stolen Bases (4th, 185)"
       ],
-      "banter_triggers": [
-        "Flexing an untouchable double-digit lead in Stolen Bases",
-        "Bobby Witt Jr. posting nightly 1 HR, 2 SB, 3 R stat lines",
-        "Taunting opponents whose entire teams have fewer stolen bases than his top two players"
-      ]
-    },
-    "Tim": {
-      "team_id": 1,
-      "team_name": "Tim's Veterans",
-      "archetype": "The Steady Veteran Accumulator",
-      "in_season_tendencies": [
-        "Builds deep, veteran-led lineups that methodically grind out counting stats",
-        "Relies on dependable rotation workhorses who consistently throw 6+ innings",
-        "Refuses to panic-drop established stars during early slumps"
+      "top_batters": [
+        {
+          "name": "James Wood",
+          "days": 143,
+          "R": 102.0,
+          "HR": 30.0,
+          "RBI": 75.0,
+          "SB": 21.0,
+          "OBP": 0.395,
+          "AB": 474.0,
+          "score": 378.48275862068965
+        },
+        {
+          "name": "Shohei Ohtani",
+          "days": 163,
+          "R": 81.0,
+          "HR": 27.0,
+          "RBI": 75.0,
+          "SB": 11.0,
+          "OBP": 0.384,
+          "AB": 460.0,
+          "score": 324.39122486288846
+        },
+        {
+          "name": "Kazuma Okamoto",
+          "days": 172,
+          "R": 77.0,
+          "HR": 32.0,
+          "RBI": 85.0,
+          "SB": 1.0,
+          "OBP": 0.311,
+          "AB": 526.0,
+          "score": 323.1224489795918
+        },
+        {
+          "name": "Alex Bregman",
+          "days": 172,
+          "R": 87.0,
+          "HR": 25.0,
+          "RBI": 84.0,
+          "SB": 3.0,
+          "OBP": 0.357,
+          "AB": 574.0,
+          "score": 312.6927710843373
+        }
       ],
-      "banter_triggers": [
-        "Quietly creeping into 1st place while everyone else is arguing in chat",
-        "Veteran starters tossing 100-pitch gems while younger aces get pulled after 75 pitches",
-        "Winning categories through sheer volume and reliable plate appearances"
-      ]
-    },
-    "Will": {
-      "team_id": 12,
-      "team_name": "Will's Warriors",
-      "archetype": "The Contact & OBP Fundamentalist",
-      "in_season_tendencies": [
-        "The league's premier OBP hawk, obsessing over walk rates and plate discipline",
-        "Wins and loses roto points on fractional decimal margins (.001 OBP swings)",
-        "Locks down high-leverage late innings with elite closers like Josh Hader"
-      ],
-      "banter_triggers": [
-        "Checking box scores four times an hour to protect a .0008 OBP lead",
-        "Celebrating a 0-for-1 night with 3 walks as a massive fantasy victory",
-        "Fierce, weekly back-and-forth category tug-of-wars with Garrett and Adrian"
-      ]
-    },
-    "Preston": {
-      "team_id": 14,
-      "team_name": "Preston's Bullpen",
-      "archetype": "The Relief Pitching Baron & Judge Power Engine",
-      "in_season_tendencies": [
-        "Monopolizes closers and elite setup men to sweep the SV+HD category week in and week out",
-        "Anchors his offense around Aaron Judge's nuclear power production",
-        "Employs radical pitching management, winning with low innings and elite leverage"
-      ],
-      "banter_triggers": [
-        "Deploying 6 active relievers on a Tuesday and poaching 4 holds in one evening",
-        "Sweeping SV+HD while barely clearing the league's minimum innings threshold",
-        "Aaron Judge out-slugging entire fantasy lineups single-handedly"
+      "top_pitchers": [
+        {
+          "name": "Logan Webb",
+          "days": 83,
+          "IP": 160.7,
+          "K": 134.0,
+          "QS": 17.0,
+          "SV+HD": 0.0,
+          "ERA": 4.31,
+          "WHIP": 1.17,
+          "score": 528.1002766251728
+        },
+        {
+          "name": "Zack Wheeler",
+          "days": 93,
+          "IP": 143.3,
+          "K": 172.0,
+          "QS": 15.0,
+          "SV+HD": 0.0,
+          "ERA": 3.14,
+          "WHIP": 1.07,
+          "score": 524.6356589147287
+        },
+        {
+          "name": "Kevin Gausman",
+          "days": 80,
+          "IP": 155.3,
+          "K": 156.0,
+          "QS": 13.0,
+          "SV+HD": 0.0,
+          "ERA": 4.58,
+          "WHIP": 1.28,
+          "score": 483.4470672389127
+        },
+        {
+          "name": "Tanner Scott",
+          "days": 173,
+          "IP": 58.7,
+          "K": 73.0,
+          "QS": 0.0,
+          "SV+HD": 34.0,
+          "ERA": 2.91,
+          "WHIP": 1.01,
+          "score": 457.09280303030306
+        }
       ]
     },
     "Alex": {
       "team_id": 8,
-      "team_name": "Alex's All-Stars",
-      "archetype": "The High-Variance Upside Wildcard",
-      "in_season_tendencies": [
-        "Capable of putting up explosive, league-high weekly counting stat totals",
-        "Aggressive on high-upside prospect call-ups and second-year breakout candidates",
-        "Prone to massive scoring volatility: surging 3 roto points one week, dropping the next"
+      "team_name": "Raleigh Towels",
+      "owner": "Alex",
+      "regular_season_seed": 7,
+      "regular_season_points": 36.0,
+      "trajectory": {
+        "start_rank": 9,
+        "start_points": 32.0,
+        "peak_week": 11,
+        "peak_points": 40.0,
+        "low_week": 1,
+        "low_points": 32.0,
+        "final_rank": 7,
+        "final_points": 36.0,
+        "net_points_change": 4.0
+      },
+      "phase_finishes": {
+        "phase_1_trios": {
+          "rank": 6,
+          "points": 39.0
+        },
+        "phase_2_midseason": {
+          "rank": 7,
+          "points": 37.5
+        },
+        "phase_3_split_final": {
+          "rank": 7,
+          "points": 36.0
+        }
+      },
+      "archetype": "The Pete Crow-Armstrong Power-Speed Engine",
+      "season_narrative": "Overcame a slow Week 1 start (9th, 32.0 pts) to battle in the middle tier, peaking at 40.0 pts in Week 11. Anchored by the single most electrifying individual hitting season in the league: Pete Crow-Armstrong's 41 HR, 111 R, 98 RBI, and 36 SB. Boasted strong starting pitching with Cristopher Sanchez (210 K, 20 QS, 2.79 ERA) and Tarik Skubal, but was hampered by a league-low .3204 OBP.",
+      "category_strengths": [
+        "ERA (3rd, 3.65)",
+        "RBI (4th, 1101)",
+        "Home Runs (5th, 328)",
+        "Stolen Bases (6th, 165)"
       ],
-      "banter_triggers": [
-        "Wild 75-point fantasy scoring surges followed by quiet lulls",
-        "Stashing rookie phenoms weeks before their MLB debuts and hitting immediate home runs",
-        "Surprise weekend scoring explosions that ruin an opponent's comfortable lead"
+      "category_vulnerabilities": [
+        "OBP (9th, .3204)",
+        "Runs (8th, 1104)",
+        "Strikeouts (8th, 1379)",
+        "Quality Starts (8th, 93)",
+        "Saves+Holds (7th, 131)"
+      ],
+      "top_batters": [
+        {
+          "name": "Pete Crow-Armstrong",
+          "days": 172,
+          "R": 111.0,
+          "HR": 41.0,
+          "RBI": 98.0,
+          "SB": 36.0,
+          "OBP": 0.371,
+          "AB": 578.0,
+          "score": 482.10879284649775
+        },
+        {
+          "name": "Bryce Harper",
+          "days": 173,
+          "R": 88.0,
+          "HR": 28.0,
+          "RBI": 83.0,
+          "SB": 7.0,
+          "OBP": 0.387,
+          "AB": 529.0,
+          "score": 335.65414710485135
+        },
+        {
+          "name": "Alec Burleson",
+          "days": 167,
+          "R": 79.0,
+          "HR": 21.0,
+          "RBI": 107.0,
+          "SB": 4.0,
+          "OBP": 0.34,
+          "AB": 549.0,
+          "score": 312.04605263157896
+        },
+        {
+          "name": "Jackson Chourio",
+          "days": 130,
+          "R": 85.0,
+          "HR": 22.0,
+          "RBI": 66.0,
+          "SB": 16.0,
+          "OBP": 0.343,
+          "AB": 466.0,
+          "score": 305.3137254901961
+        }
+      ],
+      "top_pitchers": [
+        {
+          "name": "Cristopher Sanchez",
+          "days": 173,
+          "IP": 187.3,
+          "K": 210.0,
+          "QS": 20.0,
+          "SV+HD": 0.0,
+          "ERA": 2.79,
+          "WHIP": 1.21,
+          "score": 683.4009489916963
+        },
+        {
+          "name": "Tarik Skubal",
+          "days": 133,
+          "IP": 139.7,
+          "K": 164.0,
+          "QS": 14.0,
+          "SV+HD": 0.0,
+          "ERA": 2.84,
+          "WHIP": 0.97,
+          "score": 499.49005568814636
+        },
+        {
+          "name": "Tyler Rogers",
+          "days": 172,
+          "IP": 67.7,
+          "K": 38.0,
+          "QS": 0.0,
+          "SV+HD": 36.0,
+          "ERA": 1.73,
+          "WHIP": 1.15,
+          "score": 457.0213464696223
+        },
+        {
+          "name": "Raisel Iglesias",
+          "days": 162,
+          "IP": 55.0,
+          "K": 57.0,
+          "QS": 0.0,
+          "SV+HD": 32.0,
+          "ERA": 2.78,
+          "WHIP": 1.16,
+          "score": 418.09090909090907
+        }
       ]
     },
-    "Joe": {
-      "team_id": 10,
-      "team_name": "Joe's Juggernauts",
-      "archetype": "The Middle-Tier Disrupter",
+    "Will": {
+      "team_id": 12,
+      "team_name": "Jos\u00e9 Can You See",
+      "owner": "Will",
+      "regular_season_seed": 3,
+      "regular_season_points": 66.0,
+      "trajectory": {
+        "start_rank": 7,
+        "start_points": 43.5,
+        "peak_week": 13,
+        "peak_points": 73.5,
+        "low_week": 1,
+        "low_points": 43.5,
+        "final_rank": 3,
+        "final_points": 66.0,
+        "net_points_change": 22.5
+      },
+      "phase_finishes": {
+        "phase_1_trios": {
+          "rank": 2,
+          "points": 71.0
+        },
+        "phase_2_midseason": {
+          "rank": 1,
+          "points": 72.0
+        },
+        "phase_3_split_final": {
+          "rank": 3,
+          "points": 66.0
+        }
+      },
+      "archetype": "The Spring Pace-Setter & Elite WHIP Architect",
+      "season_narrative": "The league's premier spring force, holding 1st place for 8 separate weeks (Weeks 3-7, 10, 13-14) and peaking at 73.5 pts in Week 13. Engineered the league's top pitching ratio (1st in WHIP at 1.14, 2nd in ERA at 3.53) anchored by Yoshinobu Yamamoto (20 QS, 2.62 ERA), Mason Miller (117 K, 1.14 ERA), and Kyle Schwarber's 44 home runs.",
+      "category_strengths": [
+        "WHIP (1st, 1.14)",
+        "ERA (2nd, 3.53)",
+        "Strikeouts (2nd, 1957)",
+        "Stolen Bases (2nd, 233)",
+        "OBP (3rd, .3311)"
+      ],
+      "category_vulnerabilities": [
+        "Home Runs (7th, 323)",
+        "RBI (6th, 1067)",
+        "Quality Starts (5th, 118)"
+      ],
+      "top_batters": [
+        {
+          "name": "Kyle Schwarber",
+          "days": 171,
+          "R": 88.0,
+          "HR": 44.0,
+          "RBI": 94.0,
+          "SB": 3.0,
+          "OBP": 0.351,
+          "AB": 541.0,
+          "score": 399.09316770186336
+        },
+        {
+          "name": "Randy Arozarena",
+          "days": 167,
+          "R": 99.0,
+          "HR": 25.0,
+          "RBI": 75.0,
+          "SB": 22.0,
+          "OBP": 0.375,
+          "AB": 525.0,
+          "score": 355.52039151712887
+        },
+        {
+          "name": "Yandy Diaz",
+          "days": 173,
+          "R": 86.0,
+          "HR": 22.0,
+          "RBI": 81.0,
+          "SB": 3.0,
+          "OBP": 0.366,
+          "AB": 574.0,
+          "score": 297.6043613707165
+        },
+        {
+          "name": "Willson Contreras",
+          "days": 158,
+          "R": 66.0,
+          "HR": 26.0,
+          "RBI": 79.0,
+          "SB": 3.0,
+          "OBP": 0.383,
+          "AB": 432.0,
+          "score": 293.28125
+        }
+      ],
+      "top_pitchers": [
+        {
+          "name": "Yoshinobu Yamamoto",
+          "days": 170,
+          "IP": 172.0,
+          "K": 171.0,
+          "QS": 20.0,
+          "SV+HD": 0.0,
+          "ERA": 2.62,
+          "WHIP": 0.88,
+          "score": 629.9186046511628
+        },
+        {
+          "name": "Mason Miller",
+          "days": 168,
+          "IP": 63.3,
+          "K": 117.0,
+          "QS": 0.0,
+          "SV+HD": 36.0,
+          "ERA": 1.14,
+          "WHIP": 0.85,
+          "score": 534.6491228070175
+        },
+        {
+          "name": "Cade Smith",
+          "days": 165,
+          "IP": 66.0,
+          "K": 95.0,
+          "QS": 0.0,
+          "SV+HD": 36.0,
+          "ERA": 2.18,
+          "WHIP": 1.05,
+          "score": 510.09090909090907
+        },
+        {
+          "name": "Braxton Ashcraft",
+          "days": 166,
+          "IP": 161.0,
+          "K": 166.0,
+          "QS": 13.0,
+          "SV+HD": 0.0,
+          "ERA": 3.47,
+          "WHIP": 1.07,
+          "score": 504.67080745341616
+        }
+      ]
+    },
+    "Mark": {
+      "team_id": 13,
+      "team_name": "Basement Boy",
+      "owner": "Mark",
+      "regular_season_seed": 9,
+      "regular_season_points": 28.0,
+      "trajectory": {
+        "start_rank": 2,
+        "start_points": 58.5,
+        "peak_week": 1,
+        "peak_points": 58.5,
+        "low_week": 18,
+        "low_points": 22.5,
+        "final_rank": 9,
+        "final_points": 28.0,
+        "net_points_change": -30.5
+      },
+      "phase_finishes": {
+        "phase_1_trios": {
+          "rank": 9,
+          "points": 26.0
+        },
+        "phase_2_midseason": {
+          "rank": 9,
+          "points": 24.0
+        },
+        "phase_3_split_final": {
+          "rank": 9,
+          "points": 28.0
+        }
+      },
+      "archetype": "The Early Flash & Rotation Quality Workhorse",
+      "season_narrative": "Stunned the league with an explosive Week 1 debut at #2 overall (58.5 pts) before entering an offensive dry spell that bottomed at 22.5 pts in Week 18. Despite offensive woes (last in R, HR, RBI, SB), Mark assembled one of the league's most effective starting pitching rotations, finishing 2nd in Quality Starts (124 QS) with Reid Detmers, Michael King, and Paul Skenes.",
+      "category_strengths": [
+        "Quality Starts (2nd, 124)",
+        "Strikeouts (5th, 1906)",
+        "Saves+Holds (5th, 157)",
+        "OBP (7th, .3284)"
+      ],
+      "category_vulnerabilities": [
+        "Runs (9th, 1005)",
+        "Home Runs (9th, 250)",
+        "RBI (9th, 961)",
+        "Stolen Bases (9th, 122)",
+        "ERA (9th, 4.29)",
+        "WHIP (9th, 1.28)"
+      ],
+      "top_batters": [
+        {
+          "name": "Kevin McGonigle",
+          "days": 172,
+          "R": 92.0,
+          "HR": 17.0,
+          "RBI": 65.0,
+          "SB": 12.0,
+          "OBP": 0.373,
+          "AB": 555.0,
+          "score": 286.2881355932203
+        },
+        {
+          "name": "Christian Walker",
+          "days": 145,
+          "R": 61.0,
+          "HR": 23.0,
+          "RBI": 71.0,
+          "SB": 0.0,
+          "OBP": 0.312,
+          "AB": 445.0,
+          "score": 255.1871227364185
+        },
+        {
+          "name": "Kyle Tucker",
+          "days": 170,
+          "R": 79.0,
+          "HR": 14.0,
+          "RBI": 65.0,
+          "SB": 9.0,
+          "OBP": 0.323,
+          "AB": 488.0,
+          "score": 250.3321554770318
+        },
+        {
+          "name": "Jordan Walker",
+          "days": 117,
+          "R": 58.0,
+          "HR": 15.0,
+          "RBI": 66.0,
+          "SB": 12.0,
+          "OBP": 0.321,
+          "AB": 389.0,
+          "score": 240.0665083135392
+        }
+      ],
+      "top_pitchers": [
+        {
+          "name": "Reid Detmers",
+          "days": 148,
+          "IP": 160.0,
+          "K": 177.0,
+          "QS": 13.0,
+          "SV+HD": 0.0,
+          "ERA": 3.43,
+          "WHIP": 1.08,
+          "score": 514.84375
+        },
+        {
+          "name": "Michael King",
+          "days": 101,
+          "IP": 158.0,
+          "K": 133.0,
+          "QS": 16.0,
+          "SV+HD": 0.0,
+          "ERA": 3.3,
+          "WHIP": 1.16,
+          "score": 514.4810126582279
+        },
+        {
+          "name": "Paul Skenes",
+          "days": 123,
+          "IP": 142.0,
+          "K": 161.0,
+          "QS": 11.0,
+          "SV+HD": 0.0,
+          "ERA": 3.3,
+          "WHIP": 1.13,
+          "score": 451.5211267605634
+        },
+        {
+          "name": "Sonny Gray",
+          "days": 81,
+          "IP": 118.0,
+          "K": 102.0,
+          "QS": 15.0,
+          "SV+HD": 0.0,
+          "ERA": 2.82,
+          "WHIP": 1.13,
+          "score": 430.8898305084746
+        }
+      ]
+    },
+    "Preston": {
+      "team_id": 14,
+      "team_name": "Maikels Secret Stuff",
+      "owner": "Preston",
+      "regular_season_seed": 8,
+      "regular_season_points": 33.0,
+      "trajectory": {
+        "start_rank": 5,
+        "start_points": 53.0,
+        "peak_week": 1,
+        "peak_points": 53.0,
+        "low_week": 8,
+        "low_points": 32.0,
+        "final_rank": 8,
+        "final_points": 33.0,
+        "net_points_change": -20.0
+      },
+      "phase_finishes": {
+        "phase_1_trios": {
+          "rank": 8,
+          "points": 34.5
+        },
+        "phase_2_midseason": {
+          "rank": 6,
+          "points": 39.0
+        },
+        "phase_3_split_final": {
+          "rank": 8,
+          "points": 33.0
+        }
+      },
+      "archetype": "The High-Leverage Relief Specialist & Speed Engine",
+      "season_narrative": "Started the year in 5th place (53.0 pts) before enduring a difficult May slump (dropping to 32.0 pts in Week 8). Featured elite base-stealing (3rd in SB with 189) led by Trea Turner and Steven Kwan, along with nasty rotation strikeout anchors Dylan Cease (236 K, 2.38 ERA) and Jacob Misiorowski (148 K, 1.98 ERA in 104 IP), finishing 8th overall at 33.0 pts.",
+      "category_strengths": [
+        "Stolen Bases (3rd, 189)",
+        "Runs (5th, 1184)",
+        "Saves+Holds (6th, 144)"
+      ],
+      "category_vulnerabilities": [
+        "Home Runs (8th, 266)",
+        "RBI (8th, 1045)",
+        "OBP (8th, .3279)",
+        "WHIP (8th, 1.26)",
+        "Strikeouts (7th, 1614)"
+      ],
+      "top_batters": [
+        {
+          "name": "Trea Turner",
+          "days": 164,
+          "R": 94.0,
+          "HR": 19.0,
+          "RBI": 57.0,
+          "SB": 19.0,
+          "OBP": 0.293,
+          "AB": 597.0,
+          "score": 294.30232558139534
+        },
+        {
+          "name": "Ian Happ",
+          "days": 168,
+          "R": 83.0,
+          "HR": 23.0,
+          "RBI": 65.0,
+          "SB": 4.0,
+          "OBP": 0.327,
+          "AB": 503.0,
+          "score": 280.70868824531516
+        },
+        {
+          "name": "Max Muncy",
+          "days": 141,
+          "R": 63.0,
+          "HR": 23.0,
+          "RBI": 66.0,
+          "SB": 2.0,
+          "OBP": 0.354,
+          "AB": 390.0,
+          "score": 260.39823008849555
+        },
+        {
+          "name": "Jake McCarthy",
+          "days": 111,
+          "R": 60.0,
+          "HR": 13.0,
+          "RBI": 59.0,
+          "SB": 20.0,
+          "OBP": 0.345,
+          "AB": 382.0,
+          "score": 245.46601941747574
+        }
+      ],
+      "top_pitchers": [
+        {
+          "name": "Dylan Cease",
+          "days": 157,
+          "IP": 166.3,
+          "K": 236.0,
+          "QS": 15.0,
+          "SV+HD": 0.0,
+          "ERA": 2.38,
+          "WHIP": 1.06,
+          "score": 615.4295257181029
+        },
+        {
+          "name": "Framber Valdez",
+          "days": 149,
+          "IP": 163.7,
+          "K": 121.0,
+          "QS": 16.0,
+          "SV+HD": 0.0,
+          "ERA": 4.01,
+          "WHIP": 1.36,
+          "score": 504.5953835709436
+        },
+        {
+          "name": "Jacob Misiorowski",
+          "days": 111,
+          "IP": 104.3,
+          "K": 148.0,
+          "QS": 13.0,
+          "SV+HD": 0.0,
+          "ERA": 1.98,
+          "WHIP": 0.76,
+          "score": 437.41320553780616
+        },
+        {
+          "name": "Andrew Abbott",
+          "days": 125,
+          "IP": 148.7,
+          "K": 116.0,
+          "QS": 11.0,
+          "SV+HD": 0.0,
+          "ERA": 4.96,
+          "WHIP": 1.47,
+          "score": 404.84603886397605
+        }
+      ]
+    },
+    "Adrian": {
+      "team_id": 2,
+      "team_name": "D0ng Demolishers",
+      "owner": "Adrian",
+      "regular_season_seed": 4,
+      "regular_season_points": 60.0,
+      "trajectory": {
+        "start_rank": 4,
+        "start_points": 53.0,
+        "peak_week": 8,
+        "peak_points": 69.5,
+        "low_week": 1,
+        "low_points": 53.0,
+        "final_rank": 4,
+        "final_points": 60.0,
+        "net_points_change": 7.0
+      },
+      "phase_finishes": {
+        "phase_1_trios": {
+          "rank": 3,
+          "points": 62.5
+        },
+        "phase_2_midseason": {
+          "rank": 3,
+          "points": 64.5
+        },
+        "phase_3_split_final": {
+          "rank": 4,
+          "points": 60.0
+        }
+      },
+      "archetype": "The ERA Champion & Starting Ace Purist",
+      "season_narrative": "Maintained the gold standard for starting rotation quality, winning the league ERA title (3.46) and finishing 2nd in WHIP (1.17) behind front-line aces Chris Sale (2.18 ERA, 190 K), Michael Wacha (20 QS, 3.25 ERA), and Logan Gilbert. Led the league in Weeks 2, 8, and 9 (peaking at 69.5 pts) and locked down the 4th and final Playoff Championship seed.",
+      "category_strengths": [
+        "ERA (1st, 3.46)",
+        "WHIP (2nd, 1.17)",
+        "RBI (3rd, 1139)",
+        "Home Runs (4th, 331)",
+        "Saves+Holds (4th, 177)"
+      ],
+      "category_vulnerabilities": [
+        "Strikeouts (6th, 1811)",
+        "Quality Starts (6th, 113)",
+        "OBP (5th, .3306)",
+        "Stolen Bases (5th, 177)"
+      ],
+      "top_batters": [
+        {
+          "name": "Elly De La Cruz",
+          "days": 151,
+          "R": 91.0,
+          "HR": 26.0,
+          "RBI": 71.0,
+          "SB": 25.0,
+          "OBP": 0.361,
+          "AB": 514.0,
+          "score": 352.144578313253
+        },
+        {
+          "name": "Hunter Goodman",
+          "days": 158,
+          "R": 77.0,
+          "HR": 37.0,
+          "RBI": 79.0,
+          "SB": 5.0,
+          "OBP": 0.309,
+          "AB": 467.0,
+          "score": 344.88803088803087
+        },
+        {
+          "name": "Oneil Cruz",
+          "days": 102,
+          "R": 56.0,
+          "HR": 18.0,
+          "RBI": 63.0,
+          "SB": 27.0,
+          "OBP": 0.367,
+          "AB": 331.0,
+          "score": 281.6754617414248
+        },
+        {
+          "name": "Juan Soto",
+          "days": 117,
+          "R": 56.0,
+          "HR": 25.0,
+          "RBI": 59.0,
+          "SB": 8.0,
+          "OBP": 0.391,
+          "AB": 342.0,
+          "score": 270.0776699029126
+        }
+      ],
+      "top_pitchers": [
+        {
+          "name": "Chris Sale",
+          "days": 130,
+          "IP": 157.0,
+          "K": 190.0,
+          "QS": 19.0,
+          "SV+HD": 0.0,
+          "ERA": 2.18,
+          "WHIP": 0.99,
+          "score": 621.1082802547771
+        },
+        {
+          "name": "Michael Wacha",
+          "days": 121,
+          "IP": 182.7,
+          "K": 147.0,
+          "QS": 20.0,
+          "SV+HD": 0.0,
+          "ERA": 3.25,
+          "WHIP": 1.11,
+          "score": 613.4075425790755
+        },
+        {
+          "name": "Logan Gilbert",
+          "days": 118,
+          "IP": 172.0,
+          "K": 187.0,
+          "QS": 13.0,
+          "SV+HD": 0.0,
+          "ERA": 3.72,
+          "WHIP": 1.05,
+          "score": 535.4244186046511
+        },
+        {
+          "name": "Chase Burns",
+          "days": 124,
+          "IP": 151.3,
+          "K": 181.0,
+          "QS": 11.0,
+          "SV+HD": 0.0,
+          "ERA": 2.8,
+          "WHIP": 1.15,
+          "score": 483.3575624082232
+        }
+      ]
+    },
+    "Anil": {
+      "team_id": 6,
+      "team_name": "Yeah Jeets",
+      "owner": "Anil",
+      "regular_season_seed": 6,
+      "regular_season_points": 37.0,
+      "trajectory": {
+        "start_rank": 1,
+        "start_points": 68.5,
+        "peak_week": 1,
+        "peak_points": 68.5,
+        "low_week": 14,
+        "low_points": 30.0,
+        "final_rank": 6,
+        "final_points": 37.0,
+        "net_points_change": -31.5
+      },
+      "phase_finishes": {
+        "phase_1_trios": {
+          "rank": 7,
+          "points": 37.0
+        },
+        "phase_2_midseason": {
+          "rank": 8,
+          "points": 30.0
+        },
+        "phase_3_split_final": {
+          "rank": 6,
+          "points": 37.0
+        }
+      },
+      "archetype": "The Opening Week Meteor & Middle-Inning Slugger",
+      "season_narrative": "Blazed out of the gate to hold 1st place in Week 1 with 68.5 roto points behind nuclear hitting lines. Sustained immense power all season to finish 2nd in Home Runs (344) with Junior Caminero (40 HR) and Ben Rice (38 HR), but suffered a severe pitching volume drought (last in K with 1330 and last in QS with 68) that dropped him to 6th overall (37.0 pts).",
+      "category_strengths": [
+        "Home Runs (2nd, 344)",
+        "OBP (4th, .3308)",
+        "WHIP (5th, 1.21)",
+        "ERA (4th, 3.66)"
+      ],
+      "category_vulnerabilities": [
+        "Strikeouts (9th, 1330)",
+        "Quality Starts (9th, 68)",
+        "Saves+Holds (8th, 130)",
+        "Stolen Bases (8th, 140)",
+        "Runs (7th, 1108)"
+      ],
+      "top_batters": [
+        {
+          "name": "Junior Caminero",
+          "days": 173,
+          "R": 91.0,
+          "HR": 40.0,
+          "RBI": 95.0,
+          "SB": 3.0,
+          "OBP": 0.364,
+          "AB": 570.0,
+          "score": 388.40552995391704
+        },
+        {
+          "name": "Ben Rice",
+          "days": 173,
+          "R": 95.0,
+          "HR": 38.0,
+          "RBI": 90.0,
+          "SB": 3.0,
+          "OBP": 0.356,
+          "AB": 530.0,
+          "score": 378.62091503267976
+        },
+        {
+          "name": "Brandon Lowe",
+          "days": 173,
+          "R": 87.0,
+          "HR": 29.0,
+          "RBI": 85.0,
+          "SB": 2.0,
+          "OBP": 0.327,
+          "AB": 542.0,
+          "score": 324.73026315789474
+        },
+        {
+          "name": "Bobby Witt Jr.",
+          "days": 164,
+          "R": 79.0,
+          "HR": 18.0,
+          "RBI": 51.0,
+          "SB": 39.0,
+          "OBP": 0.356,
+          "AB": 495.0,
+          "score": 315.63829787234044
+        }
+      ],
+      "top_pitchers": [
+        {
+          "name": "Cam Schlittler",
+          "days": 173,
+          "IP": 184.7,
+          "K": 228.0,
+          "QS": 19.0,
+          "SV+HD": 0.0,
+          "ERA": 1.95,
+          "WHIP": 0.9,
+          "score": 687.9193742478941
+        },
+        {
+          "name": "Bryan Woo",
+          "days": 157,
+          "IP": 155.3,
+          "K": 157.0,
+          "QS": 15.0,
+          "SV+HD": 0.0,
+          "ERA": 3.94,
+          "WHIP": 1.06,
+          "score": 517.6337625178826
+        },
+        {
+          "name": "Bryan Baker",
+          "days": 140,
+          "IP": 48.0,
+          "K": 51.0,
+          "QS": 0.0,
+          "SV+HD": 36.0,
+          "ERA": 1.12,
+          "WHIP": 0.9,
+          "score": 453.375
+        },
+        {
+          "name": "Luke Weaver",
+          "days": 173,
+          "IP": 56.3,
+          "K": 59.0,
+          "QS": 0.0,
+          "SV+HD": 22.0,
+          "ERA": 2.56,
+          "WHIP": 0.94,
+          "score": 322.55226824457594
+        }
+      ]
+    }
+  },
+  "category_battles_2026": [
+    {
+      "category": "OBP",
+      "title": "The Six-Way Decimal War",
+      "leader": {
+        "owner": "Dan",
+        "val": 0.3424,
+        "points": 9.0
+      },
+      "runner_up": {
+        "owner": "Tim",
+        "val": 0.3397,
+        "points": 8.0
+      },
+      "margin_summary": "Dan won the crown at .3424 over Tim (.3397). Below them raged a historically chaotic 6-way dogfight separated by less than .003: Will (.3311) vs Anil (.3308, diff .0003), Anil vs Adrian (.3306, diff .0001), Adrian vs Garrett (.3294, diff .0012), Garrett vs Mark (.3284, diff .0011), and Mark vs Preston (.3279, diff .0005).",
+      "key_combatants": [
+        "Dan",
+        "Tim",
+        "Will",
+        "Anil",
+        "Adrian",
+        "Garrett",
+        "Mark",
+        "Preston"
+      ]
+    },
+    {
+      "category": "HR",
+      "title": "The Heavyweight Slugfest & Middle Logjam",
+      "leader": {
+        "owner": "Tim",
+        "val": 385,
+        "points": 9.0
+      },
+      "runner_up": {
+        "owner": "Anil",
+        "val": 344,
+        "points": 8.0
+      },
+      "margin_summary": "Tim dominated with 385 homers. Behind Anil (344), five teams finished within 21 homers of each other in a frantic battle for points: Dan (338), Adrian (331), Alex (328), Garrett (325), and Will (323). Garrett and Will were separated by just 2 home runs; Alex and Garrett by 3.",
+      "key_combatants": [
+        "Tim",
+        "Anil",
+        "Dan",
+        "Adrian",
+        "Alex",
+        "Garrett",
+        "Will"
+      ]
+    },
+    {
+      "category": "SV+HD",
+      "title": "The High-Leverage Bullpen Duel",
+      "leader": {
+        "owner": "Dan",
+        "val": 194,
+        "points": 9.0
+      },
+      "runner_up": {
+        "owner": "Tim",
+        "val": 191,
+        "points": 8.0
+      },
+      "margin_summary": "Dan took the maximum 9.0 points by edging Tim by just 3 saves/holds (194 to 191). Meanwhile, Will (179) edged Adrian (177) by 2 holds, and Alex (131) edged Anil (130) by a single hold/save.",
+      "key_combatants": [
+        "Dan",
+        "Tim",
+        "Will",
+        "Adrian",
+        "Alex",
+        "Anil"
+      ]
+    },
+    {
+      "category": "QS",
+      "title": "Quality Starts Dead Heat",
+      "leader": {
+        "owner": "Dan",
+        "val": 135,
+        "points": 9.0
+      },
+      "runner_up": {
+        "owner": "Mark",
+        "val": 124,
+        "points": 8.0
+      },
+      "margin_summary": "Dan led the league with 135 QS, followed by Mark's workhorse rotation (124 QS). Tim and Garrett finished in an exact tie for 3rd place with 121 QS each (sharing 6.5 pts). Will finished just 3 back at 118 QS, and Adrian at 113.",
+      "key_combatants": [
+        "Dan",
+        "Mark",
+        "Tim",
+        "Garrett",
+        "Will",
+        "Adrian"
+      ]
+    },
+    {
+      "category": "SB",
+      "title": "The Speed Sweep & Micro-Margins",
+      "leader": {
+        "owner": "Tim",
+        "val": 257,
+        "points": 9.0
+      },
+      "runner_up": {
+        "owner": "Will",
+        "val": 233,
+        "points": 8.0
+      },
+      "margin_summary": "Tim (257) and Will (233) ran away with the top spots. Down the standings, Preston (189) edged Dan (185) by 4 steals for 7.0 pts, while Alex (165) edged Garrett (164) by a single stolen base.",
+      "key_combatants": [
+        "Tim",
+        "Will",
+        "Preston",
+        "Dan",
+        "Alex",
+        "Garrett"
+      ]
+    },
+    {
+      "category": "ERA & WHIP",
+      "title": "The Ratio Dual: Adrian vs Will",
+      "leader": {
+        "owner": "Adrian",
+        "val": 3.46,
+        "points": 9.0
+      },
+      "runner_up": {
+        "owner": "Will",
+        "val": 3.53,
+        "points": 8.0
+      },
+      "margin_summary": "Adrian captured the ERA crown with 3.46 over Will's 3.53, while Will claimed the WHIP crown at 1.14 over Adrian's 1.17. Behind them, Alex (3.65 ERA) and Anil (3.66 ERA) were separated by just 0.01 in ERA, and Dan (1.20) and Garrett (1.21) traded WHIP points on the season's final weekend.",
+      "key_combatants": [
+        "Adrian",
+        "Will",
+        "Alex",
+        "Anil",
+        "Dan",
+        "Garrett"
+      ]
+    }
+  ],
+  "season_timeline_weeks": [
+    {
+      "week": 1,
+      "name": "Opening Week (Trios)",
+      "phase": 1,
+      "start_date": "2026-03-25",
+      "end_date": "2026-04-05",
+      "leader": {
+        "owner": "Anil",
+        "points": 68.5
+      },
+      "second_place": {
+        "owner": "Mark",
+        "points": 58.5
+      },
+      "fourth_place_cutline": {
+        "owner": "Adrian",
+        "points": 53.0
+      },
+      "standings_summary": [
+        {
+          "rank": 1,
+          "owner": "Anil",
+          "team_name": "Yeah Jeets",
+          "points": 68.5
+        },
+        {
+          "rank": 2,
+          "owner": "Mark",
+          "team_name": "Basement Boy",
+          "points": 58.5
+        },
+        {
+          "rank": 3,
+          "owner": "Tim",
+          "team_name": "Anti-lock Brake Systems",
+          "points": 53.5
+        },
+        {
+          "rank": 4,
+          "owner": "Adrian",
+          "team_name": "D0ng Demolishers",
+          "points": 53.0
+        },
+        {
+          "rank": 5,
+          "owner": "Preston",
+          "team_name": "Maikels Secret Stuff",
+          "points": 53.0
+        },
+        {
+          "rank": 6,
+          "owner": "Garrett",
+          "team_name": "There's Always Next Year",
+          "points": 46.5
+        },
+        {
+          "rank": 7,
+          "owner": "Will",
+          "team_name": "Jos\u00e9 Can You See",
+          "points": 43.5
+        },
+        {
+          "rank": 8,
+          "owner": "Dan",
+          "team_name": "The Silver Bullets",
+          "points": 41.5
+        },
+        {
+          "rank": 9,
+          "owner": "Alex",
+          "team_name": "Raleigh Towels",
+          "points": 32.0
+        }
+      ],
+      "narrative": "Opening Week exploded with offense as Anil (Yeah Jeets) rocketed to 1st place with 68.5 roto points behind early power surges, followed closely by Mark (58.5 pts). Alex started slow in 9th (32.0 pts)."
+    },
+    {
+      "week": 2,
+      "name": "Week 2 (Trios)",
+      "phase": 1,
+      "start_date": "2026-04-06",
+      "end_date": "2026-04-12",
+      "leader": {
+        "owner": "Adrian",
+        "points": 61.0
+      },
+      "second_place": {
+        "owner": "Anil",
+        "points": 57.0
+      },
+      "fourth_place_cutline": {
+        "owner": "Garrett",
+        "points": 54.5
+      },
+      "standings_summary": [
+        {
+          "rank": 1,
+          "owner": "Adrian",
+          "team_name": "D0ng Demolishers",
+          "points": 61.0
+        },
+        {
+          "rank": 2,
+          "owner": "Anil",
+          "team_name": "Yeah Jeets",
+          "points": 57.0
+        },
+        {
+          "rank": 3,
+          "owner": "Will",
+          "team_name": "Jos\u00e9 Can You See",
+          "points": 55.5
+        },
+        {
+          "rank": 4,
+          "owner": "Garrett",
+          "team_name": "There's Always Next Year",
+          "points": 54.5
+        },
+        {
+          "rank": 5,
+          "owner": "Tim",
+          "team_name": "Anti-lock Brake Systems",
+          "points": 52.0
+        },
+        {
+          "rank": 6,
+          "owner": "Mark",
+          "team_name": "Basement Boy",
+          "points": 49.5
+        },
+        {
+          "rank": 7,
+          "owner": "Dan",
+          "team_name": "The Silver Bullets",
+          "points": 44.5
+        },
+        {
+          "rank": 8,
+          "owner": "Preston",
+          "team_name": "Maikels Secret Stuff",
+          "points": 40.5
+        },
+        {
+          "rank": 9,
+          "owner": "Alex",
+          "team_name": "Raleigh Towels",
+          "points": 35.5
+        }
+      ],
+      "narrative": "Adrian surged into 1st place (61.0 pts) while Will gained +12.0 points behind a dominant pitching week. Anil took an early -11.5 point hit as ratios corrected."
+    },
+    {
+      "week": 3,
+      "name": "Week 3 (Trios)",
+      "phase": 1,
+      "start_date": "2026-04-13",
+      "end_date": "2026-04-19",
+      "leader": {
+        "owner": "Will",
+        "points": 67.5
+      },
+      "second_place": {
+        "owner": "Tim",
+        "points": 62.5
+      },
+      "fourth_place_cutline": {
+        "owner": "Garrett",
+        "points": 53.0
+      },
+      "standings_summary": [
+        {
+          "rank": 1,
+          "owner": "Will",
+          "team_name": "Jos\u00e9 Can You See",
+          "points": 67.5
+        },
+        {
+          "rank": 2,
+          "owner": "Tim",
+          "team_name": "Anti-lock Brake Systems",
+          "points": 62.5
+        },
+        {
+          "rank": 3,
+          "owner": "Adrian",
+          "team_name": "D0ng Demolishers",
+          "points": 59.5
+        },
+        {
+          "rank": 4,
+          "owner": "Garrett",
+          "team_name": "There's Always Next Year",
+          "points": 53.0
+        },
+        {
+          "rank": 5,
+          "owner": "Anil",
+          "team_name": "Yeah Jeets",
+          "points": 47.0
+        },
+        {
+          "rank": 6,
+          "owner": "Dan",
+          "team_name": "The Silver Bullets",
+          "points": 44.5
+        },
+        {
+          "rank": 7,
+          "owner": "Preston",
+          "team_name": "Maikels Secret Stuff",
+          "points": 41.0
+        },
+        {
+          "rank": 8,
+          "owner": "Mark",
+          "team_name": "Basement Boy",
+          "points": 38.0
+        },
+        {
+          "rank": 9,
+          "owner": "Alex",
+          "team_name": "Raleigh Towels",
+          "points": 37.0
+        }
+      ],
+      "narrative": "Will seized 1st place for the first time with 67.5 roto points, building a 5.0-point lead over Tim (62.5 pts). Mark suffered a tough -11.5 point swing down into 8th."
+    },
+    {
+      "week": 4,
+      "name": "Week 4 (Trios)",
+      "phase": 1,
+      "start_date": "2026-04-20",
+      "end_date": "2026-04-26",
+      "leader": {
+        "owner": "Will",
+        "points": 66.0
+      },
+      "second_place": {
+        "owner": "Adrian",
+        "points": 63.0
+      },
+      "fourth_place_cutline": {
+        "owner": "Dan",
+        "points": 57.5
+      },
+      "standings_summary": [
+        {
+          "rank": 1,
+          "owner": "Will",
+          "team_name": "Jos\u00e9 Can You See",
+          "points": 66.0
+        },
+        {
+          "rank": 2,
+          "owner": "Adrian",
+          "team_name": "D0ng Demolishers",
+          "points": 63.0
+        },
+        {
+          "rank": 3,
+          "owner": "Tim",
+          "team_name": "Anti-lock Brake Systems",
+          "points": 60.0
+        },
+        {
+          "rank": 4,
+          "owner": "Dan",
+          "team_name": "The Silver Bullets",
+          "points": 57.5
+        },
+        {
+          "rank": 5,
+          "owner": "Garrett",
+          "team_name": "There's Always Next Year",
+          "points": 50.5
+        },
+        {
+          "rank": 6,
+          "owner": "Anil",
+          "team_name": "Yeah Jeets",
+          "points": 43.5
+        },
+        {
+          "rank": 7,
+          "owner": "Mark",
+          "team_name": "Basement Boy",
+          "points": 42.0
+        },
+        {
+          "rank": 8,
+          "owner": "Preston",
+          "team_name": "Maikels Secret Stuff",
+          "points": 34.5
+        },
+        {
+          "rank": 9,
+          "owner": "Alex",
+          "team_name": "Raleigh Towels",
+          "points": 33.0
+        }
+      ],
+      "narrative": "Dan posted the biggest single-week jump of the entire 2026 season: an astonishing +13.0 roto points, soaring from 8th to 4th place (57.5 pts). Will defended 1st place (66.0 pts)."
+    },
+    {
+      "week": 5,
+      "name": "Week 5 (Trios)",
+      "phase": 1,
+      "start_date": "2026-04-27",
+      "end_date": "2026-05-03",
+      "leader": {
+        "owner": "Will",
+        "points": 67.5
+      },
+      "second_place": {
+        "owner": "Adrian",
+        "points": 65.0
+      },
+      "fourth_place_cutline": {
+        "owner": "Dan",
+        "points": 54.5
+      },
+      "standings_summary": [
+        {
+          "rank": 1,
+          "owner": "Will",
+          "team_name": "Jos\u00e9 Can You See",
+          "points": 67.5
+        },
+        {
+          "rank": 2,
+          "owner": "Adrian",
+          "team_name": "D0ng Demolishers",
+          "points": 65.0
+        },
+        {
+          "rank": 3,
+          "owner": "Tim",
+          "team_name": "Anti-lock Brake Systems",
+          "points": 60.5
+        },
+        {
+          "rank": 4,
+          "owner": "Dan",
+          "team_name": "The Silver Bullets",
+          "points": 54.5
+        },
+        {
+          "rank": 5,
+          "owner": "Anil",
+          "team_name": "Yeah Jeets",
+          "points": 47.0
+        },
+        {
+          "rank": 6,
+          "owner": "Garrett",
+          "team_name": "There's Always Next Year",
+          "points": 46.5
+        },
+        {
+          "rank": 7,
+          "owner": "Preston",
+          "team_name": "Maikels Secret Stuff",
+          "points": 38.5
+        },
+        {
+          "rank": 8,
+          "owner": "Mark",
+          "team_name": "Basement Boy",
+          "points": 37.0
+        },
+        {
+          "rank": 9,
+          "owner": "Alex",
+          "team_name": "Raleigh Towels",
+          "points": 33.5
+        }
+      ],
+      "narrative": "Will (67.5 pts) and Adrian (65.0 pts) established themselves as the premier spring contenders, pulling away from the field. Alex remained in 9th at 33.5 pts."
+    },
+    {
+      "week": 6,
+      "name": "Week 6 (Trios)",
+      "phase": 1,
+      "start_date": "2026-05-04",
+      "end_date": "2026-05-10",
+      "leader": {
+        "owner": "Will",
+        "points": 68.5
+      },
+      "second_place": {
+        "owner": "Adrian",
+        "points": 63.0
+      },
+      "fourth_place_cutline": {
+        "owner": "Dan",
+        "points": 51.0
+      },
+      "standings_summary": [
+        {
+          "rank": 1,
+          "owner": "Will",
+          "team_name": "Jos\u00e9 Can You See",
+          "points": 68.5
+        },
+        {
+          "rank": 2,
+          "owner": "Adrian",
+          "team_name": "D0ng Demolishers",
+          "points": 63.0
+        },
+        {
+          "rank": 3,
+          "owner": "Tim",
+          "team_name": "Anti-lock Brake Systems",
+          "points": 61.0
+        },
+        {
+          "rank": 4,
+          "owner": "Dan",
+          "team_name": "The Silver Bullets",
+          "points": 51.0
+        },
+        {
+          "rank": 5,
+          "owner": "Garrett",
+          "team_name": "There's Always Next Year",
+          "points": 49.5
+        },
+        {
+          "rank": 6,
+          "owner": "Anil",
+          "team_name": "Yeah Jeets",
+          "points": 47.5
+        },
+        {
+          "rank": 7,
+          "owner": "Preston",
+          "team_name": "Maikels Secret Stuff",
+          "points": 40.5
+        },
+        {
+          "rank": 8,
+          "owner": "Mark",
+          "team_name": "Basement Boy",
+          "points": 35.0
+        },
+        {
+          "rank": 9,
+          "owner": "Alex",
+          "team_name": "Raleigh Towels",
+          "points": 34.0
+        }
+      ],
+      "narrative": "Will stretched his lead to 68.5 pts, anchored by Yoshinobu Yamamoto and Mason Miller. Dan held 4th place at 51.0 pts."
+    },
+    {
+      "week": 7,
+      "name": "Week 7 (Trios)",
+      "phase": 1,
+      "start_date": "2026-05-11",
+      "end_date": "2026-05-17",
+      "leader": {
+        "owner": "Will",
+        "points": 66.5
+      },
+      "second_place": {
+        "owner": "Adrian",
+        "points": 65.5
+      },
+      "fourth_place_cutline": {
+        "owner": "Garrett",
+        "points": 53.0
+      },
+      "standings_summary": [
+        {
+          "rank": 1,
+          "owner": "Will",
+          "team_name": "Jos\u00e9 Can You See",
+          "points": 66.5
+        },
+        {
+          "rank": 2,
+          "owner": "Adrian",
+          "team_name": "D0ng Demolishers",
+          "points": 65.5
+        },
+        {
+          "rank": 3,
+          "owner": "Tim",
+          "team_name": "Anti-lock Brake Systems",
+          "points": 62.0
+        },
+        {
+          "rank": 4,
+          "owner": "Garrett",
+          "team_name": "There's Always Next Year",
+          "points": 53.0
+        },
+        {
+          "rank": 5,
+          "owner": "Dan",
+          "team_name": "The Silver Bullets",
+          "points": 52.0
+        },
+        {
+          "rank": 6,
+          "owner": "Anil",
+          "team_name": "Yeah Jeets",
+          "points": 46.5
+        },
+        {
+          "rank": 7,
+          "owner": "Mark",
+          "team_name": "Basement Boy",
+          "points": 35.5
+        },
+        {
+          "rank": 8,
+          "owner": "Preston",
+          "team_name": "Maikels Secret Stuff",
+          "points": 35.0
+        },
+        {
+          "rank": 9,
+          "owner": "Alex",
+          "team_name": "Raleigh Towels",
+          "points": 34.0
+        }
+      ],
+      "narrative": "A razor-thin spring race: Will (66.5 pts) led Adrian (65.5 pts) by just 1.0 roto point, with Tim lurking in 3rd (58.5 pts)."
+    },
+    {
+      "week": 8,
+      "name": "Week 8 (Trios)",
+      "phase": 1,
+      "start_date": "2026-05-18",
+      "end_date": "2026-05-24",
+      "leader": {
+        "owner": "Adrian",
+        "points": 69.5
+      },
+      "second_place": {
+        "owner": "Will",
+        "points": 67.0
+      },
+      "fourth_place_cutline": {
+        "owner": "Garrett",
+        "points": 54.5
+      },
+      "standings_summary": [
+        {
+          "rank": 1,
+          "owner": "Adrian",
+          "team_name": "D0ng Demolishers",
+          "points": 69.5
+        },
+        {
+          "rank": 2,
+          "owner": "Will",
+          "team_name": "Jos\u00e9 Can You See",
+          "points": 67.0
+        },
+        {
+          "rank": 3,
+          "owner": "Tim",
+          "team_name": "Anti-lock Brake Systems",
+          "points": 63.5
+        },
+        {
+          "rank": 4,
+          "owner": "Garrett",
+          "team_name": "There's Always Next Year",
+          "points": 54.5
+        },
+        {
+          "rank": 5,
+          "owner": "Dan",
+          "team_name": "The Silver Bullets",
+          "points": 52.5
+        },
+        {
+          "rank": 6,
+          "owner": "Anil",
+          "team_name": "Yeah Jeets",
+          "points": 45.5
+        },
+        {
+          "rank": 7,
+          "owner": "Alex",
+          "team_name": "Raleigh Towels",
+          "points": 33.5
+        },
+        {
+          "rank": 8,
+          "owner": "Mark",
+          "team_name": "Basement Boy",
+          "points": 32.0
+        },
+        {
+          "rank": 9,
+          "owner": "Preston",
+          "team_name": "Maikels Secret Stuff",
+          "points": 32.0
+        }
+      ],
+      "narrative": "Adrian mounted a massive pitching week with Chris Sale and Michael Wacha, taking over 1st place at a season-high 69.5 pts. Preston hit his season trough at 32.0 pts."
+    },
+    {
+      "week": 9,
+      "name": "Week 9 (Trios)",
+      "phase": 1,
+      "start_date": "2026-05-25",
+      "end_date": "2026-05-31",
+      "leader": {
+        "owner": "Adrian",
+        "points": 66.0
+      },
+      "second_place": {
+        "owner": "Will",
+        "points": 64.5
+      },
+      "fourth_place_cutline": {
+        "owner": "Dan",
+        "points": 57.0
+      },
+      "standings_summary": [
+        {
+          "rank": 1,
+          "owner": "Adrian",
+          "team_name": "D0ng Demolishers",
+          "points": 66.0
+        },
+        {
+          "rank": 2,
+          "owner": "Will",
+          "team_name": "Jos\u00e9 Can You See",
+          "points": 64.5
+        },
+        {
+          "rank": 3,
+          "owner": "Tim",
+          "team_name": "Anti-lock Brake Systems",
+          "points": 64.0
+        },
+        {
+          "rank": 4,
+          "owner": "Dan",
+          "team_name": "The Silver Bullets",
+          "points": 57.0
+        },
+        {
+          "rank": 5,
+          "owner": "Garrett",
+          "team_name": "There's Always Next Year",
+          "points": 50.5
+        },
+        {
+          "rank": 6,
+          "owner": "Anil",
+          "team_name": "Yeah Jeets",
+          "points": 48.0
+        },
+        {
+          "rank": 7,
+          "owner": "Alex",
+          "team_name": "Raleigh Towels",
+          "points": 35.0
+        },
+        {
+          "rank": 8,
+          "owner": "Preston",
+          "team_name": "Maikels Secret Stuff",
+          "points": 35.0
+        },
+        {
+          "rank": 9,
+          "owner": "Mark",
+          "team_name": "Basement Boy",
+          "points": 30.0
+        }
+      ],
+      "narrative": "Adrian retained 1st place (66.0 pts) over Will (64.5 pts), while Dan climbed back into 4th (57.0 pts). Mark slipped into 9th place (30.0 pts)."
+    },
+    {
+      "week": 10,
+      "name": "Week 10 (Trios)",
+      "phase": 1,
+      "start_date": "2026-06-01",
+      "end_date": "2026-06-07",
+      "leader": {
+        "owner": "Will",
+        "points": 69.0
+      },
+      "second_place": {
+        "owner": "Tim",
+        "points": 65.5
+      },
+      "fourth_place_cutline": {
+        "owner": "Garrett",
+        "points": 53.0
+      },
+      "standings_summary": [
+        {
+          "rank": 1,
+          "owner": "Will",
+          "team_name": "Jos\u00e9 Can You See",
+          "points": 69.0
+        },
+        {
+          "rank": 2,
+          "owner": "Tim",
+          "team_name": "Anti-lock Brake Systems",
+          "points": 65.5
+        },
+        {
+          "rank": 3,
+          "owner": "Adrian",
+          "team_name": "D0ng Demolishers",
+          "points": 64.0
+        },
+        {
+          "rank": 4,
+          "owner": "Garrett",
+          "team_name": "There's Always Next Year",
+          "points": 53.0
+        },
+        {
+          "rank": 5,
+          "owner": "Dan",
+          "team_name": "The Silver Bullets",
+          "points": 53.0
+        },
+        {
+          "rank": 6,
+          "owner": "Anil",
+          "team_name": "Yeah Jeets",
+          "points": 40.5
+        },
+        {
+          "rank": 7,
+          "owner": "Alex",
+          "team_name": "Raleigh Towels",
+          "points": 39.5
+        },
+        {
+          "rank": 8,
+          "owner": "Preston",
+          "team_name": "Maikels Secret Stuff",
+          "points": 35.0
+        },
+        {
+          "rank": 9,
+          "owner": "Mark",
+          "team_name": "Basement Boy",
+          "points": 30.5
+        }
+      ],
+      "narrative": "Will reclaimed 1st place (69.0 pts) while Tim surged into 2nd (65.5 pts). Anil endured a -7.5 point drop down to 34.0 pts."
+    },
+    {
+      "week": 11,
+      "name": "Week 11 (Trios)",
+      "phase": 1,
+      "start_date": "2026-06-08",
+      "end_date": "2026-06-14",
+      "leader": {
+        "owner": "Tim",
+        "points": 68.0
+      },
+      "second_place": {
+        "owner": "Will",
+        "points": 67.0
+      },
+      "fourth_place_cutline": {
+        "owner": "Dan",
+        "points": 54.5
+      },
+      "standings_summary": [
+        {
+          "rank": 1,
+          "owner": "Tim",
+          "team_name": "Anti-lock Brake Systems",
+          "points": 68.0
+        },
+        {
+          "rank": 2,
+          "owner": "Will",
+          "team_name": "Jos\u00e9 Can You See",
+          "points": 67.0
+        },
+        {
+          "rank": 3,
+          "owner": "Adrian",
+          "team_name": "D0ng Demolishers",
+          "points": 64.0
+        },
+        {
+          "rank": 4,
+          "owner": "Dan",
+          "team_name": "The Silver Bullets",
+          "points": 54.5
+        },
+        {
+          "rank": 5,
+          "owner": "Garrett",
+          "team_name": "There's Always Next Year",
+          "points": 54.0
+        },
+        {
+          "rank": 6,
+          "owner": "Alex",
+          "team_name": "Raleigh Towels",
+          "points": 40.0
+        },
+        {
+          "rank": 7,
+          "owner": "Anil",
+          "team_name": "Yeah Jeets",
+          "points": 39.0
+        },
+        {
+          "rank": 8,
+          "owner": "Preston",
+          "team_name": "Maikels Secret Stuff",
+          "points": 34.5
+        },
+        {
+          "rank": 9,
+          "owner": "Mark",
+          "team_name": "Basement Boy",
+          "points": 29.0
+        }
+      ],
+      "narrative": "Tim seized 1st place for the first time of the season with 68.0 pts, edging Will (67.0 pts) by 1.0 point. Alex reached his season-high mark of 40.0 pts."
+    },
+    {
+      "week": 12,
+      "name": "Week 12 (Trios Finale)",
+      "phase": 1,
+      "start_date": "2026-06-15",
+      "end_date": "2026-06-21",
+      "leader": {
+        "owner": "Tim",
+        "points": 71.5
+      },
+      "second_place": {
+        "owner": "Will",
+        "points": 71.0
+      },
+      "fourth_place_cutline": {
+        "owner": "Garrett",
+        "points": 54.5
+      },
+      "standings_summary": [
+        {
+          "rank": 1,
+          "owner": "Tim",
+          "team_name": "Anti-lock Brake Systems",
+          "points": 71.5
+        },
+        {
+          "rank": 2,
+          "owner": "Will",
+          "team_name": "Jos\u00e9 Can You See",
+          "points": 71.0
+        },
+        {
+          "rank": 3,
+          "owner": "Adrian",
+          "team_name": "D0ng Demolishers",
+          "points": 62.5
+        },
+        {
+          "rank": 4,
+          "owner": "Garrett",
+          "team_name": "There's Always Next Year",
+          "points": 54.5
+        },
+        {
+          "rank": 5,
+          "owner": "Dan",
+          "team_name": "The Silver Bullets",
+          "points": 54.0
+        },
+        {
+          "rank": 6,
+          "owner": "Alex",
+          "team_name": "Raleigh Towels",
+          "points": 39.0
+        },
+        {
+          "rank": 7,
+          "owner": "Anil",
+          "team_name": "Yeah Jeets",
+          "points": 37.0
+        },
+        {
+          "rank": 8,
+          "owner": "Preston",
+          "team_name": "Maikels Secret Stuff",
+          "points": 34.5
+        },
+        {
+          "rank": 9,
+          "owner": "Mark",
+          "team_name": "Basement Boy",
+          "points": 26.0
+        }
+      ],
+      "narrative": "Phase 1 (Trios Marathon) concluded with a photo-finish at the top: Tim took 1st place with 71.5 pts, beating Will (71.0 pts) by 0.5 points! On the Phase 3 cutline, Garrett held 4th (54.5 pts) over Dan (54.0 pts) by just 0.5 points."
+    },
+    {
+      "week": 13,
+      "name": "Mid-Season Round 1",
+      "phase": 2,
+      "start_date": "2026-06-22",
+      "end_date": "2026-06-28",
+      "leader": {
+        "owner": "Will",
+        "points": 73.5
+      },
+      "second_place": {
+        "owner": "Tim",
+        "points": 70.5
+      },
+      "fourth_place_cutline": {
+        "owner": "Dan",
+        "points": 58.0
+      },
+      "standings_summary": [
+        {
+          "rank": 1,
+          "owner": "Will",
+          "team_name": "Jos\u00e9 Can You See",
+          "points": 73.5
+        },
+        {
+          "rank": 2,
+          "owner": "Tim",
+          "team_name": "Anti-lock Brake Systems",
+          "points": 70.5
+        },
+        {
+          "rank": 3,
+          "owner": "Adrian",
+          "team_name": "D0ng Demolishers",
+          "points": 63.5
+        },
+        {
+          "rank": 4,
+          "owner": "Dan",
+          "team_name": "The Silver Bullets",
+          "points": 58.0
+        },
+        {
+          "rank": 5,
+          "owner": "Garrett",
+          "team_name": "There's Always Next Year",
+          "points": 54.5
+        },
+        {
+          "rank": 6,
+          "owner": "Alex",
+          "team_name": "Raleigh Towels",
+          "points": 37.5
+        },
+        {
+          "rank": 7,
+          "owner": "Anil",
+          "team_name": "Yeah Jeets",
+          "points": 34.0
+        },
+        {
+          "rank": 8,
+          "owner": "Preston",
+          "team_name": "Maikels Secret Stuff",
+          "points": 33.5
+        },
+        {
+          "rank": 9,
+          "owner": "Mark",
+          "team_name": "Basement Boy",
+          "points": 25.0
+        }
+      ],
+      "narrative": "Phase 2 (Mid-Season Championship Round 1) ignited the cutline battle: Dan gained +4.0 points to leap into 4th place (58.0 pts), jumping Garrett (54.5 pts). Will regained 1st at a season peak of 73.5 pts."
+    },
+    {
+      "week": 14,
+      "name": "Mid-Season Round 2",
+      "phase": 2,
+      "start_date": "2026-06-29",
+      "end_date": "2026-07-05",
+      "leader": {
+        "owner": "Will",
+        "points": 72.0
+      },
+      "second_place": {
+        "owner": "Tim",
+        "points": 68.0
+      },
+      "fourth_place_cutline": {
+        "owner": "Dan",
+        "points": 58.5
+      },
+      "standings_summary": [
+        {
+          "rank": 1,
+          "owner": "Will",
+          "team_name": "Jos\u00e9 Can You See",
+          "points": 72.0
+        },
+        {
+          "rank": 2,
+          "owner": "Tim",
+          "team_name": "Anti-lock Brake Systems",
+          "points": 68.0
+        },
+        {
+          "rank": 3,
+          "owner": "Adrian",
+          "team_name": "D0ng Demolishers",
+          "points": 64.5
+        },
+        {
+          "rank": 4,
+          "owner": "Dan",
+          "team_name": "The Silver Bullets",
+          "points": 58.5
+        },
+        {
+          "rank": 5,
+          "owner": "Garrett",
+          "team_name": "There's Always Next Year",
+          "points": 56.5
+        },
+        {
+          "rank": 6,
+          "owner": "Preston",
+          "team_name": "Maikels Secret Stuff",
+          "points": 39.0
+        },
+        {
+          "rank": 7,
+          "owner": "Alex",
+          "team_name": "Raleigh Towels",
+          "points": 37.5
+        },
+        {
+          "rank": 8,
+          "owner": "Anil",
+          "team_name": "Yeah Jeets",
+          "points": 30.0
+        },
+        {
+          "rank": 9,
+          "owner": "Mark",
+          "team_name": "Basement Boy",
+          "points": 24.0
+        }
+      ],
+      "narrative": "Phase 2 concluded with monumental playoff implications: Dan secured the 4th and final Winners League seed with 58.5 pts, edging Garrett (56.5 pts) by just 2.0 roto points! Anil hit his season low of 30.0 pts."
+    },
+    {
+      "week": 15,
+      "name": "Week 15 (Split Start / ASG)",
+      "phase": 3,
+      "start_date": "2026-07-06",
+      "end_date": "2026-07-19",
+      "leader": {
+        "owner": "Tim",
+        "points": 75.5
+      },
+      "second_place": {
+        "owner": "Will",
+        "points": 71.5
+      },
+      "fourth_place_cutline": {
+        "owner": "Adrian",
+        "points": 59.5
+      },
+      "standings_summary": [
+        {
+          "rank": 1,
+          "owner": "Tim",
+          "team_name": "Anti-lock Brake Systems",
+          "points": 75.5
+        },
+        {
+          "rank": 2,
+          "owner": "Will",
+          "team_name": "Jos\u00e9 Can You See",
+          "points": 71.5
+        },
+        {
+          "rank": 3,
+          "owner": "Dan",
+          "team_name": "The Silver Bullets",
+          "points": 67.0
+        },
+        {
+          "rank": 4,
+          "owner": "Adrian",
+          "team_name": "D0ng Demolishers",
+          "points": 59.5
+        },
+        {
+          "rank": 5,
+          "owner": "Garrett",
+          "team_name": "There's Always Next Year",
+          "points": 49.0
+        },
+        {
+          "rank": 6,
+          "owner": "Anil",
+          "team_name": "Yeah Jeets",
+          "points": 34.5
+        },
+        {
+          "rank": 7,
+          "owner": "Alex",
+          "team_name": "Raleigh Towels",
+          "points": 34.0
+        },
+        {
+          "rank": 8,
+          "owner": "Preston",
+          "team_name": "Maikels Secret Stuff",
+          "points": 32.5
+        },
+        {
+          "rank": 9,
+          "owner": "Mark",
+          "team_name": "Basement Boy",
+          "points": 26.5
+        }
+      ],
+      "narrative": "Phase 3 (Split Leagues Start / ASG) saw the leaderboard reshuffled: Dan gained +8.5 points and Tim gained +7.5 points to take 1st (75.5 pts), while Garrett suffered a -7.5 point drop into the Consolation bracket."
+    },
+    {
+      "week": 16,
+      "name": "Week 16 (Split)",
+      "phase": 3,
+      "start_date": "2026-07-20",
+      "end_date": "2026-07-26",
+      "leader": {
+        "owner": "Tim",
+        "points": 75.0
+      },
+      "second_place": {
+        "owner": "Will",
+        "points": 69.5
+      },
+      "fourth_place_cutline": {
+        "owner": "Adrian",
+        "points": 59.5
+      },
+      "standings_summary": [
+        {
+          "rank": 1,
+          "owner": "Tim",
+          "team_name": "Anti-lock Brake Systems",
+          "points": 75.0
+        },
+        {
+          "rank": 2,
+          "owner": "Will",
+          "team_name": "Jos\u00e9 Can You See",
+          "points": 69.5
+        },
+        {
+          "rank": 3,
+          "owner": "Dan",
+          "team_name": "The Silver Bullets",
+          "points": 69.0
+        },
+        {
+          "rank": 4,
+          "owner": "Adrian",
+          "team_name": "D0ng Demolishers",
+          "points": 59.5
+        },
+        {
+          "rank": 5,
+          "owner": "Garrett",
+          "team_name": "There's Always Next Year",
+          "points": 49.0
+        },
+        {
+          "rank": 6,
+          "owner": "Alex",
+          "team_name": "Raleigh Towels",
+          "points": 36.0
+        },
+        {
+          "rank": 7,
+          "owner": "Anil",
+          "team_name": "Yeah Jeets",
+          "points": 34.0
+        },
+        {
+          "rank": 8,
+          "owner": "Preston",
+          "team_name": "Maikels Secret Stuff",
+          "points": 33.0
+        },
+        {
+          "rank": 9,
+          "owner": "Mark",
+          "team_name": "Basement Boy",
+          "points": 25.0
+        }
+      ],
+      "narrative": "Tim extended his dominance at the top with 75.0 pts, while Dan solidified 3rd place with 64.0 pts behind relentless pitching volume."
+    },
+    {
+      "week": 17,
+      "name": "Week 17 (Split)",
+      "phase": 3,
+      "start_date": "2026-07-27",
+      "end_date": "2026-08-02",
+      "leader": {
+        "owner": "Tim",
+        "points": 76.0
+      },
+      "second_place": {
+        "owner": "Dan",
+        "points": 68.5
+      },
+      "fourth_place_cutline": {
+        "owner": "Will",
+        "points": 64.0
+      },
+      "standings_summary": [
+        {
+          "rank": 1,
+          "owner": "Tim",
+          "team_name": "Anti-lock Brake Systems",
+          "points": 76.0
+        },
+        {
+          "rank": 2,
+          "owner": "Dan",
+          "team_name": "The Silver Bullets",
+          "points": 68.5
+        },
+        {
+          "rank": 3,
+          "owner": "Adrian",
+          "team_name": "D0ng Demolishers",
+          "points": 65.0
+        },
+        {
+          "rank": 4,
+          "owner": "Will",
+          "team_name": "Jos\u00e9 Can You See",
+          "points": 64.0
+        },
+        {
+          "rank": 5,
+          "owner": "Garrett",
+          "team_name": "There's Always Next Year",
+          "points": 53.5
+        },
+        {
+          "rank": 6,
+          "owner": "Preston",
+          "team_name": "Maikels Secret Stuff",
+          "points": 32.5
+        },
+        {
+          "rank": 7,
+          "owner": "Anil",
+          "team_name": "Yeah Jeets",
+          "points": 32.0
+        },
+        {
+          "rank": 8,
+          "owner": "Alex",
+          "team_name": "Raleigh Towels",
+          "points": 32.0
+        },
+        {
+          "rank": 9,
+          "owner": "Mark",
+          "team_name": "Basement Boy",
+          "points": 26.5
+        }
+      ],
+      "narrative": "Dan overtook Adrian and Will to grab 2nd place overall (68.5 pts), beginning his direct pursuit of Tim (76.0 pts)."
+    },
+    {
+      "week": 18,
+      "name": "Week 18 (Split)",
+      "phase": 3,
+      "start_date": "2026-08-03",
+      "end_date": "2026-08-09",
+      "leader": {
+        "owner": "Tim",
+        "points": 75.5
+      },
+      "second_place": {
+        "owner": "Dan",
+        "points": 70.0
+      },
+      "fourth_place_cutline": {
+        "owner": "Will",
+        "points": 63.5
+      },
+      "standings_summary": [
+        {
+          "rank": 1,
+          "owner": "Tim",
+          "team_name": "Anti-lock Brake Systems",
+          "points": 75.5
+        },
+        {
+          "rank": 2,
+          "owner": "Dan",
+          "team_name": "The Silver Bullets",
+          "points": 70.0
+        },
+        {
+          "rank": 3,
+          "owner": "Adrian",
+          "team_name": "D0ng Demolishers",
+          "points": 65.0
+        },
+        {
+          "rank": 4,
+          "owner": "Will",
+          "team_name": "Jos\u00e9 Can You See",
+          "points": 63.5
+        },
+        {
+          "rank": 5,
+          "owner": "Garrett",
+          "team_name": "There's Always Next Year",
+          "points": 47.5
+        },
+        {
+          "rank": 6,
+          "owner": "Anil",
+          "team_name": "Yeah Jeets",
+          "points": 35.5
+        },
+        {
+          "rank": 7,
+          "owner": "Alex",
+          "team_name": "Raleigh Towels",
+          "points": 35.5
+        },
+        {
+          "rank": 8,
+          "owner": "Preston",
+          "team_name": "Maikels Secret Stuff",
+          "points": 35.0
+        },
+        {
+          "rank": 9,
+          "owner": "Mark",
+          "team_name": "Basement Boy",
+          "points": 22.5
+        }
+      ],
+      "narrative": "Tim maintained a commanding 5.5-point lead at 75.5 pts over Dan (70.0 pts). Mark bottomed out at a season-low 22.5 pts."
+    },
+    {
+      "week": 19,
+      "name": "Week 19 (Split)",
+      "phase": 3,
+      "start_date": "2026-08-10",
+      "end_date": "2026-08-16",
+      "leader": {
+        "owner": "Tim",
+        "points": 77.5
+      },
+      "second_place": {
+        "owner": "Dan",
+        "points": 69.0
+      },
+      "fourth_place_cutline": {
+        "owner": "Will",
+        "points": 64.5
+      },
+      "standings_summary": [
+        {
+          "rank": 1,
+          "owner": "Tim",
+          "team_name": "Anti-lock Brake Systems",
+          "points": 77.5
+        },
+        {
+          "rank": 2,
+          "owner": "Dan",
+          "team_name": "The Silver Bullets",
+          "points": 69.0
+        },
+        {
+          "rank": 3,
+          "owner": "Adrian",
+          "team_name": "D0ng Demolishers",
+          "points": 65.0
+        },
+        {
+          "rank": 4,
+          "owner": "Will",
+          "team_name": "Jos\u00e9 Can You See",
+          "points": 64.5
+        },
+        {
+          "rank": 5,
+          "owner": "Garrett",
+          "team_name": "There's Always Next Year",
+          "points": 43.0
+        },
+        {
+          "rank": 6,
+          "owner": "Anil",
+          "team_name": "Yeah Jeets",
+          "points": 37.5
+        },
+        {
+          "rank": 7,
+          "owner": "Alex",
+          "team_name": "Raleigh Towels",
+          "points": 37.0
+        },
+        {
+          "rank": 8,
+          "owner": "Preston",
+          "team_name": "Maikels Secret Stuff",
+          "points": 33.0
+        },
+        {
+          "rank": 9,
+          "owner": "Mark",
+          "team_name": "Basement Boy",
+          "points": 23.5
+        }
+      ],
+      "narrative": "Tim hit his season peak of 77.5 roto points, leading Dan (69.0 pts) by an imposing 8.5-point cushion, with four hitting categories firmly in hand."
+    },
+    {
+      "week": 20,
+      "name": "Week 20 (Split)",
+      "phase": 3,
+      "start_date": "2026-08-17",
+      "end_date": "2026-08-23",
+      "leader": {
+        "owner": "Tim",
+        "points": 77.5
+      },
+      "second_place": {
+        "owner": "Dan",
+        "points": 69.0
+      },
+      "fourth_place_cutline": {
+        "owner": "Adrian",
+        "points": 65.0
+      },
+      "standings_summary": [
+        {
+          "rank": 1,
+          "owner": "Tim",
+          "team_name": "Anti-lock Brake Systems",
+          "points": 77.5
+        },
+        {
+          "rank": 2,
+          "owner": "Dan",
+          "team_name": "The Silver Bullets",
+          "points": 69.0
+        },
+        {
+          "rank": 3,
+          "owner": "Will",
+          "team_name": "Jos\u00e9 Can You See",
+          "points": 68.5
+        },
+        {
+          "rank": 4,
+          "owner": "Adrian",
+          "team_name": "D0ng Demolishers",
+          "points": 65.0
+        },
+        {
+          "rank": 5,
+          "owner": "Garrett",
+          "team_name": "There's Always Next Year",
+          "points": 41.0
+        },
+        {
+          "rank": 6,
+          "owner": "Anil",
+          "team_name": "Yeah Jeets",
+          "points": 37.0
+        },
+        {
+          "rank": 7,
+          "owner": "Alex",
+          "team_name": "Raleigh Towels",
+          "points": 37.0
+        },
+        {
+          "rank": 8,
+          "owner": "Preston",
+          "team_name": "Maikels Secret Stuff",
+          "points": 32.0
+        },
+        {
+          "rank": 9,
+          "owner": "Mark",
+          "team_name": "Basement Boy",
+          "points": 23.0
+        }
+      ],
+      "narrative": "Tim retained his 77.5-point stronghold, but Dan (69.0 pts) and Adrian (65.0 pts) began applying late-summer pressure as starting pitching rotations fatigued."
+    },
+    {
+      "week": 21,
+      "name": "Week 21 (Split)",
+      "phase": 3,
+      "start_date": "2026-08-24",
+      "end_date": "2026-08-30",
+      "leader": {
+        "owner": "Tim",
+        "points": 75.0
+      },
+      "second_place": {
+        "owner": "Dan",
+        "points": 71.0
+      },
+      "fourth_place_cutline": {
+        "owner": "Will",
+        "points": 64.0
+      },
+      "standings_summary": [
+        {
+          "rank": 1,
+          "owner": "Tim",
+          "team_name": "Anti-lock Brake Systems",
+          "points": 75.0
+        },
+        {
+          "rank": 2,
+          "owner": "Dan",
+          "team_name": "The Silver Bullets",
+          "points": 71.0
+        },
+        {
+          "rank": 3,
+          "owner": "Adrian",
+          "team_name": "D0ng Demolishers",
+          "points": 64.0
+        },
+        {
+          "rank": 4,
+          "owner": "Will",
+          "team_name": "Jos\u00e9 Can You See",
+          "points": 64.0
+        },
+        {
+          "rank": 5,
+          "owner": "Garrett",
+          "team_name": "There's Always Next Year",
+          "points": 43.0
+        },
+        {
+          "rank": 6,
+          "owner": "Alex",
+          "team_name": "Raleigh Towels",
+          "points": 39.0
+        },
+        {
+          "rank": 7,
+          "owner": "Anil",
+          "team_name": "Yeah Jeets",
+          "points": 38.0
+        },
+        {
+          "rank": 8,
+          "owner": "Preston",
+          "team_name": "Maikels Secret Stuff",
+          "points": 32.0
+        },
+        {
+          "rank": 9,
+          "owner": "Mark",
+          "team_name": "Basement Boy",
+          "points": 24.0
+        }
+      ],
+      "narrative": "The gap narrowed dramatically: Dan surged to 71.0 pts while Tim dropped to 75.0 pts \u2014 setting up an epic final fortnight for the #1 overall seed."
+    },
+    {
+      "week": 22,
+      "name": "Week 22 (Split)",
+      "phase": 3,
+      "start_date": "2026-08-31",
+      "end_date": "2026-09-06",
+      "leader": {
+        "owner": "Dan",
+        "points": 72.5
+      },
+      "second_place": {
+        "owner": "Tim",
+        "points": 72.0
+      },
+      "fourth_place_cutline": {
+        "owner": "Adrian",
+        "points": 64.0
+      },
+      "standings_summary": [
+        {
+          "rank": 1,
+          "owner": "Dan",
+          "team_name": "The Silver Bullets",
+          "points": 72.5
+        },
+        {
+          "rank": 2,
+          "owner": "Tim",
+          "team_name": "Anti-lock Brake Systems",
+          "points": 72.0
+        },
+        {
+          "rank": 3,
+          "owner": "Will",
+          "team_name": "Jos\u00e9 Can You See",
+          "points": 65.0
+        },
+        {
+          "rank": 4,
+          "owner": "Adrian",
+          "team_name": "D0ng Demolishers",
+          "points": 64.0
+        },
+        {
+          "rank": 5,
+          "owner": "Garrett",
+          "team_name": "There's Always Next Year",
+          "points": 46.0
+        },
+        {
+          "rank": 6,
+          "owner": "Anil",
+          "team_name": "Yeah Jeets",
+          "points": 36.5
+        },
+        {
+          "rank": 7,
+          "owner": "Alex",
+          "team_name": "Raleigh Towels",
+          "points": 36.0
+        },
+        {
+          "rank": 8,
+          "owner": "Preston",
+          "team_name": "Maikels Secret Stuff",
+          "points": 33.0
+        },
+        {
+          "rank": 9,
+          "owner": "Mark",
+          "team_name": "Basement Boy",
+          "points": 25.0
+        }
+      ],
+      "narrative": "THE LEADERBOARD FLIP: Dan overtook Tim for 1st place with 72.5 pts to Tim's 72.0 pts! Dan's season-long climb from #8 (41.5 pts) reached the summit."
+    },
+    {
+      "week": 23,
+      "name": "Week 23 (Regular Season Finale)",
+      "phase": 3,
+      "start_date": "2026-09-07",
+      "end_date": "2026-09-13",
+      "leader": {
+        "owner": "Dan",
+        "points": 73.0
+      },
+      "second_place": {
+        "owner": "Tim",
+        "points": 70.5
+      },
+      "fourth_place_cutline": {
+        "owner": "Adrian",
+        "points": 60.0
+      },
+      "standings_summary": [
+        {
+          "rank": 1,
+          "owner": "Dan",
+          "team_name": "The Silver Bullets",
+          "points": 73.0
+        },
+        {
+          "rank": 2,
+          "owner": "Tim",
+          "team_name": "Anti-lock Brake Systems",
+          "points": 70.5
+        },
+        {
+          "rank": 3,
+          "owner": "Will",
+          "team_name": "Jos\u00e9 Can You See",
+          "points": 66.0
+        },
+        {
+          "rank": 4,
+          "owner": "Adrian",
+          "team_name": "D0ng Demolishers",
+          "points": 60.0
+        },
+        {
+          "rank": 5,
+          "owner": "Garrett",
+          "team_name": "There's Always Next Year",
+          "points": 46.5
+        },
+        {
+          "rank": 6,
+          "owner": "Anil",
+          "team_name": "Yeah Jeets",
+          "points": 37.0
+        },
+        {
+          "rank": 7,
+          "owner": "Alex",
+          "team_name": "Raleigh Towels",
+          "points": 36.0
+        },
+        {
+          "rank": 8,
+          "owner": "Preston",
+          "team_name": "Maikels Secret Stuff",
+          "points": 33.0
+        },
+        {
+          "rank": 9,
+          "owner": "Mark",
+          "team_name": "Basement Boy",
+          "points": 28.0
+        }
+      ],
+      "narrative": "Regular Season Finale: Dan clinched the #1 overall seed with 73.0 roto points, sweeping all three pitching volume categories (K, QS, SV+HD) and OBP (.3424)! Tim finished 2nd (70.5 pts), Will 3rd (66.0 pts), Adrian 4th (60.0 pts), and Garrett ruled Consolation at 46.5 pts."
+    }
+  ],
+  "playoffs_2026": {
+    "round_1_week": 24,
+    "round_1_dates": "2026-09-14 to 2026-09-20",
+    "championship_bracket": [
+      {
+        "matchup_id": "sf1",
+        "name": "Semi-Final A",
+        "home": {
+          "seed": 1,
+          "owner": "Dan",
+          "team_name": "The Silver Bullets",
+          "regular_season_pts": 73.0
+        },
+        "away": {
+          "seed": 4,
+          "owner": "Adrian",
+          "team_name": "D0ng Demolishers",
+          "regular_season_pts": 60.0
+        },
+        "storyline": "The #1 overall seed Dan, on a +31.5 point regular season surge, faces the league ERA champion Adrian in a clash of volume streaming vs elite rotation ratios."
+      },
+      {
+        "matchup_id": "sf2",
+        "name": "Semi-Final B",
+        "home": {
+          "seed": 2,
+          "owner": "Tim",
+          "team_name": "Anti-lock Brake Systems",
+          "regular_season_pts": 70.5
+        },
+        "away": {
+          "seed": 3,
+          "owner": "Will",
+          "team_name": "Jos\u00e9 Can You See",
+          "regular_season_pts": 66.0
+        },
+        "storyline": "The two titans of the regular season spring and summer: Tim's 4-category offensive powerhouse (R, HR, RBI, SB) meets Will's pitching ratio fortress (1st in WHIP, 2nd in ERA, 2nd in K)."
+      }
+    ],
+    "consolation_bracket": [
+      {
+        "matchup_id": "c1",
+        "name": "Consolation A",
+        "home": {
+          "seed": 5,
+          "owner": "Garrett",
+          "team_name": "There's Always Next Year",
+          "regular_season_pts": 46.5
+        },
+        "away": {
+          "seed": 8,
+          "owner": "Preston",
+          "team_name": "Maikels Secret Stuff",
+          "regular_season_pts": 33.0
+        },
+        "storyline": "Consolation regular season winner Garrett takes on Preston's high-strikeout rotation (Dylan Cease, Jacob Misiorowski)."
+      },
+      {
+        "matchup_id": "c2",
+        "name": "Consolation B",
+        "home": {
+          "seed": 6,
+          "owner": "Anil",
+          "team_name": "Yeah Jeets",
+          "regular_season_pts": 37.0
+        },
+        "away": {
+          "seed": 7,
+          "owner": "Alex",
+          "team_name": "Raleigh Towels",
+          "regular_season_pts": 36.0
+        },
+        "storyline": "Anil's power tandem of Caminero and Rice battles Alex's Pete Crow-Armstrong powerhouse, separated by just 1.0 regular season roto point."
+      }
+    ],
+    "ninth_place": {
+      "seed": 9,
+      "owner": "Mark",
+      "team_name": "Basement Boy",
+      "regular_season_pts": 28.0
+    }
+  },
+  "manager_personas": {
+    "Tim": {
+      "team_id": 1,
+      "team_name": "Anti-lock Brake Systems",
+      "archetype": "The Four-Category Offensive Juggernaut & Mid-Season Titan",
       "in_season_tendencies": [
-        "Fiercely competitive in middle-tier standings battles, playing spoiler to contenders",
-        "Anchors his lineup with premium backstop production and disciplined power",
-        "Engages in high-stakes category battles down the final stretch of the season"
+        "Regular Season Seed #2 (70.5 pts, net +17.0 pts)",
+        "Peak Week: Week 19 (77.5 pts)",
+        "Category Strengths: Runs (1st, 1297), Home Runs (1st, 385)",
+        "Anchors: CJ Abrams (30.0 HR) & George Kirby (14.0 QS)"
       ],
       "banter_triggers": [
-        "Knocking off 1st-place teams on Sunday night stat corrections",
-        "Defending catcher premium value with elite two-way production",
-        "Relentless head-to-head spoiler mentality"
+        "Regular season trajectory: 53.5 pts -> 70.5 pts",
+        "Key category battle: Runs (1st, 1297)",
+        "Dominated hitting across the entire summer, capturing four of the five offensive crowns: 1st in Runs (1297), 1st in Home Runs (385), 1st in ..."
+      ]
+    },
+    "Garrett": {
+      "team_id": 3,
+      "team_name": "There's Always Next Year",
+      "archetype": "The Cutline Heartbreak & Consolation League Sovereign",
+      "in_season_tendencies": [
+        "Regular Season Seed #5 (46.5 pts, net +0.0 pts)",
+        "Peak Week: Week 14 (56.5 pts)",
+        "Category Strengths: RBI (2nd, 1149), Quality Starts (T-3rd, 121)",
+        "Anchors: Rafael Devers (37.0 HR) & Nolan McLean (18.0 QS)"
+      ],
+      "banter_triggers": [
+        "Regular season trajectory: 46.5 pts -> 46.5 pts",
+        "Key category battle: RBI (2nd, 1149)",
+        "Fought a dramatic Phase 2 cutline battle against Dan, falling just 2.0 roto points short of the Winners League in Week 14 (56.5 to 58.5). Re..."
+      ]
+    },
+    "Dan": {
+      "team_id": 5,
+      "team_name": "The Silver Bullets",
+      "archetype": "The High-Volume Volume Sweeper & Second-Half Juggernaut",
+      "in_season_tendencies": [
+        "Regular Season Seed #1 (73.0 pts, net +31.5 pts)",
+        "Peak Week: Week 23 (73.0 pts)",
+        "Category Strengths: Strikeouts (1st, 1986), Quality Starts (1st, 135)",
+        "Anchors: James Wood (30.0 HR) & Logan Webb (17.0 QS)"
+      ],
+      "banter_triggers": [
+        "Regular season trajectory: 41.5 pts -> 73.0 pts",
+        "Key category battle: Strikeouts (1st, 1986)",
+        "Mounted the defining campaign of the 2026 season: an epic +31.5 point comeback from 8th place (41.5 pts in Week 1) to claim the #1 overall s..."
+      ]
+    },
+    "Alex": {
+      "team_id": 8,
+      "team_name": "Raleigh Towels",
+      "archetype": "The Pete Crow-Armstrong Power-Speed Engine",
+      "in_season_tendencies": [
+        "Regular Season Seed #7 (36.0 pts, net +4.0 pts)",
+        "Peak Week: Week 11 (40.0 pts)",
+        "Category Strengths: ERA (3rd, 3.65), RBI (4th, 1101)",
+        "Anchors: Pete Crow-Armstrong (41.0 HR) & Cristopher Sanchez (20.0 QS)"
+      ],
+      "banter_triggers": [
+        "Regular season trajectory: 32.0 pts -> 36.0 pts",
+        "Key category battle: ERA (3rd, 3.65)",
+        "Overcame a slow Week 1 start (9th, 32.0 pts) to battle in the middle tier, peaking at 40.0 pts in Week 11. Anchored by the single most elect..."
+      ]
+    },
+    "Will": {
+      "team_id": 12,
+      "team_name": "Jos\u00e9 Can You See",
+      "archetype": "The Spring Pace-Setter & Elite WHIP Architect",
+      "in_season_tendencies": [
+        "Regular Season Seed #3 (66.0 pts, net +22.5 pts)",
+        "Peak Week: Week 13 (73.5 pts)",
+        "Category Strengths: WHIP (1st, 1.14), ERA (2nd, 3.53)",
+        "Anchors: Kyle Schwarber (44.0 HR) & Yoshinobu Yamamoto (20.0 QS)"
+      ],
+      "banter_triggers": [
+        "Regular season trajectory: 43.5 pts -> 66.0 pts",
+        "Key category battle: WHIP (1st, 1.14)",
+        "The league's premier spring force, holding 1st place for 8 separate weeks (Weeks 3-7, 10, 13-14) and peaking at 73.5 pts in Week 13. Enginee..."
+      ]
+    },
+    "Mark": {
+      "team_id": 13,
+      "team_name": "Basement Boy",
+      "archetype": "The Early Flash & Rotation Quality Workhorse",
+      "in_season_tendencies": [
+        "Regular Season Seed #9 (28.0 pts, net -30.5 pts)",
+        "Peak Week: Week 1 (58.5 pts)",
+        "Category Strengths: Quality Starts (2nd, 124), Strikeouts (5th, 1906)",
+        "Anchors: Kevin McGonigle (17.0 HR) & Reid Detmers (13.0 QS)"
+      ],
+      "banter_triggers": [
+        "Regular season trajectory: 58.5 pts -> 28.0 pts",
+        "Key category battle: Quality Starts (2nd, 124)",
+        "Stunned the league with an explosive Week 1 debut at #2 overall (58.5 pts) before entering an offensive dry spell that bottomed at 22.5 pts ..."
+      ]
+    },
+    "Preston": {
+      "team_id": 14,
+      "team_name": "Maikels Secret Stuff",
+      "archetype": "The High-Leverage Relief Specialist & Speed Engine",
+      "in_season_tendencies": [
+        "Regular Season Seed #8 (33.0 pts, net -20.0 pts)",
+        "Peak Week: Week 1 (53.0 pts)",
+        "Category Strengths: Stolen Bases (3rd, 189), Runs (5th, 1184)",
+        "Anchors: Trea Turner (19.0 HR) & Dylan Cease (15.0 QS)"
+      ],
+      "banter_triggers": [
+        "Regular season trajectory: 53.0 pts -> 33.0 pts",
+        "Key category battle: Stolen Bases (3rd, 189)",
+        "Started the year in 5th place (53.0 pts) before enduring a difficult May slump (dropping to 32.0 pts in Week 8). Featured elite base-stealin..."
+      ]
+    },
+    "Adrian": {
+      "team_id": 2,
+      "team_name": "D0ng Demolishers",
+      "archetype": "The ERA Champion & Starting Ace Purist",
+      "in_season_tendencies": [
+        "Regular Season Seed #4 (60.0 pts, net +7.0 pts)",
+        "Peak Week: Week 8 (69.5 pts)",
+        "Category Strengths: ERA (1st, 3.46), WHIP (2nd, 1.17)",
+        "Anchors: Elly De La Cruz (26.0 HR) & Chris Sale (19.0 QS)"
+      ],
+      "banter_triggers": [
+        "Regular season trajectory: 53.0 pts -> 60.0 pts",
+        "Key category battle: ERA (1st, 3.46)",
+        "Maintained the gold standard for starting rotation quality, winning the league ERA title (3.46) and finishing 2nd in WHIP (1.17) behind fron..."
+      ]
+    },
+    "Anil": {
+      "team_id": 6,
+      "team_name": "Yeah Jeets",
+      "archetype": "The Opening Week Meteor & Middle-Inning Slugger",
+      "in_season_tendencies": [
+        "Regular Season Seed #6 (37.0 pts, net -31.5 pts)",
+        "Peak Week: Week 1 (68.5 pts)",
+        "Category Strengths: Home Runs (2nd, 344), OBP (4th, .3308)",
+        "Anchors: Junior Caminero (40.0 HR) & Cam Schlittler (19.0 QS)"
+      ],
+      "banter_triggers": [
+        "Regular season trajectory: 68.5 pts -> 37.0 pts",
+        "Key category battle: Home Runs (2nd, 344)",
+        "Blazed out of the gate to hold 1st place in Week 1 with 68.5 roto points behind nuclear hitting lines. Sustained immense power all season to..."
       ]
     }
   },
   "category_battlegrounds": [
     {
       "category": "OBP",
-      "title": "The Fractional OBP Decimal War",
-      "primary_rivals": ["Will", "Garrett", "Adrian"],
-      "dynamic": "Will's disciplined high-contact approach (.3306) perpetually clashes with Garrett's all-or-nothing power (.3287) and Adrian's balanced lineup (.3312). These managers are perpetually separated by less than .002 in team OBP, meaning a single 0-for-4 slump or a 3-walk Sunday night trades 1.0 to 2.0 roto points back and forth between them."
+      "title": "The Six-Way Decimal War",
+      "primary_rivals": [
+        "Dan",
+        "Tim",
+        "Will",
+        "Anil"
+      ],
+      "dynamic": "Dan won the crown at .3424 over Tim (.3397). Below them raged a historically chaotic 6-way dogfight separated by less than .003: Will (.3311) vs Anil (.3308, diff .0003), Anil vs Adrian (.3306, diff .0001), Adrian vs Garrett (.3294, diff .0012), Garrett vs Mark (.3284, diff .0011), and Mark vs Preston (.3279, diff .0005)."
+    },
+    {
+      "category": "HR",
+      "title": "The Heavyweight Slugfest & Middle Logjam",
+      "primary_rivals": [
+        "Tim",
+        "Anil",
+        "Dan",
+        "Adrian"
+      ],
+      "dynamic": "Tim dominated with 385 homers. Behind Anil (344), five teams finished within 21 homers of each other in a frantic battle for points: Dan (338), Adrian (331), Alex (328), Garrett (325), and Will (323). Garrett and Will were separated by just 2 home runs; Alex and Garrett by 3."
     },
     {
       "category": "SV+HD",
-      "title": "The High-Leverage Bullpen Arms Race",
-      "primary_rivals": ["Preston", "Will", "Tim"],
-      "dynamic": "Preston's relief pitching monopoly (hoarding 6+ closers and setup men) is in a constant dogfight with Will (anchored by Josh Hader) and Tim's veteran bullpen. With Preston and Tim frequently deadlocked on saves and holds, every blown save or 8th-inning hold creates a direct 1-point swing at the top of the standings."
+      "title": "The High-Leverage Bullpen Duel",
+      "primary_rivals": [
+        "Dan",
+        "Tim",
+        "Will",
+        "Adrian"
+      ],
+      "dynamic": "Dan took the maximum 9.0 points by edging Tim by just 3 saves/holds (194 to 191). Meanwhile, Will (179) edged Adrian (177) by 2 holds, and Alex (131) edged Anil (130) by a single hold/save."
+    },
+    {
+      "category": "QS",
+      "title": "Quality Starts Dead Heat",
+      "primary_rivals": [
+        "Dan",
+        "Mark",
+        "Tim",
+        "Garrett"
+      ],
+      "dynamic": "Dan led the league with 135 QS, followed by Mark's workhorse rotation (124 QS). Tim and Garrett finished in an exact tie for 3rd place with 121 QS each (sharing 6.5 pts). Will finished just 3 back at 118 QS, and Adrian at 113."
     },
     {
       "category": "SB",
-      "title": "The Stolen Base Turf War",
-      "primary_rivals": ["Anil", "Dan", "Will"],
-      "dynamic": "Anil sets the gold standard for speed behind Bobby Witt Jr., while Dan relentlessly streams pinch-runners and speed demons off the wire to close the gap. Will grinds out stolen bases in high-efficiency spots. Single steals frequently flip 7th vs 8th place points in the final hours of a week."
+      "title": "The Speed Sweep & Micro-Margins",
+      "primary_rivals": [
+        "Tim",
+        "Will",
+        "Preston",
+        "Dan"
+      ],
+      "dynamic": "Tim (257) and Will (233) ran away with the top spots. Down the standings, Preston (189) edged Dan (185) by 4 steals for 7.0 pts, while Alex (165) edged Garrett (164) by a single stolen base."
     },
     {
       "category": "ERA & WHIP",
-      "title": "Pitching Volume vs Ratio Tightrope",
-      "primary_rivals": ["Adrian", "Dan", "Garrett"],
-      "dynamic": "Adrian protects fragile ratios with premium aces, while Dan streams high volumes of starting pitchers to accumulate Strikeouts and Quality Starts at the risk of ERA damage. Every 5-run implosion from a streamer or 8-inning shutout from an ace swings both ratio categories simultaneously."
-    },
-    {
-      "category": "HR & RBI",
-      "title": "The Heavyweight Slugging Clash",
-      "primary_rivals": ["Garrett", "Preston", "Mark"],
-      "dynamic": "Garrett's lineup of pure power hitters battles Preston's Aaron Judge-driven attack and Mark's second-half sluggers. Multi-homer games create instant multi-point swings in the standings, making power the most volatile offensive battleground."
+      "title": "The Ratio Dual: Adrian vs Will",
+      "primary_rivals": [
+        "Adrian",
+        "Will",
+        "Alex",
+        "Anil"
+      ],
+      "dynamic": "Adrian captured the ERA crown with 3.46 over Will's 3.53, while Will claimed the WHIP crown at 1.14 over Adrian's 1.17. Behind them, Alex (3.65 ERA) and Anil (3.66 ERA) were separated by just 0.01 in ERA, and Dan (1.20) and Garrett (1.21) traded WHIP points on the season's final weekend."
     }
   ],
   "season_trends_and_patterns": [
     {
-      "pattern": "The Mid-Table Standings Logjam",
-      "description": "Teams ranked 3rd through 7th in the roto standings are chronically clustered within 2 to 4 total points of each other. A single category win or decimal lead flip on Sunday night regularly rearranges 3 or 4 standings positions simultaneously."
+      "pattern": "Dan's Historic #8 to #1 Comeback Surge",
+      "description": "Dan climbed from 8th place (41.5 pts in Week 1) to 1st place (73.0 pts in Week 23), gaining +31.5 roto points across the season and seizing the #1 overall seed in Week 22 by sweeping K, QS, SV+HD, and OBP."
     },
     {
-      "pattern": "Sunday Night Decimal Volatility",
-      "description": "Rate categories (OBP, ERA, WHIP) and razor-thin counting stats (SB, SV+HD) experience dramatic swings during the Sunday night slate. Managers often wake up Monday morning to find their roto points flipped by a 9th-inning walk or stray hold."
+      "pattern": "The 6-Way Fractional OBP Deadlock",
+      "description": "Six managers (Will, Anil, Adrian, Garrett, Mark, Preston) spent the entire second half of 2026 separated by less than .003 in team OBP, meaning single base-on-balls on Sunday nights repeatedly caused 5-point standings swings."
     },
     {
-      "pattern": "Summer Rotation Fatigue & Ratio Spikes",
-      "description": "As MLB starters fatigue in July and August, team ERAs climb across the league. Managers with deep bullpens and innings management suddenly gain massive ratio ground over teams running tired workhorses."
+      "pattern": "Tim's 4-Category Offensive Domination",
+      "description": "Tim captured 4 of the 5 offensive categories (Runs, HR, RBI, SB) and held 1st place from Week 15 to Week 21, peaking at 77.5 roto points before Dan's pitching volume overtook him in Week 22."
     },
     {
-      "pattern": "Streaming Volume vs Rate Erosion",
-      "description": "High-transaction managers (like Dan) routinely gain counting stat points in Strikeouts and Quality Starts through heavy streaming, but battle a constant trade-off where one bad outing erodes hard-earned WHIP and ERA points."
+      "pattern": "The Week 14 Cutline Heartbreak",
+      "description": "Dan edged Garrett by just 2.0 roto points (58.5 to 56.5) at the conclusion of Phase 2, capturing the 4th and final seed into the Winners League while sending Garrett into the Consolation League."
     },
     {
-      "pattern": "Second-Half Surges vs Fast April Starters",
-      "description": "The league historically features managers who jump out to commanding spring leads (Anil, Adrian) who must constantly defend their cushion against second-half hot streaks from surging managers like Mark and Alex."
+      "pattern": "Volume Streaming vs Elite Ratios Duel",
+      "description": "Dan swept all 3 pitching volume categories (K, QS, SV+HD) with 1986 K and 135 QS, while Adrian and Will dominated ratios (Adrian 3.46 ERA, Will 1.14 WHIP) with elite starter efficiency."
     }
   ],
   "in_season_rivalries": [
     {
-      "name": "The Decimal Dogfight: Will vs Garrett",
-      "managers": ["Will", "Garrett"],
-      "narrative": "A battle of opposing offensive philosophies. Will obsesses over plate discipline, walk rates, and fractional OBP margins, while Garrett trusts raw slugging and home run power. They are chronically separated by hundredths of an OBP point and trade roto points back and forth all season long."
+      "name": "The Title Duel: Dan vs Tim",
+      "managers": [
+        "Dan",
+        "Tim"
+      ],
+      "narrative": "Tim led the league for 7 consecutive weeks (peaking at 77.5 pts) behind four offensive category crowns, but Dan's relentless pitching volume sweep (K, QS, SV+HD) and .3424 OBP allowed him to complete a +31.5 pt comeback and pass Tim in Week 22."
     },
     {
-      "name": "The Pitching Philosophy War: Adrian vs Preston",
-      "managers": ["Adrian", "Preston"],
-      "narrative": "Adrian's starting rotation aces clash directly with Preston's radical relief pitching monopoly. Adrian attacks Strikeouts, Quality Starts, and pristine ratios; Preston sweeps SV+HD and minimizes innings risk. A weekly referendum on starter consistency vs bullpen leverage."
+      "name": "The Ratio War: Adrian vs Will",
+      "managers": [
+        "Adrian",
+        "Will"
+      ],
+      "narrative": "A season-long clash of elite pitching efficiency. Adrian took the ERA crown at 3.46 with Chris Sale and Michael Wacha, while Will captured WHIP at 1.14 behind Yoshinobu Yamamoto and Mason Miller."
     },
     {
-      "name": "The Wire Churn vs Draft Floor: Dan vs Tim",
-      "managers": ["Dan", "Tim"],
-      "narrative": "Dan's frenetic waiver streaming and high-volume churn meets Tim's stoic patience and veteran consistency. Dan tries to manufacture points through 2 AM adds; Tim grinds out category points through deep, steady workhorses."
+      "name": "The Cutline Rematch: Dan vs Garrett",
+      "managers": [
+        "Dan",
+        "Garrett"
+      ],
+      "narrative": "Separated by only 0.5 points in Week 12 and 2.0 points in Week 14, Dan clinched the final Phase 3 Winners League spot over Garrett. Garrett responded by sweeping through the Consolation League with 121 QS and 1149 RBI."
     },
     {
-      "name": "The Summer Momentum Race: Mark vs Alex",
-      "managers": ["Mark", "Alex"],
-      "narrative": "Two managers whose seasons are defined by explosive scoring momentum. Alex catches lightning with young breakout prospects; Mark mounts terrifying second-half roto surges that relentlessly climb the standings leaderboard."
+      "name": "The High-Powered Sluggers: Anil vs Alex",
+      "managers": [
+        "Anil",
+        "Alex"
+      ],
+      "narrative": "Separated by just 1.0 regular season roto point (37.0 to 36.0), Anil's Junior Caminero (40 HR) and Ben Rice (38 HR) clash directly with Alex's Pete Crow-Armstrong (41 HR, 36 SB) in Consolation Semi-Final B."
     }
   ]
 }

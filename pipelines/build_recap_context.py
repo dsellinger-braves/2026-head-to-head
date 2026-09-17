@@ -292,23 +292,42 @@ def format_recap_context(
 
     patterns_block = "\n".join(bg_lines) if bg_lines else ""
 
-    # 4. Manager Personas & In-Season Pacing
+    # 4. Manager Profiles & 2026 Season Trajectories
+    team_profiles = context_data.get("team_profiles_2026", {})
+    playoff_info = context_data.get("playoffs_2026", {})
     persona_lines = []
     target_teams = list(dict.fromkeys(involved_team_ids or list(TEAM_NAMES.keys())))
-    for tid in target_teams[:5]:
+    for tid in target_teams[:6]:
         m_name = TEAM_NAMES.get(tid)
-        p = personas.get(m_name)
-        if p:
+        prof = team_profiles.get(m_name)
+        p = personas.get(m_name, {})
+        if prof:
+            seed = prof.get("regular_season_seed")
+            pts = prof.get("regular_season_points")
+            traj = prof.get("trajectory", {})
+            net = traj.get("net_points_change", 0.0)
+            net_str = f"+{net}" if net > 0 else f"{net}"
+            top_b = prof.get("top_batters", [{}])[0].get("name", "N/A")
+            top_p = prof.get("top_pitchers", [{}])[0].get("name", "N/A")
+            strengths = ", ".join(prof.get("category_strengths", [])[:2])
+            persona_lines.append(
+                f"  - {m_name} ({prof.get('team_name', '')}): Regular Season Seed #{seed} ({pts} pts, net {net_str} pts, peak: {traj.get('peak_points')} pts in W{traj.get('peak_week')}). Top Anchors: {top_b} & {top_p}. Key Strengths: {strengths}."
+            )
+        elif p:
             arch = p.get("archetype", "")
             tendencies = p.get("in_season_tendencies", p.get("tendencies", [""]))
             t_str = tendencies[0] if tendencies else ""
-            banter = p.get("banter_triggers", [""])[0]
-            persona_lines.append(f"  - {m_name} ({p.get('team_name', '')}): {arch}. Tendency: {t_str}. Banter: {banter}")
+            persona_lines.append(f"  - {m_name} ({p.get('team_name', '')}): {arch}. Tendency: {t_str}.")
 
     personas_block = "\n".join(persona_lines) if persona_lines else ""
 
-    # 5. In-Season Rivalries
+    # 5. In-Season Rivalries & Playoff Context
     rivalry_lines = []
+    if playoff_info:
+        for match in playoff_info.get("championship_bracket", []):
+            h_owner, a_owner = match["home"]["owner"], match["away"]["owner"]
+            if not involved_team_ids or (match["home"]["seed"] in involved_team_ids or match["away"]["seed"] in involved_team_ids):
+                rivalry_lines.append(f"  - 🏆 {match['name']}: #{match['home']['seed']} {h_owner} vs #{match['away']['seed']} {a_owner} — {match['storyline']}")
     if rivalries:
         for r in rivalries[:2]:
             rivalry_lines.append(f"  - Clash: {r['name']} ({', '.join(r['managers'])}) — {r['narrative']}")
@@ -325,10 +344,10 @@ ACTIVE CATEGORY BATTLEGROUNDS & ROTO POINT TUG-OF-WARS (LIVE):
 SEASON-LONG CATEGORY BATTLEGROUNDS & PATTERNS:
 {patterns_block}
 
-LEAGUE MANAGER PERSONAS & IN-SEASON TENDENCIES:
+LEAGUE MANAGER PROFILES & 2026 SEASON TRAJECTORIES:
 {personas_block}
 
-SEASON RIVALRIES & CATEGORY CLASHES:
+SEASON RIVALRIES & PLAYOFF BRACKET STAKES:
 {rivalries_block}
 """
     return output.strip()
@@ -337,26 +356,26 @@ SEASON RIVALRIES & CATEGORY CLASHES:
 if __name__ == "__main__":
     print("Testing recap context generator with mock standings...")
     mock_records = [
-        {"full_name": "Aaron Judge", "team_id": 14},
-        {"full_name": "Pete Alonso", "team_id": 1},
-        {"full_name": "Bobby Witt Jr.", "team_id": 6},
-        {"full_name": "Corbin Carroll", "team_id": 13},
-        {"full_name": "Gunnar Henderson", "team_id": 3}
+        {"full_name": "James Wood", "team_id": 5},
+        {"full_name": "Yordan Alvarez", "team_id": 1},
+        {"full_name": "Kyle Schwarber", "team_id": 12},
+        {"full_name": "Chris Sale", "team_id": 2},
+        {"full_name": "Pete Crow-Armstrong", "team_id": 8}
     ]
 
     mock_standings = {
-        12: {"R": 1150, "HR": 270, "RBI": 950, "OBP": 0.3306, "SB": 140, "QS": 85, "ERA": 3.90, "WHIP": 1.210, "K": 1500, "SV_HD": 90, "roto_points": 58.0, "standing": 2, "cat_points": {"OBP": 6.0, "SV_HD": 8.0}},
-        3:  {"R": 1180, "HR": 320, "RBI": 1050, "OBP": 0.3287, "SB": 110, "QS": 80, "ERA": 4.10, "WHIP": 1.250, "K": 1450, "SV_HD": 60, "roto_points": 57.0, "standing": 3, "cat_points": {"OBP": 5.0, "SV_HD": 4.0}},
-        14: {"R": 1140, "HR": 310, "RBI": 990, "OBP": 0.3285, "SB": 95, "QS": 70, "ERA": 3.85, "WHIP": 1.205, "K": 1400, "SV_HD": 92, "roto_points": 51.0, "standing": 5, "cat_points": {"OBP": 4.0, "SV_HD": 9.0}},
-        1:  {"R": 1210, "HR": 290, "RBI": 1010, "OBP": 0.3401, "SB": 130, "QS": 95, "ERA": 3.75, "WHIP": 1.180, "K": 1600, "SV_HD": 91, "roto_points": 72.0, "standing": 1, "cat_points": {"OBP": 8.0, "SV_HD": 8.5}},
+        5:  {"R": 1274, "HR": 338, "RBI": 1086, "OBP": 0.3424, "SB": 185, "QS": 135, "ERA": 3.80, "WHIP": 1.200, "K": 1986, "SV_HD": 194, "roto_points": 73.0, "standing": 1, "cat_points": {"OBP": 9.0, "K": 9.0, "QS": 9.0, "SV_HD": 9.0}},
+        1:  {"R": 1297, "HR": 385, "RBI": 1278, "OBP": 0.3397, "SB": 257, "QS": 121, "ERA": 3.86, "WHIP": 1.250, "K": 1927, "SV_HD": 191, "roto_points": 70.5, "standing": 2, "cat_points": {"R": 9.0, "HR": 9.0, "RBI": 9.0, "SB": 9.0}},
+        12: {"R": 1262, "HR": 323, "RBI": 1067, "OBP": 0.3311, "SB": 233, "QS": 118, "ERA": 3.53, "WHIP": 1.140, "K": 1957, "SV_HD": 179, "roto_points": 66.0, "standing": 3, "cat_points": {"WHIP": 9.0, "ERA": 8.0, "K": 8.0}},
+        2:  {"R": 1220, "HR": 331, "RBI": 1139, "OBP": 0.3306, "SB": 177, "QS": 113, "ERA": 3.46, "WHIP": 1.170, "K": 1811, "SV_HD": 177, "roto_points": 60.0, "standing": 4, "cat_points": {"ERA": 9.0, "WHIP": 8.0}},
     }
 
     mock_delta = {
-        12: {"points_change": 1.0, "rank_change": 0, "cat_delta": {"OBP": 1.0}},
-        3:  {"points_change": -1.0, "rank_change": 0, "cat_delta": {"OBP": -1.0}},
+        5: {"points_change": 0.5, "rank_change": 0, "cat_delta": {"OBP": 1.0}},
+        1: {"points_change": -0.5, "rank_change": 0, "cat_delta": {"OBP": -1.0}},
     }
 
-    ctx = format_recap_context(mock_records, [12, 3, 14, 1], standings=mock_standings, delta=mock_delta)
+    ctx = format_recap_context(mock_records, [5, 1, 12, 2], standings=mock_standings, delta=mock_delta)
     print("\n--- GENERATED CONTEXT INJECTION BLOCK ---")
     print(ctx)
 
