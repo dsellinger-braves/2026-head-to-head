@@ -96,7 +96,7 @@ export default function LeagueHistoryView({
   const [highlightFilter, setHighlightFilter] = useState('all'); // 'all' | 'highlights' | 'lowlights'
 
   // Standings display controls
-  const [showRawStats, setShowRawStats] = useState(false);
+  const [showRawStats, setShowRawStats] = useState(selectedYear === 'ALL');
 
   // Highlights stat records filter
   const [selectedStatCategory, setSelectedStatCategory] = useState('ALL'); // 'ALL' | 'R' | 'HR' | ...
@@ -357,7 +357,8 @@ export default function LeagueHistoryView({
         valA = a.pitchingPoints;
         valB = b.pitchingPoints;
       } else if (CATEGORIES.some(c => c.key === sortField)) {
-        if (showRawStats) {
+        const isRawSort = showRawStats || selectedYear === 'ALL';
+        if (isRawSort) {
           const rawA = a.rawStats?.[sortField];
           const rawB = b.rawStats?.[sortField];
           if (rawA !== undefined && rawB !== undefined) {
@@ -381,7 +382,7 @@ export default function LeagueHistoryView({
       return a.place - b.place;
     });
     return list;
-  }, [filteredFinishes, sortField, sortDirection, showRawStats]);
+  }, [filteredFinishes, sortField, sortDirection, showRawStats, selectedYear]);
 
   // Unique list of owners across history
   const allOwners = useMemo(() => {
@@ -399,7 +400,8 @@ export default function LeagueHistoryView({
     } else {
       setSortField(field);
       const cat = CATEGORIES.find(c => c.key === field);
-      const preferAsc = field === 'place' || (showRawStats && cat && !cat.higherIsBetter);
+      const isRawSort = showRawStats || selectedYear === 'ALL';
+      const preferAsc = field === 'place' || (isRawSort && cat && !cat.higherIsBetter);
       setSortDirection(preferAsc ? 'asc' : 'desc');
     }
   };
@@ -814,7 +816,13 @@ export default function LeagueHistoryView({
                 <span className="text-xs font-black text-gray-500 uppercase">Season:</span>
                 <select
                   value={selectedYear}
-                  onChange={e => setSelectedYear(e.target.value)}
+                  onChange={e => {
+                    const yr = e.target.value;
+                    setSelectedYear(yr);
+                    if (yr === 'ALL') {
+                      setShowRawStats(true);
+                    }
+                  }}
                   className="bg-gray-50 border border-gray-300 text-gray-800 text-xs font-black rounded-xl px-3 py-2 focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-xs"
                 >
                   {AVAILABLE_SEASONS.map(y => (
