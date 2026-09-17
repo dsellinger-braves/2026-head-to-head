@@ -3,8 +3,8 @@
   "league_name": "2026 Head to Head Heftystrong",
   "season_year": 2026,
   "scoring_format": "10-Category Head-to-Head Each Category / Points (R, HR, RBI, OBP, SB | K, QS, SV+HD, ERA, WHIP)",
-  "last_updated_scoring_period": 176,
-  "last_updated_timestamp": "2026-09-17T15:34:14.994307Z",
+  "last_updated_scoring_period": 177,
+  "last_updated_timestamp": "2026-09-17T18:05:03.278786Z",
   "current_week": 24,
   "season_structure": {
     "phase_1": {
@@ -410,6 +410,14 @@
           "obp": 0.339
         },
         {
+          "name": "Sal Stewart",
+          "hr": 32,
+          "rbi": 107,
+          "r": 83,
+          "sb": 15,
+          "obp": 0.337
+        },
+        {
           "name": "Pete Alonso",
           "hr": 37,
           "rbi": 102,
@@ -424,14 +432,6 @@
           "r": 96,
           "sb": 1,
           "obp": 0.428
-        },
-        {
-          "name": "Sal Stewart",
-          "hr": 31,
-          "rbi": 106,
-          "r": 82,
-          "sb": 15,
-          "obp": 0.337
         },
         {
           "name": "Fernando Tatis Jr.",
@@ -575,7 +575,7 @@
           "rbi": 94,
           "r": 96,
           "sb": 19,
-          "obp": 0.369
+          "obp": 0.367
         },
         {
           "name": "Manny Machado",
@@ -1036,7 +1036,7 @@
           "rbi": 81,
           "r": 86,
           "sb": 3,
-          "obp": 0.362
+          "obp": 0.36
         }
       ],
       "top_pitchers": [
@@ -1158,11 +1158,11 @@
         },
         {
           "name": "Kyle Tucker",
-          "hr": 15,
-          "rbi": 66,
-          "r": 83,
+          "hr": 16,
+          "rbi": 69,
+          "r": 85,
           "sb": 10,
-          "obp": 0.327
+          "obp": 0.33
         },
         {
           "name": "Christian Walker",
@@ -1313,20 +1313,20 @@
           "obp": 0.328
         },
         {
+          "name": "Max Muncy",
+          "hr": 23,
+          "rbi": 68,
+          "r": 64,
+          "sb": 2,
+          "obp": 0.353
+        },
+        {
           "name": "Jake McCarthy",
           "hr": 13,
           "rbi": 61,
           "r": 63,
           "sb": 21,
           "obp": 0.345
-        },
-        {
-          "name": "Max Muncy",
-          "hr": 23,
-          "rbi": 66,
-          "r": 64,
-          "sb": 2,
-          "obp": 0.348
         },
         {
           "name": "Shea Langeliers",
@@ -1443,7 +1443,7 @@
           "rbi": 74,
           "r": 94,
           "sb": 26,
-          "obp": 0.364
+          "obp": 0.363
         },
         {
           "name": "Hunter Goodman",
@@ -1456,8 +1456,8 @@
         {
           "name": "Oneil Cruz",
           "hr": 19,
-          "rbi": 64,
-          "r": 57,
+          "rbi": 66,
+          "r": 58,
           "sb": 27,
           "obp": 0.364
         },
@@ -1472,10 +1472,10 @@
         {
           "name": "Freddie Freeman",
           "hr": 16,
-          "rbi": 65,
-          "r": 72,
+          "rbi": 66,
+          "r": 74,
           "sb": 7,
-          "obp": 0.376
+          "obp": 0.377
         }
       ],
       "top_pitchers": [
@@ -1594,7 +1594,7 @@
           "rbi": 96,
           "r": 93,
           "sb": 3,
-          "obp": 0.363
+          "obp": 0.362
         },
         {
           "name": "Ben Rice",
@@ -1607,10 +1607,10 @@
         {
           "name": "Brandon Lowe",
           "hr": 31,
-          "rbi": 88,
+          "rbi": 89,
           "r": 89,
           "sb": 2,
-          "obp": 0.329
+          "obp": 0.33
         },
         {
           "name": "Bobby Witt Jr.",
@@ -3593,7 +3593,7 @@
       },
       "fourth_place_cutline": {
         "owner": "Adrian",
-        "points": 62.5
+        "points": 63.0
       },
       "standings_summary": [
         {
@@ -3618,7 +3618,7 @@
           "rank": 4,
           "owner": "Adrian",
           "team_name": "D0ng Demolishers",
-          "points": 62.5
+          "points": 63.0
         },
         {
           "rank": 5,
@@ -3636,7 +3636,7 @@
           "rank": 7,
           "owner": "Alex",
           "team_name": "Raleigh Towels",
-          "points": 35.5
+          "points": 35.0
         },
         {
           "rank": 8,
@@ -3764,8 +3764,8 @@
         "category_breakdown": {
           "R": {
             "winner": "Adrian",
-            "val_a": 17,
-            "val_b": 24
+            "val_a": 18,
+            "val_b": 27
           },
           "HR": {
             "winner": "Adrian",
@@ -3775,11 +3775,11 @@
           "RBI": {
             "winner": "Adrian",
             "val_a": 19,
-            "val_b": 25
+            "val_b": 28
           },
           "OBP": {
             "winner": "Adrian",
-            "val_a": 0.328,
+            "val_a": 0.3351,
             "val_b": 0.377
           },
           "SB": {
@@ -3789,8 +3789,8 @@
           },
           "K": {
             "winner": "Adrian",
-            "val_a": 30,
-            "val_b": 48
+            "val_a": 32,
+            "val_b": 51
           },
           "QS": {
             "winner": "TIE",
@@ -3804,13 +3804,13 @@
           },
           "ERA": {
             "winner": "Dan",
-            "val_a": 0.89,
-            "val_b": 3.21
+            "val_a": 0.79,
+            "val_b": 3.0
           },
           "WHIP": {
             "winner": "Dan",
-            "val_a": 0.89,
-            "val_b": 1.17
+            "val_a": 0.9,
+            "val_b": 1.09
           }
         }
       },
@@ -3832,23 +3832,23 @@
         "category_breakdown": {
           "R": {
             "winner": "Tim",
-            "val_a": 27,
+            "val_a": 28,
             "val_b": 21
           },
           "HR": {
             "winner": "Tim",
-            "val_a": 9,
+            "val_a": 10,
             "val_b": 5
           },
           "RBI": {
             "winner": "Tim",
-            "val_a": 20,
+            "val_a": 21,
             "val_b": 18
           },
           "OBP": {
             "winner": "Tim",
-            "val_a": 0.3787,
-            "val_b": 0.3425
+            "val_a": 0.3779,
+            "val_b": 0.3405
           },
           "SB": {
             "winner": "Will",
@@ -3886,25 +3886,25 @@
         "3": {
           "R": 15,
           "HR": 5,
-          "RBI": 15,
-          "OBP": 0.2601,
-          "SB": 4,
+          "RBI": 16,
+          "OBP": 0.2597,
+          "SB": 5,
           "K": 37,
           "QS": 1,
           "SV_HD": 0,
           "ERA": 3.18,
           "WHIP": 1.26,
-          "raw_IP": 34.0,
-          "raw_AB": 155.0,
-          "raw_H": 28.0,
-          "raw_BB": 16.0,
+          "raw_IP": 33.99999999999999,
+          "raw_AB": 162.0,
+          "raw_H": 29.0,
+          "raw_BB": 17.0,
           "raw_ER": 12.0
         },
         "8": {
           "R": 20,
           "HR": 6,
           "RBI": 19,
-          "OBP": 0.2879,
+          "OBP": 0.2889,
           "SB": 3,
           "K": 30,
           "QS": 1,
@@ -3912,50 +3912,50 @@
           "ERA": 3.38,
           "WHIP": 1.06,
           "raw_IP": 29.333333333333332,
-          "raw_AB": 120.0,
+          "raw_AB": 122.0,
           "raw_H": 27.0,
-          "raw_BB": 8.0,
+          "raw_BB": 9.0,
           "raw_ER": 11.0
         },
         "6": {
           "R": 20,
           "HR": 4,
-          "RBI": 12,
-          "OBP": 0.3052,
+          "RBI": 13,
+          "OBP": 0.3038,
           "SB": 4,
           "K": 7,
           "QS": 0,
           "SV_HD": 2,
           "ERA": 3.72,
           "WHIP": 1.55,
-          "raw_IP": 9.666666666666668,
-          "raw_AB": 139.0,
+          "raw_IP": 9.666666666666664,
+          "raw_AB": 142.0,
           "raw_H": 32.0,
           "raw_BB": 12.0,
           "raw_ER": 4.0
         },
         "13": {
-          "R": 11,
-          "HR": 2,
-          "RBI": 8,
-          "OBP": 0.377,
+          "R": 13,
+          "HR": 3,
+          "RBI": 11,
+          "OBP": 0.4062,
           "SB": 3,
-          "K": 36,
+          "K": 40,
           "QS": 2,
           "SV_HD": 1,
-          "ERA": 5.36,
-          "WHIP": 1.26,
-          "raw_IP": 40.333333333333336,
-          "raw_AB": 50.0,
-          "raw_H": 12.0,
+          "ERA": 5.82,
+          "WHIP": 1.34,
+          "raw_IP": 43.333333333333336,
+          "raw_AB": 53.0,
+          "raw_H": 15.0,
           "raw_BB": 11.0,
-          "raw_ER": 24.0
+          "raw_ER": 28.0
         },
         "14": {
           "R": 21,
           "HR": 5,
-          "RBI": 18,
-          "OBP": 0.3614,
+          "RBI": 20,
+          "OBP": 0.3765,
           "SB": 7,
           "K": 32,
           "QS": 0,
@@ -3963,8 +3963,8 @@
           "ERA": 1.69,
           "WHIP": 1.27,
           "raw_IP": 21.333333333333336,
-          "raw_AB": 145.0,
-          "raw_H": 40.0,
+          "raw_AB": 148.0,
+          "raw_H": 43.0,
           "raw_BB": 19.0,
           "raw_ER": 4.0
         }
