@@ -94,6 +94,13 @@ At the conclusion of Week 23 (September 13, 2026), all 23 regular season weeks w
 - **Story**: Tim dominated the first five weeks of Phase 3, ascending to an untouched 77.5 points in Weeks 19–20. But Dan's pitching rotation (Logan Webb, Zack Wheeler, Kevin Gausman) and bullpen (Tanner Scott) swept all three volume categories, while James Wood (.395 OBP) and Shohei Ohtani (.384 OBP) propelled Dan to the #1 OBP ranking (.3424). In Week 22, Dan passed Tim (72.5 to 72.0) and clinched the #1 overall seed in Week 23 (73.0 pts).
 
 ### Phase 4: The 2026 Playoffs (Weeks 24–25)
+
+> [!IMPORTANT]
+> **⚡ LIVE Playoff Semi-Finals Status (Week 24)**  
+> *Scored Head-to-Head across all 10 categories (First to 6 wins; ties award 0.5).*
+> - **Semi-Final A**: **#1 Dan** (2) vs **#4 Adrian** (8) — **Leader: Adrian** (0 tied categories)
+> - **Semi-Final B**: **#2 Tim** (5) vs **#3 Will** (5) — **Leader: TIED** (0 tied categories)
+
 - **Semi-Final A**: **#1 Dan (The Silver Bullets)** vs **#4 Adrian (D0ng Demolishers)**  
   *Matchup Dynamics*: Volume streaming vs pristine rotation ratios. Dan leads the league in K, QS, and SV+HD; Adrian counters with the league's #1 ERA (3.46) led by Chris Sale and Michael Wacha.
 - **Semi-Final B**: **#2 Tim (Anti-lock Brake Systems)** vs **#3 Will (José Can You See)**  

@@ -36,9 +36,23 @@ TEAM_NAMES = {
 _context_cache = None
 
 
-def load_league_context() -> dict:
-    """Load the persistent league context document."""
+def ensure_context_is_fresh() -> None:
+    """Ensure data/league_context.json is updated from Supabase if needed."""
     global _context_cache
+    try:
+        from pipelines.update_league_context import refresh_context_files
+        _context_cache = refresh_context_files(save_to_disk=True)
+    except Exception as e:
+        # Fall back gracefully to on-disk context cache
+        pass
+
+
+def load_league_context(auto_refresh: bool = False) -> dict:
+    """Load the persistent league context document, optionally refreshing first."""
+    global _context_cache
+    if auto_refresh:
+        ensure_context_is_fresh()
+
     if _context_cache is not None:
         return _context_cache
 
@@ -170,8 +184,8 @@ def detect_active_roto_battles(
     limit: int = 4
 ) -> List[str]:
     """
-    Dynamically identify active category dogfights and standings tug-of-wars
-    where managers are separated by razor-thin margins and actively trading roto points.
+    Dynamically identify active category volatility and standings deadlocks
+    where managers are separated by razor-thin margins.
     """
     if not standings or not isinstance(standings, dict):
         return []
@@ -213,11 +227,11 @@ def detect_active_roto_battles(
 
                 if flipped:
                     battles.append(
-                        f"  - ⚡ ACTIVE POINT FLIP in {cat}: {m1} and {m2} just traded roto points! Separated by only {diff_str} in {cat} ({t1_str} vs {t2_str})."
+                        f"  - ⚡ POINT SWING in {cat}: {m1} and {m2} swapped roto points! Margin: {diff_str} in {cat} ({t1_str} vs {t2_str})."
                     )
                 else:
                     battles.append(
-                        f"  - ⚔️ {cat} TUG-OF-WAR (Margin: {diff_str}): {t1_str} vs {t2_str} — neck-and-neck for this roto point, actively trading it back and forth!"
+                        f"  - 🎯 {cat} VOLATILITY ZONE (Margin: {diff_str}): {t1_str} vs {t2_str} — separated by fractional margins, a single hot night flips this point."
                     )
 
     # 2. Overall Standings Logjams (teams within 1.5 total roto points)
@@ -344,10 +358,10 @@ def format_recap_context(
 REAL MLB NEWS & FANTASY ROSTER OVERLAP:
 {news_block}
 
-ACTIVE CATEGORY BATTLEGROUNDS & ROTO POINT TUG-OF-WARS (LIVE):
+ACTIVE CATEGORY VOLATILITY & RAZOR-THIN MARGINS (LIVE):
 {active_battles_block}
 
-SEASON-LONG CATEGORY BATTLEGROUNDS & PATTERNS:
+SEASON TRAJECTORIES & STATISTICAL PATTERNS:
 {patterns_block}
 
 LEAGUE MANAGER PROFILES & 2026 SEASON TRAJECTORIES:

@@ -13,6 +13,7 @@ from collections import defaultdict
 from datetime import datetime, timedelta, date, timezone
 from supabase import create_client, Client
 import google.genai as genai
+from google.genai import types
 from historical import (
     format_owner_history,
     format_league_champions,
@@ -552,10 +553,76 @@ def format_delta_block(standings: dict, delta: dict) -> str:
 # ---------------------------------------------------------------------------
 # AI SUMMARY
 # ---------------------------------------------------------------------------
+# ROTATING DAILY PERSONAS & ANTI-REPETITION CONSTRAINTS
+# ---------------------------------------------------------------------------
+
+ROTATING_DAILY_PERSONAS = {
+    0: {  # Monday (reviewing Sunday games)
+        "role_name": "The Sunday Box Score Coroner",
+        "perspective": "Conducting a dry, clinical, slightly morbid post-mortem of weekend box scores. Treat ERA blowups and blown saves as medical malpractice or crime scene investigations. Identify cause of death for sinking teams and autopsies of pitching disasters.",
+        "sample_motifs": ["toxic WHIP levels", "certified time of death", "pitching malpractice", "blunt-force trauma to the standings", "cardiac arrest in the 9th inning"]
+    },
+    1: {  # Tuesday (early week / waiver moves)
+        "role_name": "The Wall Street Quant & Distressed Asset Trader",
+        "perspective": "Viewing fantasy rosters strictly through the lens of capital efficiency, risk-adjusted returns, and market arbitrage. Treat players as volatile equities or distressed assets, call out inefficient streaming spending, and identify toxic assets ripe for the waiver scrapheap.",
+        "sample_motifs": ["margin calls on your bullpen", "liquidity crisis", "shorting slumping sluggers", "roster arbitrage", "negative ROI streaming", "mean reversion"]
+    },
+    2: {  # Wednesday (mid-week standings shifts)
+        "role_name": "The Vegas Oddsmaker & Sharp Bettor",
+        "perspective": "Framing the league race in terms of betting lines, futures movement, bad beats, backdoor covers, and closing-line value. Look at team totals as point spreads and roast managers taking sucker bets on fading aces.",
+        "sample_motifs": ["taking the chalk", "backdoor cover", "bad beat of the century", "implied title probability", "parlay buster", "the sharps are fading you"]
+    },
+    3: {  # Thursday (clubhouse vibes & tension)
+        "role_name": "The Dugout Beat Writer & Clubhouse Insider",
+        "perspective": "Writing like an embedded, sourced baseball journalist who hears the locker room whispers, dugout tension, and manager press conference subtext. Quote 'anonymous front office sources' and speculate on fractured team chemistry.",
+        "sample_motifs": ["closed-door manager meetings", "clubhouse body language", "front office sources say", "veteran benching rumors", "lost the locker room"]
+    },
+    4: {  # Friday (heading into weekend action)
+        "role_name": "The Drive-Time Sports Radio Shock Jock",
+        "perspective": "Screaming hot-take radio energy, taking furious calls, slamming the panic button on underperforming stars, and demanding immediate, irrational managerial overhauls ahead of the weekend.",
+        "sample_motifs": ["caller on line 4 has had enough", "hit the emergency siren", "smash the panic button", "unforgivable managing", "turn up the heat on the hot seat"]
+    },
+    5: {  # Saturday (deep weekend matchups)
+        "role_name": "The Gritty Scout & Sabermetric Purist",
+        "perspective": "Focusing on underlying metrics, batted-ball quality, spin rates, launch angles, and calling out managers whose luck is running out versus those who are getting robbed by the BABIP gods.",
+        "sample_motifs": ["hard-hit merchant", "smoke and mirrors ERA", "the BABIP regression Reaper", "barrel rate reality check", "feasting on soft contact"]
+    },
+    6: {  # Sunday (weekly climax & finish line)
+        "role_name": "The Live Chaos Desk & Decimal Tracker",
+        "perspective": "Breathless, second-by-second drama tracking razor-thin decimal margins, eleventh-hour stolen bases in late west coast games, and the gut-wrenching pain of a single strikeout flipping the podium.",
+        "sample_motifs": ["down to the final out", "thousandths of an OBP point", "razor wire finish", "midnight raid on the leaderboard", "photo finish at the wire"]
+    }
+}
+
+BANNED_CLICHES_BLOCK = """STRICT VOCABULARY & STYLE RULES:
+- BANNED CLICHÉS (NEVER USE ANY OF THESE PHRASES):
+  "dogfight", "trading blows", "firing on all cylinders", "juggernaut", "crying in their beer",
+  "living rent-free", "dumpster fire", "statement win", "another day in the books", "when all is said and done",
+  "make no mistake", "bloodbath", "slugfest", "rollercoaster", "feast or famine", "silver lining", "wake-up call",
+  "at the end of the day", "battleground", "tug-of-war", "neck-and-neck", "clash of titans".
+- BANNED FORMULAIC OPENINGS:
+  Never start with "Another day...", "Welcome back...", "Well, well, well...", "In what can only be described as...",
+  "It was a day of...", "Grab your popcorn...", or "There's no love lost...".
+- MANDATORY IN MEDIA RES OPENING:
+  Begin sentence 1 immediately with a specific action, an arresting stat line, or a vivid concrete scene.
+- UNCONVENTIONAL METAPHORS:
+  Use fresh, unexpected metaphors (e.g. maritime catastrophes, failed municipal zoning, high-stakes poker bluffs, Michelin-star kitchen meltdowns) rather than generic sports clichés."""
+
+# ---------------------------------------------------------------------------
+# AI SUMMARY
+# ---------------------------------------------------------------------------
 
 def generate_ai_summary(prompt: str) -> str:
-    client   = genai.Client(api_key=GEMINI_API_KEY)
-    response = client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
+    client = genai.Client(api_key=GEMINI_API_KEY)
+    config = types.GenerateContentConfig(
+        temperature=0.88,
+        top_p=0.95,
+    )
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=prompt,
+        config=config
+    )
     return response.text
 
 def build_daily_prompt(
@@ -605,17 +672,26 @@ def build_daily_prompt(
     recap_context = format_recap_context(today_records, involved_tids, standings=standings, delta=delta)
     context_section = f"\n{recap_context}\n" if recap_context else ""
 
-    return f"""You are the commissioner's snarky, trash-talking fantasy baseball bot for the HEFTYSTRONG league.
-Write a short narrative daily recap for {period_date.strftime('%A, %B %d, %Y')}.
+    persona = ROTATING_DAILY_PERSONAS.get(period_date.weekday(), ROTATING_DAILY_PERSONAS[0])
+    motifs_str = ", ".join(f'"{m}"' for m in persona["sample_motifs"][:3])
 
-Keep it under 275 words and fun — roast the losers, hype the winners.
+    return f"""You are the commissioner's voice for the HEFTYSTRONG fantasy baseball league.
+TODAY'S EDITORIAL LENS: **{persona['role_name']}**
+Tone & Perspective: {persona['perspective']}
+Atmospheric motifs to draw from: {motifs_str}
+
+Write a short narrative daily recap for {period_date.strftime('%A, %B %d, %Y')}.
+Keep it under 275 words and fun — sharp, observant, and opinionated.
 Do NOT include a title. Format for Discord (plain text, no markdown headers).
 
-CRITICAL INSTRUCTIONS:
-- Tell the story of the day — reference 2-3 notable performances and weave in what the day meant for the roto race.
-- Weave real MLB news and headlines with fantasy roster performance when relevant (e.g. real-life walk-offs, milestones, or injuries).
-- Focus heavily on active in-season trends, category battlegrounds, and roto points being traded back and forth between rival managers (e.g. decimal OBP wars, single-point swings, surging vs fading teams).
-- Leverage manager in-season personas and category rivalries for authentic, spicy commissioner banter.
+{BANNED_CLICHES_BLOCK}
+
+CORE NARRATIVE INSTRUCTIONS:
+- Tell the story of the day through your assigned persona ({persona['role_name']}).
+- Reference 2-3 standout individual performances and weave in what the day meant for the standings.
+- Weave real MLB news and headlines with fantasy roster performance when relevant.
+- Focus heavily on active category volatility, point swings, and decimal-level margins between rival managers.
+- Leverage manager personas and rivalries for authentic commissioner banter.
 - Specific stat tables and standings changes will be shown separately in Discord, so do NOT list every team's line.
 - All stats reflect active lineup players only (bench/IL excluded).
 
@@ -751,23 +827,27 @@ def build_weekly_prompt(
     recap_context = format_recap_context(records or [], involved_tids, standings=standings, delta=weekly_delta)
     context_section = f"\n{recap_context}\n" if recap_context else ""
 
-    return f"""You are the commissioner's snarky, trash-talking fantasy baseball bot for the HEFTYSTRONG league.
-Generate a WEEKLY RECAP for the week of {week_start_date.strftime('%b %d')} – {week_end_date.strftime('%b %d, %Y')}.
+    return f"""You are the commissioner's voice for the HEFTYSTRONG fantasy baseball league.
+EDITORIAL LENS: **The League Commissioner Feature Columnist**
+Tone & Perspective: Writing an authoritative Sunday-night longform sports feature breaking down the week's strategic narrative arc, catastrophic collapses, and the evolving playoff landscape with high-literary wit and biting honesty.
 
-Keep it under 350 words. Fun, opinionated, and trash-talking. No title. Format for Discord (plain text).
+Generate a WEEKLY RECAP for the week of {week_start_date.strftime('%b %d')} – {week_end_date.strftime('%b %d, %Y')}.
+Keep it under 350 words. Fun, opinionated, and narrative-driven. No title. Format for Discord (plain text).
 Our 10 roto scoring categories: R, HR, RBI, OBP, SB, QS, ERA, WHIP, K, SV+Holds.
 Roto points: 1 (worst) to {n_teams} (best) per category. All stats are active-lineup only.
 
-CRITICAL INSTRUCTIONS:
-- DO NOT list every team's stats. Tell the story of the week!
+{BANNED_CLICHES_BLOCK}
+
+CORE NARRATIVE INSTRUCTIONS:
+- DO NOT list every team's stats. Tell the overarching story of the week!
 - Reference 2-3 standout individual players from this week (e.g. {best_h[0]['name'] if best_h else 'top hitters'}).
-- Call out who dominated categories this week, who had an embarrassing collapse, and who gained/lost the most roto ground.
+- Call out who dominated categories this week, who suffered an embarrassing collapse, and who gained/lost the most roto ground.
 - Weave real MLB news and headlines with fantasy roster performance when relevant.
-- Focus heavily on in-season trends, pattern shifts over the course of the season, and neck-and-neck category battlegrounds where managers are actively trading roto points back and forth.
-- Leverage manager personas and category rivalries for authentic, spicy commissioner banter.
+- Focus heavily on in-season trends, pattern shifts over the course of the season, and category swings where managers are actively trading points.
+- Leverage manager personas and category rivalries for authentic commissioner banter.
 - IMPORTANT: Use the WEEKLY TEAM PRODUCTION and CATEGORY LEADERS tables below for THIS WEEK'S stats.
-- The CUMULATIVE SEASON STANDINGS table at the bottom shows season-long cumulative totals — DO NOT confuse or cite season totals as this week's numbers!
-- Use historical context for spicy banter (e.g. championships, past collapses).
+- The CUMULATIVE SEASON STANDINGS table at the bottom shows season-long cumulative totals — DO NOT cite season totals as this week's numbers!
+- Use historical pedigree for sharp context (e.g. championships, past collapses).
 
 {format_weekly_production_block(weekly_teams)}
 

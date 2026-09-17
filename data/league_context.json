@@ -3,6 +3,9 @@
   "league_name": "2026 Head to Head Heftystrong",
   "season_year": 2026,
   "scoring_format": "10-Category Head-to-Head Each Category / Points (R, HR, RBI, OBP, SB | K, QS, SV+HD, ERA, WHIP)",
+  "last_updated_scoring_period": 176,
+  "last_updated_timestamp": "2026-09-16T21:28:10.138839Z",
+  "current_week": 24,
   "season_structure": {
     "phase_1": {
       "name": "Triple Crown (Kirkman Trios)",
@@ -400,93 +403,85 @@
       "top_batters": [
         {
           "name": "CJ Abrams",
-          "days": 171,
-          "R": 88.0,
-          "HR": 30.0,
-          "RBI": 96.0,
-          "SB": 29.0,
-          "OBP": 0.339,
-          "AB": 542.0,
-          "score": 395.931484502447
-        },
-        {
-          "name": "Yordan Alvarez",
-          "days": 171,
-          "R": 95.0,
-          "HR": 38.0,
-          "RBI": 96.0,
-          "SB": 1.0,
-          "OBP": 0.427,
-          "AB": 523.0,
-          "score": 387.7230046948357
+          "hr": 30,
+          "rbi": 96,
+          "r": 88,
+          "sb": 29,
+          "obp": 0.339
         },
         {
           "name": "Pete Alonso",
-          "days": 171,
-          "R": 89.0,
-          "HR": 35.0,
-          "RBI": 100.0,
-          "SB": 5.0,
-          "OBP": 0.363,
-          "AB": 561.0,
-          "score": 375.3496932515337
+          "hr": 37,
+          "rbi": 102,
+          "r": 91,
+          "sb": 5,
+          "obp": 0.361
+        },
+        {
+          "name": "Yordan Alvarez",
+          "hr": 39,
+          "rbi": 98,
+          "r": 96,
+          "sb": 1,
+          "obp": 0.428
         },
         {
           "name": "Sal Stewart",
-          "days": 171,
-          "R": 81.0,
-          "HR": 31.0,
-          "RBI": 105.0,
-          "SB": 15.0,
-          "OBP": 0.339,
-          "AB": 570.0,
-          "score": 373.85093167701865
+          "hr": 31,
+          "rbi": 106,
+          "r": 82,
+          "sb": 15,
+          "obp": 0.337
+        },
+        {
+          "name": "Fernando Tatis Jr.",
+          "hr": 23,
+          "rbi": 77,
+          "r": 90,
+          "sb": 35,
+          "obp": 0.357
         }
       ],
       "top_pitchers": [
         {
-          "name": "George Kirby",
-          "days": 115,
-          "IP": 157.7,
-          "K": 129.0,
-          "QS": 14.0,
-          "SV+HD": 0.0,
-          "ERA": 4.4,
-          "WHIP": 1.38,
-          "score": 474.6899224806201
+          "name": "Louis Varland",
+          "k": 78,
+          "qs": 0,
+          "sv_hd": 35,
+          "era": 1.55,
+          "ip": 64.0
         },
         {
-          "name": "Louis Varland",
-          "days": 145,
-          "IP": 61.3,
-          "K": 74.0,
-          "QS": 0.0,
-          "SV+HD": 34.0,
-          "ERA": 1.47,
-          "WHIP": 0.99,
-          "score": 467.9963768115942
+          "name": "George Kirby",
+          "k": 129,
+          "qs": 14,
+          "sv_hd": 0,
+          "era": 4.4,
+          "ip": 157.7
         },
         {
           "name": "Kyle Bradish",
-          "days": 130,
-          "IP": 155.0,
-          "K": 142.0,
-          "QS": 12.0,
-          "SV+HD": 0.0,
-          "ERA": 4.12,
-          "WHIP": 1.46,
-          "score": 456.38709677419354
+          "k": 142,
+          "qs": 12,
+          "sv_hd": 0,
+          "era": 4.12,
+          "ip": 155.0
+        },
+        {
+          "name": "Trevor Megill",
+          "k": 59,
+          "qs": 0,
+          "sv_hd": 32,
+          "era": 2.18,
+          "ip": 53.7
         },
         {
           "name": "Eury Perez",
-          "days": 105,
-          "IP": 134.3,
-          "K": 146.0,
-          "QS": 11.0,
-          "SV+HD": 0.0,
-          "ERA": 4.15,
-          "WHIP": 1.27,
-          "score": 424.56410256410254
+          "k": 146,
+          "qs": 11,
+          "sv_hd": 0,
+          "era": 4.15,
+          "ip": 134.3
         }
       ],
       "historical_pedigree": {
@@ -568,93 +563,85 @@
       "top_batters": [
         {
           "name": "Rafael Devers",
-          "days": 171,
-          "R": 88.0,
-          "HR": 37.0,
-          "RBI": 98.0,
-          "SB": 0.0,
-          "OBP": 0.339,
-          "AB": 554.0,
-          "score": 367.86327503974564
+          "hr": 37,
+          "rbi": 98,
+          "r": 88,
+          "sb": 0,
+          "obp": 0.339
         },
         {
           "name": "Brice Turang",
-          "days": 171,
-          "R": 95.0,
-          "HR": 19.0,
-          "RBI": 93.0,
-          "SB": 18.0,
-          "OBP": 0.365,
-          "AB": 539.0,
-          "score": 336.48
+          "hr": 19,
+          "rbi": 94,
+          "r": 96,
+          "sb": 19,
+          "obp": 0.369
         },
         {
           "name": "Manny Machado",
-          "days": 168,
-          "R": 76.0,
-          "HR": 26.0,
-          "RBI": 80.0,
-          "SB": 5.0,
-          "OBP": 0.312,
-          "AB": 532.0,
-          "score": 301.15823817292005
+          "hr": 27,
+          "rbi": 81,
+          "r": 78,
+          "sb": 5,
+          "obp": 0.311
         },
         {
           "name": "William Contreras",
-          "days": 173,
-          "R": 79.0,
-          "HR": 17.0,
-          "RBI": 86.0,
-          "SB": 1.0,
-          "OBP": 0.342,
-          "AB": 528.0,
-          "score": 269.1708542713568
+          "hr": 17,
+          "rbi": 86,
+          "r": 80,
+          "sb": 1,
+          "obp": 0.34
+        },
+        {
+          "name": "Riley Greene",
+          "hr": 20,
+          "rbi": 73,
+          "r": 75,
+          "sb": 3,
+          "obp": 0.371
         }
       ],
       "top_pitchers": [
         {
           "name": "Nolan McLean",
-          "days": 110,
-          "IP": 161.7,
-          "K": 176.0,
-          "QS": 18.0,
-          "SV+HD": 0.0,
-          "ERA": 3.06,
-          "WHIP": 1.14,
-          "score": 592.3573883161512
+          "k": 176,
+          "qs": 18,
+          "sv_hd": 0,
+          "era": 3.06,
+          "ip": 161.7
         },
         {
           "name": "Gavin Williams",
-          "days": 109,
-          "IP": 163.0,
-          "K": 217.0,
-          "QS": 10.0,
-          "SV+HD": 0.0,
-          "ERA": 3.81,
-          "WHIP": 1.09,
-          "score": 510.9509202453988
+          "k": 224,
+          "qs": 10,
+          "sv_hd": 0,
+          "era": 3.8,
+          "ip": 168.0
         },
         {
           "name": "Parker Messick",
-          "days": 115,
-          "IP": 158.7,
-          "K": 167.0,
-          "QS": 11.0,
-          "SV+HD": 0.0,
-          "ERA": 2.67,
-          "WHIP": 1.05,
-          "score": 477.33683473389357
+          "k": 175,
+          "qs": 12,
+          "sv_hd": 0,
+          "era": 2.73,
+          "ip": 164.7
         },
         {
           "name": "Drew Rasmussen",
-          "days": 67,
-          "IP": 99.3,
-          "K": 98.0,
-          "QS": 10.0,
-          "SV+HD": 0.0,
-          "ERA": 3.26,
-          "WHIP": 0.94,
-          "score": 331.02460850111856
+          "k": 98,
+          "qs": 10,
+          "sv_hd": 0,
+          "era": 3.26,
+          "ip": 99.3
+        },
+        {
+          "name": "Bryce Elder",
+          "k": 87,
+          "qs": 10,
+          "sv_hd": 0,
+          "era": 5.0,
+          "ip": 108.0
         }
       ],
       "historical_pedigree": {
@@ -722,93 +709,85 @@
       "top_batters": [
         {
           "name": "James Wood",
-          "days": 143,
-          "R": 102.0,
-          "HR": 30.0,
-          "RBI": 75.0,
-          "SB": 21.0,
-          "OBP": 0.395,
-          "AB": 474.0,
-          "score": 378.48275862068965
-        },
-        {
-          "name": "Shohei Ohtani",
-          "days": 163,
-          "R": 81.0,
-          "HR": 27.0,
-          "RBI": 75.0,
-          "SB": 11.0,
-          "OBP": 0.384,
-          "AB": 460.0,
-          "score": 324.39122486288846
+          "hr": 30,
+          "rbi": 75,
+          "r": 102,
+          "sb": 21,
+          "obp": 0.392
         },
         {
           "name": "Kazuma Okamoto",
-          "days": 172,
-          "R": 77.0,
-          "HR": 32.0,
-          "RBI": 85.0,
-          "SB": 1.0,
-          "OBP": 0.311,
-          "AB": 526.0,
-          "score": 323.1224489795918
+          "hr": 33,
+          "rbi": 88,
+          "r": 79,
+          "sb": 1,
+          "obp": 0.31
         },
         {
           "name": "Alex Bregman",
-          "days": 172,
-          "R": 87.0,
-          "HR": 25.0,
-          "RBI": 84.0,
-          "SB": 3.0,
-          "OBP": 0.357,
-          "AB": 574.0,
-          "score": 312.6927710843373
+          "hr": 26,
+          "rbi": 88,
+          "r": 88,
+          "sb": 3,
+          "obp": 0.357
+        },
+        {
+          "name": "Shohei Ohtani",
+          "hr": 27,
+          "rbi": 75,
+          "r": 81,
+          "sb": 11,
+          "obp": 0.384
+        },
+        {
+          "name": "Michael Harris II",
+          "hr": 24,
+          "rbi": 81,
+          "r": 71,
+          "sb": 11,
+          "obp": 0.314
         }
       ],
       "top_pitchers": [
         {
-          "name": "Logan Webb",
-          "days": 83,
-          "IP": 160.7,
-          "K": 134.0,
-          "QS": 17.0,
-          "SV+HD": 0.0,
-          "ERA": 4.31,
-          "WHIP": 1.17,
-          "score": 528.1002766251728
+          "name": "Zack Wheeler",
+          "k": 177,
+          "qs": 15,
+          "sv_hd": 0,
+          "era": 2.99,
+          "ip": 150.3
         },
         {
-          "name": "Zack Wheeler",
-          "days": 93,
-          "IP": 143.3,
-          "K": 172.0,
-          "QS": 15.0,
-          "SV+HD": 0.0,
-          "ERA": 3.14,
-          "WHIP": 1.07,
-          "score": 524.6356589147287
+          "name": "Logan Webb",
+          "k": 134,
+          "qs": 17,
+          "sv_hd": 0,
+          "era": 4.31,
+          "ip": 160.7
         },
         {
           "name": "Kevin Gausman",
-          "days": 80,
-          "IP": 155.3,
-          "K": 156.0,
-          "QS": 13.0,
-          "SV+HD": 0.0,
-          "ERA": 4.58,
-          "WHIP": 1.28,
-          "score": 483.4470672389127
+          "k": 156,
+          "qs": 13,
+          "sv_hd": 0,
+          "era": 4.58,
+          "ip": 155.3
         },
         {
           "name": "Tanner Scott",
-          "days": 173,
-          "IP": 58.7,
-          "K": 73.0,
-          "QS": 0.0,
-          "SV+HD": 34.0,
-          "ERA": 2.91,
-          "WHIP": 1.01,
-          "score": 457.09280303030306
+          "k": 76,
+          "qs": 0,
+          "sv_hd": 34,
+          "era": 2.87,
+          "ip": 59.7
+        },
+        {
+          "name": "Gerrit Cole",
+          "k": 117,
+          "qs": 11,
+          "sv_hd": 0,
+          "era": 3.67,
+          "ip": 115.3
         }
       ],
       "historical_pedigree": {
@@ -881,93 +860,85 @@
       "top_batters": [
         {
           "name": "Pete Crow-Armstrong",
-          "days": 172,
-          "R": 111.0,
-          "HR": 41.0,
-          "RBI": 98.0,
-          "SB": 36.0,
-          "OBP": 0.371,
-          "AB": 578.0,
-          "score": 482.10879284649775
+          "hr": 43,
+          "rbi": 104,
+          "r": 114,
+          "sb": 37,
+          "obp": 0.374
         },
         {
           "name": "Bryce Harper",
-          "days": 173,
-          "R": 88.0,
-          "HR": 28.0,
-          "RBI": 83.0,
-          "SB": 7.0,
-          "OBP": 0.387,
-          "AB": 529.0,
-          "score": 335.65414710485135
+          "hr": 28,
+          "rbi": 83,
+          "r": 90,
+          "sb": 7,
+          "obp": 0.385
         },
         {
           "name": "Alec Burleson",
-          "days": 167,
-          "R": 79.0,
-          "HR": 21.0,
-          "RBI": 107.0,
-          "SB": 4.0,
-          "OBP": 0.34,
-          "AB": 549.0,
-          "score": 312.04605263157896
+          "hr": 22,
+          "rbi": 109,
+          "r": 81,
+          "sb": 4,
+          "obp": 0.342
         },
         {
           "name": "Jackson Chourio",
-          "days": 130,
-          "R": 85.0,
-          "HR": 22.0,
-          "RBI": 66.0,
-          "SB": 16.0,
-          "OBP": 0.343,
-          "AB": 466.0,
-          "score": 305.3137254901961
+          "hr": 22,
+          "rbi": 66,
+          "r": 86,
+          "sb": 16,
+          "obp": 0.339
+        },
+        {
+          "name": "Jarren Duran",
+          "hr": 20,
+          "rbi": 69,
+          "r": 64,
+          "sb": 19,
+          "obp": 0.261
         }
       ],
       "top_pitchers": [
         {
           "name": "Cristopher Sanchez",
-          "days": 173,
-          "IP": 187.3,
-          "K": 210.0,
-          "QS": 20.0,
-          "SV+HD": 0.0,
-          "ERA": 2.79,
-          "WHIP": 1.21,
-          "score": 683.4009489916963
+          "k": 215,
+          "qs": 20,
+          "sv_hd": 0,
+          "era": 2.93,
+          "ip": 193.7
         },
         {
           "name": "Tarik Skubal",
-          "days": 133,
-          "IP": 139.7,
-          "K": 164.0,
-          "QS": 14.0,
-          "SV+HD": 0.0,
-          "ERA": 2.84,
-          "WHIP": 0.97,
-          "score": 499.49005568814636
+          "k": 173,
+          "qs": 15,
+          "sv_hd": 0,
+          "era": 2.7,
+          "ip": 146.7
         },
         {
           "name": "Tyler Rogers",
-          "days": 172,
-          "IP": 67.7,
-          "K": 38.0,
-          "QS": 0.0,
-          "SV+HD": 36.0,
-          "ERA": 1.73,
-          "WHIP": 1.15,
-          "score": 457.0213464696223
+          "k": 38,
+          "qs": 0,
+          "sv_hd": 36,
+          "era": 1.73,
+          "ip": 67.7
         },
         {
           "name": "Raisel Iglesias",
-          "days": 162,
-          "IP": 55.0,
-          "K": 57.0,
-          "QS": 0.0,
-          "SV+HD": 32.0,
-          "ERA": 2.78,
-          "WHIP": 1.16,
-          "score": 418.09090909090907
+          "k": 57,
+          "qs": 0,
+          "sv_hd": 33,
+          "era": 2.73,
+          "ip": 56.0
+        },
+        {
+          "name": "Jhoan Duran",
+          "k": 73,
+          "qs": 0,
+          "sv_hd": 30,
+          "era": 1.69,
+          "ip": 53.3
         }
       ],
       "historical_pedigree": {
@@ -1029,93 +1000,85 @@
       "top_batters": [
         {
           "name": "Kyle Schwarber",
-          "days": 171,
-          "R": 88.0,
-          "HR": 44.0,
-          "RBI": 94.0,
-          "SB": 3.0,
-          "OBP": 0.351,
-          "AB": 541.0,
-          "score": 399.09316770186336
+          "hr": 45,
+          "rbi": 95,
+          "r": 90,
+          "sb": 3,
+          "obp": 0.351
         },
         {
           "name": "Randy Arozarena",
-          "days": 167,
-          "R": 99.0,
-          "HR": 25.0,
-          "RBI": 75.0,
-          "SB": 22.0,
-          "OBP": 0.375,
-          "AB": 525.0,
-          "score": 355.52039151712887
+          "hr": 25,
+          "rbi": 75,
+          "r": 100,
+          "sb": 23,
+          "obp": 0.375
+        },
+        {
+          "name": "Otto Lopez",
+          "hr": 10,
+          "rbi": 69,
+          "r": 89,
+          "sb": 30,
+          "obp": 0.347
         },
         {
           "name": "Yandy Diaz",
-          "days": 173,
-          "R": 86.0,
-          "HR": 22.0,
-          "RBI": 81.0,
-          "SB": 3.0,
-          "OBP": 0.366,
-          "AB": 574.0,
-          "score": 297.6043613707165
+          "hr": 22,
+          "rbi": 81,
+          "r": 86,
+          "sb": 3,
+          "obp": 0.362
         },
         {
-          "name": "Willson Contreras",
-          "days": 158,
-          "R": 66.0,
-          "HR": 26.0,
-          "RBI": 79.0,
-          "SB": 3.0,
-          "OBP": 0.383,
-          "AB": 432.0,
-          "score": 293.28125
+          "name": "Julio Rodriguez",
+          "hr": 21,
+          "rbi": 65,
+          "r": 68,
+          "sb": 21,
+          "obp": 0.304
         }
       ],
       "top_pitchers": [
         {
           "name": "Yoshinobu Yamamoto",
-          "days": 170,
-          "IP": 172.0,
-          "K": 171.0,
-          "QS": 20.0,
-          "SV+HD": 0.0,
-          "ERA": 2.62,
-          "WHIP": 0.88,
-          "score": 629.9186046511628
+          "k": 178,
+          "qs": 21,
+          "sv_hd": 0,
+          "era": 2.51,
+          "ip": 179.0
         },
         {
           "name": "Mason Miller",
-          "days": 168,
-          "IP": 63.3,
-          "K": 117.0,
-          "QS": 0.0,
-          "SV+HD": 36.0,
-          "ERA": 1.14,
-          "WHIP": 0.85,
-          "score": 534.6491228070175
+          "k": 119,
+          "qs": 0,
+          "sv_hd": 37,
+          "era": 1.12,
+          "ip": 64.3
         },
         {
           "name": "Cade Smith",
-          "days": 165,
-          "IP": 66.0,
-          "K": 95.0,
-          "QS": 0.0,
-          "SV+HD": 36.0,
-          "ERA": 2.18,
-          "WHIP": 1.05,
-          "score": 510.09090909090907
+          "k": 98,
+          "qs": 0,
+          "sv_hd": 37,
+          "era": 2.09,
+          "ip": 69.0
+        },
+        {
+          "name": "Jacob deGrom",
+          "k": 188,
+          "qs": 12,
+          "sv_hd": 0,
+          "era": 3.61,
+          "ip": 149.7
         },
         {
           "name": "Braxton Ashcraft",
-          "days": 166,
-          "IP": 161.0,
-          "K": 166.0,
-          "QS": 13.0,
-          "SV+HD": 0.0,
-          "ERA": 3.47,
-          "WHIP": 1.07,
-          "score": 504.67080745341616
+          "k": 166,
+          "qs": 13,
+          "sv_hd": 0,
+          "era": 3.47,
+          "ip": 161.0
         }
       ],
       "historical_pedigree": {
@@ -1187,93 +1150,85 @@
       "top_batters": [
         {
           "name": "Kevin McGonigle",
-          "days": 172,
-          "R": 92.0,
-          "HR": 17.0,
-          "RBI": 65.0,
-          "SB": 12.0,
-          "OBP": 0.373,
-          "AB": 555.0,
-          "score": 286.2881355932203
-        },
-        {
-          "name": "Christian Walker",
-          "days": 145,
-          "R": 61.0,
-          "HR": 23.0,
-          "RBI": 71.0,
-          "SB": 0.0,
-          "OBP": 0.312,
-          "AB": 445.0,
-          "score": 255.1871227364185
+          "hr": 17,
+          "rbi": 65,
+          "r": 94,
+          "sb": 12,
+          "obp": 0.376
         },
         {
           "name": "Kyle Tucker",
-          "days": 170,
-          "R": 79.0,
-          "HR": 14.0,
-          "RBI": 65.0,
-          "SB": 9.0,
-          "OBP": 0.323,
-          "AB": 488.0,
-          "score": 250.3321554770318
+          "hr": 15,
+          "rbi": 66,
+          "r": 83,
+          "sb": 10,
+          "obp": 0.328
+        },
+        {
+          "name": "Christian Walker",
+          "hr": 23,
+          "rbi": 71,
+          "r": 61,
+          "sb": 0,
+          "obp": 0.312
         },
         {
           "name": "Jordan Walker",
-          "days": 117,
-          "R": 58.0,
-          "HR": 15.0,
-          "RBI": 66.0,
-          "SB": 12.0,
-          "OBP": 0.321,
-          "AB": 389.0,
-          "score": 240.0665083135392
+          "hr": 15,
+          "rbi": 66,
+          "r": 59,
+          "sb": 13,
+          "obp": 0.321
+        },
+        {
+          "name": "Ryan O'Hearn",
+          "hr": 16,
+          "rbi": 68,
+          "r": 53,
+          "sb": 1,
+          "obp": 0.332
         }
       ],
       "top_pitchers": [
         {
           "name": "Reid Detmers",
-          "days": 148,
-          "IP": 160.0,
-          "K": 177.0,
-          "QS": 13.0,
-          "SV+HD": 0.0,
-          "ERA": 3.43,
-          "WHIP": 1.08,
-          "score": 514.84375
+          "k": 185,
+          "qs": 14,
+          "sv_hd": 0,
+          "era": 3.47,
+          "ip": 166.0
         },
         {
           "name": "Michael King",
-          "days": 101,
-          "IP": 158.0,
-          "K": 133.0,
-          "QS": 16.0,
-          "SV+HD": 0.0,
-          "ERA": 3.3,
-          "WHIP": 1.16,
-          "score": 514.4810126582279
-        },
-        {
-          "name": "Paul Skenes",
-          "days": 123,
-          "IP": 142.0,
-          "K": 161.0,
-          "QS": 11.0,
-          "SV+HD": 0.0,
-          "ERA": 3.3,
-          "WHIP": 1.13,
-          "score": 451.5211267605634
+          "k": 133,
+          "qs": 16,
+          "sv_hd": 0,
+          "era": 3.3,
+          "ip": 158.0
         },
         {
           "name": "Sonny Gray",
-          "days": 81,
-          "IP": 118.0,
-          "K": 102.0,
-          "QS": 15.0,
-          "SV+HD": 0.0,
-          "ERA": 2.82,
-          "WHIP": 1.13,
-          "score": 430.8898305084746
+          "k": 102,
+          "qs": 15,
+          "sv_hd": 0,
+          "era": 2.82,
+          "ip": 118.0
+        },
+        {
+          "name": "Paul Skenes",
+          "k": 161,
+          "qs": 11,
+          "sv_hd": 0,
+          "era": 3.3,
+          "ip": 142.0
+        },
+        {
+          "name": "Aroldis Chapman",
+          "k": 60,
+          "qs": 0,
+          "sv_hd": 30,
+          "era": 1.77,
+          "ip": 45.7
         }
       ],
       "historical_pedigree": {
@@ -1343,93 +1298,85 @@
       "top_batters": [
         {
           "name": "Trea Turner",
-          "days": 164,
-          "R": 94.0,
-          "HR": 19.0,
-          "RBI": 57.0,
-          "SB": 19.0,
-          "OBP": 0.293,
-          "AB": 597.0,
-          "score": 294.30232558139534
+          "hr": 19,
+          "rbi": 57,
+          "r": 96,
+          "sb": 20,
+          "obp": 0.292
         },
         {
           "name": "Ian Happ",
-          "days": 168,
-          "R": 83.0,
-          "HR": 23.0,
-          "RBI": 65.0,
-          "SB": 4.0,
-          "OBP": 0.327,
-          "AB": 503.0,
-          "score": 280.70868824531516
-        },
-        {
-          "name": "Max Muncy",
-          "days": 141,
-          "R": 63.0,
-          "HR": 23.0,
-          "RBI": 66.0,
-          "SB": 2.0,
-          "OBP": 0.354,
-          "AB": 390.0,
-          "score": 260.39823008849555
+          "hr": 23,
+          "rbi": 65,
+          "r": 84,
+          "sb": 4,
+          "obp": 0.328
         },
         {
           "name": "Jake McCarthy",
-          "days": 111,
-          "R": 60.0,
-          "HR": 13.0,
-          "RBI": 59.0,
-          "SB": 20.0,
-          "OBP": 0.345,
-          "AB": 382.0,
-          "score": 245.46601941747574
+          "hr": 13,
+          "rbi": 61,
+          "r": 63,
+          "sb": 21,
+          "obp": 0.348
+        },
+        {
+          "name": "Max Muncy",
+          "hr": 23,
+          "rbi": 66,
+          "r": 64,
+          "sb": 2,
+          "obp": 0.349
+        },
+        {
+          "name": "Shea Langeliers",
+          "hr": 23,
+          "rbi": 54,
+          "r": 55,
+          "sb": 3,
+          "obp": 0.333
         }
       ],
       "top_pitchers": [
         {
           "name": "Dylan Cease",
-          "days": 157,
-          "IP": 166.3,
-          "K": 236.0,
-          "QS": 15.0,
-          "SV+HD": 0.0,
-          "ERA": 2.38,
-          "WHIP": 1.06,
-          "score": 615.4295257181029
+          "k": 236,
+          "qs": 15,
+          "sv_hd": 0,
+          "era": 2.38,
+          "ip": 166.3
         },
         {
           "name": "Framber Valdez",
-          "days": 149,
-          "IP": 163.7,
-          "K": 121.0,
-          "QS": 16.0,
-          "SV+HD": 0.0,
-          "ERA": 4.01,
-          "WHIP": 1.36,
-          "score": 504.5953835709436
+          "k": 121,
+          "qs": 16,
+          "sv_hd": 0,
+          "era": 4.01,
+          "ip": 163.7
         },
         {
           "name": "Jacob Misiorowski",
-          "days": 111,
-          "IP": 104.3,
-          "K": 148.0,
-          "QS": 13.0,
-          "SV+HD": 0.0,
-          "ERA": 1.98,
-          "WHIP": 0.76,
-          "score": 437.41320553780616
+          "k": 155,
+          "qs": 13,
+          "sv_hd": 0,
+          "era": 1.89,
+          "ip": 109.3
+        },
+        {
+          "name": "Jesus Luzardo",
+          "k": 143,
+          "qs": 10,
+          "sv_hd": 0,
+          "era": 3.43,
+          "ip": 115.3
         },
         {
           "name": "Andrew Abbott",
-          "days": 125,
-          "IP": 148.7,
-          "K": 116.0,
-          "QS": 11.0,
-          "SV+HD": 0.0,
-          "ERA": 4.96,
-          "WHIP": 1.47,
-          "score": 404.84603886397605
+          "k": 121,
+          "qs": 11,
+          "sv_hd": 0,
+          "era": 4.87,
+          "ip": 153.3
         }
       ],
       "historical_pedigree": {
@@ -1492,93 +1439,85 @@
       "top_batters": [
         {
           "name": "Elly De La Cruz",
-          "days": 151,
-          "R": 91.0,
-          "HR": 26.0,
-          "RBI": 71.0,
-          "SB": 25.0,
-          "OBP": 0.361,
-          "AB": 514.0,
-          "score": 352.144578313253
+          "hr": 28,
+          "rbi": 74,
+          "r": 93,
+          "sb": 26,
+          "obp": 0.364
         },
         {
           "name": "Hunter Goodman",
-          "days": 158,
-          "R": 77.0,
-          "HR": 37.0,
-          "RBI": 79.0,
-          "SB": 5.0,
-          "OBP": 0.309,
-          "AB": 467.0,
-          "score": 344.88803088803087
+          "hr": 37,
+          "rbi": 79,
+          "r": 78,
+          "sb": 5,
+          "obp": 0.312
         },
         {
           "name": "Oneil Cruz",
-          "days": 102,
-          "R": 56.0,
-          "HR": 18.0,
-          "RBI": 63.0,
-          "SB": 27.0,
-          "OBP": 0.367,
-          "AB": 331.0,
-          "score": 281.6754617414248
+          "hr": 19,
+          "rbi": 64,
+          "r": 57,
+          "sb": 27,
+          "obp": 0.363
         },
         {
           "name": "Juan Soto",
-          "days": 117,
-          "R": 56.0,
-          "HR": 25.0,
-          "RBI": 59.0,
-          "SB": 8.0,
-          "OBP": 0.391,
-          "AB": 342.0,
-          "score": 270.0776699029126
+          "hr": 25,
+          "rbi": 60,
+          "r": 57,
+          "sb": 9,
+          "obp": 0.391
+        },
+        {
+          "name": "Freddie Freeman",
+          "hr": 16,
+          "rbi": 65,
+          "r": 72,
+          "sb": 7,
+          "obp": 0.376
         }
       ],
       "top_pitchers": [
         {
           "name": "Chris Sale",
-          "days": 130,
-          "IP": 157.0,
-          "K": 190.0,
-          "QS": 19.0,
-          "SV+HD": 0.0,
-          "ERA": 2.18,
-          "WHIP": 0.99,
-          "score": 621.1082802547771
+          "k": 190,
+          "qs": 19,
+          "sv_hd": 0,
+          "era": 2.18,
+          "ip": 157.0
         },
         {
           "name": "Michael Wacha",
-          "days": 121,
-          "IP": 182.7,
-          "K": 147.0,
-          "QS": 20.0,
-          "SV+HD": 0.0,
-          "ERA": 3.25,
-          "WHIP": 1.11,
-          "score": 613.4075425790755
+          "k": 149,
+          "qs": 20,
+          "sv_hd": 0,
+          "era": 3.34,
+          "ip": 188.7
         },
         {
           "name": "Logan Gilbert",
-          "days": 118,
-          "IP": 172.0,
-          "K": 187.0,
-          "QS": 13.0,
-          "SV+HD": 0.0,
-          "ERA": 3.72,
-          "WHIP": 1.05,
-          "score": 535.4244186046511
+          "k": 194,
+          "qs": 14,
+          "sv_hd": 0,
+          "era": 3.69,
+          "ip": 178.0
         },
         {
           "name": "Chase Burns",
-          "days": 124,
-          "IP": 151.3,
-          "K": 181.0,
-          "QS": 11.0,
-          "SV+HD": 0.0,
-          "ERA": 2.8,
-          "WHIP": 1.15,
-          "score": 483.3575624082232
+          "k": 181,
+          "qs": 11,
+          "sv_hd": 0,
+          "era": 2.8,
+          "ip": 151.3
+        },
+        {
+          "name": "Jacob Latz",
+          "k": 61,
+          "qs": 0,
+          "sv_hd": 28,
+          "era": 2.36,
+          "ip": 49.7
         }
       ],
       "historical_pedigree": {
@@ -1651,93 +1590,85 @@
       "top_batters": [
         {
           "name": "Junior Caminero",
-          "days": 173,
-          "R": 91.0,
-          "HR": 40.0,
-          "RBI": 95.0,
-          "SB": 3.0,
-          "OBP": 0.364,
-          "AB": 570.0,
-          "score": 388.40552995391704
+          "hr": 41,
+          "rbi": 96,
+          "r": 93,
+          "sb": 3,
+          "obp": 0.363
         },
         {
           "name": "Ben Rice",
-          "days": 173,
-          "R": 95.0,
-          "HR": 38.0,
-          "RBI": 90.0,
-          "SB": 3.0,
-          "OBP": 0.356,
-          "AB": 530.0,
-          "score": 378.62091503267976
+          "hr": 38,
+          "rbi": 92,
+          "r": 98,
+          "sb": 3,
+          "obp": 0.36
         },
         {
           "name": "Brandon Lowe",
-          "days": 173,
-          "R": 87.0,
-          "HR": 29.0,
-          "RBI": 85.0,
-          "SB": 2.0,
-          "OBP": 0.327,
-          "AB": 542.0,
-          "score": 324.73026315789474
+          "hr": 31,
+          "rbi": 88,
+          "r": 89,
+          "sb": 2,
+          "obp": 0.328
         },
         {
           "name": "Bobby Witt Jr.",
-          "days": 164,
-          "R": 79.0,
-          "HR": 18.0,
-          "RBI": 51.0,
-          "SB": 39.0,
-          "OBP": 0.356,
-          "AB": 495.0,
-          "score": 315.63829787234044
+          "hr": 18,
+          "rbi": 51,
+          "r": 79,
+          "sb": 39,
+          "obp": 0.357
+        },
+        {
+          "name": "Colson Montgomery",
+          "hr": 31,
+          "rbi": 84,
+          "r": 68,
+          "sb": 1,
+          "obp": 0.29
         }
       ],
       "top_pitchers": [
         {
           "name": "Cam Schlittler",
-          "days": 173,
-          "IP": 184.7,
-          "K": 228.0,
-          "QS": 19.0,
-          "SV+HD": 0.0,
-          "ERA": 1.95,
-          "WHIP": 0.9,
-          "score": 687.9193742478941
+          "k": 228,
+          "qs": 19,
+          "sv_hd": 0,
+          "era": 1.95,
+          "ip": 184.7
         },
         {
           "name": "Bryan Woo",
-          "days": 157,
-          "IP": 155.3,
-          "K": 157.0,
-          "QS": 15.0,
-          "SV+HD": 0.0,
-          "ERA": 3.94,
-          "WHIP": 1.06,
-          "score": 517.6337625178826
+          "k": 157,
+          "qs": 15,
+          "sv_hd": 0,
+          "era": 3.94,
+          "ip": 155.3
         },
         {
           "name": "Bryan Baker",
-          "days": 140,
-          "IP": 48.0,
-          "K": 51.0,
-          "QS": 0.0,
-          "SV+HD": 36.0,
-          "ERA": 1.12,
-          "WHIP": 0.9,
-          "score": 453.375
+          "k": 51,
+          "qs": 0,
+          "sv_hd": 36,
+          "era": 1.1,
+          "ip": 49.0
         },
         {
           "name": "Luke Weaver",
-          "days": 173,
-          "IP": 56.3,
-          "K": 59.0,
-          "QS": 0.0,
-          "SV+HD": 22.0,
-          "ERA": 2.56,
-          "WHIP": 0.94,
-          "score": 322.55226824457594
+          "k": 59,
+          "qs": 0,
+          "sv_hd": 22,
+          "era": 2.56,
+          "ip": 56.3
+        },
+        {
+          "name": "Grant Taylor",
+          "k": 67,
+          "qs": 0,
+          "sv_hd": 16,
+          "era": 2.67,
+          "ip": 54.0
         }
       ],
       "historical_pedigree": {
@@ -1910,7 +1841,7 @@
       },
       "second_place": {
         "owner": "Mark",
-        "points": 58.5
+        "points": 58.0
       },
       "fourth_place_cutline": {
         "owner": "Adrian",
@@ -1927,13 +1858,13 @@
           "rank": 2,
           "owner": "Mark",
           "team_name": "Basement Boy",
-          "points": 58.5
+          "points": 58.0
         },
         {
           "rank": 3,
           "owner": "Tim",
           "team_name": "Anti-lock Brake Systems",
-          "points": 53.5
+          "points": 54.0
         },
         {
           "rank": 4,
@@ -2027,7 +1958,7 @@
           "rank": 6,
           "owner": "Mark",
           "team_name": "Basement Boy",
-          "points": 49.5
+          "points": 50.0
         },
         {
           "rank": 7,
@@ -2045,7 +1976,7 @@
           "rank": 9,
           "owner": "Alex",
           "team_name": "Raleigh Towels",
-          "points": 35.5
+          "points": 35.0
         }
       ],
       "narrative": "Adrian surged into 1st place (61.0 pts) while Will gained +12.0 points behind a dominant pitching week. Anil took an early -11.5 point hit as ratios corrected."
@@ -2062,7 +1993,7 @@
       },
       "second_place": {
         "owner": "Tim",
-        "points": 62.5
+        "points": 62.0
       },
       "fourth_place_cutline": {
         "owner": "Garrett",
@@ -2079,7 +2010,7 @@
           "rank": 2,
           "owner": "Tim",
           "team_name": "Anti-lock Brake Systems",
-          "points": 62.5
+          "points": 62.0
         },
         {
           "rank": 3,
@@ -2115,7 +2046,7 @@
           "rank": 8,
           "owner": "Mark",
           "team_name": "Basement Boy",
-          "points": 38.0
+          "points": 38.5
         },
         {
           "rank": 9,
@@ -2210,11 +2141,11 @@
       "end_date": "2026-05-03",
       "leader": {
         "owner": "Will",
-        "points": 67.5
+        "points": 67.0
       },
       "second_place": {
         "owner": "Adrian",
-        "points": 65.0
+        "points": 65.5
       },
       "fourth_place_cutline": {
         "owner": "Dan",
@@ -2225,13 +2156,13 @@
           "rank": 1,
           "owner": "Will",
           "team_name": "Jos\u00e9 Can You See",
-          "points": 67.5
+          "points": 67.0
         },
         {
           "rank": 2,
           "owner": "Adrian",
           "team_name": "D0ng Demolishers",
-          "points": 65.0
+          "points": 65.5
         },
         {
           "rank": 3,
@@ -2438,7 +2369,7 @@
       "end_date": "2026-05-24",
       "leader": {
         "owner": "Adrian",
-        "points": 69.5
+        "points": 68.5
       },
       "second_place": {
         "owner": "Will",
@@ -2446,14 +2377,14 @@
       },
       "fourth_place_cutline": {
         "owner": "Garrett",
-        "points": 54.5
+        "points": 55.5
       },
       "standings_summary": [
         {
           "rank": 1,
           "owner": "Adrian",
           "team_name": "D0ng Demolishers",
-          "points": 69.5
+          "points": 68.5
         },
         {
           "rank": 2,
@@ -2471,7 +2402,7 @@
           "rank": 4,
           "owner": "Garrett",
           "team_name": "There's Always Next Year",
-          "points": 54.5
+          "points": 55.5
         },
         {
           "rank": 5,
@@ -2674,7 +2605,7 @@
       },
       "fourth_place_cutline": {
         "owner": "Dan",
-        "points": 54.5
+        "points": 55.5
       },
       "standings_summary": [
         {
@@ -2699,7 +2630,7 @@
           "rank": 4,
           "owner": "Dan",
           "team_name": "The Silver Bullets",
-          "points": 54.5
+          "points": 55.5
         },
         {
           "rank": 5,
@@ -2717,7 +2648,7 @@
           "rank": 7,
           "owner": "Anil",
           "team_name": "Yeah Jeets",
-          "points": 39.0
+          "points": 38.0
         },
         {
           "rank": 8,
@@ -2826,7 +2757,7 @@
       },
       "fourth_place_cutline": {
         "owner": "Dan",
-        "points": 58.0
+        "points": 57.5
       },
       "standings_summary": [
         {
@@ -2845,13 +2776,13 @@
           "rank": 3,
           "owner": "Adrian",
           "team_name": "D0ng Demolishers",
-          "points": 63.5
+          "points": 64.0
         },
         {
           "rank": 4,
           "owner": "Dan",
           "team_name": "The Silver Bullets",
-          "points": 58.0
+          "points": 57.5
         },
         {
           "rank": 5,
@@ -2863,13 +2794,13 @@
           "rank": 6,
           "owner": "Alex",
           "team_name": "Raleigh Towels",
-          "points": 37.5
+          "points": 37.0
         },
         {
           "rank": 7,
           "owner": "Anil",
           "team_name": "Yeah Jeets",
-          "points": 34.0
+          "points": 34.5
         },
         {
           "rank": 8,
@@ -2902,7 +2833,7 @@
       },
       "fourth_place_cutline": {
         "owner": "Dan",
-        "points": 58.5
+        "points": 59.0
       },
       "standings_summary": [
         {
@@ -2921,37 +2852,37 @@
           "rank": 3,
           "owner": "Adrian",
           "team_name": "D0ng Demolishers",
-          "points": 64.5
+          "points": 65.0
         },
         {
           "rank": 4,
           "owner": "Dan",
           "team_name": "The Silver Bullets",
-          "points": 58.5
+          "points": 59.0
         },
         {
           "rank": 5,
           "owner": "Garrett",
           "team_name": "There's Always Next Year",
-          "points": 56.5
+          "points": 56.0
         },
         {
           "rank": 6,
           "owner": "Preston",
           "team_name": "Maikels Secret Stuff",
-          "points": 39.0
+          "points": 38.5
         },
         {
           "rank": 7,
           "owner": "Alex",
           "team_name": "Raleigh Towels",
-          "points": 37.5
+          "points": 37.0
         },
         {
           "rank": 8,
           "owner": "Anil",
           "team_name": "Yeah Jeets",
-          "points": 30.0
+          "points": 30.5
         },
         {
           "rank": 9,
@@ -2970,7 +2901,7 @@
       "end_date": "2026-07-19",
       "leader": {
         "owner": "Tim",
-        "points": 75.5
+        "points": 75.0
       },
       "second_place": {
         "owner": "Will",
@@ -2978,14 +2909,14 @@
       },
       "fourth_place_cutline": {
         "owner": "Adrian",
-        "points": 59.5
+        "points": 60.0
       },
       "standings_summary": [
         {
           "rank": 1,
           "owner": "Tim",
           "team_name": "Anti-lock Brake Systems",
-          "points": 75.5
+          "points": 75.0
         },
         {
           "rank": 2,
@@ -3003,7 +2934,7 @@
           "rank": 4,
           "owner": "Adrian",
           "team_name": "D0ng Demolishers",
-          "points": 59.5
+          "points": 60.0
         },
         {
           "rank": 5,
@@ -3046,7 +2977,7 @@
       "end_date": "2026-07-26",
       "leader": {
         "owner": "Tim",
-        "points": 75.0
+        "points": 74.0
       },
       "second_place": {
         "owner": "Will",
@@ -3061,7 +2992,7 @@
           "rank": 1,
           "owner": "Tim",
           "team_name": "Anti-lock Brake Systems",
-          "points": 75.0
+          "points": 74.0
         },
         {
           "rank": 2,
@@ -3073,7 +3004,7 @@
           "rank": 3,
           "owner": "Dan",
           "team_name": "The Silver Bullets",
-          "points": 69.0
+          "points": 68.5
         },
         {
           "rank": 4,
@@ -3085,19 +3016,19 @@
           "rank": 5,
           "owner": "Garrett",
           "team_name": "There's Always Next Year",
-          "points": 49.0
+          "points": 50.0
         },
         {
           "rank": 6,
           "owner": "Alex",
           "team_name": "Raleigh Towels",
-          "points": 36.0
+          "points": 35.5
         },
         {
           "rank": 7,
           "owner": "Anil",
           "team_name": "Yeah Jeets",
-          "points": 34.0
+          "points": 35.0
         },
         {
           "rank": 8,
@@ -3122,7 +3053,7 @@
       "end_date": "2026-08-02",
       "leader": {
         "owner": "Tim",
-        "points": 76.0
+        "points": 75.5
       },
       "second_place": {
         "owner": "Dan",
@@ -3137,7 +3068,7 @@
           "rank": 1,
           "owner": "Tim",
           "team_name": "Anti-lock Brake Systems",
-          "points": 76.0
+          "points": 75.5
         },
         {
           "rank": 2,
@@ -3149,7 +3080,7 @@
           "rank": 3,
           "owner": "Adrian",
           "team_name": "D0ng Demolishers",
-          "points": 65.0
+          "points": 64.5
         },
         {
           "rank": 4,
@@ -3161,24 +3092,24 @@
           "rank": 5,
           "owner": "Garrett",
           "team_name": "There's Always Next Year",
-          "points": 53.5
+          "points": 54.0
         },
         {
           "rank": 6,
+          "owner": "Alex",
+          "team_name": "Raleigh Towels",
+          "points": 32.5
+        },
+        {
+          "rank": 7,
           "owner": "Preston",
           "team_name": "Maikels Secret Stuff",
           "points": 32.5
         },
         {
-          "rank": 7,
+          "rank": 8,
           "owner": "Anil",
           "team_name": "Yeah Jeets",
-          "points": 32.0
-        },
-        {
-          "rank": 8,
-          "owner": "Alex",
-          "team_name": "Raleigh Towels",
           "points": 32.0
         },
         {
@@ -3202,7 +3133,7 @@
       },
       "second_place": {
         "owner": "Dan",
-        "points": 70.0
+        "points": 70.5
       },
       "fourth_place_cutline": {
         "owner": "Will",
@@ -3219,13 +3150,13 @@
           "rank": 2,
           "owner": "Dan",
           "team_name": "The Silver Bullets",
-          "points": 70.0
+          "points": 70.5
         },
         {
           "rank": 3,
           "owner": "Adrian",
           "team_name": "D0ng Demolishers",
-          "points": 65.0
+          "points": 64.5
         },
         {
           "rank": 4,
@@ -3274,7 +3205,7 @@
       "end_date": "2026-08-16",
       "leader": {
         "owner": "Tim",
-        "points": 77.5
+        "points": 78.0
       },
       "second_place": {
         "owner": "Dan",
@@ -3289,7 +3220,7 @@
           "rank": 1,
           "owner": "Tim",
           "team_name": "Anti-lock Brake Systems",
-          "points": 77.5
+          "points": 78.0
         },
         {
           "rank": 2,
@@ -3319,7 +3250,7 @@
           "rank": 6,
           "owner": "Anil",
           "team_name": "Yeah Jeets",
-          "points": 37.5
+          "points": 37.0
         },
         {
           "rank": 7,
@@ -3350,7 +3281,7 @@
       "end_date": "2026-08-23",
       "leader": {
         "owner": "Tim",
-        "points": 77.5
+        "points": 78.0
       },
       "second_place": {
         "owner": "Dan",
@@ -3365,7 +3296,7 @@
           "rank": 1,
           "owner": "Tim",
           "team_name": "Anti-lock Brake Systems",
-          "points": 77.5
+          "points": 78.0
         },
         {
           "rank": 2,
@@ -3393,27 +3324,27 @@
         },
         {
           "rank": 6,
-          "owner": "Anil",
-          "team_name": "Yeah Jeets",
-          "points": 37.0
-        },
-        {
-          "rank": 7,
           "owner": "Alex",
           "team_name": "Raleigh Towels",
           "points": 37.0
         },
         {
+          "rank": 7,
+          "owner": "Anil",
+          "team_name": "Yeah Jeets",
+          "points": 36.5
+        },
+        {
           "rank": 8,
           "owner": "Preston",
           "team_name": "Maikels Secret Stuff",
-          "points": 32.0
+          "points": 31.5
         },
         {
           "rank": 9,
           "owner": "Mark",
           "team_name": "Basement Boy",
-          "points": 23.0
+          "points": 23.5
         }
       ],
       "narrative": "Tim retained his 77.5-point stronghold, but Dan (69.0 pts) and Adrian (65.0 pts) began applying late-summer pressure as starting pitching rotations fatigued."
@@ -3426,11 +3357,11 @@
       "end_date": "2026-08-30",
       "leader": {
         "owner": "Tim",
-        "points": 75.0
+        "points": 75.5
       },
       "second_place": {
         "owner": "Dan",
-        "points": 71.0
+        "points": 70.5
       },
       "fourth_place_cutline": {
         "owner": "Will",
@@ -3441,13 +3372,13 @@
           "rank": 1,
           "owner": "Tim",
           "team_name": "Anti-lock Brake Systems",
-          "points": 75.0
+          "points": 75.5
         },
         {
           "rank": 2,
           "owner": "Dan",
           "team_name": "The Silver Bullets",
-          "points": 71.0
+          "points": 70.5
         },
         {
           "rank": 3,
@@ -3465,13 +3396,13 @@
           "rank": 5,
           "owner": "Garrett",
           "team_name": "There's Always Next Year",
-          "points": 43.0
+          "points": 43.5
         },
         {
           "rank": 6,
           "owner": "Alex",
           "team_name": "Raleigh Towels",
-          "points": 39.0
+          "points": 38.5
         },
         {
           "rank": 7,
@@ -3483,13 +3414,13 @@
           "rank": 8,
           "owner": "Preston",
           "team_name": "Maikels Secret Stuff",
-          "points": 32.0
+          "points": 32.5
         },
         {
           "rank": 9,
           "owner": "Mark",
           "team_name": "Basement Boy",
-          "points": 24.0
+          "points": 23.5
         }
       ],
       "narrative": "The gap narrowed dramatically: Dan surged to 71.0 pts while Tim dropped to 75.0 pts \u2014 setting up an epic final fortnight for the #1 overall seed."
@@ -3501,12 +3432,12 @@
       "start_date": "2026-08-31",
       "end_date": "2026-09-06",
       "leader": {
-        "owner": "Dan",
+        "owner": "Tim",
         "points": 72.5
       },
       "second_place": {
-        "owner": "Tim",
-        "points": 72.0
+        "owner": "Dan",
+        "points": 72.5
       },
       "fourth_place_cutline": {
         "owner": "Adrian",
@@ -3515,15 +3446,15 @@
       "standings_summary": [
         {
           "rank": 1,
-          "owner": "Dan",
-          "team_name": "The Silver Bullets",
+          "owner": "Tim",
+          "team_name": "Anti-lock Brake Systems",
           "points": 72.5
         },
         {
           "rank": 2,
-          "owner": "Tim",
-          "team_name": "Anti-lock Brake Systems",
-          "points": 72.0
+          "owner": "Dan",
+          "team_name": "The Silver Bullets",
+          "points": 72.5
         },
         {
           "rank": 3,
@@ -3553,7 +3484,7 @@
           "rank": 7,
           "owner": "Alex",
           "team_name": "Raleigh Towels",
-          "points": 36.0
+          "points": 35.5
         },
         {
           "rank": 8,
@@ -3582,7 +3513,7 @@
       },
       "second_place": {
         "owner": "Tim",
-        "points": 70.5
+        "points": 71.5
       },
       "fourth_place_cutline": {
         "owner": "Adrian",
@@ -3599,7 +3530,7 @@
           "rank": 2,
           "owner": "Tim",
           "team_name": "Anti-lock Brake Systems",
-          "points": 70.5
+          "points": 71.5
         },
         {
           "rank": 3,
@@ -3617,7 +3548,83 @@
           "rank": 5,
           "owner": "Garrett",
           "team_name": "There's Always Next Year",
-          "points": 46.5
+          "points": 46.0
+        },
+        {
+          "rank": 6,
+          "owner": "Anil",
+          "team_name": "Yeah Jeets",
+          "points": 37.5
+        },
+        {
+          "rank": 7,
+          "owner": "Alex",
+          "team_name": "Raleigh Towels",
+          "points": 35.5
+        },
+        {
+          "rank": 8,
+          "owner": "Preston",
+          "team_name": "Maikels Secret Stuff",
+          "points": 32.5
+        },
+        {
+          "rank": 9,
+          "owner": "Mark",
+          "team_name": "Basement Boy",
+          "points": 28.0
+        }
+      ],
+      "narrative": "Regular Season Finale: Dan clinched the #1 overall seed with 73.0 roto points, sweeping all three pitching volume categories (K, QS, SV+HD) and OBP (.3424)! Tim finished 2nd (70.5 pts), Will 3rd (66.0 pts), Adrian 4th (60.0 pts), and Garrett ruled Consolation at 46.5 pts."
+    },
+    {
+      "week": 24,
+      "name": "Playoff Semi-Finals",
+      "phase": 4,
+      "start_date": "2026-09-14",
+      "end_date": "2026-09-20",
+      "leader": {
+        "owner": "Dan",
+        "points": 73.0
+      },
+      "second_place": {
+        "owner": "Tim",
+        "points": 70.0
+      },
+      "fourth_place_cutline": {
+        "owner": "Adrian",
+        "points": 62.0
+      },
+      "standings_summary": [
+        {
+          "rank": 1,
+          "owner": "Dan",
+          "team_name": "The Silver Bullets",
+          "points": 73.0
+        },
+        {
+          "rank": 2,
+          "owner": "Tim",
+          "team_name": "Anti-lock Brake Systems",
+          "points": 70.0
+        },
+        {
+          "rank": 3,
+          "owner": "Will",
+          "team_name": "Jos\u00e9 Can You See",
+          "points": 65.0
+        },
+        {
+          "rank": 4,
+          "owner": "Adrian",
+          "team_name": "D0ng Demolishers",
+          "points": 62.0
+        },
+        {
+          "rank": 5,
+          "owner": "Garrett",
+          "team_name": "There's Always Next Year",
+          "points": 44.5
         },
         {
           "rank": 6,
@@ -3629,22 +3636,22 @@
           "rank": 7,
           "owner": "Alex",
           "team_name": "Raleigh Towels",
-          "points": 36.0
+          "points": 35.5
         },
         {
           "rank": 8,
           "owner": "Preston",
           "team_name": "Maikels Secret Stuff",
-          "points": 33.0
+          "points": 34.0
         },
         {
           "rank": 9,
           "owner": "Mark",
           "team_name": "Basement Boy",
-          "points": 28.0
+          "points": 29.0
         }
       ],
-      "narrative": "Regular Season Finale: Dan clinched the #1 overall seed with 73.0 roto points, sweeping all three pitching volume categories (K, QS, SV+HD) and OBP (.3424)! Tim finished 2nd (70.5 pts), Will 3rd (66.0 pts), Adrian 4th (60.0 pts), and Garrett ruled Consolation at 46.5 pts."
+      "narrative": "Playoff Semi-Finals: #1 Dan battles #4 Adrian while #2 Tim clashes with #3 Will in head-to-head playoff competition."
     }
   ],
   "playoffs_2026": {
@@ -3736,7 +3743,234 @@
       "team_name": "Basement Boy",
       "regular_season_pts": 28.0
     },
-    "championship_pedigree_context": "All four 2026 Championship Semi-Finalists (Dan, Tim, Will, Adrian) are former league champions, representing 11 of the 14 total championships in league history (Tim: 7, Adrian: 2, Will: 1, Dan: 1)."
+    "championship_pedigree_context": "All four 2026 Championship Semi-Finalists (Dan, Tim, Will, Adrian) are former league champions, representing 11 of the 14 total championships in league history (Tim: 7, Adrian: 2, Will: 1, Dan: 1).",
+    "live_scores_week_24": {
+      "week": 24,
+      "semi_final_a": {
+        "home": {
+          "team_id": 5,
+          "owner": "Dan",
+          "seed": 1,
+          "score": 2
+        },
+        "away": {
+          "team_id": 2,
+          "owner": "Adrian",
+          "seed": 4,
+          "score": 8
+        },
+        "ties": 0,
+        "leader": "Adrian",
+        "category_breakdown": {
+          "R": {
+            "winner": "Adrian",
+            "val_a": 13,
+            "val_b": 19
+          },
+          "HR": {
+            "winner": "Adrian",
+            "val_a": 5,
+            "val_b": 6
+          },
+          "RBI": {
+            "winner": "Adrian",
+            "val_a": 15,
+            "val_b": 21
+          },
+          "OBP": {
+            "winner": "Adrian",
+            "val_a": 0.3141,
+            "val_b": 0.366
+          },
+          "SB": {
+            "winner": "Adrian",
+            "val_a": 2,
+            "val_b": 8
+          },
+          "K": {
+            "winner": "Adrian",
+            "val_a": 29,
+            "val_b": 43
+          },
+          "QS": {
+            "winner": "Adrian",
+            "val_a": 1,
+            "val_b": 2
+          },
+          "SV_HD": {
+            "winner": "Adrian",
+            "val_a": 3,
+            "val_b": 4
+          },
+          "ERA": {
+            "winner": "Dan",
+            "val_a": 0.96,
+            "val_b": 3.05
+          },
+          "WHIP": {
+            "winner": "Dan",
+            "val_a": 0.86,
+            "val_b": 1.15
+          }
+        }
+      },
+      "semi_final_b": {
+        "home": {
+          "team_id": 1,
+          "owner": "Tim",
+          "seed": 2,
+          "score": 5
+        },
+        "away": {
+          "team_id": 12,
+          "owner": "Will",
+          "seed": 3,
+          "score": 5
+        },
+        "ties": 0,
+        "leader": "TIED",
+        "category_breakdown": {
+          "R": {
+            "winner": "Tim",
+            "val_a": 25,
+            "val_b": 17
+          },
+          "HR": {
+            "winner": "Tim",
+            "val_a": 9,
+            "val_b": 5
+          },
+          "RBI": {
+            "winner": "Tim",
+            "val_a": 20,
+            "val_b": 17
+          },
+          "OBP": {
+            "winner": "Tim",
+            "val_a": 0.3944,
+            "val_b": 0.3208
+          },
+          "SB": {
+            "winner": "Will",
+            "val_a": 2,
+            "val_b": 5
+          },
+          "K": {
+            "winner": "Will",
+            "val_a": 27,
+            "val_b": 41
+          },
+          "QS": {
+            "winner": "Will",
+            "val_a": 0,
+            "val_b": 2
+          },
+          "SV_HD": {
+            "winner": "Tim",
+            "val_a": 5,
+            "val_b": 4
+          },
+          "ERA": {
+            "winner": "Will",
+            "val_a": 1.98,
+            "val_b": 1.95
+          },
+          "WHIP": {
+            "winner": "Will",
+            "val_a": 1.13,
+            "val_b": 0.86
+          }
+        }
+      },
+      "consolation_stats": {
+        "3": {
+          "R": 14,
+          "HR": 5,
+          "RBI": 12,
+          "OBP": 0.2466,
+          "SB": 2,
+          "K": 37,
+          "QS": 1,
+          "SV_HD": 0,
+          "ERA": 3.18,
+          "WHIP": 1.26,
+          "raw_IP": 33.99999999999999,
+          "raw_AB": 132.0,
+          "raw_H": 22.0,
+          "raw_BB": 13.0,
+          "raw_ER": 12.0
+        },
+        "8": {
+          "R": 16,
+          "HR": 5,
+          "RBI": 14,
+          "OBP": 0.2727,
+          "SB": 3,
+          "K": 28,
+          "QS": 1,
+          "SV_HD": 1,
+          "ERA": 3.49,
+          "WHIP": 1.09,
+          "raw_IP": 28.333333333333332,
+          "raw_AB": 102.0,
+          "raw_H": 22.0,
+          "raw_BB": 6.0,
+          "raw_ER": 11.0
+        },
+        "6": {
+          "R": 20,
+          "HR": 4,
+          "RBI": 12,
+          "OBP": 0.3082,
+          "SB": 3,
+          "K": 7,
+          "QS": 0,
+          "SV_HD": 2,
+          "ERA": 3.72,
+          "WHIP": 1.55,
+          "raw_IP": 9.666666666666664,
+          "raw_AB": 132.0,
+          "raw_H": 31.0,
+          "raw_BB": 11.0,
+          "raw_ER": 4.0
+        },
+        "13": {
+          "R": 11,
+          "HR": 2,
+          "RBI": 8,
+          "OBP": 0.3833,
+          "SB": 3,
+          "K": 35,
+          "QS": 2,
+          "SV_HD": 1,
+          "ERA": 5.94,
+          "WHIP": 1.38,
+          "raw_IP": 36.333333333333336,
+          "raw_AB": 49.0,
+          "raw_H": 12.0,
+          "raw_BB": 11.0,
+          "raw_ER": 24.0
+        },
+        "14": {
+          "R": 19,
+          "HR": 5,
+          "RBI": 17,
+          "OBP": 0.366,
+          "SB": 6,
+          "K": 27,
+          "QS": 0,
+          "SV_HD": 4,
+          "ERA": 1.86,
+          "WHIP": 1.34,
+          "raw_IP": 19.333333333333336,
+          "raw_AB": 134.0,
+          "raw_H": 38.0,
+          "raw_BB": 17.0,
+          "raw_ER": 4.0
+        }
+      }
+    },
+    "current_round_week": 24
   },
   "manager_personas": {
     "Tim": {

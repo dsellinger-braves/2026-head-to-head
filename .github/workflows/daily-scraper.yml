@@ -18,6 +18,9 @@ on:
 jobs:
   scrape-and-upload:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -40,3 +43,22 @@ jobs:
           ESPN_S2: ${{ secrets.ESPN_S2 }}
           ESPN_SWID: ${{ secrets.ESPN_SWID }}
         run: python active-stats-pull.py
+
+      - name: Update League Context & Storylines
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          python pipelines/update_league_context.py
+
+      - name: Commit and Push Updated Context
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/league_context.json LEAGUE_STORYLINES.md
+          if git diff --staged --quiet; then
+            echo "No context changes to commit."
+          else
+            git commit -m "chore(data): auto-refresh league context and storylines [skip ci]"
+            git push
+          fi
