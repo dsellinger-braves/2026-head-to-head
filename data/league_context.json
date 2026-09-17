@@ -488,7 +488,37 @@
           "WHIP": 1.27,
           "score": 424.56410256410254
         }
-      ]
+      ],
+      "historical_pedigree": {
+        "seasons_played": 14,
+        "championships": 7,
+        "championship_years": [
+          2012,
+          2016,
+          2017,
+          2018,
+          2019,
+          2023,
+          2025
+        ],
+        "podium_finishes": 11,
+        "podium_years": [
+          2012,
+          2013,
+          2014,
+          2015,
+          2016,
+          2017,
+          2018,
+          2019,
+          2020,
+          2023,
+          2025
+        ],
+        "career_average_finish": 2.07,
+        "best_finish": 1,
+        "worst_finish": 5
+      }
     },
     "Garrett": {
       "team_id": 3,
@@ -626,7 +656,23 @@
           "WHIP": 0.94,
           "score": 331.02460850111856
         }
-      ]
+      ],
+      "historical_pedigree": {
+        "seasons_played": 14,
+        "championships": 0,
+        "championship_years": [],
+        "podium_finishes": 5,
+        "podium_years": [
+          2012,
+          2014,
+          2018,
+          2019,
+          2023
+        ],
+        "career_average_finish": 4.29,
+        "best_finish": 2,
+        "worst_finish": 9
+      }
     },
     "Dan": {
       "team_id": 5,
@@ -764,7 +810,27 @@
           "WHIP": 1.01,
           "score": 457.09280303030306
         }
-      ]
+      ],
+      "historical_pedigree": {
+        "seasons_played": 14,
+        "championships": 1,
+        "championship_years": [
+          2024
+        ],
+        "podium_finishes": 7,
+        "podium_years": [
+          2015,
+          2018,
+          2021,
+          2022,
+          2023,
+          2024,
+          2025
+        ],
+        "career_average_finish": 4.0,
+        "best_finish": 1,
+        "worst_finish": 7
+      }
     },
     "Alex": {
       "team_id": 8,
@@ -903,7 +969,17 @@
           "WHIP": 1.16,
           "score": 418.09090909090907
         }
-      ]
+      ],
+      "historical_pedigree": {
+        "seasons_played": 13,
+        "championships": 0,
+        "championship_years": [],
+        "podium_finishes": 0,
+        "podium_years": [],
+        "career_average_finish": 7.23,
+        "best_finish": 5,
+        "worst_finish": 10
+      }
     },
     "Will": {
       "team_id": 12,
@@ -1041,7 +1117,25 @@
           "WHIP": 1.07,
           "score": 504.67080745341616
         }
-      ]
+      ],
+      "historical_pedigree": {
+        "seasons_played": 7,
+        "championships": 1,
+        "championship_years": [
+          2022
+        ],
+        "podium_finishes": 5,
+        "podium_years": [
+          2019,
+          2020,
+          2022,
+          2024,
+          2025
+        ],
+        "career_average_finish": 3.57,
+        "best_finish": 1,
+        "worst_finish": 7
+      }
     },
     "Mark": {
       "team_id": 13,
@@ -1181,7 +1275,25 @@
           "WHIP": 1.13,
           "score": 430.8898305084746
         }
-      ]
+      ],
+      "historical_pedigree": {
+        "seasons_played": 8,
+        "championships": 3,
+        "championship_years": [
+          2013,
+          2014,
+          2015
+        ],
+        "podium_finishes": 3,
+        "podium_years": [
+          2013,
+          2014,
+          2015
+        ],
+        "career_average_finish": 4.75,
+        "best_finish": 1,
+        "worst_finish": 9
+      }
     },
     "Preston": {
       "team_id": 14,
@@ -1319,7 +1431,17 @@
           "WHIP": 1.47,
           "score": 404.84603886397605
         }
-      ]
+      ],
+      "historical_pedigree": {
+        "seasons_played": 0,
+        "championships": 0,
+        "championship_years": [],
+        "podium_finishes": 0,
+        "podium_years": [],
+        "career_average_finish": null,
+        "best_finish": "N/A (2026 Expansion Franchise)",
+        "worst_finish": "N/A (2026 Expansion Franchise)"
+      }
     },
     "Adrian": {
       "team_id": 2,
@@ -1458,7 +1580,27 @@
           "WHIP": 1.15,
           "score": 483.3575624082232
         }
-      ]
+      ],
+      "historical_pedigree": {
+        "seasons_played": 14,
+        "championships": 2,
+        "championship_years": [
+          2020,
+          2021
+        ],
+        "podium_finishes": 6,
+        "podium_years": [
+          2016,
+          2017,
+          2020,
+          2021,
+          2022,
+          2024
+        ],
+        "career_average_finish": 3.79,
+        "best_finish": 1,
+        "worst_finish": 8
+      }
     },
     "Anil": {
       "team_id": 6,
@@ -1597,7 +1739,19 @@
           "WHIP": 0.94,
           "score": 322.55226824457594
         }
-      ]
+      ],
+      "historical_pedigree": {
+        "seasons_played": 10,
+        "championships": 0,
+        "championship_years": [],
+        "podium_finishes": 1,
+        "podium_years": [
+          2017
+        ],
+        "career_average_finish": 8.2,
+        "best_finish": 3,
+        "worst_finish": 10
+      }
     }
   },
   "category_battles_2026": [
@@ -3512,7 +3666,11 @@
           "team_name": "D0ng Demolishers",
           "regular_season_pts": 60.0
         },
-        "storyline": "The #1 overall seed Dan, on a +31.5 point regular season surge, faces the league ERA champion Adrian in a clash of volume streaming vs elite rotation ratios."
+        "storyline": "The #1 overall seed Dan, on a +31.5 point regular season surge, faces the league ERA champion Adrian in a clash of volume streaming vs elite rotation ratios.",
+        "historical_titles": {
+          "Dan": 1,
+          "Adrian": 2
+        }
       },
       {
         "matchup_id": "sf2",
@@ -3529,7 +3687,11 @@
           "team_name": "Jos\u00e9 Can You See",
           "regular_season_pts": 66.0
         },
-        "storyline": "The two titans of the regular season spring and summer: Tim's 4-category offensive powerhouse (R, HR, RBI, SB) meets Will's pitching ratio fortress (1st in WHIP, 2nd in ERA, 2nd in K)."
+        "storyline": "The two titans of the regular season spring and summer: Tim's 4-category offensive powerhouse (R, HR, RBI, SB) meets Will's pitching ratio fortress (1st in WHIP, 2nd in ERA, 2nd in K).",
+        "historical_titles": {
+          "Tim": 7,
+          "Will": 1
+        }
       }
     ],
     "consolation_bracket": [
@@ -3573,7 +3735,8 @@
       "owner": "Mark",
       "team_name": "Basement Boy",
       "regular_season_pts": 28.0
-    }
+    },
+    "championship_pedigree_context": "All four 2026 Championship Semi-Finalists (Dan, Tim, Will, Adrian) are former league champions, representing 11 of the 14 total championships in league history (Tim: 7, Adrian: 2, Will: 1, Dan: 1)."
   },
   "manager_personas": {
     "Tim": {
@@ -3844,5 +4007,1675 @@
       ],
       "narrative": "Separated by just 1.0 regular season roto point (37.0 to 36.0), Anil's Junior Caminero (40 HR) and Ben Rice (38 HR) clash directly with Alex's Pete Crow-Armstrong (41 HR, 36 SB) in Consolation Semi-Final B."
     }
-  ]
+  ],
+  "historical_finishes_summary": {
+    "total_seasons_completed": 14,
+    "seasons_range": "2012-2025",
+    "championship_roll_of_honor": [
+      {
+        "year": 2012,
+        "champion": "Tim",
+        "champion_team_name": "Layin Down The Lawrie",
+        "champion_points": 74.5,
+        "runner_up": "Jordy",
+        "runner_up_points": 59.0,
+        "third_place": "Garrett",
+        "third_place_points": 57.0,
+        "total_teams": 9
+      },
+      {
+        "year": 2013,
+        "champion": "Mark",
+        "champion_team_name": "Third Wheel Specialist",
+        "champion_points": 63.0,
+        "runner_up": "Jordy",
+        "runner_up_points": 62.0,
+        "third_place": "Tim",
+        "third_place_points": 57.5,
+        "total_teams": 8
+      },
+      {
+        "year": 2014,
+        "champion": "Mark",
+        "champion_team_name": "The Barves",
+        "champion_points": 92.0,
+        "runner_up": "Tim",
+        "runner_up_points": 79.0,
+        "third_place": "Garrett",
+        "third_place_points": 73.0,
+        "total_teams": 10
+      },
+      {
+        "year": 2015,
+        "champion": "Mark",
+        "champion_team_name": "Tom Brady Is A Taint Licker",
+        "champion_points": 88.5,
+        "runner_up": "Tim",
+        "runner_up_points": 73.0,
+        "third_place": "Dan",
+        "third_place_points": 71.5,
+        "total_teams": 10
+      },
+      {
+        "year": 2016,
+        "champion": "Tim",
+        "champion_team_name": "Team to be Named Later",
+        "champion_points": 90.5,
+        "runner_up": "Adrian",
+        "runner_up_points": 77.5,
+        "third_place": "Andrew Entwistle",
+        "third_place_points": 70.0,
+        "total_teams": 10
+      },
+      {
+        "year": 2017,
+        "champion": "Tim",
+        "champion_team_name": "Team to be Named Later",
+        "champion_points": 89.0,
+        "runner_up": "Adrian",
+        "runner_up_points": 66.0,
+        "third_place": "Anil",
+        "third_place_points": 63.0,
+        "total_teams": 10
+      },
+      {
+        "year": 2018,
+        "champion": "Tim",
+        "champion_team_name": "Albies There For You",
+        "champion_points": 86.0,
+        "runner_up": "Dan",
+        "runner_up_points": 73.5,
+        "third_place": "Garrett",
+        "third_place_points": 68.5,
+        "total_teams": 10
+      },
+      {
+        "year": 2019,
+        "champion": "Tim",
+        "champion_team_name": "Me and the Boyds",
+        "champion_points": 89.0,
+        "runner_up": "Garrett",
+        "runner_up_points": 87.5,
+        "third_place": "Will",
+        "third_place_points": 84.5,
+        "total_teams": 11
+      },
+      {
+        "year": 2020,
+        "champion": "Adrian",
+        "champion_team_name": "Sonny w/ chance of dongballs",
+        "champion_points": 86.0,
+        "runner_up": "Tim",
+        "runner_up_points": 81.0,
+        "third_place": "Will",
+        "third_place_points": 70.0,
+        "total_teams": 10
+      },
+      {
+        "year": 2021,
+        "champion": "Adrian",
+        "champion_team_name": "Hooper My Pooper",
+        "champion_points": 88.0,
+        "runner_up": "Anurag Komavarelli",
+        "runner_up_points": 73.0,
+        "third_place": "Dan",
+        "third_place_points": 71.0,
+        "total_teams": 10
+      },
+      {
+        "year": 2022,
+        "champion": "Will",
+        "champion_team_name": "Jos\u00e9 Can You See",
+        "champion_points": 87.5,
+        "runner_up": "Adrian",
+        "runner_up_points": 67.0,
+        "third_place": "Dan",
+        "third_place_points": 62.5,
+        "total_teams": 10
+      },
+      {
+        "year": 2023,
+        "champion": "Tim",
+        "champion_team_name": "Itch Lockers",
+        "champion_points": 84.5,
+        "runner_up": "Garrett",
+        "runner_up_points": 77.0,
+        "third_place": "Dan",
+        "third_place_points": 67.0,
+        "total_teams": 10
+      },
+      {
+        "year": 2024,
+        "champion": "Dan",
+        "champion_team_name": "Ramblin' Gamblin'",
+        "champion_points": 85.0,
+        "runner_up": "Adrian",
+        "runner_up_points": 81.0,
+        "third_place": "Will",
+        "third_place_points": 75.0,
+        "total_teams": 10
+      },
+      {
+        "year": 2025,
+        "champion": "Tim",
+        "champion_team_name": "Campbell's Kristian Noodle Soup",
+        "champion_points": 77.5,
+        "runner_up": "Dan",
+        "runner_up_points": 76.0,
+        "third_place": "Will",
+        "third_place_points": 74.5,
+        "total_teams": 10
+      }
+    ],
+    "all_time_leaderboard": [
+      {
+        "owner": "Tim",
+        "seasons_played": 14,
+        "championships": 7,
+        "championship_years": [
+          2012,
+          2016,
+          2017,
+          2018,
+          2019,
+          2023,
+          2025
+        ],
+        "podium_finishes": 11,
+        "podium_years": [
+          2012,
+          2013,
+          2014,
+          2015,
+          2016,
+          2017,
+          2018,
+          2019,
+          2020,
+          2023,
+          2025
+        ],
+        "career_average_finish": 2.07,
+        "best_finish": 1,
+        "worst_finish": 5,
+        "total_historical_points": 1072.5,
+        "annual_finishes": [
+          {
+            "year": 2012,
+            "place": 1,
+            "points": 74.5,
+            "team_name": "Layin Down The Lawrie"
+          },
+          {
+            "year": 2013,
+            "place": 3,
+            "points": 57.5,
+            "team_name": "BRUCE HOOPER!!!!"
+          },
+          {
+            "year": 2014,
+            "place": 2,
+            "points": 79.0,
+            "team_name": "Angels in the Troutfield"
+          },
+          {
+            "year": 2015,
+            "place": 2,
+            "points": 73.0,
+            "team_name": "It's a New ERA"
+          },
+          {
+            "year": 2016,
+            "place": 1,
+            "points": 90.5,
+            "team_name": "Team to be Named Later"
+          },
+          {
+            "year": 2017,
+            "place": 1,
+            "points": 89.0,
+            "team_name": "Team to be Named Later"
+          },
+          {
+            "year": 2018,
+            "place": 1,
+            "points": 86.0,
+            "team_name": "Albies There For You"
+          },
+          {
+            "year": 2019,
+            "place": 1,
+            "points": 89.0,
+            "team_name": "Me and the Boyds"
+          },
+          {
+            "year": 2020,
+            "place": 2,
+            "points": 81.0,
+            "team_name": "Recency Baez"
+          },
+          {
+            "year": 2021,
+            "place": 4,
+            "points": 67.0,
+            "team_name": "Recency Baez"
+          },
+          {
+            "year": 2022,
+            "place": 4,
+            "points": 60.0,
+            "team_name": "Recency Baez"
+          },
+          {
+            "year": 2023,
+            "place": 1,
+            "points": 84.5,
+            "team_name": "Itch Lockers"
+          },
+          {
+            "year": 2024,
+            "place": 5,
+            "points": 64.0,
+            "team_name": "Itch Lockers"
+          },
+          {
+            "year": 2025,
+            "place": 1,
+            "points": 77.5,
+            "team_name": "Campbell's Kristian Noodle Soup"
+          }
+        ]
+      },
+      {
+        "owner": "Mark",
+        "seasons_played": 8,
+        "championships": 3,
+        "championship_years": [
+          2013,
+          2014,
+          2015
+        ],
+        "podium_finishes": 3,
+        "podium_years": [
+          2013,
+          2014,
+          2015
+        ],
+        "career_average_finish": 4.75,
+        "best_finish": 1,
+        "worst_finish": 9,
+        "total_historical_points": 480.5,
+        "annual_finishes": [
+          {
+            "year": 2012,
+            "place": 5,
+            "points": 51.0,
+            "team_name": "How I Met Your Mother"
+          },
+          {
+            "year": 2013,
+            "place": 1,
+            "points": 63.0,
+            "team_name": "Third Wheel Specialist"
+          },
+          {
+            "year": 2014,
+            "place": 1,
+            "points": 92.0,
+            "team_name": "The Barves"
+          },
+          {
+            "year": 2015,
+            "place": 1,
+            "points": 88.5,
+            "team_name": "Tom Brady Is A Taint Licker"
+          },
+          {
+            "year": 2022,
+            "place": 8,
+            "points": 47.0,
+            "team_name": "Team Russell"
+          },
+          {
+            "year": 2023,
+            "place": 9,
+            "points": 33.0,
+            "team_name": "Team Russell"
+          },
+          {
+            "year": 2024,
+            "place": 6,
+            "points": 50.0,
+            "team_name": "Basement Boy"
+          },
+          {
+            "year": 2025,
+            "place": 7,
+            "points": 56.0,
+            "team_name": "Basement Boy"
+          }
+        ]
+      },
+      {
+        "owner": "Adrian",
+        "seasons_played": 14,
+        "championships": 2,
+        "championship_years": [
+          2020,
+          2021
+        ],
+        "podium_finishes": 6,
+        "podium_years": [
+          2016,
+          2017,
+          2020,
+          2021,
+          2022,
+          2024
+        ],
+        "career_average_finish": 3.79,
+        "best_finish": 1,
+        "worst_finish": 8,
+        "total_historical_points": 897.5,
+        "annual_finishes": [
+          {
+            "year": 2012,
+            "place": 8,
+            "points": 38.5,
+            "team_name": "First Floor Flamethrowers"
+          },
+          {
+            "year": 2013,
+            "place": 7,
+            "points": 25.5,
+            "team_name": "Infield Flies"
+          },
+          {
+            "year": 2014,
+            "place": 4,
+            "points": 63.0,
+            "team_name": "ThenWeShall FightInTheShade"
+          },
+          {
+            "year": 2015,
+            "place": 7,
+            "points": 44.0,
+            "team_name": "The Metamorphasis"
+          },
+          {
+            "year": 2016,
+            "place": 2,
+            "points": 77.5,
+            "team_name": "Byron's Big Club"
+          },
+          {
+            "year": 2017,
+            "place": 2,
+            "points": 66.0,
+            "team_name": "The Bux Stops Here"
+          },
+          {
+            "year": 2018,
+            "place": 4,
+            "points": 66.5,
+            "team_name": "Teach me how to Ferddie"
+          },
+          {
+            "year": 2019,
+            "place": 5,
+            "points": 69.0,
+            "team_name": "Oh Boy Adalberto"
+          },
+          {
+            "year": 2020,
+            "place": 1,
+            "points": 86.0,
+            "team_name": "Sonny w/ chance of dongballs"
+          },
+          {
+            "year": 2021,
+            "place": 1,
+            "points": 88.0,
+            "team_name": "Hooper My Pooper"
+          },
+          {
+            "year": 2022,
+            "place": 2,
+            "points": 67.0,
+            "team_name": "Hooper My Pooper"
+          },
+          {
+            "year": 2023,
+            "place": 4,
+            "points": 59.5,
+            "team_name": "Cruz Cruz"
+          },
+          {
+            "year": 2024,
+            "place": 2,
+            "points": 81.0,
+            "team_name": "D0ng Demolishers"
+          },
+          {
+            "year": 2025,
+            "place": 4,
+            "points": 66.0,
+            "team_name": "D0ng Demolishers"
+          }
+        ]
+      },
+      {
+        "owner": "Dan",
+        "seasons_played": 14,
+        "championships": 1,
+        "championship_years": [
+          2024
+        ],
+        "podium_finishes": 7,
+        "podium_years": [
+          2015,
+          2018,
+          2021,
+          2022,
+          2023,
+          2024,
+          2025
+        ],
+        "career_average_finish": 4.0,
+        "best_finish": 1,
+        "worst_finish": 7,
+        "total_historical_points": 875.0,
+        "annual_finishes": [
+          {
+            "year": 2012,
+            "place": 6,
+            "points": 47.0,
+            "team_name": "Professor Cuddlesworth"
+          },
+          {
+            "year": 2013,
+            "place": 4,
+            "points": 52.5,
+            "team_name": "Florida Gulf Co ast University"
+          },
+          {
+            "year": 2014,
+            "place": 5,
+            "points": 55.5,
+            "team_name": "#5ettling Down"
+          },
+          {
+            "year": 2015,
+            "place": 3,
+            "points": 71.5,
+            "team_name": "Will Shimmy for Homers"
+          },
+          {
+            "year": 2016,
+            "place": 6,
+            "points": 46.0,
+            "team_name": "Raging Pikspillers"
+          },
+          {
+            "year": 2017,
+            "place": 5,
+            "points": 53.0,
+            "team_name": "Sano Dogs 2: Snow Harder"
+          },
+          {
+            "year": 2018,
+            "place": 2,
+            "points": 73.5,
+            "team_name": "Scootie and the Blowfish"
+          },
+          {
+            "year": 2019,
+            "place": 6,
+            "points": 64.0,
+            "team_name": "Eloy Eloy Lama Sabacthani"
+          },
+          {
+            "year": 2020,
+            "place": 7,
+            "points": 50.5,
+            "team_name": "Tank Commander"
+          },
+          {
+            "year": 2021,
+            "place": 3,
+            "points": 71.0,
+            "team_name": "Tank Reverser"
+          },
+          {
+            "year": 2022,
+            "place": 3,
+            "points": 62.5,
+            "team_name": "Tank Reverser"
+          },
+          {
+            "year": 2023,
+            "place": 3,
+            "points": 67.0,
+            "team_name": "Lowe's Hardware"
+          },
+          {
+            "year": 2024,
+            "place": 1,
+            "points": 85.0,
+            "team_name": "Ramblin' Gamblin'"
+          },
+          {
+            "year": 2025,
+            "place": 2,
+            "points": 76.0,
+            "team_name": "Team _ellinger"
+          }
+        ]
+      },
+      {
+        "owner": "Will",
+        "seasons_played": 7,
+        "championships": 1,
+        "championship_years": [
+          2022
+        ],
+        "podium_finishes": 5,
+        "podium_years": [
+          2019,
+          2020,
+          2022,
+          2024,
+          2025
+        ],
+        "career_average_finish": 3.57,
+        "best_finish": 1,
+        "worst_finish": 7,
+        "total_historical_points": 502.5,
+        "annual_finishes": [
+          {
+            "year": 2019,
+            "place": 3,
+            "points": 84.5,
+            "team_name": "Jos\u00e9 Can You See"
+          },
+          {
+            "year": 2020,
+            "place": 3,
+            "points": 70.0,
+            "team_name": "Jos\u00e9 Can You See"
+          },
+          {
+            "year": 2021,
+            "place": 5,
+            "points": 58.0,
+            "team_name": "Jos\u00e9 Can You See"
+          },
+          {
+            "year": 2022,
+            "place": 1,
+            "points": 87.5,
+            "team_name": "Jos\u00e9 Can You See"
+          },
+          {
+            "year": 2023,
+            "place": 7,
+            "points": 53.0,
+            "team_name": "Jos\u00e9 Can You See"
+          },
+          {
+            "year": 2024,
+            "place": 3,
+            "points": 75.0,
+            "team_name": "Jos\u00e9 Can You See"
+          },
+          {
+            "year": 2025,
+            "place": 3,
+            "points": 74.5,
+            "team_name": "Jos\u00e9 Can You See"
+          }
+        ]
+      },
+      {
+        "owner": "Garrett",
+        "seasons_played": 14,
+        "championships": 0,
+        "championship_years": [],
+        "podium_finishes": 5,
+        "podium_years": [
+          2012,
+          2014,
+          2018,
+          2019,
+          2023
+        ],
+        "career_average_finish": 4.29,
+        "best_finish": 2,
+        "worst_finish": 9,
+        "total_historical_points": 876.0,
+        "annual_finishes": [
+          {
+            "year": 2012,
+            "place": 3,
+            "points": 57.0,
+            "team_name": "The Braunies"
+          },
+          {
+            "year": 2013,
+            "place": 5,
+            "points": 48.5,
+            "team_name": "Eirc and Donna Penciotti"
+          },
+          {
+            "year": 2014,
+            "place": 3,
+            "points": 73.0,
+            "team_name": "Yasi Me Hunting the Pence"
+          },
+          {
+            "year": 2015,
+            "place": 5,
+            "points": 55.0,
+            "team_name": "New Name Better Results"
+          },
+          {
+            "year": 2016,
+            "place": 4,
+            "points": 58.5,
+            "team_name": "The Thirst"
+          },
+          {
+            "year": 2017,
+            "place": 4,
+            "points": 62.0,
+            "team_name": "Thirst Quencher"
+          },
+          {
+            "year": 2018,
+            "place": 3,
+            "points": 68.5,
+            "team_name": "Acuna Matatta"
+          },
+          {
+            "year": 2019,
+            "place": 2,
+            "points": 87.5,
+            "team_name": "Acuna Matatta"
+          },
+          {
+            "year": 2020,
+            "place": 5,
+            "points": 60.5,
+            "team_name": "Acuna Matatta"
+          },
+          {
+            "year": 2021,
+            "place": 6,
+            "points": 52.0,
+            "team_name": "Nobody to Tank For"
+          },
+          {
+            "year": 2022,
+            "place": 9,
+            "points": 45.0,
+            "team_name": "New Year Same Result"
+          },
+          {
+            "year": 2023,
+            "place": 2,
+            "points": 77.0,
+            "team_name": "World Shocked"
+          },
+          {
+            "year": 2024,
+            "place": 4,
+            "points": 69.0,
+            "team_name": "No worse than 4th?"
+          },
+          {
+            "year": 2025,
+            "place": 5,
+            "points": 62.5,
+            "team_name": "Resigned to Fourth"
+          }
+        ]
+      },
+      {
+        "owner": "Anil",
+        "seasons_played": 10,
+        "championships": 0,
+        "championship_years": [],
+        "podium_finishes": 1,
+        "podium_years": [
+          2017
+        ],
+        "career_average_finish": 8.2,
+        "best_finish": 3,
+        "worst_finish": 10,
+        "total_historical_points": 374.5,
+        "annual_finishes": [
+          {
+            "year": 2016,
+            "place": 10,
+            "points": 28.0,
+            "team_name": "Yeah Jeets"
+          },
+          {
+            "year": 2017,
+            "place": 3,
+            "points": 63.0,
+            "team_name": "Yeah Jeets"
+          },
+          {
+            "year": 2018,
+            "place": 9,
+            "points": 34.0,
+            "team_name": "Yeah Jeets"
+          },
+          {
+            "year": 2019,
+            "place": 9,
+            "points": 48.0,
+            "team_name": "Yeah Jeets"
+          },
+          {
+            "year": 2020,
+            "place": 8,
+            "points": 32.0,
+            "team_name": "Yeah Jeets"
+          },
+          {
+            "year": 2021,
+            "place": 10,
+            "points": 30.0,
+            "team_name": "Yeah Jeets"
+          },
+          {
+            "year": 2022,
+            "place": 5,
+            "points": 59.0,
+            "team_name": "Yeah Jeets"
+          },
+          {
+            "year": 2023,
+            "place": 8,
+            "points": 39.0,
+            "team_name": "Yeah Jeets"
+          },
+          {
+            "year": 2024,
+            "place": 10,
+            "points": 24.0,
+            "team_name": "Yeah Jeets"
+          },
+          {
+            "year": 2025,
+            "place": 10,
+            "points": 17.5,
+            "team_name": "Yeah Jeets"
+          }
+        ]
+      },
+      {
+        "owner": "Alex",
+        "seasons_played": 13,
+        "championships": 0,
+        "championship_years": [],
+        "podium_finishes": 0,
+        "podium_years": [],
+        "career_average_finish": 7.23,
+        "best_finish": 5,
+        "worst_finish": 10,
+        "total_historical_points": 563.5,
+        "annual_finishes": [
+          {
+            "year": 2012,
+            "place": 7,
+            "points": 40.0,
+            "team_name": "Gone for the Halladay"
+          },
+          {
+            "year": 2014,
+            "place": 10,
+            "points": 25.0,
+            "team_name": "Team @ Bottom of the Hudson"
+          },
+          {
+            "year": 2015,
+            "place": 8,
+            "points": 42.0,
+            "team_name": "BRB on a feels Trip"
+          },
+          {
+            "year": 2016,
+            "place": 5,
+            "points": 53.0,
+            "team_name": "Holy Schmidt"
+          },
+          {
+            "year": 2017,
+            "place": 9,
+            "points": 39.0,
+            "team_name": "Holy Schmidt"
+          },
+          {
+            "year": 2018,
+            "place": 7,
+            "points": 40.0,
+            "team_name": "Holy Schmidt"
+          },
+          {
+            "year": 2019,
+            "place": 8,
+            "points": 49.0,
+            "team_name": "Holy Schmidt"
+          },
+          {
+            "year": 2020,
+            "place": 5,
+            "points": 60.5,
+            "team_name": "The Cutch Gene"
+          },
+          {
+            "year": 2021,
+            "place": 7,
+            "points": 41.0,
+            "team_name": "Place Your Betts"
+          },
+          {
+            "year": 2022,
+            "place": 10,
+            "points": 23.0,
+            "team_name": "Place Your Betts"
+          },
+          {
+            "year": 2023,
+            "place": 5,
+            "points": 55.5,
+            "team_name": "Place Your Betts"
+          },
+          {
+            "year": 2024,
+            "place": 7,
+            "points": 38.0,
+            "team_name": "Place Your Betts"
+          },
+          {
+            "year": 2025,
+            "place": 6,
+            "points": 57.5,
+            "team_name": "Place Your Betts"
+          }
+        ]
+      },
+      {
+        "owner": "Preston",
+        "seasons_played": 0,
+        "championships": 0,
+        "championship_years": [],
+        "podium_finishes": 0,
+        "podium_years": [],
+        "career_average_finish": null,
+        "best_finish": "N/A (2026 Expansion Franchise)",
+        "worst_finish": "N/A (2026 Expansion Franchise)",
+        "total_historical_points": 0.0,
+        "annual_finishes": []
+      }
+    ],
+    "active_owners_historical_summary": {
+      "Dan": {
+        "owner": "Dan",
+        "seasons_played": 14,
+        "championships": 1,
+        "championship_years": [
+          2024
+        ],
+        "podium_finishes": 7,
+        "podium_years": [
+          2015,
+          2018,
+          2021,
+          2022,
+          2023,
+          2024,
+          2025
+        ],
+        "career_average_finish": 4.0,
+        "best_finish": 1,
+        "worst_finish": 7,
+        "total_historical_points": 875.0,
+        "annual_finishes": [
+          {
+            "year": 2012,
+            "place": 6,
+            "points": 47.0,
+            "team_name": "Professor Cuddlesworth"
+          },
+          {
+            "year": 2013,
+            "place": 4,
+            "points": 52.5,
+            "team_name": "Florida Gulf Co ast University"
+          },
+          {
+            "year": 2014,
+            "place": 5,
+            "points": 55.5,
+            "team_name": "#5ettling Down"
+          },
+          {
+            "year": 2015,
+            "place": 3,
+            "points": 71.5,
+            "team_name": "Will Shimmy for Homers"
+          },
+          {
+            "year": 2016,
+            "place": 6,
+            "points": 46.0,
+            "team_name": "Raging Pikspillers"
+          },
+          {
+            "year": 2017,
+            "place": 5,
+            "points": 53.0,
+            "team_name": "Sano Dogs 2: Snow Harder"
+          },
+          {
+            "year": 2018,
+            "place": 2,
+            "points": 73.5,
+            "team_name": "Scootie and the Blowfish"
+          },
+          {
+            "year": 2019,
+            "place": 6,
+            "points": 64.0,
+            "team_name": "Eloy Eloy Lama Sabacthani"
+          },
+          {
+            "year": 2020,
+            "place": 7,
+            "points": 50.5,
+            "team_name": "Tank Commander"
+          },
+          {
+            "year": 2021,
+            "place": 3,
+            "points": 71.0,
+            "team_name": "Tank Reverser"
+          },
+          {
+            "year": 2022,
+            "place": 3,
+            "points": 62.5,
+            "team_name": "Tank Reverser"
+          },
+          {
+            "year": 2023,
+            "place": 3,
+            "points": 67.0,
+            "team_name": "Lowe's Hardware"
+          },
+          {
+            "year": 2024,
+            "place": 1,
+            "points": 85.0,
+            "team_name": "Ramblin' Gamblin'"
+          },
+          {
+            "year": 2025,
+            "place": 2,
+            "points": 76.0,
+            "team_name": "Team _ellinger"
+          }
+        ]
+      },
+      "Tim": {
+        "owner": "Tim",
+        "seasons_played": 14,
+        "championships": 7,
+        "championship_years": [
+          2012,
+          2016,
+          2017,
+          2018,
+          2019,
+          2023,
+          2025
+        ],
+        "podium_finishes": 11,
+        "podium_years": [
+          2012,
+          2013,
+          2014,
+          2015,
+          2016,
+          2017,
+          2018,
+          2019,
+          2020,
+          2023,
+          2025
+        ],
+        "career_average_finish": 2.07,
+        "best_finish": 1,
+        "worst_finish": 5,
+        "total_historical_points": 1072.5,
+        "annual_finishes": [
+          {
+            "year": 2012,
+            "place": 1,
+            "points": 74.5,
+            "team_name": "Layin Down The Lawrie"
+          },
+          {
+            "year": 2013,
+            "place": 3,
+            "points": 57.5,
+            "team_name": "BRUCE HOOPER!!!!"
+          },
+          {
+            "year": 2014,
+            "place": 2,
+            "points": 79.0,
+            "team_name": "Angels in the Troutfield"
+          },
+          {
+            "year": 2015,
+            "place": 2,
+            "points": 73.0,
+            "team_name": "It's a New ERA"
+          },
+          {
+            "year": 2016,
+            "place": 1,
+            "points": 90.5,
+            "team_name": "Team to be Named Later"
+          },
+          {
+            "year": 2017,
+            "place": 1,
+            "points": 89.0,
+            "team_name": "Team to be Named Later"
+          },
+          {
+            "year": 2018,
+            "place": 1,
+            "points": 86.0,
+            "team_name": "Albies There For You"
+          },
+          {
+            "year": 2019,
+            "place": 1,
+            "points": 89.0,
+            "team_name": "Me and the Boyds"
+          },
+          {
+            "year": 2020,
+            "place": 2,
+            "points": 81.0,
+            "team_name": "Recency Baez"
+          },
+          {
+            "year": 2021,
+            "place": 4,
+            "points": 67.0,
+            "team_name": "Recency Baez"
+          },
+          {
+            "year": 2022,
+            "place": 4,
+            "points": 60.0,
+            "team_name": "Recency Baez"
+          },
+          {
+            "year": 2023,
+            "place": 1,
+            "points": 84.5,
+            "team_name": "Itch Lockers"
+          },
+          {
+            "year": 2024,
+            "place": 5,
+            "points": 64.0,
+            "team_name": "Itch Lockers"
+          },
+          {
+            "year": 2025,
+            "place": 1,
+            "points": 77.5,
+            "team_name": "Campbell's Kristian Noodle Soup"
+          }
+        ]
+      },
+      "Adrian": {
+        "owner": "Adrian",
+        "seasons_played": 14,
+        "championships": 2,
+        "championship_years": [
+          2020,
+          2021
+        ],
+        "podium_finishes": 6,
+        "podium_years": [
+          2016,
+          2017,
+          2020,
+          2021,
+          2022,
+          2024
+        ],
+        "career_average_finish": 3.79,
+        "best_finish": 1,
+        "worst_finish": 8,
+        "total_historical_points": 897.5,
+        "annual_finishes": [
+          {
+            "year": 2012,
+            "place": 8,
+            "points": 38.5,
+            "team_name": "First Floor Flamethrowers"
+          },
+          {
+            "year": 2013,
+            "place": 7,
+            "points": 25.5,
+            "team_name": "Infield Flies"
+          },
+          {
+            "year": 2014,
+            "place": 4,
+            "points": 63.0,
+            "team_name": "ThenWeShall FightInTheShade"
+          },
+          {
+            "year": 2015,
+            "place": 7,
+            "points": 44.0,
+            "team_name": "The Metamorphasis"
+          },
+          {
+            "year": 2016,
+            "place": 2,
+            "points": 77.5,
+            "team_name": "Byron's Big Club"
+          },
+          {
+            "year": 2017,
+            "place": 2,
+            "points": 66.0,
+            "team_name": "The Bux Stops Here"
+          },
+          {
+            "year": 2018,
+            "place": 4,
+            "points": 66.5,
+            "team_name": "Teach me how to Ferddie"
+          },
+          {
+            "year": 2019,
+            "place": 5,
+            "points": 69.0,
+            "team_name": "Oh Boy Adalberto"
+          },
+          {
+            "year": 2020,
+            "place": 1,
+            "points": 86.0,
+            "team_name": "Sonny w/ chance of dongballs"
+          },
+          {
+            "year": 2021,
+            "place": 1,
+            "points": 88.0,
+            "team_name": "Hooper My Pooper"
+          },
+          {
+            "year": 2022,
+            "place": 2,
+            "points": 67.0,
+            "team_name": "Hooper My Pooper"
+          },
+          {
+            "year": 2023,
+            "place": 4,
+            "points": 59.5,
+            "team_name": "Cruz Cruz"
+          },
+          {
+            "year": 2024,
+            "place": 2,
+            "points": 81.0,
+            "team_name": "D0ng Demolishers"
+          },
+          {
+            "year": 2025,
+            "place": 4,
+            "points": 66.0,
+            "team_name": "D0ng Demolishers"
+          }
+        ]
+      },
+      "Garrett": {
+        "owner": "Garrett",
+        "seasons_played": 14,
+        "championships": 0,
+        "championship_years": [],
+        "podium_finishes": 5,
+        "podium_years": [
+          2012,
+          2014,
+          2018,
+          2019,
+          2023
+        ],
+        "career_average_finish": 4.29,
+        "best_finish": 2,
+        "worst_finish": 9,
+        "total_historical_points": 876.0,
+        "annual_finishes": [
+          {
+            "year": 2012,
+            "place": 3,
+            "points": 57.0,
+            "team_name": "The Braunies"
+          },
+          {
+            "year": 2013,
+            "place": 5,
+            "points": 48.5,
+            "team_name": "Eirc and Donna Penciotti"
+          },
+          {
+            "year": 2014,
+            "place": 3,
+            "points": 73.0,
+            "team_name": "Yasi Me Hunting the Pence"
+          },
+          {
+            "year": 2015,
+            "place": 5,
+            "points": 55.0,
+            "team_name": "New Name Better Results"
+          },
+          {
+            "year": 2016,
+            "place": 4,
+            "points": 58.5,
+            "team_name": "The Thirst"
+          },
+          {
+            "year": 2017,
+            "place": 4,
+            "points": 62.0,
+            "team_name": "Thirst Quencher"
+          },
+          {
+            "year": 2018,
+            "place": 3,
+            "points": 68.5,
+            "team_name": "Acuna Matatta"
+          },
+          {
+            "year": 2019,
+            "place": 2,
+            "points": 87.5,
+            "team_name": "Acuna Matatta"
+          },
+          {
+            "year": 2020,
+            "place": 5,
+            "points": 60.5,
+            "team_name": "Acuna Matatta"
+          },
+          {
+            "year": 2021,
+            "place": 6,
+            "points": 52.0,
+            "team_name": "Nobody to Tank For"
+          },
+          {
+            "year": 2022,
+            "place": 9,
+            "points": 45.0,
+            "team_name": "New Year Same Result"
+          },
+          {
+            "year": 2023,
+            "place": 2,
+            "points": 77.0,
+            "team_name": "World Shocked"
+          },
+          {
+            "year": 2024,
+            "place": 4,
+            "points": 69.0,
+            "team_name": "No worse than 4th?"
+          },
+          {
+            "year": 2025,
+            "place": 5,
+            "points": 62.5,
+            "team_name": "Resigned to Fourth"
+          }
+        ]
+      },
+      "Will": {
+        "owner": "Will",
+        "seasons_played": 7,
+        "championships": 1,
+        "championship_years": [
+          2022
+        ],
+        "podium_finishes": 5,
+        "podium_years": [
+          2019,
+          2020,
+          2022,
+          2024,
+          2025
+        ],
+        "career_average_finish": 3.57,
+        "best_finish": 1,
+        "worst_finish": 7,
+        "total_historical_points": 502.5,
+        "annual_finishes": [
+          {
+            "year": 2019,
+            "place": 3,
+            "points": 84.5,
+            "team_name": "Jos\u00e9 Can You See"
+          },
+          {
+            "year": 2020,
+            "place": 3,
+            "points": 70.0,
+            "team_name": "Jos\u00e9 Can You See"
+          },
+          {
+            "year": 2021,
+            "place": 5,
+            "points": 58.0,
+            "team_name": "Jos\u00e9 Can You See"
+          },
+          {
+            "year": 2022,
+            "place": 1,
+            "points": 87.5,
+            "team_name": "Jos\u00e9 Can You See"
+          },
+          {
+            "year": 2023,
+            "place": 7,
+            "points": 53.0,
+            "team_name": "Jos\u00e9 Can You See"
+          },
+          {
+            "year": 2024,
+            "place": 3,
+            "points": 75.0,
+            "team_name": "Jos\u00e9 Can You See"
+          },
+          {
+            "year": 2025,
+            "place": 3,
+            "points": 74.5,
+            "team_name": "Jos\u00e9 Can You See"
+          }
+        ]
+      },
+      "Mark": {
+        "owner": "Mark",
+        "seasons_played": 8,
+        "championships": 3,
+        "championship_years": [
+          2013,
+          2014,
+          2015
+        ],
+        "podium_finishes": 3,
+        "podium_years": [
+          2013,
+          2014,
+          2015
+        ],
+        "career_average_finish": 4.75,
+        "best_finish": 1,
+        "worst_finish": 9,
+        "total_historical_points": 480.5,
+        "annual_finishes": [
+          {
+            "year": 2012,
+            "place": 5,
+            "points": 51.0,
+            "team_name": "How I Met Your Mother"
+          },
+          {
+            "year": 2013,
+            "place": 1,
+            "points": 63.0,
+            "team_name": "Third Wheel Specialist"
+          },
+          {
+            "year": 2014,
+            "place": 1,
+            "points": 92.0,
+            "team_name": "The Barves"
+          },
+          {
+            "year": 2015,
+            "place": 1,
+            "points": 88.5,
+            "team_name": "Tom Brady Is A Taint Licker"
+          },
+          {
+            "year": 2022,
+            "place": 8,
+            "points": 47.0,
+            "team_name": "Team Russell"
+          },
+          {
+            "year": 2023,
+            "place": 9,
+            "points": 33.0,
+            "team_name": "Team Russell"
+          },
+          {
+            "year": 2024,
+            "place": 6,
+            "points": 50.0,
+            "team_name": "Basement Boy"
+          },
+          {
+            "year": 2025,
+            "place": 7,
+            "points": 56.0,
+            "team_name": "Basement Boy"
+          }
+        ]
+      },
+      "Alex": {
+        "owner": "Alex",
+        "seasons_played": 13,
+        "championships": 0,
+        "championship_years": [],
+        "podium_finishes": 0,
+        "podium_years": [],
+        "career_average_finish": 7.23,
+        "best_finish": 5,
+        "worst_finish": 10,
+        "total_historical_points": 563.5,
+        "annual_finishes": [
+          {
+            "year": 2012,
+            "place": 7,
+            "points": 40.0,
+            "team_name": "Gone for the Halladay"
+          },
+          {
+            "year": 2014,
+            "place": 10,
+            "points": 25.0,
+            "team_name": "Team @ Bottom of the Hudson"
+          },
+          {
+            "year": 2015,
+            "place": 8,
+            "points": 42.0,
+            "team_name": "BRB on a feels Trip"
+          },
+          {
+            "year": 2016,
+            "place": 5,
+            "points": 53.0,
+            "team_name": "Holy Schmidt"
+          },
+          {
+            "year": 2017,
+            "place": 9,
+            "points": 39.0,
+            "team_name": "Holy Schmidt"
+          },
+          {
+            "year": 2018,
+            "place": 7,
+            "points": 40.0,
+            "team_name": "Holy Schmidt"
+          },
+          {
+            "year": 2019,
+            "place": 8,
+            "points": 49.0,
+            "team_name": "Holy Schmidt"
+          },
+          {
+            "year": 2020,
+            "place": 5,
+            "points": 60.5,
+            "team_name": "The Cutch Gene"
+          },
+          {
+            "year": 2021,
+            "place": 7,
+            "points": 41.0,
+            "team_name": "Place Your Betts"
+          },
+          {
+            "year": 2022,
+            "place": 10,
+            "points": 23.0,
+            "team_name": "Place Your Betts"
+          },
+          {
+            "year": 2023,
+            "place": 5,
+            "points": 55.5,
+            "team_name": "Place Your Betts"
+          },
+          {
+            "year": 2024,
+            "place": 7,
+            "points": 38.0,
+            "team_name": "Place Your Betts"
+          },
+          {
+            "year": 2025,
+            "place": 6,
+            "points": 57.5,
+            "team_name": "Place Your Betts"
+          }
+        ]
+      },
+      "Anil": {
+        "owner": "Anil",
+        "seasons_played": 10,
+        "championships": 0,
+        "championship_years": [],
+        "podium_finishes": 1,
+        "podium_years": [
+          2017
+        ],
+        "career_average_finish": 8.2,
+        "best_finish": 3,
+        "worst_finish": 10,
+        "total_historical_points": 374.5,
+        "annual_finishes": [
+          {
+            "year": 2016,
+            "place": 10,
+            "points": 28.0,
+            "team_name": "Yeah Jeets"
+          },
+          {
+            "year": 2017,
+            "place": 3,
+            "points": 63.0,
+            "team_name": "Yeah Jeets"
+          },
+          {
+            "year": 2018,
+            "place": 9,
+            "points": 34.0,
+            "team_name": "Yeah Jeets"
+          },
+          {
+            "year": 2019,
+            "place": 9,
+            "points": 48.0,
+            "team_name": "Yeah Jeets"
+          },
+          {
+            "year": 2020,
+            "place": 8,
+            "points": 32.0,
+            "team_name": "Yeah Jeets"
+          },
+          {
+            "year": 2021,
+            "place": 10,
+            "points": 30.0,
+            "team_name": "Yeah Jeets"
+          },
+          {
+            "year": 2022,
+            "place": 5,
+            "points": 59.0,
+            "team_name": "Yeah Jeets"
+          },
+          {
+            "year": 2023,
+            "place": 8,
+            "points": 39.0,
+            "team_name": "Yeah Jeets"
+          },
+          {
+            "year": 2024,
+            "place": 10,
+            "points": 24.0,
+            "team_name": "Yeah Jeets"
+          },
+          {
+            "year": 2025,
+            "place": 10,
+            "points": 17.5,
+            "team_name": "Yeah Jeets"
+          }
+        ]
+      },
+      "Preston": {
+        "owner": "Preston",
+        "seasons_played": 0,
+        "championships": 0,
+        "championship_years": [],
+        "podium_finishes": 0,
+        "podium_years": [],
+        "career_average_finish": null,
+        "best_finish": "N/A (2026 Expansion Franchise)",
+        "worst_finish": "N/A (2026 Expansion Franchise)",
+        "total_historical_points": 0.0,
+        "annual_finishes": []
+      }
+    }
+  }
 }

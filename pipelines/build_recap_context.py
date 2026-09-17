@@ -310,8 +310,11 @@ def format_recap_context(
             top_b = prof.get("top_batters", [{}])[0].get("name", "N/A")
             top_p = prof.get("top_pitchers", [{}])[0].get("name", "N/A")
             strengths = ", ".join(prof.get("category_strengths", [])[:2])
+            ped = prof.get("historical_pedigree", {})
+            titles = ped.get("championships", 0)
+            ped_str = f"{titles}x Champ" if titles > 1 else ("2024 Champ" if titles == 1 and m_name == "Dan" else ("2022 Champ" if titles == 1 else f"{ped.get('podium_finishes', 0)}x Podium" if ped.get('podium_finishes', 0) > 0 else ("Expansion Franchise" if m_name == "Preston" else "Veteran Contender")))
             persona_lines.append(
-                f"  - {m_name} ({prof.get('team_name', '')}): Regular Season Seed #{seed} ({pts} pts, net {net_str} pts, peak: {traj.get('peak_points')} pts in W{traj.get('peak_week')}). Top Anchors: {top_b} & {top_p}. Key Strengths: {strengths}."
+                f"  - {m_name} ({prof.get('team_name', '')}): [{ped_str}] Regular Season Seed #{seed} ({pts} pts, net {net_str} pts, peak: {traj.get('peak_points')} pts in W{traj.get('peak_week')}). Top Anchors: {top_b} & {top_p}. Key Strengths: {strengths}."
             )
         elif p:
             arch = p.get("archetype", "")
@@ -323,6 +326,9 @@ def format_recap_context(
 
     # 5. In-Season Rivalries & Playoff Context
     rivalry_lines = []
+    ped_context = playoff_info.get("championship_pedigree_context")
+    if ped_context:
+        rivalry_lines.append(f"  - 👑 HISTORICAL STAKES: {ped_context}")
     if playoff_info:
         for match in playoff_info.get("championship_bracket", []):
             h_owner, a_owner = match["home"]["owner"], match["away"]["owner"]
