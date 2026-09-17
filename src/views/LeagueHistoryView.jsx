@@ -22,6 +22,7 @@ const CANONICAL_OWNERS = {
   anil: 'Anil',
   alex: 'Alex',
   will: 'Will',
+  'will alexander': 'Will',
   mark: 'Mark',
   preston: 'Preston'
 };
