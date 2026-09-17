@@ -98,7 +98,7 @@ At the conclusion of Week 23 (September 13, 2026), all 23 regular season weeks w
 > [!IMPORTANT]
 > **⚡ LIVE Playoff Semi-Finals Status (Week 24)**  
 > *Scored Head-to-Head across all 10 categories (First to 6 wins; ties award 0.5).*
-> - **Semi-Final A**: **#1 Dan** (2) vs **#4 Adrian** (6) — **Leader: Adrian** (2 tied categories)
+> - **Semi-Final A**: **#1 Dan** (2) vs **#4 Adrian** (5) — **Leader: Adrian** (3 tied categories)
 > - **Semi-Final B**: **#2 Tim** (5) vs **#3 Will** (5) — **Leader: TIED** (0 tied categories)
 
 - **Semi-Final A**: **#1 Dan (The Silver Bullets)** vs **#4 Adrian (D0ng Demolishers)**  
