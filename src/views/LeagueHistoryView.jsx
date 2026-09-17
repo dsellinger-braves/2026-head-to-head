@@ -95,6 +95,7 @@ export default function LeagueHistoryView({
   const [adjustMlb, setAdjustMlb] = useState(false);
   const [showMethodologyModal, setShowMethodologyModal] = useState(false);
   const [highlightFilter, setHighlightFilter] = useState('all'); // 'all' | 'highlights' | 'lowlights'
+  const [exclude2020Lowlights, setExclude2020Lowlights] = useState(true);
 
   // Standings display controls
   const [showRawStats, setShowRawStats] = useState(selectedYear === 'ALL');
@@ -446,7 +447,10 @@ export default function LeagueHistoryView({
     }).slice(0, 10);
 
     // 2. Lowest scoring finishes ever (Lowlights)
-    const lowestScoring = [...list].sort((a, b) => {
+    const lowestScoringList = exclude2020Lowlights
+      ? list.filter(r => r.year !== 2020)
+      : list;
+    const lowestScoring = [...lowestScoringList].sort((a, b) => {
       const pA = a.isAdjusted ? a.adjustedPoints : a.points;
       const pB = b.isAdjusted ? b.adjustedPoints : b.points;
       return pA - pB;
@@ -537,7 +541,11 @@ export default function LeagueHistoryView({
       }).slice(0, 5);
 
       // Lows (Worst): For counting & OBP, lowest sortVal. For ERA & WHIP, highest sortVal.
-      const lows = [...validRecords].sort((a, b) => {
+      const candidateLows = exclude2020Lowlights
+        ? validRecords.filter(r => r.year !== 2020)
+        : validRecords;
+
+      const lows = [...candidateLows].sort((a, b) => {
         return higherIsBetter ? a.sortVal - b.sortVal : b.sortVal - a.sortVal;
       }).slice(0, 5);
 
@@ -558,7 +566,7 @@ export default function LeagueHistoryView({
       hangovers,
       categoryStatRecords,
     };
-  }, [augmentedFinishes, adjustRoster, adjustMlb]);
+  }, [augmentedFinishes, adjustRoster, adjustMlb, exclude2020Lowlights]);
 
   // ---------------------------------------------------------------------------
   // ALL-TIME FRANCHISE LEADERBOARDS & MATRIX
@@ -1153,6 +1161,19 @@ export default function LeagueHistoryView({
                 <span>MLB Era Adjusted</span>
               </label>
 
+              <label className="flex items-center gap-2 bg-white px-3.5 py-2 rounded-2xl border border-gray-300 shadow-xs cursor-pointer hover:border-rose-400 transition text-xs font-black text-gray-800" title="Exclude the 60-game COVID-shortened 2020 season from all-time lowlights & counting lows">
+                <input
+                  type="checkbox"
+                  checked={exclude2020Lowlights}
+                  onChange={e => setExclude2020Lowlights(e.target.checked)}
+                  className="rounded text-rose-600 focus:ring-rose-500 cursor-pointer"
+                />
+                <span className="flex items-center gap-1.5">
+                  <span>🦠</span>
+                  <span>Exclude 2020 (COVID)</span>
+                </span>
+              </label>
+
               {/* View filter */}
               <div className="flex rounded-xl bg-gray-100 p-1 border border-gray-200 text-xs font-black">
                 <button
@@ -1184,7 +1205,7 @@ export default function LeagueHistoryView({
                 <div className="flex items-center gap-2 text-sm font-black text-gray-900 uppercase tracking-wider">
                   <span>📊</span>
                   <span>All-Time Category Stat Records (Highs & Lows)</span>
-                  <span className="text-xs text-gray-500 font-normal lowercase">(2018–2026 data tracked)</span>
+                  <span className="text-xs text-gray-500 font-normal lowercase">(2012–2026 data tracked)</span>
                 </div>
                 <p className="text-xs text-gray-500 mt-0.5">
                   All-time single-season benchmarks across all 10 roto categories. {adjustRoster || adjustMlb ? 'Era & roster adjustments applied.' : 'Raw seasonal totals shown.'}
@@ -1567,7 +1588,12 @@ export default function LeagueHistoryView({
                       <span>📉</span>
                       <span>Lowest Roto Point Finishes in History</span>
                     </h3>
-                    <span className="text-[11px] text-gray-400 font-mono">Sub-35 Campaigns</span>
+                    <span 
+                      onClick={() => setExclude2020Lowlights(!exclude2020Lowlights)}
+                      className="text-[11px] text-gray-400 font-mono cursor-pointer hover:text-gray-600 transition"
+                    >
+                      {exclude2020Lowlights ? 'Excl. 2020 (COVID)' : 'All Seasons'}
+                    </span>
                   </div>
                   <div className="divide-y divide-gray-100 text-xs">
                     {highlightsData.lowestScoring.map((rec, i) => (
