@@ -129,9 +129,10 @@ export default function LeagueHistoryView({
 
       // 1. Check IndexedDB Cache first
       try {
-        const cached = await get('league_history_finishes_v2');
+        const cached = await get('league_history_finishes_v3');
         if (cached && cached.length > 0 && isMounted) {
-          setRawFinishes(cached);
+          const normalized = cached.map(r => ({ ...r, owner: normalizeOwner(r.owner) }));
+          setRawFinishes(normalized);
           setDataSource('IndexedDB Cache');
           setLoading(false);
         }
@@ -152,10 +153,10 @@ export default function LeagueHistoryView({
           dbRecords = data.map(r => ({
             year: r.season_year,
             place: r.final_place,
-            owner: r.team_owner,
+            owner: normalizeOwner(r.team_owner),
             points: parseFloat(r.total_roto_points) || 0,
             isActive: Boolean(r.is_active_owner),
-            teamName: r.category_ranks?.team_name || r.raw_data?.['Team Name'] || `Team ${r.team_owner}`,
+            teamName: r.category_ranks?.team_name || r.raw_data?.['Team Name'] || `Team ${normalizeOwner(r.team_owner)}`,
             hittingPoints: parseFloat(r.category_ranks?.hitting_points || r.raw_data?.['Hitting Points']) || 0,
             pitchingPoints: parseFloat(r.category_ranks?.pitching_points || r.raw_data?.['Pitching Points']) || 0,
             categoryRanks: {
@@ -185,10 +186,10 @@ export default function LeagueHistoryView({
             dbRecords = gcsData.map(r => ({
               year: parseInt(r.Year, 10),
               place: parseInt(r['Final Rank'], 10),
-              owner: r.Owner,
+              owner: normalizeOwner(r.Owner),
               points: parseFloat(r.Points) || 0,
               isActive: r['Active Owner?'] === 'Y',
-              teamName: r['Team Name'] || `Team ${r.Owner}`,
+              teamName: r['Team Name'] || `Team ${normalizeOwner(r.Owner)}`,
               hittingPoints: parseFloat(r['Hitting Points']) || 0,
               pitchingPoints: parseFloat(r['Pitching Points']) || 0,
               categoryRanks: {
@@ -219,7 +220,7 @@ export default function LeagueHistoryView({
         return {
           year: 2026,
           place: s.seed || s.rank,
-          owner: s.owner,
+          owner: normalizeOwner(s.owner),
           points: s.points,
           isActive: true,
           teamName: s.team_name,
@@ -248,7 +249,7 @@ export default function LeagueHistoryView({
         setDataSource(dbRecords.length ? 'Supabase Warehouse + 2026 Standings' : 'GCS Archive + 2026 Standings');
         setLoading(false);
         try {
-          await set('league_history_finishes_v2', combined);
+          await set('league_history_finishes_v3', combined);
         } catch (writeErr) {
           console.warn('Could not update IndexedDB cache:', writeErr);
         }
@@ -316,13 +317,15 @@ export default function LeagueHistoryView({
   // Augmented finishes with adjustment metrics and raw stats
   const augmentedFinishes = useMemo(() => {
     return rawFinishes.map(r => {
-      const baseAdj = getAdjustedRecord(r);
+      const normOwner = normalizeOwner(r.owner);
+      const baseAdj = getAdjustedRecord({ ...r, owner: normOwner });
       const rawSeason = historicalRawStats[String(r.year)];
       const rawTeam = rawSeason
-        ? (rawSeason[r.owner] || rawSeason[normalizeOwner(r.owner)] || null)
+        ? (rawSeason[normOwner] || rawSeason[r.owner] || null)
         : null;
       return {
         ...baseAdj,
+        owner: normOwner,
         rawStats: rawTeam,
       };
     });
@@ -332,7 +335,7 @@ export default function LeagueHistoryView({
   const filteredFinishes = useMemo(() => {
     return augmentedFinishes.filter(r => {
       if (selectedYear !== 'ALL' && r.year !== parseInt(selectedYear, 10)) return false;
-      if (selectedOwner !== 'ALL' && r.owner.toLowerCase() !== selectedOwner.toLowerCase()) return false;
+      if (selectedOwner !== 'ALL' && normalizeOwner(r.owner).toLowerCase() !== normalizeOwner(selectedOwner).toLowerCase()) return false;
       return true;
     });
   }, [augmentedFinishes, selectedYear, selectedOwner]);
@@ -388,7 +391,8 @@ export default function LeagueHistoryView({
   const allOwners = useMemo(() => {
     const set = new Set();
     rawFinishes.forEach(r => {
-      if (r.owner) set.add(r.owner);
+      const o = normalizeOwner(r.owner);
+      if (o) set.add(o);
     });
     return Array.from(set).sort();
   }, [rawFinishes]);
@@ -406,9 +410,9 @@ export default function LeagueHistoryView({
     }
   };
 
-  // Champion for selected single season (hero card)
+  // Champion for selected single season (hero card) - only for completed seasons
   const selectedSeasonChampion = useMemo(() => {
-    if (selectedYear === 'ALL') return null;
+    if (selectedYear === 'ALL' || selectedYear === '2026') return null;
     const yr = parseInt(selectedYear, 10);
     const seasonRows = augmentedFinishes.filter(r => r.year === yr).sort((a, b) => a.place - b.place);
     if (!seasonRows.length) return null;
@@ -453,10 +457,10 @@ export default function LeagueHistoryView({
     // 4. Highest Pitching Points in a season
     const topPitching = [...list].sort((a, b) => b.pitchingPoints - a.pitchingPoints).slice(0, 8);
 
-    // 5. Largest Championship Blowouts
+    // 5. Largest Championship Blowouts (completed seasons only, exclude 2026)
     const blowouts = [];
-    const seasonsList = Array.from(new Set(list.map(r => r.year))).sort((a, b) => b - a);
-    seasonsList.forEach(yr => {
+    const completedSeasonsList = Array.from(new Set(list.map(r => r.year))).filter(y => y !== 2026).sort((a, b) => b - a);
+    completedSeasonsList.forEach(yr => {
       const rows = list.filter(r => r.year === yr).sort((a, b) => a.place - b.place);
       if (rows.length >= 2) {
         const diff = rows[0].points - rows[1].points;
@@ -473,12 +477,12 @@ export default function LeagueHistoryView({
     });
     blowouts.sort((a, b) => b.margin - a.margin);
 
-    // 6. Championship Hangovers (Biggest drop the year following a Championship)
+    // 6. Championship Hangovers (completed seasons only, exclude 2026)
     const hangovers = [];
-    seasonsList.forEach(yr => {
+    completedSeasonsList.forEach(yr => {
       const champ = list.find(r => r.year === yr && r.place === 1);
       if (champ) {
-        const nextYearRow = list.find(r => r.year === yr + 1 && r.owner.toLowerCase() === champ.owner.toLowerCase());
+        const nextYearRow = list.find(r => r.year === yr + 1 && normalizeOwner(r.owner).toLowerCase() === normalizeOwner(champ.owner).toLowerCase());
         if (nextYearRow) {
           const rankDrop = nextYearRow.place - 1;
           const pointsDrop = champ.points - nextYearRow.points;
@@ -563,7 +567,7 @@ export default function LeagueHistoryView({
     const summaryByOwner = {};
 
     augmentedFinishes.forEach(r => {
-      const o = r.owner;
+      const o = normalizeOwner(r.owner);
       if (!summaryByOwner[o]) {
         summaryByOwner[o] = {
           owner: o,
@@ -589,13 +593,16 @@ export default function LeagueHistoryView({
         teamName: r.teamName,
       };
 
-      if (r.place === 1) {
-        s.titles += 1;
-        s.titleYears.push(r.year);
-      }
-      if (r.place <= 3) {
-        s.podiums += 1;
-        s.podiumYears.push(r.year);
+      // Exclude 2026 from titles and podiums since season is still in progress
+      if (r.year !== 2026) {
+        if (r.place === 1) {
+          s.titles += 1;
+          s.titleYears.push(r.year);
+        }
+        if (r.place <= 3) {
+          s.podiums += 1;
+          s.podiumYears.push(r.year);
+        }
       }
       if (r.place < s.bestPlace) s.bestPlace = r.place;
       if (r.place > s.worstPlace) s.worstPlace = r.place;
@@ -706,7 +713,11 @@ export default function LeagueHistoryView({
 
   // Find team object for onOwnerClick
   const getOwnerTeamObj = (ownerName) => {
-    return Object.values(TEAMS).find(t => t.owner?.toLowerCase() === ownerName?.toLowerCase()) || { owner: ownerName, name: ownerName };
+    const norm = normalizeOwner(ownerName).toLowerCase();
+    return Object.values(TEAMS).find(t => {
+      const tNorm = normalizeOwner(t.owner).toLowerCase();
+      return tNorm === norm;
+    }) || { owner: normalizeOwner(ownerName), name: normalizeOwner(ownerName) };
   };
 
   // Filtered categories for stat records
@@ -930,6 +941,27 @@ export default function LeagueHistoryView({
             </div>
           )}
 
+          {/* 2026 In-Progress Notice */}
+          {selectedYear === '2026' && (
+            <div className="bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-transparent border border-blue-400/30 rounded-3xl p-6 shadow-sm flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-blue-500/20 border-2 border-blue-400 flex items-center justify-center text-3xl shadow-inner shrink-0">
+                ⚾
+              </div>
+              <div>
+                <div className="text-xs font-black text-blue-700 uppercase tracking-wider flex items-center gap-2">
+                  <span>2026 Regular Season In Progress</span>
+                  <span className="inline-block px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 text-[10px] font-bold">Active Season</span>
+                </div>
+                <div className="text-lg font-black text-gray-900 mt-0.5">
+                  Standings reflect Week 23 regular season table.
+                </div>
+                <div className="text-xs text-gray-600 mt-1">
+                  The 2026 League Champion will be crowned upon completion of the postseason playoffs.
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Standings Table */}
           <div className="bg-white border border-gray-200 rounded-3xl shadow-xl overflow-hidden">
             <div className="p-4 sm:p-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/70">
@@ -976,8 +1008,8 @@ export default function LeagueHistoryView({
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {sortedFinishes.map((row, idx) => {
-                    const isChamp = row.place === 1;
-                    const isPodium = row.place <= 3;
+                    const isChamp = row.place === 1 && row.year !== 2026;
+                    const isPodium = row.place <= 3 && row.year !== 2026;
                     const dispPoints = row.isAdjusted ? row.adjustedPoints.toFixed(1) : row.points.toFixed(1);
 
                     // Split bar percentage
@@ -999,12 +1031,12 @@ export default function LeagueHistoryView({
                         {/* Place Badge */}
                         <td className="py-3 px-3 font-black">
                           <span className={`inline-flex items-center justify-center w-7 h-7 rounded-xl text-xs font-black shadow-xs ${
-                            row.place === 1 ? 'bg-amber-400 text-amber-950 ring-2 ring-amber-300' :
-                            row.place === 2 ? 'bg-slate-300 text-slate-900' :
-                            row.place === 3 ? 'bg-amber-700 text-amber-100' :
+                            isChamp ? 'bg-amber-400 text-amber-950 ring-2 ring-amber-300' :
+                            (isPodium && row.place === 2) ? 'bg-slate-300 text-slate-900' :
+                            (isPodium && row.place === 3) ? 'bg-amber-700 text-amber-100' :
                             'bg-gray-100 text-gray-600'
                           }`}>
-                            {row.place === 1 ? '🥇' : row.place === 2 ? '🥈' : row.place === 3 ? '🥉' : `#${row.place}`}
+                            {isChamp ? '🥇' : (isPodium && row.place === 2) ? '🥈' : (isPodium && row.place === 3) ? '🥉' : `#${row.place}`}
                           </span>
                         </td>
 
