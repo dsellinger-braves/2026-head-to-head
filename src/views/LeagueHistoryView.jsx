@@ -46,6 +46,37 @@ const formatRawStat = (key, val) => {
   return Math.round(n).toLocaleString();
 };
 
+const formatDiffStat = (key, diff) => {
+  if (diff === null || diff === undefined || isNaN(diff)) return '—';
+  const sign = diff > 0 ? '+' : diff < 0 ? '-' : '';
+  const absVal = Math.abs(diff);
+  if (key === 'OBP' || key === 'AVG') {
+    const s = absVal < 1 ? absVal.toFixed(3).replace(/^0/, '') : absVal.toFixed(3);
+    return `${sign}${s}`;
+  }
+  if (key === 'ERA' || key === 'WHIP') {
+    return `${sign}${absVal.toFixed(2)}`;
+  }
+  return `${sign}${Math.round(absVal).toLocaleString()}`;
+};
+
+const formatPctDiff = (pct) => {
+  if (pct === null || pct === undefined || isNaN(pct)) return '—';
+  const sign = pct > 0 ? '+' : '';
+  return `${sign}${pct.toFixed(1)}%`;
+};
+
+const formatMeanStat = (key, val) => {
+  if (val === null || val === undefined || isNaN(val)) return '—';
+  if (key === 'OBP' || key === 'AVG') {
+    return val < 1 ? val.toFixed(3).replace(/^0/, '') : val.toFixed(3);
+  }
+  if (key === 'ERA' || key === 'WHIP') {
+    return val.toFixed(2);
+  }
+  return val.toFixed(1);
+};
+
 const getDisplayRawStat = (catKey, row) => {
   if (!row.rawStats) return { text: '—', badge: null, title: '' };
 
@@ -160,6 +191,8 @@ export default function LeagueHistoryView({
   const [showMethodologyModal, setShowMethodologyModal] = useState(false);
   const [highlightFilter, setHighlightFilter] = useState('all'); // 'all' | 'highlights' | 'lowlights'
   const [exclude2020Lowlights, setExclude2020Lowlights] = useState(true);
+  const [highlightViewMode, setHighlightViewMode] = useState('totals'); // 'totals' | 'relative' | 'margins'
+  const [marginsGapType, setMarginsGapType] = useState('all'); // 'all' | '1st_2nd' | 'last_2nd_last'
 
   // Standings display controls
   const [showRawStats, setShowRawStats] = useState(selectedYear === 'ALL');
@@ -585,8 +618,93 @@ export default function LeagueHistoryView({
     });
     hangovers.sort((a, b) => b.rankDrop - a.rankDrop);
 
-    // 7. All-Time Highs and Lows in each individual stat
+    // 7. Precompute season-level category metrics (mean, stdDev, ranks, gaps) for all categories
+    const allCategoriesList = [...CATEGORIES, ...LEGACY_CATEGORIES];
+    const seasonCategoryMetrics = {}; // key: `${yr}_${catKey}`
+
+    const seasonRowsMap = {};
+    list.forEach(r => {
+      if (!seasonRowsMap[r.year]) seasonRowsMap[r.year] = [];
+      seasonRowsMap[r.year].push(r);
+    });
+
+    AVAILABLE_SEASONS.filter(y => y !== 'ALL').forEach(yr => {
+      const rows = seasonRowsMap[yr] || [];
+      allCategoriesList.forEach(cat => {
+        const statField = cat.statField || cat.key;
+        const rankField = cat.rankField || cat.key;
+        const minYear = cat.activeYears ? cat.activeYears[0] : 2012;
+        const maxYear = cat.activeYears ? cat.activeYears[1] : 2026;
+        if (yr < minYear || yr > maxYear) return;
+
+        const validSeasonRecords = [];
+        rows.forEach(r => {
+          const rawVal = r.rawStats?.[statField];
+          if (rawVal !== undefined && rawVal !== null && rawVal > 0) {
+            validSeasonRecords.push({
+              year: yr,
+              owner: r.owner,
+              teamName: r.teamName,
+              place: r.place,
+              rotoPoints: r.categoryRanks?.[rankField] || 0,
+              rawVal,
+            });
+          }
+        });
+
+        if (validSeasonRecords.length >= 2) {
+          const vals = validSeasonRecords.map(x => x.rawVal);
+          const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+          const variance = vals.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / vals.length;
+          const stdDev = Math.sqrt(variance);
+
+          // Sort best to worst
+          validSeasonRecords.sort((a, b) => {
+            return cat.higherIsBetter ? b.rawVal - a.rawVal : a.rawVal - b.rawVal;
+          });
+
+          const first = validSeasonRecords[0];
+          const second = validSeasonRecords[1];
+          const secondLast = validSeasonRecords[validSeasonRecords.length - 2];
+          const last = validSeasonRecords[validSeasonRecords.length - 1];
+
+          // 1st vs 2nd gap
+          const gap12 = cat.higherIsBetter
+            ? first.rawVal - second.rawVal
+            : second.rawVal - first.rawVal;
+          const pctGap12 = second.rawVal > 0 ? (gap12 / second.rawVal) * 100 : 0;
+
+          // Last vs 2nd-to-last gap (deficit)
+          const gapLast = cat.higherIsBetter
+            ? secondLast.rawVal - last.rawVal
+            : last.rawVal - secondLast.rawVal;
+          const pctGapLast = secondLast.rawVal > 0 ? (gapLast / secondLast.rawVal) * 100 : 0;
+
+          seasonCategoryMetrics[`${yr}_${cat.key}`] = {
+            year: yr,
+            catKey: cat.key,
+            cat,
+            mean,
+            stdDev,
+            count: validSeasonRecords.length,
+            first,
+            second,
+            secondLast,
+            last,
+            gap12,
+            pctGap12,
+            gapLast,
+            pctGapLast,
+          };
+        }
+      });
+    });
+
+    // 8. All-Time Highs and Lows in each individual stat
     const categoryStatRecords = {};
+    const relativeDominanceRecords = {};
+    const categoryGapsRecords = {};
+
     CATEGORIES.forEach(cat => {
       const higherIsBetter = cat.higherIsBetter;
       const statKey = cat.key;
@@ -603,6 +721,16 @@ export default function LeagueHistoryView({
         if (rawVal !== undefined && rawVal !== null && rawVal > 0) {
           const adj = calculateEraAdjustedStat(eraKey, rawVal, r.year, { adjustRoster, adjustMlb });
           const sortVal = (adjustRoster || adjustMlb) ? adj.adjustedVal : rawVal;
+
+          const sMetrics = seasonCategoryMetrics[`${r.year}_${statKey}`];
+          const seasonMean = sMetrics ? sMetrics.mean : null;
+          let diffVsAvg = null;
+          let pctVsAvg = null;
+          if (seasonMean !== null && seasonMean > 0) {
+            diffVsAvg = higherIsBetter ? rawVal - seasonMean : seasonMean - rawVal;
+            pctVsAvg = ((higherIsBetter ? rawVal - seasonMean : seasonMean - rawVal) / seasonMean) * 100;
+          }
+
           validRecords.push({
             year: r.year,
             owner: r.owner,
@@ -613,6 +741,9 @@ export default function LeagueHistoryView({
             adjustedVal: adj.adjustedVal,
             isAdjusted: adj.isAdjusted,
             sortVal,
+            seasonMean,
+            diffVsAvg,
+            pctVsAvg,
           });
         }
       });
@@ -637,9 +768,56 @@ export default function LeagueHistoryView({
         lows,
         totalTracked: validRecords.length,
       };
+
+      // Relative Dominance (% vs Season Average)
+      const relHighs = [...validRecords]
+        .filter(r => r.pctVsAvg !== null)
+        .sort((a, b) => b.pctVsAvg - a.pctVsAvg)
+        .slice(0, 5);
+
+      const candidateRelLows = exclude2020Lowlights
+        ? validRecords.filter(r => r.year !== 2020 && r.pctVsAvg !== null)
+        : validRecords.filter(r => r.pctVsAvg !== null);
+
+      const relLows = [...candidateRelLows]
+        .sort((a, b) => a.pctVsAvg - b.pctVsAvg)
+        .slice(0, 5);
+
+      relativeDominanceRecords[statKey] = {
+        cat,
+        highs: relHighs,
+        lows: relLows,
+        totalTracked: validRecords.length,
+      };
+
+      // Category single-season margins & gaps
+      const seasonMetricsForCat = [];
+      AVAILABLE_SEASONS.filter(y => y !== 'ALL').forEach(yr => {
+        const m = seasonCategoryMetrics[`${yr}_${statKey}`];
+        if (m) seasonMetricsForCat.push(m);
+      });
+
+      const gaps12 = [...seasonMetricsForCat]
+        .sort((a, b) => b.pctGap12 - a.pctGap12)
+        .slice(0, 5);
+
+      const candidateGapsLast = exclude2020Lowlights
+        ? seasonMetricsForCat.filter(m => m.year !== 2020)
+        : seasonMetricsForCat;
+
+      const gapsLast = [...candidateGapsLast]
+        .sort((a, b) => b.pctGapLast - a.pctGapLast)
+        .slice(0, 5);
+
+      categoryGapsRecords[statKey] = {
+        cat,
+        gaps12,
+        gapsLast,
+        totalSeasons: seasonMetricsForCat.length,
+      };
     });
 
-    // 8. Legacy Stat Records (BA in 2012, Wins in 2012-13, Saves in 2012-18)
+    // 9. Legacy Stat Records (BA in 2012, Wins in 2012-13, Saves in 2012-18)
     const legacyStatRecords = {};
     LEGACY_CATEGORIES.forEach(cat => {
       const higherIsBetter = cat.higherIsBetter;
@@ -653,6 +831,15 @@ export default function LeagueHistoryView({
         if (r.year < minYear || r.year > maxYear) return;
         const rawVal = r.rawStats?.[statField];
         if (rawVal !== undefined && rawVal !== null && rawVal > 0) {
+          const sMetrics = seasonCategoryMetrics[`${r.year}_${cat.key}`];
+          const seasonMean = sMetrics ? sMetrics.mean : null;
+          let diffVsAvg = null;
+          let pctVsAvg = null;
+          if (seasonMean !== null && seasonMean > 0) {
+            diffVsAvg = higherIsBetter ? rawVal - seasonMean : seasonMean - rawVal;
+            pctVsAvg = ((higherIsBetter ? rawVal - seasonMean : seasonMean - rawVal) / seasonMean) * 100;
+          }
+
           validRecords.push({
             year: r.year,
             owner: r.owner,
@@ -663,6 +850,9 @@ export default function LeagueHistoryView({
             adjustedVal: rawVal,
             isAdjusted: false,
             sortVal: rawVal,
+            seasonMean,
+            diffVsAvg,
+            pctVsAvg,
           });
         }
       });
@@ -685,7 +875,70 @@ export default function LeagueHistoryView({
         lows,
         totalTracked: validRecords.length,
       };
+
+      // Relative dominance for legacy category
+      const relHighs = [...validRecords]
+        .filter(r => r.pctVsAvg !== null)
+        .sort((a, b) => b.pctVsAvg - a.pctVsAvg)
+        .slice(0, 5);
+
+      const candidateRelLows = exclude2020Lowlights
+        ? validRecords.filter(r => r.year !== 2020 && r.pctVsAvg !== null)
+        : validRecords.filter(r => r.pctVsAvg !== null);
+
+      const relLows = [...candidateRelLows]
+        .sort((a, b) => a.pctVsAvg - b.pctVsAvg)
+        .slice(0, 5);
+
+      relativeDominanceRecords[cat.key] = {
+        cat,
+        highs: relHighs,
+        lows: relLows,
+        totalTracked: validRecords.length,
+      };
+
+      // Gaps for legacy category
+      const seasonMetricsForCat = [];
+      AVAILABLE_SEASONS.filter(y => y !== 'ALL').forEach(yr => {
+        const m = seasonCategoryMetrics[`${yr}_${cat.key}`];
+        if (m) seasonMetricsForCat.push(m);
+      });
+
+      const gaps12 = [...seasonMetricsForCat]
+        .sort((a, b) => b.pctGap12 - a.pctGap12)
+        .slice(0, 5);
+
+      const candidateGapsLast = exclude2020Lowlights
+        ? seasonMetricsForCat.filter(m => m.year !== 2020)
+        : seasonMetricsForCat;
+
+      const gapsLast = [...candidateGapsLast]
+        .sort((a, b) => b.pctGapLast - a.pctGapLast)
+        .slice(0, 5);
+
+      categoryGapsRecords[cat.key] = {
+        cat,
+        gaps12,
+        gapsLast,
+        totalSeasons: seasonMetricsForCat.length,
+      };
     });
+
+    // 10. Top Overall Gaps Across ALL Categories (All-Time Blowouts & Chasm Deficits)
+    const allSeasonCategoryMetricsList = Object.values(seasonCategoryMetrics);
+
+    const topOverall12Gaps = [...allSeasonCategoryMetricsList]
+      .filter(m => m.gap12 > 0)
+      .sort((a, b) => b.pctGap12 - a.pctGap12)
+      .slice(0, 10);
+
+    const candidateOverallLastGaps = exclude2020Lowlights
+      ? allSeasonCategoryMetricsList.filter(m => m.year !== 2020 && m.gapLast > 0)
+      : allSeasonCategoryMetricsList.filter(m => m.gapLast > 0);
+
+    const topOverallLastGaps = [...candidateOverallLastGaps]
+      .sort((a, b) => b.pctGapLast - a.pctGapLast)
+      .slice(0, 10);
 
     return {
       topScoring,
@@ -696,6 +949,11 @@ export default function LeagueHistoryView({
       hangovers,
       categoryStatRecords,
       legacyStatRecords,
+      relativeDominanceRecords,
+      categoryGapsRecords,
+      topOverall12Gaps,
+      topOverallLastGaps,
+      seasonCategoryMetrics,
     };
   }, [augmentedFinishes, adjustRoster, adjustMlb, exclude2020Lowlights]);
 
@@ -1383,72 +1641,175 @@ export default function LeagueHistoryView({
             </div>
           </div>
 
-          {/* ALL-TIME STAT RECORDS (HIGHS & LOWS BY STAT CATEGORY) */}
-          <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-200 pb-3">
-              <div>
-                <div className="flex items-center gap-2 text-sm font-black text-gray-900 uppercase tracking-wider">
-                  <span>📊</span>
-                  <span>All-Time Category Stat Records (Highs & Lows)</span>
-                  <span className="text-xs text-gray-500 font-normal lowercase">(Active era adjusted)</span>
+          {/* ALL-TIME STAT RECORDS (HIGHS, LOWS, RELATIVE DOMINANCE & CATEGORY MARGINS) */}
+          <div className="space-y-6">
+            <div className="flex flex-col gap-4 border-b border-gray-200 pb-4">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2 text-sm font-black text-gray-900 uppercase tracking-wider">
+                    <span>{highlightViewMode === 'totals' ? '📊' : highlightViewMode === 'relative' ? '📈' : '⚡'}</span>
+                    <span>
+                      {highlightViewMode === 'totals' && 'All-Time Category Stat Records (Highs & Lows)'}
+                      {highlightViewMode === 'relative' && 'Relative Dominance & Deficits (% vs Season League Average)'}
+                      {highlightViewMode === 'margins' && 'Historical Category Margins & Gaps (Blowouts & Punts)'}
+                    </span>
+                    <span className="text-xs text-gray-500 font-normal lowercase">
+                      {highlightViewMode === 'totals' && (adjustRoster || adjustMlb ? '(Era & roster adjusted)' : '(Raw single-season totals)')}
+                      {highlightViewMode === 'relative' && '(Standardized across eras)'}
+                      {highlightViewMode === 'margins' && '(1st vs 2nd Leads & Last vs 2nd-Last Deficits)'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1 max-w-3xl">
+                    {highlightViewMode === 'totals' && (
+                      <>All-time single-season benchmarks across all 10 roto categories. Evaluates active seasons for each category (OBP: 2013+, QS: 2014+, SV+H: 2019+). Each record displays its comparative margin against that season's league mean.</>
+                    )}
+                    {highlightViewMode === 'relative' && (
+                      <>Ranks single-season performances by percentage above (or below) that season's league mean. Standardizes performance across high and low offensive eras to highlight historically unprecedented dominance or basement collapses.</>
+                    )}
+                    {highlightViewMode === 'margins' && (
+                      <>Measures single-season competitive chasms: runaway category titles (largest margins between 1st and 2nd place) and the basement abyss (largest deficits between last and second-to-last place).</>
+                    )}
+                  </p>
                 </div>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  All-time single-season benchmarks across all 10 roto categories. Evaluates active seasons for each category (OBP: 2013+, QS: 2014+, SV+H: 2019+). {adjustRoster || adjustMlb ? 'Era & roster adjustments applied.' : 'Raw seasonal totals shown.'}
-                </p>
+
+                {/* Sub-view Switcher */}
+                <div className="flex flex-wrap items-center gap-1.5 p-1 bg-gray-100 rounded-2xl border border-gray-200 text-xs font-black self-start md:self-auto shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setHighlightViewMode('totals')}
+                    className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 cursor-pointer ${
+                      highlightViewMode === 'totals'
+                        ? 'bg-white text-gray-900 shadow-xs ring-1 ring-black/5'
+                        : 'text-gray-500 hover:text-gray-900'
+                    }`}
+                  >
+                    <span>🏆</span>
+                    <span>All-Time Totals</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setHighlightViewMode('relative')}
+                    className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 cursor-pointer ${
+                      highlightViewMode === 'relative'
+                        ? 'bg-white text-indigo-950 shadow-xs ring-1 ring-black/5'
+                        : 'text-gray-500 hover:text-gray-900'
+                    }`}
+                  >
+                    <span>📈</span>
+                    <span>Relative (% vs Avg)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setHighlightViewMode('margins')}
+                    className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 cursor-pointer ${
+                      highlightViewMode === 'margins'
+                        ? 'bg-white text-amber-950 shadow-xs ring-1 ring-black/5'
+                        : 'text-gray-500 hover:text-gray-900'
+                    }`}
+                  >
+                    <span>⚡</span>
+                    <span>Margins & Gaps</span>
+                  </button>
+                </div>
               </div>
 
-              {/* Category filter pills */}
-              <div className="flex flex-wrap items-center gap-1.5 overflow-x-auto py-1">
-                <button
-                  type="button"
-                  onClick={() => setSelectedStatCategory('ALL')}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-black transition cursor-pointer ${
-                    selectedStatCategory === 'ALL'
-                      ? 'bg-blue-600 text-white shadow-xs'
-                      : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-100'
-                  }`}
-                >
-                  All Stats
-                </button>
-                {CATEGORIES.map(cat => (
+              {/* Second row: Margins Gap Type Switcher & Category filter pills */}
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-1">
+                {highlightViewMode === 'margins' ? (
+                  <div className="flex items-center gap-1.5 p-1 bg-amber-50 rounded-xl border border-amber-200 text-xs font-bold self-start shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setMarginsGapType('all')}
+                      className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
+                        marginsGapType === 'all'
+                          ? 'bg-amber-600 text-white shadow-xs'
+                          : 'text-amber-900 hover:bg-amber-100'
+                      }`}
+                    >
+                      All Margins
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMarginsGapType('1st_2nd')}
+                      className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
+                        marginsGapType === '1st_2nd'
+                          ? 'bg-amber-600 text-white shadow-xs'
+                          : 'text-amber-900 hover:bg-amber-100'
+                      }`}
+                    >
+                      🥇 1st vs 2nd Leads
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMarginsGapType('last_2nd_last')}
+                      className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
+                        marginsGapType === 'last_2nd_last'
+                          ? 'bg-rose-600 text-white shadow-xs'
+                          : 'text-rose-900 hover:bg-rose-100'
+                      }`}
+                    >
+                      ⚠️ Last vs 2nd-Last Deficits
+                    </button>
+                  </div>
+                ) : (
+                  <div className="text-xs text-gray-400 font-medium">
+                    Filter by stat category:
+                  </div>
+                )}
+
+                {/* Category filter pills */}
+                <div className="flex flex-wrap items-center gap-1.5 overflow-x-auto py-1">
                   <button
-                    key={cat.key}
                     type="button"
-                    onClick={() => setSelectedStatCategory(cat.key)}
-                    className={`px-2 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
-                      selectedStatCategory === cat.key
-                        ? (cat.type === 'bat' ? 'bg-amber-600 text-white shadow-xs' : 'bg-indigo-600 text-white shadow-xs')
+                    onClick={() => setSelectedStatCategory('ALL')}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-black transition cursor-pointer ${
+                      selectedStatCategory === 'ALL'
+                        ? 'bg-blue-600 text-white shadow-xs'
                         : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-100'
                     }`}
                   >
-                    <span>{CAT_ICONS[cat.key]}</span>
-                    <span>{cat.label}</span>
+                    All Stats
                   </button>
-                ))}
+                  {CATEGORIES.map(cat => (
+                    <button
+                      key={cat.key}
+                      type="button"
+                      onClick={() => setSelectedStatCategory(cat.key)}
+                      className={`px-2 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
+                        selectedStatCategory === cat.key
+                          ? (cat.type === 'bat' ? 'bg-amber-600 text-white shadow-xs' : 'bg-indigo-600 text-white shadow-xs')
+                          : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-100'
+                      }`}
+                    >
+                      <span>{CAT_ICONS[cat.key]}</span>
+                      <span>{cat.label}</span>
+                    </button>
+                  ))}
 
-                {/* Legacy Category Pills */}
-                <div className="hidden sm:inline-block w-px h-5 bg-gray-300 mx-1"></div>
-                {LEGACY_CATEGORIES.map(cat => (
-                  <button
-                    key={cat.key}
-                    type="button"
-                    onClick={() => setSelectedStatCategory(cat.key)}
-                    className={`px-2 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
-                      selectedStatCategory === cat.key
-                        ? 'bg-purple-700 text-white shadow-xs'
-                        : 'bg-purple-50 text-purple-800 border border-purple-200 hover:bg-purple-100'
-                    }`}
-                    title={`Legacy Category: ${cat.name} (${cat.activeYears[0]}${cat.activeYears[0] !== cat.activeYears[1] ? '–' + cat.activeYears[1] : ''})`}
-                  >
-                    <span>{CAT_ICONS[cat.key]}</span>
-                    <span>{cat.label} ({cat.activeYears[0] === cat.activeYears[1] ? `'${String(cat.activeYears[0]).slice(2)}` : `'${String(cat.activeYears[0]).slice(2)}–'${String(cat.activeYears[1]).slice(2)}`})</span>
-                  </button>
-                ))}
+                  {/* Legacy Category Pills */}
+                  <div className="hidden sm:inline-block w-px h-5 bg-gray-300 mx-1"></div>
+                  {LEGACY_CATEGORIES.map(cat => (
+                    <button
+                      key={cat.key}
+                      type="button"
+                      onClick={() => setSelectedStatCategory(cat.key)}
+                      className={`px-2 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
+                        selectedStatCategory === cat.key
+                          ? 'bg-purple-700 text-white shadow-xs'
+                          : 'bg-purple-50 text-purple-800 border border-purple-200 hover:bg-purple-100'
+                      }`}
+                      title={`Legacy Category: ${cat.name} (${cat.activeYears[0]}${cat.activeYears[0] !== cat.activeYears[1] ? '–' + cat.activeYears[1] : ''})`}
+                    >
+                      <span>{CAT_ICONS[cat.key]}</span>
+                      <span>{cat.label} ({cat.activeYears[0] === cat.activeYears[1] ? `'${String(cat.activeYears[0]).slice(2)}` : `'${String(cat.activeYears[0]).slice(2)}–'${String(cat.activeYears[1]).slice(2)}`})</span>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
-            {/* Category Records Cards Grid */}
-            {(() => {
+            {/* SUB-VIEW 1: ALL-TIME TOTALS (WITH SEASON AVERAGE COMPARISON CHIPS) */}
+            {highlightViewMode === 'totals' && (() => {
               const renderCategoryCard = (cat, isLegacy = false) => {
                 const record = isLegacy
                   ? highlightsData.legacyStatRecords?.[cat.key]
@@ -1582,7 +1943,18 @@ export default function LeagueHistoryView({
                                         {subRaw}
                                       </div>
                                     )}
-                                    <div className="text-[9px] text-gray-400">
+                                    {rec.pctVsAvg !== null && (
+                                      <div className="mt-0.5">
+                                        <span
+                                          className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60"
+                                          title={`Season average in ${rec.year}: ${formatMeanStat(cat.key, rec.seasonMean)} (${formatDiffStat(cat.key, rec.diffVsAvg)} vs avg)`}
+                                        >
+                                          <span>▲</span>
+                                          <span>{formatPctDiff(rec.pctVsAvg)} vs avg</span>
+                                        </span>
+                                      </div>
+                                    )}
+                                    <div className="text-[9px] text-gray-400 mt-0.5">
                                       {rec.rotoPoints} pts
                                     </div>
                                   </div>
@@ -1647,7 +2019,18 @@ export default function LeagueHistoryView({
                                         {subRaw}
                                       </div>
                                     )}
-                                    <div className="text-[9px] text-gray-400">
+                                    {rec.pctVsAvg !== null && (
+                                      <div className="mt-0.5">
+                                        <span
+                                          className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200/60"
+                                          title={`Season average in ${rec.year}: ${formatMeanStat(cat.key, rec.seasonMean)} (${formatDiffStat(cat.key, rec.diffVsAvg)} vs avg)`}
+                                        >
+                                          <span>▼</span>
+                                          <span>{formatPctDiff(rec.pctVsAvg)} vs avg</span>
+                                        </span>
+                                      </div>
+                                    )}
+                                    <div className="text-[9px] text-gray-400 mt-0.5">
                                       {rec.rotoPoints} pts
                                     </div>
                                   </div>
@@ -1692,6 +2075,542 @@ export default function LeagueHistoryView({
                     </div>
                   )}
                 </>
+              );
+            })()}
+
+            {/* SUB-VIEW 2: RELATIVE DOMINANCE (% VS SEASON LEAGUE AVERAGE) */}
+            {highlightViewMode === 'relative' && (() => {
+              const renderRelativeDominanceCard = (cat, isLegacy = false) => {
+                const record = highlightsData.relativeDominanceRecords?.[cat.key];
+                if (!record) return null;
+                const { highs, lows, totalTracked } = record;
+                const icon = CAT_ICONS[cat.key] || '⚾';
+                const isBat = cat.type === 'bat';
+                const showHighs = highlightFilter === 'all' || highlightFilter === 'highlights';
+                const showLows = highlightFilter === 'all' || highlightFilter === 'lowlights';
+                const twoCols = showHighs && showLows;
+
+                return (
+                  <div
+                    key={`rel-rec-${cat.key}`}
+                    className="bg-white border border-gray-200 rounded-3xl p-5 shadow-sm space-y-4 hover:shadow-md transition"
+                  >
+                    {/* Card Header */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-3">
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-2xl">{icon}</span>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-base font-black text-gray-900">{cat.name}</h3>
+                            <span className="font-mono text-xs font-bold text-gray-500">({cat.label})</span>
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                              isLegacy
+                                ? 'bg-purple-100 text-purple-800'
+                                : isBat ? 'bg-amber-100 text-amber-800' : 'bg-indigo-100 text-indigo-800'
+                            }`}>
+                              {isLegacy ? 'Legacy' : isBat ? 'Batting' : 'Pitching'}
+                            </span>
+                          </div>
+                          <div className="text-[11px] text-gray-400 mt-0.5 flex flex-wrap items-center gap-2">
+                            <span className="text-indigo-600 font-bold">Relative Dominance</span>
+                            <span>•</span>
+                            <span>{totalTracked} team-seasons</span>
+                            <span>•</span>
+                            <span>{cat.higherIsBetter ? '▲ Higher % is better' : '▼ Lower stat = higher % lead'}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <span className="inline-flex items-center gap-1 text-[10px] font-black px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-800 border border-indigo-200 self-start sm:self-auto">
+                        <span>📈</span>
+                        <span>% vs Season Mean</span>
+                      </span>
+                    </div>
+
+                    {/* Columns: Most Dominant vs Largest Deficits */}
+                    <div className={`grid grid-cols-1 ${twoCols ? 'md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-100' : ''} gap-4`}>
+                      {/* HIGHEST % ABOVE AVG */}
+                      {showHighs && (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between px-1">
+                            <span className="text-xs font-black text-emerald-800 flex items-center gap-1.5">
+                              <span>🥇</span>
+                              <span>Most Dominant (% Above Avg)</span>
+                            </span>
+                            <span className="text-[10px] font-mono font-bold text-emerald-600">Top 5</span>
+                          </div>
+
+                          <div className="divide-y divide-gray-50 text-xs">
+                            {highs.map((rec, i) => {
+                              const isGold = i === 0;
+                              const isSilver = i === 1;
+                              const isBronze = i === 2;
+
+                              return (
+                                <div
+                                  key={`rel-high-${cat.key}-${rec.year}-${rec.owner}-${i}`}
+                                  className="py-2 px-1.5 flex items-center justify-between hover:bg-emerald-50/50 rounded-xl transition"
+                                >
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <span className={`w-5 h-5 rounded-lg flex items-center justify-center font-mono font-black text-[10px] shrink-0 ${
+                                      isGold ? 'bg-amber-400 text-amber-950 ring-1 ring-amber-300' :
+                                      isSilver ? 'bg-slate-300 text-slate-900' :
+                                      isBronze ? 'bg-amber-700 text-amber-100' :
+                                      'bg-gray-100 text-gray-600'
+                                    }`}>
+                                      {isGold ? '🥇' : isSilver ? '🥈' : isBronze ? '🥉' : i + 1}
+                                    </span>
+                                    <TeamAvatar team={{ owner: rec.owner }} size="xs" />
+                                    <div className="min-w-0">
+                                      <div className="font-black text-gray-900 flex items-center gap-1 text-[11px] truncate">
+                                        <span className="truncate">{rec.owner}</span>
+                                        <span className="text-gray-400 font-normal shrink-0">({rec.year})</span>
+                                        {rec.place === 1 && <span className="text-amber-500 text-[10px] shrink-0">👑</span>}
+                                      </div>
+                                      <div className="text-[10px] text-gray-500 truncate max-w-[120px] sm:max-w-[150px]">
+                                        {rec.teamName}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <div className="text-right font-mono shrink-0 pl-2">
+                                    <div className="font-black text-emerald-700 text-xs sm:text-sm">
+                                      +{rec.pctVsAvg.toFixed(1)}%
+                                    </div>
+                                    <div className="text-[10px] text-gray-600 font-bold">
+                                      {formatRawStat(cat.key, rec.rawVal)}
+                                      <span className="text-gray-400 font-normal font-sans ml-1">(avg: {formatMeanStat(cat.key, rec.seasonMean)})</span>
+                                    </div>
+                                    <div className="text-[9px] text-gray-400">
+                                      {rec.rotoPoints} pts
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* WORST % BELOW AVG */}
+                      {showLows && (
+                        <div className={`space-y-2 ${twoCols ? 'pt-3 md:pt-0 md:pl-4' : ''}`}>
+                          <div className="flex items-center justify-between px-1">
+                            <span className="text-xs font-black text-rose-800 flex items-center gap-1.5">
+                              <span>⚠️</span>
+                              <span>Largest Deficits (% Below Avg)</span>
+                            </span>
+                            <span className="text-[10px] font-mono font-bold text-rose-600">Bottom 5</span>
+                          </div>
+
+                          <div className="divide-y divide-gray-50 text-xs">
+                            {lows.map((rec, i) => (
+                              <div
+                                key={`rel-low-${cat.key}-${rec.year}-${rec.owner}-${i}`}
+                                className="py-2 px-1.5 flex items-center justify-between hover:bg-rose-50/50 rounded-xl transition"
+                              >
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <span className="w-5 h-5 rounded-lg flex items-center justify-center font-mono font-black text-[10px] shrink-0 bg-rose-100 text-rose-900 font-bold">
+                                    {i + 1}
+                                  </span>
+                                  <TeamAvatar team={{ owner: rec.owner }} size="xs" />
+                                  <div className="min-w-0">
+                                    <div className="font-black text-gray-900 flex items-center gap-1 text-[11px] truncate">
+                                      <span className="truncate">{rec.owner}</span>
+                                      <span className="text-gray-400 font-normal shrink-0">({rec.year})</span>
+                                    </div>
+                                    <div className="text-[10px] text-gray-500 truncate max-w-[120px] sm:max-w-[150px]">
+                                      {rec.teamName}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="text-right font-mono shrink-0 pl-2">
+                                  <div className="font-black text-rose-700 text-xs sm:text-sm">
+                                    {rec.pctVsAvg.toFixed(1)}%
+                                  </div>
+                                  <div className="text-[10px] text-gray-600 font-bold">
+                                    {formatRawStat(cat.key, rec.rawVal)}
+                                    <span className="text-gray-400 font-normal font-sans ml-1">(avg: {formatMeanStat(cat.key, rec.seasonMean)})</span>
+                                  </div>
+                                  <div className="text-[9px] text-gray-400">
+                                    {rec.rotoPoints} pts
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              };
+
+              return (
+                <>
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    {displayedStatCategories.map(cat => renderRelativeDominanceCard(cat, LEGACY_CATEGORIES.some(l => l.key === cat.key)))}
+                  </div>
+
+                  {/* Discontinued / Legacy categories spotlight when viewing All Stats */}
+                  {selectedStatCategory === 'ALL' && (
+                    <div className="mt-8 pt-6 border-t border-gray-200 space-y-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <div className="flex items-center gap-2 text-sm font-black text-purple-950 uppercase tracking-wider">
+                            <span>🏛️</span>
+                            <span>Discontinued & Legacy Relative Dominance</span>
+                          </div>
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            Relative dominance metrics for discontinued formats (Batting Average in 2012, Wins in 2012–13, Saves in 2012–18).
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                        {LEGACY_CATEGORIES.map(cat => renderRelativeDominanceCard(cat, true))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
+
+            {/* SUB-VIEW 3: CATEGORY MARGINS & GAPS (1ST VS 2ND AND LAST VS 2ND-TO-LAST) */}
+            {highlightViewMode === 'margins' && (() => {
+              const showLeads = marginsGapType === 'all' || marginsGapType === '1st_2nd';
+              const showDeficits = marginsGapType === 'all' || marginsGapType === 'last_2nd_last';
+
+              const renderCategoryMarginsCard = (cat, isLegacy = false) => {
+                const record = highlightsData.categoryGapsRecords?.[cat.key];
+                if (!record) return null;
+                const { gaps12, gapsLast, totalSeasons } = record;
+                const icon = CAT_ICONS[cat.key] || '⚾';
+                const isBat = cat.type === 'bat';
+                const twoCols = showLeads && showDeficits;
+
+                return (
+                  <div
+                    key={`margin-rec-${cat.key}`}
+                    className="bg-white border border-gray-200 rounded-3xl p-5 shadow-sm space-y-4 hover:shadow-md transition"
+                  >
+                    {/* Header */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-3">
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-2xl">{icon}</span>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-base font-black text-gray-900">{cat.name}</h3>
+                            <span className="font-mono text-xs font-bold text-gray-500">({cat.label})</span>
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                              isLegacy
+                                ? 'bg-purple-100 text-purple-800'
+                                : isBat ? 'bg-amber-100 text-amber-800' : 'bg-indigo-100 text-indigo-800'
+                            }`}>
+                              {isLegacy ? 'Legacy' : isBat ? 'Batting' : 'Pitching'}
+                            </span>
+                          </div>
+                          <div className="text-[11px] text-gray-400 mt-0.5 flex flex-wrap items-center gap-2">
+                            <span>Competitive chasms</span>
+                            <span>•</span>
+                            <span>{totalSeasons} seasons</span>
+                            <span>•</span>
+                            <span className="font-mono text-gray-500">
+                              {cat.activeYears[0] === cat.activeYears[1] ? `Season: ${cat.activeYears[0]}` : `Active: ${cat.activeYears[0]}–${cat.activeYears[1]}`}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <span className="inline-flex items-center gap-1 text-[10px] font-black px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 self-start sm:self-auto">
+                        <span>⚡</span>
+                        <span>Margins & Gaps</span>
+                      </span>
+                    </div>
+
+                    {/* Columns: 1st vs 2nd Leads and Last vs 2nd-Last Deficits */}
+                    <div className={`grid grid-cols-1 ${twoCols ? 'md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-100' : ''} gap-4`}>
+                      {/* 1st vs 2nd Leads */}
+                      {showLeads && (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between px-1">
+                            <span className="text-xs font-black text-amber-800 flex items-center gap-1.5">
+                              <span>🥇</span>
+                              <span>Biggest 1st vs 2nd Leads (Runaway Titles)</span>
+                            </span>
+                            <span className="text-[10px] font-mono font-bold text-amber-600">Top 5</span>
+                          </div>
+
+                          <div className="divide-y divide-gray-50 text-xs">
+                            {gaps12.map((m, i) => (
+                              <div
+                                key={`gap12-${cat.key}-${m.year}-${i}`}
+                                className="py-2.5 px-1.5 flex items-center justify-between hover:bg-amber-50/50 rounded-xl transition"
+                              >
+                                <div className="min-w-0 pr-2">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="font-mono font-black text-xs text-gray-900 bg-gray-100 px-1.5 py-0.5 rounded">
+                                      {m.year}
+                                    </span>
+                                    <span className="font-black text-emerald-800 flex items-center gap-1 text-[11px] truncate">
+                                      <span>1st: {m.first.owner}</span>
+                                      <span className="font-mono font-bold text-emerald-700">({formatRawStat(cat.key, m.first.rawVal)})</span>
+                                    </span>
+                                  </div>
+                                  <div className="text-[10px] text-gray-500 flex items-center gap-1 mt-0.5">
+                                    <span>vs 2nd:</span>
+                                    <span className="font-bold text-gray-700">{m.second.owner}</span>
+                                    <span className="font-mono">({formatRawStat(cat.key, m.second.rawVal)})</span>
+                                  </div>
+                                </div>
+
+                                <div className="text-right font-mono shrink-0">
+                                  <div className="font-black text-amber-700 text-xs sm:text-sm">
+                                    +{formatDiffStat(cat.key, m.gap12)} {cat.label}
+                                  </div>
+                                  <div className="mt-0.5">
+                                    <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                                      +{m.pctGap12.toFixed(1)}% lead
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Last vs 2nd-Last Deficits */}
+                      {showDeficits && (
+                        <div className={`space-y-2 ${twoCols ? 'pt-3 md:pt-0 md:pl-4' : ''}`}>
+                          <div className="flex items-center justify-between px-1">
+                            <span className="text-xs font-black text-rose-800 flex items-center gap-1.5">
+                              <span>⚠️</span>
+                              <span>Biggest Last vs 2nd-Last Deficits (Abyss)</span>
+                            </span>
+                            <span className="text-[10px] font-mono font-bold text-rose-600">Bottom 5</span>
+                          </div>
+
+                          <div className="divide-y divide-gray-50 text-xs">
+                            {gapsLast.map((m, i) => (
+                              <div
+                                key={`gaplast-${cat.key}-${m.year}-${i}`}
+                                className="py-2.5 px-1.5 flex items-center justify-between hover:bg-rose-50/50 rounded-xl transition"
+                              >
+                                <div className="min-w-0 pr-2">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="font-mono font-black text-xs text-gray-900 bg-gray-100 px-1.5 py-0.5 rounded">
+                                      {m.year}
+                                    </span>
+                                    <span className="font-black text-rose-800 flex items-center gap-1 text-[11px] truncate">
+                                      <span>Last: {m.last.owner}</span>
+                                      <span className="font-mono font-bold text-rose-700">({formatRawStat(cat.key, m.last.rawVal)})</span>
+                                    </span>
+                                  </div>
+                                  <div className="text-[10px] text-gray-500 flex items-center gap-1 mt-0.5">
+                                    <span>behind 2nd-last:</span>
+                                    <span className="font-bold text-gray-700">{m.secondLast.owner}</span>
+                                    <span className="font-mono">({formatRawStat(cat.key, m.secondLast.rawVal)})</span>
+                                  </div>
+                                </div>
+
+                                <div className="text-right font-mono shrink-0">
+                                  <div className="font-black text-rose-700 text-xs sm:text-sm">
+                                    -{formatDiffStat(cat.key, m.gapLast)} {cat.label}
+                                  </div>
+                                  <div className="mt-0.5">
+                                    <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-rose-100 text-rose-900 border border-rose-300">
+                                      -{m.pctGapLast.toFixed(1)}% deficit
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              };
+
+              return (
+                <div className="space-y-8">
+                  {/* OVERALL ALL-TIME GAP LEADERBOARDS (SHOWN WHEN ALL STATS IS SELECTED) */}
+                  {selectedStatCategory === 'ALL' && (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* TOP 10 ALL-TIME RUNAWAY CATEGORY TITLES (1ST VS 2ND LEADS) */}
+                      {showLeads && (
+                        <div className="bg-gradient-to-br from-amber-500/10 via-amber-50/40 to-white border border-amber-200 rounded-3xl p-6 shadow-sm space-y-4">
+                          <div className="flex items-center justify-between border-b border-amber-200/60 pb-3">
+                            <div className="flex items-center gap-2">
+                              <span className="text-2xl">🥇</span>
+                              <div>
+                                <h3 className="text-base font-black text-amber-950">Top 10 Runaway Category Titles</h3>
+                                <p className="text-xs text-amber-800/80">All-time largest single-season leads over 2nd place (% lead)</p>
+                              </div>
+                            </div>
+                            <span className="text-xs font-mono font-black text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300">
+                              Blowouts
+                            </span>
+                          </div>
+
+                          <div className="divide-y divide-amber-100/70 text-xs">
+                            {highlightsData.topOverall12Gaps?.map((m, idx) => {
+                              const isGold = idx === 0;
+                              const isSilver = idx === 1;
+                              const isBronze = idx === 2;
+
+                              return (
+                                <div
+                                  key={`overall-gap12-${m.year}-${m.catKey}-${idx}`}
+                                  className="py-2.5 flex items-center justify-between hover:bg-amber-100/40 rounded-xl px-2 transition"
+                                >
+                                  <div className="flex items-center gap-2 min-w-0 pr-2">
+                                    <span className={`w-5 h-5 rounded-lg flex items-center justify-center font-mono font-black text-[10px] shrink-0 ${
+                                      isGold ? 'bg-amber-400 text-amber-950 ring-1 ring-amber-300' :
+                                      isSilver ? 'bg-slate-300 text-slate-900' :
+                                      isBronze ? 'bg-amber-700 text-amber-100' :
+                                      'bg-amber-100 text-amber-900'
+                                    }`}>
+                                      {isGold ? '🥇' : isSilver ? '🥈' : isBronze ? '🥉' : idx + 1}
+                                    </span>
+                                    <div className="min-w-0">
+                                      <div className="flex items-center gap-1.5 flex-wrap">
+                                        <span className="font-black text-gray-900 text-[11px] flex items-center gap-1">
+                                          <span>{CAT_ICONS[m.catKey]}</span>
+                                          <span>{m.cat.label}</span>
+                                          <span className="text-gray-500 font-mono font-normal">('{String(m.year).slice(2)})</span>
+                                        </span>
+                                        <span className="text-gray-300">•</span>
+                                        <span className="font-bold text-emerald-800 text-[11px] truncate">
+                                          1st: {m.first.owner} <span className="font-mono text-emerald-700">({formatRawStat(m.catKey, m.first.rawVal)})</span>
+                                        </span>
+                                      </div>
+                                      <div className="text-[10px] text-gray-500 flex items-center gap-1 mt-0.5">
+                                        <span>vs 2nd:</span>
+                                        <span className="font-semibold text-gray-700">{m.second.owner}</span>
+                                        <span className="font-mono">({formatRawStat(m.catKey, m.second.rawVal)})</span>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <div className="text-right font-mono shrink-0 pl-2">
+                                    <div className="font-black text-amber-800 text-xs sm:text-sm">
+                                      +{formatDiffStat(m.catKey, m.gap12)} {m.cat.label}
+                                    </div>
+                                    <div className="mt-0.5">
+                                      <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                                        +{m.pctGap12.toFixed(1)}% lead
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* TOP 10 ALL-TIME THE BASEMENT ABYSS (LAST VS 2ND-TO-LAST DEFICITS) */}
+                      {showDeficits && (
+                        <div className="bg-gradient-to-br from-rose-500/10 via-rose-50/40 to-white border border-rose-200 rounded-3xl p-6 shadow-sm space-y-4">
+                          <div className="flex items-center justify-between border-b border-rose-200/60 pb-3">
+                            <div className="flex items-center gap-2">
+                              <span className="text-2xl">⚠️</span>
+                              <div>
+                                <h3 className="text-base font-black text-rose-950">Top 10 The Basement Abyss</h3>
+                                <p className="text-xs text-rose-800/80">All-time largest deficits between last & 2nd-to-last (% deficit)</p>
+                              </div>
+                            </div>
+                            <span className="text-xs font-mono font-black text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full border border-rose-300">
+                              Punts & Collapses
+                            </span>
+                          </div>
+
+                          <div className="divide-y divide-rose-100/70 text-xs">
+                            {highlightsData.topOverallLastGaps?.map((m, idx) => (
+                              <div
+                                key={`overall-gaplast-${m.year}-${m.catKey}-${idx}`}
+                                className="py-2.5 flex items-center justify-between hover:bg-rose-100/40 rounded-xl px-2 transition"
+                              >
+                                <div className="flex items-center gap-2 min-w-0 pr-2">
+                                  <span className="w-5 h-5 rounded-lg flex items-center justify-center font-mono font-black text-[10px] shrink-0 bg-rose-100 text-rose-900 font-bold">
+                                    {idx + 1}
+                                  </span>
+                                  <div className="min-w-0">
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      <span className="font-black text-gray-900 text-[11px] flex items-center gap-1">
+                                        <span>{CAT_ICONS[m.catKey]}</span>
+                                        <span>{m.cat.label}</span>
+                                        <span className="text-gray-500 font-mono font-normal">('{String(m.year).slice(2)})</span>
+                                      </span>
+                                      <span className="text-gray-300">•</span>
+                                      <span className="font-bold text-rose-800 text-[11px] truncate">
+                                        Last: {m.last.owner} <span className="font-mono text-rose-700">({formatRawStat(m.catKey, m.last.rawVal)})</span>
+                                      </span>
+                                    </div>
+                                    <div className="text-[10px] text-gray-500 flex items-center gap-1 mt-0.5">
+                                      <span>behind 2nd-last:</span>
+                                      <span className="font-semibold text-gray-700">{m.secondLast.owner}</span>
+                                      <span className="font-mono">({formatRawStat(m.catKey, m.secondLast.rawVal)})</span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="text-right font-mono shrink-0 pl-2">
+                                  <div className="font-black text-rose-800 text-xs sm:text-sm">
+                                    -{formatDiffStat(m.catKey, m.gapLast)} {m.cat.label}
+                                  </div>
+                                  <div className="mt-0.5">
+                                    <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-rose-100 text-rose-900 border border-rose-300">
+                                      -{m.pctGapLast.toFixed(1)}% deficit
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* PER-CATEGORY MARGIN BREAKDOWN CARDS */}
+                  <div className="space-y-4">
+                    {selectedStatCategory === 'ALL' && (
+                      <div className="text-xs font-black text-gray-700 uppercase tracking-wider pt-2">
+                        Per-Category Margin Breakdowns
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                      {displayedStatCategories.map(cat => renderCategoryMarginsCard(cat, LEGACY_CATEGORIES.some(l => l.key === cat.key)))}
+                    </div>
+
+                    {/* Discontinued / Legacy categories spotlight when viewing All Stats */}
+                    {selectedStatCategory === 'ALL' && (
+                      <div className="mt-8 pt-6 border-t border-gray-200 space-y-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <div className="flex items-center gap-2 text-sm font-black text-purple-950 uppercase tracking-wider">
+                              <span>🏛️</span>
+                              <span>Discontinued & Legacy Margins</span>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              Historical 1st vs 2nd leads and last place deficits for discontinued categories (Batting Average in 2012, Wins in 2012–13, Saves in 2012–18).
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                          {LEGACY_CATEGORIES.map(cat => renderCategoryMarginsCard(cat, true))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               );
             })()}
           </div>
