@@ -1,5 +1,31 @@
 [
   {
+    "espn_transaction_id": "e3c8b269-f08d-4c1b-9dec-2cc9a6eeb5a7_35759_13",
+    "league_id": 130215,
+    "season_year": 2026,
+    "transaction_type": "ADD",
+    "transaction_date": "2026-09-18T19:05:29.359000+00:00",
+    "scoring_period_id": 178,
+    "to_team_id": 13,
+    "from_team_id": 0,
+    "player_id": 35759,
+    "player_name": "Jose Urquidy",
+    "raw_type": "FREEAGENT"
+  },
+  {
+    "espn_transaction_id": "e3c8b269-f08d-4c1b-9dec-2cc9a6eeb5a7_35759_13",
+    "league_id": 130215,
+    "season_year": 2026,
+    "transaction_type": "ADD",
+    "transaction_date": "2026-09-18T19:05:29.359000+00:00",
+    "scoring_period_id": 178,
+    "to_team_id": 13,
+    "from_team_id": 0,
+    "player_id": 35759,
+    "player_name": "Jose Urquidy",
+    "raw_type": "FREEAGENT"
+  },
+  {
     "espn_transaction_id": "910c376c-4b75-40be-bccc-003ea3178a58_40949_2",
     "league_id": 130215,
     "season_year": 2026,
@@ -182,32 +208,6 @@
     "raw_type": "WAIVER"
   },
   {
-    "espn_transaction_id": "a26c02eb-7e7f-49e1-9c5d-4b7b9ea6fe92_41216_14",
-    "league_id": 130215,
-    "season_year": 2026,
-    "transaction_type": "ADD",
-    "transaction_date": "2026-09-18T08:21:03.776000+00:00",
-    "scoring_period_id": 178,
-    "to_team_id": 14,
-    "from_team_id": 0,
-    "player_id": 41216,
-    "player_name": "Logan Webb",
-    "raw_type": "WAIVER"
-  },
-  {
-    "espn_transaction_id": "a26c02eb-7e7f-49e1-9c5d-4b7b9ea6fe92_33654_0",
-    "league_id": 130215,
-    "season_year": 2026,
-    "transaction_type": "ADD",
-    "transaction_date": "2026-09-18T08:21:03.776000+00:00",
-    "scoring_period_id": 178,
-    "to_team_id": 0,
-    "from_team_id": 14,
-    "player_id": 33654,
-    "player_name": "Tyron Guerrero",
-    "raw_type": "WAIVER"
-  },
-  {
     "espn_transaction_id": "84bfd10b-6601-40d9-a961-fe5562e33d72_41216_5",
     "league_id": 130215,
     "season_year": 2026,
@@ -231,6 +231,32 @@
     "from_team_id": 5,
     "player_id": 36063,
     "player_name": "Jose Alvarado",
+    "raw_type": "WAIVER"
+  },
+  {
+    "espn_transaction_id": "a26c02eb-7e7f-49e1-9c5d-4b7b9ea6fe92_41216_14",
+    "league_id": 130215,
+    "season_year": 2026,
+    "transaction_type": "ADD",
+    "transaction_date": "2026-09-18T08:21:03.776000+00:00",
+    "scoring_period_id": 178,
+    "to_team_id": 14,
+    "from_team_id": 0,
+    "player_id": 41216,
+    "player_name": "Logan Webb",
+    "raw_type": "WAIVER"
+  },
+  {
+    "espn_transaction_id": "a26c02eb-7e7f-49e1-9c5d-4b7b9ea6fe92_33654_0",
+    "league_id": 130215,
+    "season_year": 2026,
+    "transaction_type": "ADD",
+    "transaction_date": "2026-09-18T08:21:03.776000+00:00",
+    "scoring_period_id": 178,
+    "to_team_id": 0,
+    "from_team_id": 14,
+    "player_id": 33654,
+    "player_name": "Tyron Guerrero",
     "raw_type": "WAIVER"
   },
   {
@@ -260,32 +286,6 @@
     "raw_type": "WAIVER"
   },
   {
-    "espn_transaction_id": "a26c02eb-7e7f-49e1-9c5d-4b7b9ea6fe92_41216_14",
-    "league_id": 130215,
-    "season_year": 2026,
-    "transaction_type": "ADD",
-    "transaction_date": "2026-09-18T08:21:03.776000+00:00",
-    "scoring_period_id": 178,
-    "to_team_id": 14,
-    "from_team_id": 0,
-    "player_id": 41216,
-    "player_name": "Logan Webb",
-    "raw_type": "WAIVER"
-  },
-  {
-    "espn_transaction_id": "a26c02eb-7e7f-49e1-9c5d-4b7b9ea6fe92_33654_0",
-    "league_id": 130215,
-    "season_year": 2026,
-    "transaction_type": "ADD",
-    "transaction_date": "2026-09-18T08:21:03.776000+00:00",
-    "scoring_period_id": 178,
-    "to_team_id": 0,
-    "from_team_id": 14,
-    "player_id": 33654,
-    "player_name": "Tyron Guerrero",
-    "raw_type": "WAIVER"
-  },
-  {
     "espn_transaction_id": "84bfd10b-6601-40d9-a961-fe5562e33d72_41216_5",
     "league_id": 130215,
     "season_year": 2026,
@@ -309,6 +309,32 @@
     "from_team_id": 5,
     "player_id": 36063,
     "player_name": "Jose Alvarado",
+    "raw_type": "WAIVER"
+  },
+  {
+    "espn_transaction_id": "a26c02eb-7e7f-49e1-9c5d-4b7b9ea6fe92_41216_14",
+    "league_id": 130215,
+    "season_year": 2026,
+    "transaction_type": "ADD",
+    "transaction_date": "2026-09-18T08:21:03.776000+00:00",
+    "scoring_period_id": 178,
+    "to_team_id": 14,
+    "from_team_id": 0,
+    "player_id": 41216,
+    "player_name": "Logan Webb",
+    "raw_type": "WAIVER"
+  },
+  {
+    "espn_transaction_id": "a26c02eb-7e7f-49e1-9c5d-4b7b9ea6fe92_33654_0",
+    "league_id": 130215,
+    "season_year": 2026,
+    "transaction_type": "ADD",
+    "transaction_date": "2026-09-18T08:21:03.776000+00:00",
+    "scoring_period_id": 178,
+    "to_team_id": 0,
+    "from_team_id": 14,
+    "player_id": 33654,
+    "player_name": "Tyron Guerrero",
     "raw_type": "WAIVER"
   },
   {
