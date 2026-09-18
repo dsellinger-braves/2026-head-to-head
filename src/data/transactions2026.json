@@ -1,5 +1,57 @@
 [
   {
+    "espn_transaction_id": "9394314e-48f3-4e4f-9841-18d80b0cd673_4866735_5",
+    "league_id": 130215,
+    "season_year": 2026,
+    "transaction_type": "ADD",
+    "transaction_date": "2026-09-18T00:13:11.275000+00:00",
+    "scoring_period_id": 177,
+    "to_team_id": 5,
+    "from_team_id": 0,
+    "player_id": 4866735,
+    "player_name": "Jakob Marsee",
+    "raw_type": "WAIVER"
+  },
+  {
+    "espn_transaction_id": "9394314e-48f3-4e4f-9841-18d80b0cd673_4917919_0",
+    "league_id": 130215,
+    "season_year": 2026,
+    "transaction_type": "ADD",
+    "transaction_date": "2026-09-18T00:13:11.275000+00:00",
+    "scoring_period_id": 177,
+    "to_team_id": 0,
+    "from_team_id": 5,
+    "player_id": 4917919,
+    "player_name": "Lawrence Butler",
+    "raw_type": "WAIVER"
+  },
+  {
+    "espn_transaction_id": "9394314e-48f3-4e4f-9841-18d80b0cd673_4866735_5",
+    "league_id": 130215,
+    "season_year": 2026,
+    "transaction_type": "ADD",
+    "transaction_date": "2026-09-18T00:13:11.275000+00:00",
+    "scoring_period_id": 177,
+    "to_team_id": 5,
+    "from_team_id": 0,
+    "player_id": 4866735,
+    "player_name": "Jakob Marsee",
+    "raw_type": "WAIVER"
+  },
+  {
+    "espn_transaction_id": "9394314e-48f3-4e4f-9841-18d80b0cd673_4917919_0",
+    "league_id": 130215,
+    "season_year": 2026,
+    "transaction_type": "ADD",
+    "transaction_date": "2026-09-18T00:13:11.275000+00:00",
+    "scoring_period_id": 177,
+    "to_team_id": 0,
+    "from_team_id": 5,
+    "player_id": 4917919,
+    "player_name": "Lawrence Butler",
+    "raw_type": "WAIVER"
+  },
+  {
     "espn_transaction_id": "636bd148-5110-4f32-9575-c5428ad2a9d1_5132011_13",
     "league_id": 130215,
     "season_year": 2026,
