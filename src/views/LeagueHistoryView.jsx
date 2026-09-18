@@ -1825,7 +1825,7 @@ export default function LeagueHistoryView({
                 return (
                   <div
                     key={`stat-rec-${cat.key}`}
-                    className="bg-white border border-gray-200 rounded-3xl p-5 shadow-sm space-y-4 hover:shadow-md transition"
+                    className="bg-white border border-gray-200 rounded-3xl p-5 sm:p-6 shadow-sm space-y-4 hover:shadow-md transition"
                   >
                     {/* Card Header */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-3">
@@ -1834,7 +1834,6 @@ export default function LeagueHistoryView({
                         <div>
                           <div className="flex items-center gap-2">
                             <h3 className="text-base font-black text-gray-900">{cat.name}</h3>
-                            <span className="font-mono text-xs font-bold text-gray-500">({cat.label})</span>
                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
                               isLegacy
                                 ? 'bg-purple-100 text-purple-800'
@@ -1879,7 +1878,7 @@ export default function LeagueHistoryView({
                     </div>
 
                     {/* Highs & Lows Columns */}
-                    <div className={`grid grid-cols-1 ${twoCols ? 'md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-100' : ''} gap-4`}>
+                    <div className={`grid grid-cols-1 ${twoCols ? 'lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-gray-100' : ''} gap-6`}>
                       {/* HIGHS / BEST COLUMN */}
                       {showHighs && (
                         <div className="space-y-2">
@@ -1910,9 +1909,9 @@ export default function LeagueHistoryView({
                               return (
                                 <div
                                   key={`high-${cat.key}-${rec.year}-${rec.owner}-${i}`}
-                                  className="py-2 px-1.5 flex items-center justify-between hover:bg-emerald-50/50 rounded-xl transition"
+                                  className="py-2.5 px-2 flex items-center justify-between hover:bg-emerald-50/50 rounded-xl transition gap-3"
                                 >
-                                  <div className="flex items-center gap-2 min-w-0">
+                                  <div className="flex items-center gap-2.5 min-w-0">
                                     <span className={`w-5 h-5 rounded-lg flex items-center justify-center font-mono font-black text-[10px] shrink-0 ${
                                       isGold ? 'bg-amber-400 text-amber-950 ring-1 ring-amber-300' :
                                       isSilver ? 'bg-slate-300 text-slate-900' :
@@ -1921,40 +1920,39 @@ export default function LeagueHistoryView({
                                     }`}>
                                       {isGold ? '🥇' : isSilver ? '🥈' : isBronze ? '🥉' : i + 1}
                                     </span>
-                                    <TeamAvatar team={{ owner: rec.owner }} size="xs" />
-                                    <div className="min-w-0">
-                                      <div className="font-black text-gray-900 flex items-center gap-1 text-[11px] truncate">
-                                        <span className="truncate">{rec.owner}</span>
-                                        <span className="text-gray-400 font-normal shrink-0">({rec.year})</span>
-                                        {rec.place === 1 && <span className="text-amber-500 text-[10px] shrink-0">👑</span>}
+                                    <div className="min-w-0 flex items-center gap-1.5 flex-wrap sm:flex-nowrap">
+                                      <div className="font-black text-gray-900 text-xs sm:text-sm whitespace-nowrap flex items-center gap-1">
+                                        <span>{rec.owner}</span>
+                                        <span className="text-gray-400 font-normal font-mono text-xs">({rec.year})</span>
+                                        {rec.place === 1 && <span className="text-amber-500 text-[11px]">👑</span>}
                                       </div>
-                                      <div className="text-[10px] text-gray-500 truncate max-w-[120px] sm:max-w-[150px]">
-                                        {rec.teamName}
+                                      <div className="text-[11px] text-gray-400 truncate max-w-[140px] sm:max-w-[220px] hidden sm:inline">
+                                        • {rec.teamName}
                                       </div>
                                     </div>
                                   </div>
 
-                                  <div className="text-right font-mono shrink-0 pl-2">
-                                    <div className="font-black text-emerald-700 text-xs sm:text-sm">
-                                      {dispVal}
+                                  <div className="flex items-center gap-2.5 shrink-0 pl-2">
+                                    <div className="text-right font-mono">
+                                      <div className="font-black text-emerald-700 text-xs sm:text-sm">
+                                        {dispVal}
+                                      </div>
+                                      {subRaw && (
+                                        <div className="text-[9px] text-gray-400">
+                                          {subRaw}
+                                        </div>
+                                      )}
                                     </div>
-                                    {subRaw && (
-                                      <div className="text-[9px] text-gray-400">
-                                        {subRaw}
-                                      </div>
-                                    )}
                                     {rec.pctVsAvg !== null && (
-                                      <div className="mt-0.5">
-                                        <span
-                                          className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60"
-                                          title={`Season average in ${rec.year}: ${formatMeanStat(cat.key, rec.seasonMean)} (${formatDiffStat(cat.key, rec.diffVsAvg)} vs avg)`}
-                                        >
-                                          <span>▲</span>
-                                          <span>{formatPctDiff(rec.pctVsAvg)} vs avg</span>
-                                        </span>
-                                      </div>
+                                      <span
+                                        className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md text-[11px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200/80 shrink-0 font-mono"
+                                        title={`Season average in ${rec.year}: ${formatMeanStat(cat.key, rec.seasonMean)} (${formatDiffStat(cat.key, rec.diffVsAvg)} vs avg)`}
+                                      >
+                                        <span>▲</span>
+                                        <span>{formatPctDiff(rec.pctVsAvg)}</span>
+                                      </span>
                                     )}
-                                    <div className="text-[9px] text-gray-400 mt-0.5">
+                                    <div className="text-[11px] font-mono text-gray-400 font-semibold w-11 text-right shrink-0">
                                       {rec.rotoPoints} pts
                                     </div>
                                   </div>
@@ -1967,7 +1965,7 @@ export default function LeagueHistoryView({
 
                       {/* LOWS / WORST COLUMN */}
                       {showLows && (
-                        <div className={`space-y-2 ${twoCols ? 'pt-3 md:pt-0 md:pl-4' : ''}`}>
+                        <div className={`space-y-2 ${twoCols ? 'pt-4 lg:pt-0 lg:pl-6' : ''}`}>
                           <div className="flex items-center justify-between px-1">
                             <span className="text-xs font-black text-rose-800 flex items-center gap-1.5">
                               <span>⚠️</span>
@@ -1992,45 +1990,44 @@ export default function LeagueHistoryView({
                               return (
                                 <div
                                   key={`low-${cat.key}-${rec.year}-${rec.owner}-${i}`}
-                                  className="py-2 px-1.5 flex items-center justify-between hover:bg-rose-50/50 rounded-xl transition"
+                                  className="py-2.5 px-2 flex items-center justify-between hover:bg-rose-50/50 rounded-xl transition gap-3"
                                 >
-                                  <div className="flex items-center gap-2 min-w-0">
+                                  <div className="flex items-center gap-2.5 min-w-0">
                                     <span className="w-5 h-5 rounded-lg flex items-center justify-center font-mono font-black text-[10px] shrink-0 bg-rose-100 text-rose-900 font-bold">
                                       {i + 1}
                                     </span>
-                                    <TeamAvatar team={{ owner: rec.owner }} size="xs" />
-                                    <div className="min-w-0">
-                                      <div className="font-black text-gray-900 flex items-center gap-1 text-[11px] truncate">
-                                        <span className="truncate">{rec.owner}</span>
-                                        <span className="text-gray-400 font-normal shrink-0">({rec.year})</span>
+                                    <div className="min-w-0 flex items-center gap-1.5 flex-wrap sm:flex-nowrap">
+                                      <div className="font-black text-gray-900 text-xs sm:text-sm whitespace-nowrap flex items-center gap-1">
+                                        <span>{rec.owner}</span>
+                                        <span className="text-gray-400 font-normal font-mono text-xs">({rec.year})</span>
                                       </div>
-                                      <div className="text-[10px] text-gray-500 truncate max-w-[120px] sm:max-w-[150px]">
-                                        {rec.teamName}
+                                      <div className="text-[11px] text-gray-400 truncate max-w-[140px] sm:max-w-[220px] hidden sm:inline">
+                                        • {rec.teamName}
                                       </div>
                                     </div>
                                   </div>
 
-                                  <div className="text-right font-mono shrink-0 pl-2">
-                                    <div className="font-black text-rose-700 text-xs sm:text-sm">
-                                      {dispVal}
+                                  <div className="flex items-center gap-2.5 shrink-0 pl-2">
+                                    <div className="text-right font-mono">
+                                      <div className="font-black text-rose-700 text-xs sm:text-sm">
+                                        {dispVal}
+                                      </div>
+                                      {subRaw && (
+                                        <div className="text-[9px] text-gray-400">
+                                          {subRaw}
+                                        </div>
+                                      )}
                                     </div>
-                                    {subRaw && (
-                                      <div className="text-[9px] text-gray-400">
-                                        {subRaw}
-                                      </div>
-                                    )}
                                     {rec.pctVsAvg !== null && (
-                                      <div className="mt-0.5">
-                                        <span
-                                          className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200/60"
-                                          title={`Season average in ${rec.year}: ${formatMeanStat(cat.key, rec.seasonMean)} (${formatDiffStat(cat.key, rec.diffVsAvg)} vs avg)`}
-                                        >
-                                          <span>▼</span>
-                                          <span>{formatPctDiff(rec.pctVsAvg)} vs avg</span>
-                                        </span>
-                                      </div>
+                                      <span
+                                        className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md text-[11px] font-black bg-rose-50 text-rose-700 border border-rose-200/80 shrink-0 font-mono"
+                                        title={`Season average in ${rec.year}: ${formatMeanStat(cat.key, rec.seasonMean)} (${formatDiffStat(cat.key, rec.diffVsAvg)} vs avg)`}
+                                      >
+                                        <span>▼</span>
+                                        <span>{formatPctDiff(rec.pctVsAvg)}</span>
+                                      </span>
                                     )}
-                                    <div className="text-[9px] text-gray-400 mt-0.5">
+                                    <div className="text-[11px] font-mono text-gray-400 font-semibold w-11 text-right shrink-0">
                                       {rec.rotoPoints} pts
                                     </div>
                                   </div>
@@ -2047,7 +2044,7 @@ export default function LeagueHistoryView({
 
               return (
                 <>
-                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 gap-6">
                     {displayedStatCategories.map(cat => renderCategoryCard(cat, LEGACY_CATEGORIES.some(l => l.key === cat.key)))}
                   </div>
 
@@ -2069,7 +2066,7 @@ export default function LeagueHistoryView({
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                      <div className="grid grid-cols-1 gap-6">
                         {LEGACY_CATEGORIES.map(cat => renderCategoryCard(cat, true))}
                       </div>
                     </div>
@@ -2102,7 +2099,6 @@ export default function LeagueHistoryView({
                         <div>
                           <div className="flex items-center gap-2">
                             <h3 className="text-base font-black text-gray-900">{cat.name}</h3>
-                            <span className="font-mono text-xs font-bold text-gray-500">({cat.label})</span>
                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
                               isLegacy
                                 ? 'bg-purple-100 text-purple-800'
@@ -2128,7 +2124,7 @@ export default function LeagueHistoryView({
                     </div>
 
                     {/* Columns: Most Dominant vs Largest Deficits */}
-                    <div className={`grid grid-cols-1 ${twoCols ? 'md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-100' : ''} gap-4`}>
+                    <div className={`grid grid-cols-1 ${twoCols ? 'lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-gray-100' : ''} gap-4`}>
                       {/* HIGHEST % ABOVE AVG */}
                       {showHighs && (
                         <div className="space-y-2">
@@ -2149,9 +2145,9 @@ export default function LeagueHistoryView({
                               return (
                                 <div
                                   key={`rel-high-${cat.key}-${rec.year}-${rec.owner}-${i}`}
-                                  className="py-2 px-1.5 flex items-center justify-between hover:bg-emerald-50/50 rounded-xl transition"
+                                  className="py-2.5 px-2 flex items-center justify-between hover:bg-emerald-50/50 rounded-xl transition gap-3"
                                 >
-                                  <div className="flex items-center gap-2 min-w-0">
+                                  <div className="flex items-center gap-2.5 min-w-0">
                                     <span className={`w-5 h-5 rounded-lg flex items-center justify-center font-mono font-black text-[10px] shrink-0 ${
                                       isGold ? 'bg-amber-400 text-amber-950 ring-1 ring-amber-300' :
                                       isSilver ? 'bg-slate-300 text-slate-900' :
@@ -2160,30 +2156,35 @@ export default function LeagueHistoryView({
                                     }`}>
                                       {isGold ? '🥇' : isSilver ? '🥈' : isBronze ? '🥉' : i + 1}
                                     </span>
-                                    <TeamAvatar team={{ owner: rec.owner }} size="xs" />
-                                    <div className="min-w-0">
-                                      <div className="font-black text-gray-900 flex items-center gap-1 text-[11px] truncate">
-                                        <span className="truncate">{rec.owner}</span>
-                                        <span className="text-gray-400 font-normal shrink-0">({rec.year})</span>
-                                        {rec.place === 1 && <span className="text-amber-500 text-[10px] shrink-0">👑</span>}
+                                    <div className="min-w-0 flex items-center gap-1.5 flex-wrap sm:flex-nowrap">
+                                      <div className="font-black text-gray-900 text-xs sm:text-sm whitespace-nowrap flex items-center gap-1">
+                                        <span>{rec.owner}</span>
+                                        <span className="text-gray-400 font-normal font-mono text-xs">({rec.year})</span>
+                                        {rec.place === 1 && <span className="text-amber-500 text-xs">👑</span>}
                                       </div>
-                                      <div className="text-[10px] text-gray-500 truncate max-w-[120px] sm:max-w-[150px]">
-                                        {rec.teamName}
+                                      <div className="text-[11px] text-gray-400 truncate max-w-[140px] sm:max-w-[220px] hidden sm:inline">
+                                        • {rec.teamName}
                                       </div>
                                     </div>
                                   </div>
 
-                                  <div className="text-right font-mono shrink-0 pl-2">
-                                    <div className="font-black text-emerald-700 text-xs sm:text-sm">
-                                      +{rec.pctVsAvg.toFixed(1)}%
+                                  <div className="flex items-center gap-2.5 shrink-0 pl-2">
+                                    <div className="text-right">
+                                      <div className="text-[11px] text-gray-700 font-mono font-bold">
+                                        {formatRawStat(cat.key, rec.rawVal)}
+                                        <span className="text-gray-400 font-normal font-sans ml-1">(avg: {formatMeanStat(cat.key, rec.seasonMean)})</span>
+                                      </div>
+                                      <div className="text-[10px] font-mono text-gray-400">
+                                        {rec.rotoPoints} pts
+                                      </div>
                                     </div>
-                                    <div className="text-[10px] text-gray-600 font-bold">
-                                      {formatRawStat(cat.key, rec.rawVal)}
-                                      <span className="text-gray-400 font-normal font-sans ml-1">(avg: {formatMeanStat(cat.key, rec.seasonMean)})</span>
-                                    </div>
-                                    <div className="text-[9px] text-gray-400">
-                                      {rec.rotoPoints} pts
-                                    </div>
+                                    <span
+                                      className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md text-[11px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200/80 shrink-0 font-mono"
+                                      title={`Season average in ${rec.year}: ${formatMeanStat(cat.key, rec.seasonMean)}`}
+                                    >
+                                      <span>▲</span>
+                                      <span>+{rec.pctVsAvg.toFixed(1)}%</span>
+                                    </span>
                                   </div>
                                 </div>
                               );
@@ -2194,7 +2195,7 @@ export default function LeagueHistoryView({
 
                       {/* WORST % BELOW AVG */}
                       {showLows && (
-                        <div className={`space-y-2 ${twoCols ? 'pt-3 md:pt-0 md:pl-4' : ''}`}>
+                        <div className={`space-y-2 ${twoCols ? 'pt-4 lg:pt-0 lg:pl-6' : ''}`}>
                           <div className="flex items-center justify-between px-1">
                             <span className="text-xs font-black text-rose-800 flex items-center gap-1.5">
                               <span>⚠️</span>
@@ -2207,35 +2208,40 @@ export default function LeagueHistoryView({
                             {lows.map((rec, i) => (
                               <div
                                 key={`rel-low-${cat.key}-${rec.year}-${rec.owner}-${i}`}
-                                className="py-2 px-1.5 flex items-center justify-between hover:bg-rose-50/50 rounded-xl transition"
+                                className="py-2.5 px-2 flex items-center justify-between hover:bg-rose-50/50 rounded-xl transition gap-3"
                               >
-                                <div className="flex items-center gap-2 min-w-0">
+                                <div className="flex items-center gap-2.5 min-w-0">
                                   <span className="w-5 h-5 rounded-lg flex items-center justify-center font-mono font-black text-[10px] shrink-0 bg-rose-100 text-rose-900 font-bold">
                                     {i + 1}
                                   </span>
-                                  <TeamAvatar team={{ owner: rec.owner }} size="xs" />
-                                  <div className="min-w-0">
-                                    <div className="font-black text-gray-900 flex items-center gap-1 text-[11px] truncate">
-                                      <span className="truncate">{rec.owner}</span>
-                                      <span className="text-gray-400 font-normal shrink-0">({rec.year})</span>
+                                  <div className="min-w-0 flex items-center gap-1.5 flex-wrap sm:flex-nowrap">
+                                    <div className="font-black text-gray-900 text-xs sm:text-sm whitespace-nowrap flex items-center gap-1">
+                                      <span>{rec.owner}</span>
+                                      <span className="text-gray-400 font-normal font-mono text-xs">({rec.year})</span>
                                     </div>
-                                    <div className="text-[10px] text-gray-500 truncate max-w-[120px] sm:max-w-[150px]">
-                                      {rec.teamName}
+                                    <div className="text-[11px] text-gray-400 truncate max-w-[140px] sm:max-w-[220px] hidden sm:inline">
+                                      • {rec.teamName}
                                     </div>
                                   </div>
                                 </div>
 
-                                <div className="text-right font-mono shrink-0 pl-2">
-                                  <div className="font-black text-rose-700 text-xs sm:text-sm">
-                                    {rec.pctVsAvg.toFixed(1)}%
+                                <div className="flex items-center gap-2.5 shrink-0 pl-2">
+                                  <div className="text-right">
+                                    <div className="text-[11px] text-gray-700 font-mono font-bold">
+                                      {formatRawStat(cat.key, rec.rawVal)}
+                                      <span className="text-gray-400 font-normal font-sans ml-1">(avg: {formatMeanStat(cat.key, rec.seasonMean)})</span>
+                                    </div>
+                                    <div className="text-[10px] font-mono text-gray-400">
+                                      {rec.rotoPoints} pts
+                                    </div>
                                   </div>
-                                  <div className="text-[10px] text-gray-600 font-bold">
-                                    {formatRawStat(cat.key, rec.rawVal)}
-                                    <span className="text-gray-400 font-normal font-sans ml-1">(avg: {formatMeanStat(cat.key, rec.seasonMean)})</span>
-                                  </div>
-                                  <div className="text-[9px] text-gray-400">
-                                    {rec.rotoPoints} pts
-                                  </div>
+                                  <span
+                                    className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md text-[11px] font-black bg-rose-50 text-rose-700 border border-rose-200/80 shrink-0 font-mono"
+                                    title={`Season average in ${rec.year}: ${formatMeanStat(cat.key, rec.seasonMean)}`}
+                                  >
+                                    <span>▼</span>
+                                    <span>{rec.pctVsAvg.toFixed(1)}%</span>
+                                  </span>
                                 </div>
                               </div>
                             ))}
@@ -2249,7 +2255,7 @@ export default function LeagueHistoryView({
 
               return (
                 <>
-                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 gap-6">
                     {displayedStatCategories.map(cat => renderRelativeDominanceCard(cat, LEGACY_CATEGORIES.some(l => l.key === cat.key)))}
                   </div>
 
@@ -2268,7 +2274,7 @@ export default function LeagueHistoryView({
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                      <div className="grid grid-cols-1 gap-6">
                         {LEGACY_CATEGORIES.map(cat => renderRelativeDominanceCard(cat, true))}
                       </div>
                     </div>
@@ -2302,7 +2308,6 @@ export default function LeagueHistoryView({
                         <div>
                           <div className="flex items-center gap-2">
                             <h3 className="text-base font-black text-gray-900">{cat.name}</h3>
-                            <span className="font-mono text-xs font-bold text-gray-500">({cat.label})</span>
                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
                               isLegacy
                                 ? 'bg-purple-100 text-purple-800'
@@ -2330,7 +2335,7 @@ export default function LeagueHistoryView({
                     </div>
 
                     {/* Columns: 1st vs 2nd Leads and Last vs 2nd-Last Deficits */}
-                    <div className={`grid grid-cols-1 ${twoCols ? 'md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-100' : ''} gap-4`}>
+                    <div className={`grid grid-cols-1 ${twoCols ? 'lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-gray-100' : ''} gap-4`}>
                       {/* 1st vs 2nd Leads */}
                       {showLeads && (
                         <div className="space-y-2">
@@ -2346,34 +2351,34 @@ export default function LeagueHistoryView({
                             {gaps12.map((m, i) => (
                               <div
                                 key={`gap12-${cat.key}-${m.year}-${i}`}
-                                className="py-2.5 px-1.5 flex items-center justify-between hover:bg-amber-50/50 rounded-xl transition"
+                                className="py-2.5 px-2 flex items-center justify-between hover:bg-amber-50/50 rounded-xl transition gap-3"
                               >
-                                <div className="min-w-0 pr-2">
-                                  <div className="flex items-center gap-1.5">
-                                    <span className="font-mono font-black text-xs text-gray-900 bg-gray-100 px-1.5 py-0.5 rounded">
-                                      {m.year}
-                                    </span>
-                                    <span className="font-black text-emerald-800 flex items-center gap-1 text-[11px] truncate">
+                                <div className="min-w-0 flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                                  <span className="font-mono font-black text-xs text-gray-900 bg-gray-100 px-1.5 py-0.5 rounded shrink-0">
+                                    {m.year}
+                                  </span>
+                                  <div className="min-w-0">
+                                    <div className="font-black text-emerald-800 text-xs sm:text-sm whitespace-nowrap flex items-center gap-1">
                                       <span>1st: {m.first.owner}</span>
-                                      <span className="font-mono font-bold text-emerald-700">({formatRawStat(cat.key, m.first.rawVal)})</span>
-                                    </span>
-                                  </div>
-                                  <div className="text-[10px] text-gray-500 flex items-center gap-1 mt-0.5">
-                                    <span>vs 2nd:</span>
-                                    <span className="font-bold text-gray-700">{m.second.owner}</span>
-                                    <span className="font-mono">({formatRawStat(cat.key, m.second.rawVal)})</span>
+                                      <span className="font-mono font-bold text-emerald-700 text-xs">({formatRawStat(cat.key, m.first.rawVal)})</span>
+                                    </div>
+                                    <div className="text-[11px] text-gray-500 whitespace-nowrap flex items-center gap-1 mt-0.5">
+                                      <span>vs 2nd:</span>
+                                      <span className="font-bold text-gray-700">{m.second.owner}</span>
+                                      <span className="font-mono text-gray-500">({formatRawStat(cat.key, m.second.rawVal)})</span>
+                                    </div>
                                   </div>
                                 </div>
 
-                                <div className="text-right font-mono shrink-0">
-                                  <div className="font-black text-amber-700 text-xs sm:text-sm">
-                                    +{formatDiffStat(cat.key, m.gap12)} {cat.label}
+                                <div className="flex items-center gap-2.5 shrink-0 pl-2">
+                                  <div className="text-right font-mono">
+                                    <div className="font-black text-amber-800 text-xs sm:text-sm">
+                                      +{formatDiffStat(cat.key, m.gap12)}
+                                    </div>
                                   </div>
-                                  <div className="mt-0.5">
-                                    <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
-                                      +{m.pctGap12.toFixed(1)}% lead
-                                    </span>
-                                  </div>
+                                  <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md text-[11px] font-black bg-amber-50 text-amber-800 border border-amber-300 shrink-0 font-mono">
+                                    +{m.pctGap12.toFixed(1)}% lead
+                                  </span>
                                 </div>
                               </div>
                             ))}
@@ -2383,7 +2388,7 @@ export default function LeagueHistoryView({
 
                       {/* Last vs 2nd-Last Deficits */}
                       {showDeficits && (
-                        <div className={`space-y-2 ${twoCols ? 'pt-3 md:pt-0 md:pl-4' : ''}`}>
+                        <div className={`space-y-2 ${twoCols ? 'pt-4 lg:pt-0 lg:pl-6' : ''}`}>
                           <div className="flex items-center justify-between px-1">
                             <span className="text-xs font-black text-rose-800 flex items-center gap-1.5">
                               <span>⚠️</span>
@@ -2396,34 +2401,34 @@ export default function LeagueHistoryView({
                             {gapsLast.map((m, i) => (
                               <div
                                 key={`gaplast-${cat.key}-${m.year}-${i}`}
-                                className="py-2.5 px-1.5 flex items-center justify-between hover:bg-rose-50/50 rounded-xl transition"
+                                className="py-2.5 px-2 flex items-center justify-between hover:bg-rose-50/50 rounded-xl transition gap-3"
                               >
-                                <div className="min-w-0 pr-2">
-                                  <div className="flex items-center gap-1.5">
-                                    <span className="font-mono font-black text-xs text-gray-900 bg-gray-100 px-1.5 py-0.5 rounded">
-                                      {m.year}
-                                    </span>
-                                    <span className="font-black text-rose-800 flex items-center gap-1 text-[11px] truncate">
+                                <div className="min-w-0 flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                                  <span className="font-mono font-black text-xs text-gray-900 bg-gray-100 px-1.5 py-0.5 rounded shrink-0">
+                                    {m.year}
+                                  </span>
+                                  <div className="min-w-0">
+                                    <div className="font-black text-rose-800 text-xs sm:text-sm whitespace-nowrap flex items-center gap-1">
                                       <span>Last: {m.last.owner}</span>
-                                      <span className="font-mono font-bold text-rose-700">({formatRawStat(cat.key, m.last.rawVal)})</span>
-                                    </span>
-                                  </div>
-                                  <div className="text-[10px] text-gray-500 flex items-center gap-1 mt-0.5">
-                                    <span>behind 2nd-last:</span>
-                                    <span className="font-bold text-gray-700">{m.secondLast.owner}</span>
-                                    <span className="font-mono">({formatRawStat(cat.key, m.secondLast.rawVal)})</span>
+                                      <span className="font-mono font-bold text-rose-700 text-xs">({formatRawStat(cat.key, m.last.rawVal)})</span>
+                                    </div>
+                                    <div className="text-[11px] text-gray-500 whitespace-nowrap flex items-center gap-1 mt-0.5">
+                                      <span>behind 2nd-last:</span>
+                                      <span className="font-bold text-gray-700">{m.secondLast.owner}</span>
+                                      <span className="font-mono text-gray-500">({formatRawStat(cat.key, m.secondLast.rawVal)})</span>
+                                    </div>
                                   </div>
                                 </div>
 
-                                <div className="text-right font-mono shrink-0">
-                                  <div className="font-black text-rose-700 text-xs sm:text-sm">
-                                    -{formatDiffStat(cat.key, m.gapLast)} {cat.label}
+                                <div className="flex items-center gap-2.5 shrink-0 pl-2">
+                                  <div className="text-right font-mono">
+                                    <div className="font-black text-rose-800 text-xs sm:text-sm">
+                                      -{formatDiffStat(cat.key, m.gapLast)}
+                                    </div>
                                   </div>
-                                  <div className="mt-0.5">
-                                    <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-rose-100 text-rose-900 border border-rose-300">
-                                      -{m.pctGapLast.toFixed(1)}% deficit
-                                    </span>
-                                  </div>
+                                  <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md text-[11px] font-black bg-rose-50 text-rose-800 border border-rose-300 shrink-0 font-mono">
+                                    -{m.pctGapLast.toFixed(1)}% deficit
+                                  </span>
                                 </div>
                               </div>
                             ))}
@@ -2465,9 +2470,9 @@ export default function LeagueHistoryView({
                               return (
                                 <div
                                   key={`overall-gap12-${m.year}-${m.catKey}-${idx}`}
-                                  className="py-2.5 flex items-center justify-between hover:bg-amber-100/40 rounded-xl px-2 transition"
+                                  className="py-2.5 flex items-center justify-between hover:bg-amber-100/40 rounded-xl px-2 transition gap-3"
                                 >
-                                  <div className="flex items-center gap-2 min-w-0 pr-2">
+                                  <div className="flex items-center gap-2.5 min-w-0 pr-2">
                                     <span className={`w-5 h-5 rounded-lg flex items-center justify-center font-mono font-black text-[10px] shrink-0 ${
                                       isGold ? 'bg-amber-400 text-amber-950 ring-1 ring-amber-300' :
                                       isSilver ? 'bg-slate-300 text-slate-900' :
@@ -2478,17 +2483,17 @@ export default function LeagueHistoryView({
                                     </span>
                                     <div className="min-w-0">
                                       <div className="flex items-center gap-1.5 flex-wrap">
-                                        <span className="font-black text-gray-900 text-[11px] flex items-center gap-1">
+                                        <span className="font-black text-gray-900 text-[11px] flex items-center gap-1 whitespace-nowrap">
                                           <span>{CAT_ICONS[m.catKey]}</span>
-                                          <span>{m.cat.label}</span>
+                                          <span>{m.cat.name}</span>
                                           <span className="text-gray-500 font-mono font-normal">('{String(m.year).slice(2)})</span>
                                         </span>
                                         <span className="text-gray-300">•</span>
-                                        <span className="font-bold text-emerald-800 text-[11px] truncate">
+                                        <span className="font-bold text-emerald-800 text-[11px] whitespace-nowrap">
                                           1st: {m.first.owner} <span className="font-mono text-emerald-700">({formatRawStat(m.catKey, m.first.rawVal)})</span>
                                         </span>
                                       </div>
-                                      <div className="text-[10px] text-gray-500 flex items-center gap-1 mt-0.5">
+                                      <div className="text-[10px] text-gray-500 flex items-center gap-1 mt-0.5 whitespace-nowrap">
                                         <span>vs 2nd:</span>
                                         <span className="font-semibold text-gray-700">{m.second.owner}</span>
                                         <span className="font-mono">({formatRawStat(m.catKey, m.second.rawVal)})</span>
@@ -2496,15 +2501,15 @@ export default function LeagueHistoryView({
                                     </div>
                                   </div>
 
-                                  <div className="text-right font-mono shrink-0 pl-2">
-                                    <div className="font-black text-amber-800 text-xs sm:text-sm">
-                                      +{formatDiffStat(m.catKey, m.gap12)} {m.cat.label}
+                                  <div className="flex items-center gap-2.5 shrink-0 pl-2">
+                                    <div className="text-right font-mono">
+                                      <div className="font-black text-amber-800 text-xs sm:text-sm">
+                                        +{formatDiffStat(m.catKey, m.gap12)}
+                                      </div>
                                     </div>
-                                    <div className="mt-0.5">
-                                      <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
-                                        +{m.pctGap12.toFixed(1)}% lead
-                                      </span>
-                                    </div>
+                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 font-mono shrink-0">
+                                      +{m.pctGap12.toFixed(1)}% lead
+                                    </span>
                                   </div>
                                 </div>
                               );
@@ -2533,25 +2538,25 @@ export default function LeagueHistoryView({
                             {highlightsData.topOverallLastGaps?.map((m, idx) => (
                               <div
                                 key={`overall-gaplast-${m.year}-${m.catKey}-${idx}`}
-                                className="py-2.5 flex items-center justify-between hover:bg-rose-100/40 rounded-xl px-2 transition"
+                                className="py-2.5 flex items-center justify-between hover:bg-rose-100/40 rounded-xl px-2 transition gap-3"
                               >
-                                <div className="flex items-center gap-2 min-w-0 pr-2">
+                                <div className="flex items-center gap-2.5 min-w-0 pr-2">
                                   <span className="w-5 h-5 rounded-lg flex items-center justify-center font-mono font-black text-[10px] shrink-0 bg-rose-100 text-rose-900 font-bold">
                                     {idx + 1}
                                   </span>
                                   <div className="min-w-0">
                                     <div className="flex items-center gap-1.5 flex-wrap">
-                                      <span className="font-black text-gray-900 text-[11px] flex items-center gap-1">
+                                      <span className="font-black text-gray-900 text-[11px] flex items-center gap-1 whitespace-nowrap">
                                         <span>{CAT_ICONS[m.catKey]}</span>
-                                        <span>{m.cat.label}</span>
+                                        <span>{m.cat.name}</span>
                                         <span className="text-gray-500 font-mono font-normal">('{String(m.year).slice(2)})</span>
                                       </span>
                                       <span className="text-gray-300">•</span>
-                                      <span className="font-bold text-rose-800 text-[11px] truncate">
+                                      <span className="font-bold text-rose-800 text-[11px] whitespace-nowrap">
                                         Last: {m.last.owner} <span className="font-mono text-rose-700">({formatRawStat(m.catKey, m.last.rawVal)})</span>
                                       </span>
                                     </div>
-                                    <div className="text-[10px] text-gray-500 flex items-center gap-1 mt-0.5">
+                                    <div className="text-[10px] text-gray-500 flex items-center gap-1 mt-0.5 whitespace-nowrap">
                                       <span>behind 2nd-last:</span>
                                       <span className="font-semibold text-gray-700">{m.secondLast.owner}</span>
                                       <span className="font-mono">({formatRawStat(m.catKey, m.secondLast.rawVal)})</span>
@@ -2559,15 +2564,15 @@ export default function LeagueHistoryView({
                                   </div>
                                 </div>
 
-                                <div className="text-right font-mono shrink-0 pl-2">
-                                  <div className="font-black text-rose-800 text-xs sm:text-sm">
-                                    -{formatDiffStat(m.catKey, m.gapLast)} {m.cat.label}
+                                <div className="flex items-center gap-2.5 shrink-0 pl-2">
+                                  <div className="text-right font-mono">
+                                    <div className="font-black text-rose-800 text-xs sm:text-sm">
+                                      -{formatDiffStat(m.catKey, m.gapLast)}
+                                    </div>
                                   </div>
-                                  <div className="mt-0.5">
-                                    <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-rose-100 text-rose-900 border border-rose-300">
-                                      -{m.pctGapLast.toFixed(1)}% deficit
-                                    </span>
-                                  </div>
+                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-900 border border-rose-300 font-mono shrink-0">
+                                    -{m.pctGapLast.toFixed(1)}% deficit
+                                  </span>
                                 </div>
                               </div>
                             ))}
@@ -2585,7 +2590,7 @@ export default function LeagueHistoryView({
                       </div>
                     )}
 
-                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 gap-6">
                       {displayedStatCategories.map(cat => renderCategoryMarginsCard(cat, LEGACY_CATEGORIES.some(l => l.key === cat.key)))}
                     </div>
 
@@ -2604,7 +2609,7 @@ export default function LeagueHistoryView({
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 gap-6">
                           {LEGACY_CATEGORIES.map(cat => renderCategoryMarginsCard(cat, true))}
                         </div>
                       </div>
