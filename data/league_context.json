@@ -4,7 +4,7 @@
   "season_year": 2026,
   "scoring_format": "10-Category Head-to-Head Each Category / Points (R, HR, RBI, OBP, SB | K, QS, SV+HD, ERA, WHIP)",
   "last_updated_scoring_period": 177,
-  "last_updated_timestamp": "2026-09-18T04:37:36.717229Z",
+  "last_updated_timestamp": "2026-09-18T09:34:05.945710Z",
   "current_week": 24,
   "season_structure": {
     "phase_1": {
@@ -3832,7 +3832,7 @@
         "category_breakdown": {
           "R": {
             "winner": "Tim",
-            "val_a": 35,
+            "val_a": 36,
             "val_b": 22
           },
           "HR": {
@@ -3890,15 +3890,15 @@
           "OBP": 0.2709,
           "SB": 5,
           "K": 64,
-          "QS": 3,
+          "QS": 5,
           "SV_HD": 1,
-          "ERA": 2.31,
+          "ERA": 2.45,
           "WHIP": 1.16,
           "raw_IP": 62.33333333333333,
           "raw_AB": 179.0,
           "raw_H": 33.0,
           "raw_BB": 21.0,
-          "raw_ER": 16.0
+          "raw_ER": 17.0
         },
         "8": {
           "R": 20,
