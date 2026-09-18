@@ -3,8 +3,8 @@
   "league_name": "2026 Head to Head Heftystrong",
   "season_year": 2026,
   "scoring_format": "10-Category Head-to-Head Each Category / Points (R, HR, RBI, OBP, SB | K, QS, SV+HD, ERA, WHIP)",
-  "last_updated_scoring_period": 177,
-  "last_updated_timestamp": "2026-09-18T18:13:45.717578Z",
+  "last_updated_scoring_period": 178,
+  "last_updated_timestamp": "2026-09-18T21:34:37.491102Z",
   "current_week": 24,
   "season_structure": {
     "phase_1": {
@@ -3928,7 +3928,7 @@
           "SV_HD": 4,
           "ERA": 3.95,
           "WHIP": 1.68,
-          "raw_IP": 13.666666666666666,
+          "raw_IP": 13.666666666666664,
           "raw_AB": 170.0,
           "raw_H": 41.0,
           "raw_BB": 21.0,
