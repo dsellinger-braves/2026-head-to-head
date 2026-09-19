@@ -99,7 +99,7 @@ At the conclusion of Week 23 (September 13, 2026), all 23 regular season weeks w
 > **⚡ LIVE Playoff Semi-Finals Status (Week 24)**  
 > *Scored Head-to-Head across all 10 categories (First to 6 wins; ties award 0.5).*
 > - **Semi-Final A**: **#1 Dan** (6) vs **#4 Adrian** (4) — **Leader: Dan** (0 tied categories)
-> - **Semi-Final B**: **#2 Tim** (5) vs **#3 Will** (5) — **Leader: TIED** (0 tied categories)
+> - **Semi-Final B**: **#2 Tim** (6) vs **#3 Will** (4) — **Leader: Tim** (0 tied categories)
 
 - **Semi-Final A**: **#1 Dan (The Silver Bullets)** vs **#4 Adrian (D0ng Demolishers)**  
   *Matchup Dynamics*: Volume streaming vs pristine rotation ratios. Dan leads the league in K, QS, and SV+HD; Adrian counters with the league's #1 ERA (3.46) led by Chris Sale and Michael Wacha.
