@@ -4,7 +4,7 @@
   "season_year": 2026,
   "scoring_format": "10-Category Head-to-Head Each Category / Points (R, HR, RBI, OBP, SB | K, QS, SV+HD, ERA, WHIP)",
   "last_updated_scoring_period": 180,
-  "last_updated_timestamp": "2026-09-21T04:18:50.007686Z",
+  "last_updated_timestamp": "2026-09-21T10:34:38.668646Z",
   "current_week": 24,
   "season_structure": {
     "phase_1": {
@@ -917,20 +917,20 @@
           "ip": 151.7
         },
         {
-          "name": "Jhoan Duran",
-          "k": 77,
-          "qs": 0,
-          "sv_hd": 32,
-          "era": 1.63,
-          "ip": 55.3
-        },
-        {
           "name": "Raisel Iglesias",
           "k": 61,
           "qs": 0,
           "sv_hd": 34,
           "era": 2.64,
           "ip": 58.0
+        },
+        {
+          "name": "Jhoan Duran",
+          "k": 77,
+          "qs": 0,
+          "sv_hd": 32,
+          "era": 1.63,
+          "ip": 55.3
         },
         {
           "name": "Tyler Rogers",
