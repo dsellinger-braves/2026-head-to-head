@@ -4,7 +4,7 @@
   "season_year": 2026,
   "scoring_format": "10-Category Head-to-Head Each Category / Points (R, HR, RBI, OBP, SB | K, QS, SV+HD, ERA, WHIP)",
   "last_updated_scoring_period": 181,
-  "last_updated_timestamp": "2026-09-21T20:58:04.666514Z",
+  "last_updated_timestamp": "2026-09-22T00:00:20.283303Z",
   "current_week": 25,
   "season_structure": {
     "phase_1": {
@@ -407,7 +407,15 @@
           "rbi": 99,
           "r": 90,
           "sb": 33,
-          "obp": 0.336
+          "obp": 0.335
+        },
+        {
+          "name": "Pete Alonso",
+          "hr": 39,
+          "rbi": 106,
+          "r": 93,
+          "sb": 5,
+          "obp": 0.359
         },
         {
           "name": "Fernando Tatis Jr.",
@@ -416,14 +424,6 @@
           "r": 94,
           "sb": 36,
           "obp": 0.355
-        },
-        {
-          "name": "Pete Alonso",
-          "hr": 38,
-          "rbi": 105,
-          "r": 92,
-          "sb": 5,
-          "obp": 0.358
         },
         {
           "name": "Yordan Alvarez",
@@ -713,7 +713,7 @@
           "rbi": 76,
           "r": 103,
           "sb": 21,
-          "obp": 0.39
+          "obp": 0.388
         },
         {
           "name": "Kazuma Okamoto",
@@ -721,7 +721,7 @@
           "rbi": 89,
           "r": 79,
           "sb": 1,
-          "obp": 0.31
+          "obp": 0.311
         },
         {
           "name": "Alex Bregman",
@@ -1334,7 +1334,7 @@
           "rbi": 65,
           "r": 51,
           "sb": 12,
-          "obp": 0.292
+          "obp": 0.29
         }
       ],
       "top_pitchers": [
@@ -3665,7 +3665,7 @@
       },
       "second_place": {
         "owner": "Tim",
-        "points": 69.5
+        "points": 70.0
       },
       "fourth_place_cutline": {
         "owner": "Adrian",
@@ -3682,7 +3682,7 @@
           "rank": 2,
           "owner": "Tim",
           "team_name": "Anti-lock Brake Systems",
-          "points": 69.5
+          "points": 70.0
         },
         {
           "rank": 3,
@@ -3718,7 +3718,7 @@
           "rank": 8,
           "owner": "Preston",
           "team_name": "Maikels Secret Stuff",
-          "points": 33.5
+          "points": 33.0
         },
         {
           "rank": 9,
@@ -4054,7 +4054,7 @@
           "team_id": 5,
           "owner": "Dan",
           "seed": 1,
-          "score": 0
+          "score": 6
         },
         "away": {
           "team_id": 2,
@@ -4062,12 +4062,12 @@
           "seed": 4,
           "score": 0
         },
-        "ties": 10,
-        "leader": "TIED",
+        "ties": 4,
+        "leader": "Dan",
         "category_breakdown": {
           "R": {
-            "winner": "TIE",
-            "val_a": 0,
+            "winner": "Dan",
+            "val_a": 2,
             "val_b": 0
           },
           "HR": {
@@ -4076,14 +4076,14 @@
             "val_b": 0
           },
           "RBI": {
-            "winner": "TIE",
-            "val_a": 0,
+            "winner": "Dan",
+            "val_a": 1,
             "val_b": 0
           },
           "OBP": {
-            "winner": "TIE",
-            "val_a": 0.0,
-            "val_b": 0.0
+            "winner": "Dan",
+            "val_a": 0.4545,
+            "val_b": 0.2
           },
           "SB": {
             "winner": "TIE",
@@ -4091,8 +4091,8 @@
             "val_b": 0
           },
           "K": {
-            "winner": "TIE",
-            "val_a": 0,
+            "winner": "Dan",
+            "val_a": 3,
             "val_b": 0
           },
           "QS": {
@@ -4106,13 +4106,13 @@
             "val_b": 0
           },
           "ERA": {
-            "winner": "TIE",
-            "val_a": 99.0,
+            "winner": "Dan",
+            "val_a": 0.0,
             "val_b": 99.0
           },
           "WHIP": {
-            "winner": "TIE",
-            "val_a": 99.0,
+            "winner": "Dan",
+            "val_a": 1.0,
             "val_b": 99.0
           }
         }
@@ -4122,36 +4122,36 @@
           "team_id": 1,
           "owner": "Tim",
           "seed": 2,
-          "score": 0
+          "score": 5
         },
         "away": {
           "team_id": 12,
           "owner": "Will",
           "seed": 3,
-          "score": 0
+          "score": 1
         },
-        "ties": 10,
-        "leader": "TIED",
+        "ties": 4,
+        "leader": "Tim",
         "category_breakdown": {
           "R": {
-            "winner": "TIE",
-            "val_a": 0,
+            "winner": "Tim",
+            "val_a": 3,
             "val_b": 0
           },
           "HR": {
-            "winner": "TIE",
-            "val_a": 0,
+            "winner": "Tim",
+            "val_a": 1,
             "val_b": 0
           },
           "RBI": {
             "winner": "TIE",
-            "val_a": 0,
-            "val_b": 0
+            "val_a": 1,
+            "val_b": 1
           },
           "OBP": {
-            "winner": "TIE",
-            "val_a": 0.0,
-            "val_b": 0.0
+            "winner": "Will",
+            "val_a": 0.4286,
+            "val_b": 1.0
           },
           "SB": {
             "winner": "TIE",
@@ -4159,8 +4159,8 @@
             "val_b": 0
           },
           "K": {
-            "winner": "TIE",
-            "val_a": 0,
+            "winner": "Tim",
+            "val_a": 3,
             "val_b": 0
           },
           "QS": {
@@ -4174,14 +4174,14 @@
             "val_b": 0
           },
           "ERA": {
-            "winner": "TIE",
-            "val_a": 99.0,
-            "val_b": 99.0
+            "winner": "Tim",
+            "val_a": 0.0,
+            "val_b": 13.5
           },
           "WHIP": {
-            "winner": "TIE",
-            "val_a": 99.0,
-            "val_b": 99.0
+            "winner": "Tim",
+            "val_a": 1.0,
+            "val_b": 2.5
           }
         }
       },
@@ -4190,18 +4190,18 @@
           "R": 0,
           "HR": 0,
           "RBI": 0,
-          "OBP": 0.0,
+          "OBP": 0.3333,
           "SB": 0,
-          "K": 0,
+          "K": 2,
           "QS": 0,
           "SV_HD": 0,
-          "ERA": 99.0,
-          "WHIP": 99.0,
-          "raw_IP": 0.0,
-          "raw_AB": 0.0,
+          "ERA": 9.0,
+          "WHIP": 1.0,
+          "raw_IP": 1.0,
+          "raw_AB": 2.0,
           "raw_H": 0.0,
-          "raw_BB": 0.0,
-          "raw_ER": 0.0
+          "raw_BB": 1.0,
+          "raw_ER": 1.0
         },
         "8": {
           "R": 0,
@@ -4258,7 +4258,7 @@
           "R": 0,
           "HR": 0,
           "RBI": 0,
-          "OBP": 0.0,
+          "OBP": 0.3333,
           "SB": 0,
           "K": 0,
           "QS": 0,
@@ -4266,9 +4266,9 @@
           "ERA": 99.0,
           "WHIP": 99.0,
           "raw_IP": 0.0,
-          "raw_AB": 0.0,
-          "raw_H": 0.0,
-          "raw_BB": 0.0,
+          "raw_AB": 5.0,
+          "raw_H": 1.0,
+          "raw_BB": 1.0,
           "raw_ER": 0.0
         }
       }
