@@ -4,6 +4,7 @@ import { aggregateStats, SCORING_CATS, MINUTIAE_STATS, getStatMeta, calculateRot
 import TeamAvatar from '../components/TeamAvatar';
 import RotoGapView from './RotoGapView';
 import BenchStatsView from './BenchStatsView';
+import PlayerImpactSimulatorView from './PlayerImpactSimulatorView';
 
 const STAT_COLS = ['PA', 'R', 'HR', 'RBI', 'SB', 'OBP', 'IP', 'K', 'QS', 'QS_PCT', 'SV+HDs', 'ERA', 'WHIP'];
 
@@ -118,10 +119,10 @@ function SortIcon({ col, sortKey, sortDir }) {
   );
 }
 
-export default function TeamsView({ allStats, onOwnerClick, onPlayerClick, selectedSeason = 2026 }) {
+export default function TeamsView({ allStats, onOwnerClick, onPlayerClick, selectedSeason = 2026, initialViewMode = 'raw', initialTeamId = 5 }) {
   const [sortKey, setSortKey] = useState('R');
   const [sortDir, setSortDir] = useState('desc');
-  const [viewMode, setViewMode] = useState('raw'); // 'raw', 'roto', 'minutiae', 'gap'
+  const [viewMode, setViewMode] = useState(initialViewMode); // 'raw', 'roto', 'minutiae', 'bench', 'gap', 'simulator'
 
   const teamRows = useMemo(() => {
     const groups = {};
@@ -226,6 +227,12 @@ export default function TeamsView({ allStats, onOwnerClick, onPlayerClick, selec
           >
             🎯 Roto Gap & Pace
           </button>
+          <button
+            onClick={() => handleViewModeChange('simulator')}
+            className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${viewMode === 'simulator' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+          >
+            🧪 What-If Simulator
+          </button>
         </div>
       </div>
 
@@ -238,6 +245,14 @@ export default function TeamsView({ allStats, onOwnerClick, onPlayerClick, selec
         />
       ) : viewMode === 'gap' ? (
         <RotoGapView allStats={allStats} selectedSeason={selectedSeason} onOwnerClick={onOwnerClick} />
+      ) : viewMode === 'simulator' ? (
+        <PlayerImpactSimulatorView
+          allStats={allStats}
+          selectedSeason={selectedSeason}
+          initialTeamId={initialTeamId}
+          onOwnerClick={onOwnerClick}
+          onPlayerClick={onPlayerClick}
+        />
       ) : (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
           <table className="min-w-full text-sm">

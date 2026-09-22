@@ -64,6 +64,14 @@ const HASH_TO_VIEW = {
   roto: 'teams',
   teams: 'teams',
   'teams/roto': 'teams',
+  'teams/what-if': 'teams',
+  'what-if': 'teams',
+  'teams/simulator': 'teams',
+  'teams/bench': 'teams',
+  'teams/gap': 'teams',
+  'teams/minutiae': 'teams',
+  'player-simulator': 'teams',
+  'impact-simulator': 'teams',
   rosters: 'rosters',
   roster: 'rosters',
   lineups: 'rosters',
@@ -153,14 +161,15 @@ function getViewFromHash() {
 }
 
 function getSubTabsFromHash() {
-  if (typeof window === 'undefined') return { keepersSubTab: 'matrix', draftSubTab: 'board' };
+  if (typeof window === 'undefined') return { keepersSubTab: 'matrix', draftSubTab: 'board', teamsSubTab: 'raw' };
   const rawHash = window.location.hash || '';
   const hash = rawHash.replace(/^#\/?/, '').trim().toLowerCase();
   let keepersSubTab = 'matrix';
   let draftSubTab = 'board';
+  let teamsSubTab = 'raw';
 
-  if (hash.includes('rosters')) keepersSubTab = 'rosters';
-  else if (hash.includes('comp') || hash.includes('simulator')) keepersSubTab = 'simulator';
+  if (hash.includes('rosters') && !hash.includes('teams')) keepersSubTab = 'rosters';
+  else if (hash.includes('comp') || (hash.includes('simulator') && hash.includes('keepers'))) keepersSubTab = 'simulator';
   else if (hash.includes('planner')) keepersSubTab = 'planner';
   else if (hash.includes('prices') || hash.includes('matrix')) keepersSubTab = 'matrix';
 
@@ -168,7 +177,13 @@ function getSubTabsFromHash() {
   else if (hash.includes('ledgers')) draftSubTab = 'ledgers';
   else if (hash.includes('traded') || hash.includes('board')) draftSubTab = 'board';
 
-  return { keepersSubTab, draftSubTab };
+  if (hash.includes('what-if') || hash.includes('teams/simulator') || hash.includes('impact') || hash === 'simulator' || hash === 'what-if') teamsSubTab = 'simulator';
+  else if (hash.includes('bench')) teamsSubTab = 'bench';
+  else if (hash.includes('gap')) teamsSubTab = 'gap';
+  else if (hash.includes('minutiae')) teamsSubTab = 'minutiae';
+  else if (hash.includes('roto')) teamsSubTab = 'roto';
+
+  return { keepersSubTab, draftSubTab, teamsSubTab };
 }
 
 function App() {
@@ -177,6 +192,7 @@ function App() {
   const [currentView, setCurrentView] = useState(getViewFromHash);
   const [keepersSubTab, setKeepersSubTab] = useState(() => getSubTabsFromHash().keepersSubTab);
   const [draftSubTab, setDraftSubTab] = useState(() => getSubTabsFromHash().draftSubTab);
+  const [teamsSubTab, setTeamsSubTab] = useState(() => getSubTabsFromHash().teamsSubTab);
   const [openDropdown, setOpenDropdown] = useState(null); // 'teams' | 'players' | 'keepers' | 'draft' | null
 
   const [rawData, setRawData] = useState([]);
@@ -222,6 +238,13 @@ function App() {
       else slug = 'draft/traded-board';
     } else if (currentView === 'drafthistory') {
       slug = 'draft/history';
+    } else if (currentView === 'teams') {
+      if (teamsSubTab === 'simulator') slug = 'teams/what-if';
+      else if (teamsSubTab === 'bench') slug = 'teams/bench';
+      else if (teamsSubTab === 'gap') slug = 'teams/gap';
+      else if (teamsSubTab === 'minutiae') slug = 'teams/minutiae';
+      else if (teamsSubTab === 'roto') slug = 'teams/roto';
+      else slug = 'teams';
     }
 
     const targetHash = `#/${slug}`;
@@ -229,7 +252,7 @@ function App() {
       window.location.hash = targetHash;
     }
     setActiveGroup(OFFSEASON_VIEWS.has(currentView) ? 'offseason' : 'season');
-  }, [currentView, keepersSubTab, draftSubTab]);
+  }, [currentView, keepersSubTab, draftSubTab, teamsSubTab]);
 
   const handleGroupChange = (group) => {
     setActiveGroup(group);
@@ -246,10 +269,11 @@ function App() {
   useEffect(() => {
     const handleHashChange = () => {
       const newView = getViewFromHash();
-      const { keepersSubTab: kTab, draftSubTab: dTab } = getSubTabsFromHash();
+      const { keepersSubTab: kTab, draftSubTab: dTab, teamsSubTab: tTab } = getSubTabsFromHash();
       setCurrentView((prev) => (prev !== newView ? newView : prev));
       setKeepersSubTab(kTab);
       setDraftSubTab(dTab);
+      setTeamsSubTab(tTab);
     };
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
@@ -1304,6 +1328,7 @@ function App() {
                     if (subTab) {
                       if (view === 'keepers') setKeepersSubTab(subTab);
                       if (view === 'capital') setDraftSubTab(subTab);
+                      if (view === 'teams') setTeamsSubTab(subTab);
                     }
                     setCurrentView(view);
                   }}
@@ -1327,6 +1352,7 @@ function App() {
                 <TeamsView
                   allStats={rawData}
                   selectedSeason={selectedSeason}
+                  initialViewMode={teamsSubTab}
                   onOwnerClick={(team) => setSelectedOwner(team)}
                   onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
                 />
