@@ -846,13 +846,21 @@ export default function OwnerLandingView({
             )}
           </div>
 
-          <div className="mt-6 pt-4 border-t border-slate-800/80">
+          <div className="mt-6 pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row gap-2">
             <button
               type="button"
-              onClick={() => onNavigate && onNavigate('teams')}
-              className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs transition cursor-pointer shadow-md flex items-center justify-center gap-2"
+              onClick={() => onNavigate && onNavigate('teams', 'gap')}
+              className="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs transition cursor-pointer shadow-md flex items-center justify-center gap-2"
             >
               <span>View Roto Gap Analysis & Pace Targets</span>
+              <span>➔</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onNavigate && onNavigate('teams', 'simulator')}
+              className="py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs transition cursor-pointer shadow-md flex items-center justify-center gap-2"
+            >
+              <span>🧪 What-If Simulator</span>
               <span>➔</span>
             </button>
           </div>
