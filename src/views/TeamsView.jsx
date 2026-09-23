@@ -9,6 +9,8 @@ import OptimalLineupSimulatorView from './OptimalLineupSimulatorView';
 
 const STAT_COLS = ['PA', 'R', 'HR', 'RBI', 'SB', 'OBP', 'IP', 'K', 'QS', 'QS_PCT', 'SV+HDs', 'ERA', 'WHIP'];
 
+const ROTO_COLS = ['R', 'HR', 'RBI', 'SB', 'OBP', 'K', 'QS', 'SV+HDs', 'ERA', 'WHIP'];
+
 const MINUTIAE_COLS = [
   // Hitting
   'AB', 'H', '2B', '3B', 'BB', 'SO', 'HBP', 'CS', 'SB_PCT', 'E', 'AVG', 'SLG', 'OPS',
@@ -121,13 +123,20 @@ function SortIcon({ col, sortKey, sortDir }) {
 }
 
 export default function TeamsView({ allStats, onOwnerClick, onPlayerClick, selectedSeason = 2026, initialViewMode = 'raw', initialTeamId = 5 }) {
-  const [sortKey, setSortKey] = useState('R');
+  const [sortKey, setSortKey] = useState(initialViewMode === 'roto' ? 'total' : 'R');
   const [sortDir, setSortDir] = useState('desc');
   const [viewMode, setViewMode] = useState(initialViewMode); // 'raw', 'roto', 'minutiae', 'bench', 'gap', 'simulator', 'best-lineup'
   const [prevInitial, setPrevInitial] = useState(initialViewMode);
   if (initialViewMode !== prevInitial) {
     setPrevInitial(initialViewMode);
     setViewMode(initialViewMode);
+    if (initialViewMode === 'roto') {
+      setSortKey('total');
+      setSortDir('desc');
+    } else if (initialViewMode === 'raw') {
+      setSortKey('R');
+      setSortDir('desc');
+    }
   }
 
   const teamRows = useMemo(() => {
@@ -150,33 +159,44 @@ export default function TeamsView({ allStats, onOwnerClick, onPlayerClick, selec
     return Object.entries(teamStatsMap).map(([id, stats]) => ({
       ...TEAMS[id],
       stats,
-      rotoPoints: rotoPointsMap[id]
+      rotoPoints: rotoPointsMap[id] || { total: 0 }
     }));
   }, [allStats]);
 
-  const activeCols = viewMode === 'minutiae' ? MINUTIAE_COLS : STAT_COLS;
+  const activeCols = viewMode === 'minutiae' ? MINUTIAE_COLS : (viewMode === 'roto' ? ROTO_COLS : STAT_COLS);
 
   const sorted = useMemo(() => {
     return [...teamRows].sort((a, b) => {
-      const dataA = viewMode === 'roto' && SCORING_CATS[sortKey] ? a.rotoPoints : a.stats;
-      const dataB = viewMode === 'roto' && SCORING_CATS[sortKey] ? b.rotoPoints : b.stats;
-      const valA = dataA[`${sortKey}_raw`] !== undefined ? dataA[`${sortKey}_raw`] : dataA[sortKey];
-      const valB = dataB[`${sortKey}_raw`] !== undefined ? dataB[`${sortKey}_raw`] : dataB[sortKey];
-      
-      const va = parseFloat(valA) || 0;
-      const vb = parseFloat(valB) || 0;
-      
-      const isLow = getStatMeta(sortKey)?.type === 'low';
-      const cmp = isLow ? va - vb : vb - va;
-      return sortDir === 'desc' ? cmp : -cmp;
+      let va = 0;
+      let vb = 0;
+
+      if (sortKey === 'total' || sortKey === 'roto' || sortKey === 'totalRoto' || sortKey === 'rotoPoints') {
+        va = parseFloat(a.rotoPoints?.total) || 0;
+        vb = parseFloat(b.rotoPoints?.total) || 0;
+      } else if (viewMode === 'roto') {
+        va = parseFloat(a.rotoPoints?.[sortKey]) || 0;
+        vb = parseFloat(b.rotoPoints?.[sortKey]) || 0;
+      } else {
+        const valA = a.stats?.[`${sortKey}_raw`] !== undefined ? a.stats[`${sortKey}_raw`] : a.stats?.[sortKey];
+        const valB = b.stats?.[`${sortKey}_raw`] !== undefined ? b.stats[`${sortKey}_raw`] : b.stats?.[sortKey];
+        va = parseFloat(valA) || 0;
+        vb = parseFloat(valB) || 0;
+      }
+
+      if (Math.abs(va - vb) < 0.00001) {
+        return (a.name || '').localeCompare(b.name || '');
+      }
+
+      return sortDir === 'desc' ? vb - va : va - vb;
     });
   }, [teamRows, sortKey, sortDir, viewMode]);
 
   const handleSort = (col) => {
-    if (sortKey === col) setSortDir(d => d === 'desc' ? 'asc' : 'desc');
-    else {
+    if (sortKey === col) {
+      setSortDir(d => d === 'desc' ? 'asc' : 'desc');
+    } else {
       setSortKey(col);
-      const isLow = getStatMeta(col)?.type === 'low';
+      const isLow = (viewMode !== 'roto' && col !== 'total' && col !== 'roto' && col !== 'totalRoto' && col !== 'rotoPoints') && getStatMeta(col)?.type === 'low';
       setSortDir(isLow ? 'asc' : 'desc');
     }
   };
@@ -296,15 +316,15 @@ export default function TeamsView({ allStats, onOwnerClick, onPlayerClick, selec
                     </th>
                   );
                 })}
-                {viewMode === 'roto' && (
+                {(viewMode === 'roto' || viewMode === 'raw') && (
                   <th 
                     onClick={() => handleSort('total')}
                     className={`px-3 py-3 text-center text-xs font-bold uppercase tracking-wider cursor-pointer select-none hover:bg-blue-50 transition-colors whitespace-nowrap
-                      ${sortKey === 'total' ? 'text-blue-600 bg-blue-50' : 'text-gray-500'}`}
+                      ${sortKey === 'total' || sortKey === 'roto' ? 'text-blue-600 bg-blue-50' : 'text-gray-500'}`}
                     title="Total Rotisserie Points (Higher is better)"
                   >
                     Total Roto
-                    <SortIcon col="total" sortKey={sortKey} sortDir={sortDir} />
+                    <SortIcon col={sortKey === 'roto' ? 'roto' : 'total'} sortKey={sortKey} sortDir={sortDir} />
                   </th>
                 )}
               </tr>
@@ -336,12 +356,12 @@ export default function TeamsView({ allStats, onOwnerClick, onPlayerClick, selec
                         {viewMode === 'roto' ? (rowData[col] === undefined ? '-' : (rowData[col] % 1 === 0 ? rowData[col] : rowData[col].toFixed(1))) : formatStat(rowData, col)}
                       </td>
                     ))}
-                    {viewMode === 'roto' && (
+                    {(viewMode === 'roto' || viewMode === 'raw') && (
                       <td 
-                        title={`Total Rotisserie Points: ${rowData.total % 1 === 0 ? rowData.total : rowData.total.toFixed(1)}`}
-                        className={`px-3 py-3 text-center font-mono text-sm font-black whitespace-nowrap ${sortKey === 'total' ? 'text-blue-700 bg-blue-50/50' : 'text-blue-900'}`}
+                        title={`Total Rotisserie Points: ${team.rotoPoints?.total !== undefined ? (team.rotoPoints.total % 1 === 0 ? team.rotoPoints.total : team.rotoPoints.total.toFixed(1)) : '-'}`}
+                        className={`px-3 py-3 text-center font-mono text-sm font-black whitespace-nowrap ${sortKey === 'total' || sortKey === 'roto' ? 'text-blue-700 bg-blue-50/50' : 'text-blue-900'}`}
                       >
-                        {rowData.total % 1 === 0 ? rowData.total : rowData.total.toFixed(1)}
+                        {team.rotoPoints?.total !== undefined ? (team.rotoPoints.total % 1 === 0 ? team.rotoPoints.total : team.rotoPoints.total.toFixed(1)) : '-'}
                       </td>
                     )}
                   </tr>
