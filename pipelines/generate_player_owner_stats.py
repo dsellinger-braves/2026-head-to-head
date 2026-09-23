@@ -3,52 +3,57 @@
 pipelines/generate_player_owner_stats.py
 
 Flattens daily fantasy player records across all available seasons (2018–2026)
-into pre-aggregated player-owner-season rows.
+into comprehensive, 100% complete player-owner-season rows:
+- 2018, 2019, 2021, 2022, 2023, 2024, 2025: Scraped directly from ESPN API daily rosters
+- 2020: ESPN 2020 official season totals from leagueHistory mRoster
+- 2026: Active 2026 season stats from Supabase player_daily_stats
 
 Outputs:
 1. Local static bundle: src/data/playerOwnerSeasonStats.json
-2. (Optional/Target) Supabase table: player_owner_season_stats
+2. Cached daily raw records: src/data/espn_daily_cache/{year}.json
 """
 
 import os
 import json
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from collections import defaultdict
 from dotenv import load_dotenv
+import requests
 
 load_dotenv()
+
+LEAGUE_ID = 130215
 
 # Active Supabase config
 DEFAULT_SUPABASE_URL = "https://wczdkcdqgtzlsbssogoz.supabase.co"
 DEFAULT_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjemRrY2RxZ3R6bHNic3NvZ296Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NzQxMjQsImV4cCI6MjA4NTA1MDEyNH0.wOwQg2oRj5Z_XWtpjvprr0moAiA-ZvCXfVfu_0rrw44"
 
-raw_url = os.environ.get("VITE_SUPABASE_URL") or os.environ.get("SUPABASE_URL")
-if not raw_url or "your-project" in raw_url:
-    SUPABASE_URL = DEFAULT_SUPABASE_URL
-else:
-    SUPABASE_URL = raw_url
-
 SUPABASE_URL = DEFAULT_SUPABASE_URL
 SUPABASE_KEY = DEFAULT_SUPABASE_ANON_KEY
 
-LEAGUE_ID = 130215
+# ESPN API Credentials
+ESPN_S2 = os.environ.get("ESPN_S2") or "AEB3MyffcIwOXwNtqVObEhOa954aWtHmClqry8K2zUkWBQqqva0%2BudusV55Y%2BzlZlmzXa7GTyF55Rw1UGwVP0P%2FF1UXzCtYm8rhXig91IEYBSArPgPVcX680OkEfJ%2Bhmd5CcPGxhsMV2c27OT29gVY%2BX4ddWyyBpwxMSZztk%2BM9vltTUGlYx1G3oz5%2BFjTDTeywbm7ESpQ0ZBulFtRQI52G9uIILPNcnPiBTewHBLSeVhmbRMdgtzf4DyQI7ondV0Vry5ABZr6wmPu8KRS8HNjZ1O8Sqkn8mmZI4oMtkc4RbK3Hp%2BIcMsFM%2FY5m1wk2ngQE%3D"
+ESPN_SWID = os.environ.get("ESPN_SWID") or "{81698BB0-C05B-433A-8364-E2D2278F134D}"
 
-# Owner name mappings
-TEAM_OWNERS = {
-    1: "Tim",
-    2: "Adrian",
-    3: "Garrett",
-    5: "Dan",
-    6: "Anil",
-    7: "Patrick",
-    8: "Alex",
-    9: "Owens",
-    10: "Joe",
-    11: "Michael",
-    12: "Will",
-    13: "Mark",
-    14: "Preston",
-    99: "Ghost"
+COOKIES = {
+    'espn_s2': ESPN_S2,
+    'SWID': ESPN_SWID
+}
+HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+    'Accept': 'application/json'
+}
+
+# Final scoring periods for historical seasons
+FINAL_SPS = {
+    2018: 186,
+    2019: 194,
+    2021: 186,
+    2022: 182,
+    2023: 186,
+    2024: 195,
+    2025: 195
 }
 
 # Lineup slot mappings
@@ -64,69 +69,188 @@ PRIMARY_POS_SLOTS = {
     5: 'OF', 11: 'DH', 14: 'SP', 15: 'RP'
 }
 
-
-def get_supabase_client():
-    from supabase import create_client
-    return create_client(SUPABASE_URL, SUPABASE_KEY)
+HITTING_SLOT_IDS  = {0, 1, 2, 3, 4, 5, 6, 7, 11, 12, 19}
+PITCHING_SLOT_IDS = {13, 14, 15}
 
 
-HIST_COLS = 'id, team_id, fullName, lineupSlotID, "0", "1", "3", "4", "5", "8", "10", "12", "13", "16", "20", "21", "23", "24", "27", "33", "34", "37", "39", "44", "45", "48", "53", "54", "57", "60", "63"'
-DAILY_COLS = 'player_id, team_id, full_name, lineup_slot_id, stats'
+def get_owner_name(year, team_id):
+    """Accurate canonical owner name mapping by season."""
+    if team_id == 1: return "Tim"
+    if team_id == 2: return "Adrian"
+    if team_id == 3: return "Garrett"
+    if team_id == 5: return "Dan"
+    if team_id == 6: return "Anil"
+    if team_id == 7: return "Anurag"
+    if team_id == 8: return "Alex"
+    if team_id == 9: return "Joe"
+    if team_id == 10: return "Andrew"
+    if team_id == 11:
+        if year >= 2025: return "Patrick"
+        if year == 2024: return "Ghost"
+        return "Michael"
+    if team_id == 12: return "Will"
+    if team_id == 13: return "Mark"
+    if team_id == 14: return "Preston"
+    if team_id == 99: return "Ghost"
+    return f"Team {team_id}"
 
-def fetch_all_daily_records_for_year(supabase, year):
-    """Fetch all daily records for a given season from historical_data or player_daily_stats."""
-    is_historical = (year < 2026)
-    table_name = 'historical_data' if is_historical else 'player_daily_stats'
-    select_cols = HIST_COLS if is_historical else DAILY_COLS
+
+CACHE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src", "data", "espn_daily_cache")
+os.makedirs(CACHE_DIR, exist_ok=True)
+
+
+def fetch_espn_sp(year, sp):
+    """Fetch all rosters and daily stats for one scoring period."""
+    url = f"https://lm-api-reads.fantasy.espn.com/apis/v3/games/flb/seasons/{year}/segments/0/leagues/{LEAGUE_ID}?scoringPeriodId={sp}&view=mRoster"
+    try:
+        r = requests.get(url, headers=HEADERS, cookies=COOKIES, timeout=15)
+        if r.status_code == 200:
+            return sp, r.json()
+    except Exception as e:
+        print(f"[{year}] Error SP {sp}: {e}")
+    return sp, None
+
+
+def fetch_season_from_espn(year):
+    """Fetch complete daily records for a season from ESPN API (or local cache)."""
+    cache_file = os.path.join(CACHE_DIR, f"{year}.json")
+    if os.path.exists(cache_file):
+        print(f"[{year}] Loading from cache: {cache_file}")
+        with open(cache_file, "r") as f:
+            return json.load(f)
+
+    final_sp = FINAL_SPS.get(year, 185)
+    print(f"[{year}] Fetching {final_sp} scoring periods from ESPN API...")
+    t0 = time.time()
     
-    print(f"[{year}] Querying {table_name}...")
-    page_size = 1000
-    all_rows = []
-    
-    # Get total count first
-    query = supabase.table(table_name).select('id' if not is_historical else 'season_year', count='exact', head=True)
-    if is_historical:
-        query = query.eq('league_id', LEAGUE_ID).eq('season_year', year)
-    else:
-        query = query.eq('league_id', LEAGUE_ID)
-    
-    res = query.execute()
-    total_count = res.count or 0
-    print(f"[{year}] Total records to fetch: {total_count}")
-    
-    if total_count == 0:
-        return []
+    daily_rows = []
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        futures = {executor.submit(fetch_espn_sp, year, sp): sp for sp in range(1, final_sp + 1)}
+        done_count = 0
+        for future in as_completed(futures):
+            sp, data = future.result()
+            if data and 'teams' in data:
+                for t in data['teams']:
+                    team_id = t.get('id')
+                    entries = (t.get('roster') or {}).get('entries') or []
+                    for e in entries:
+                        if not e:
+                            continue
+                        slot_id = e.get('lineupSlotId')
+                        pool_entry = e.get('playerPoolEntry') or {}
+                        p = pool_entry.get('player') or {}
+                        pid = p.get('id')
+                        if not pid:
+                            continue
+                        pname = p.get('fullName', 'Unknown')
+                        
+                        # Find stats for this day
+                        day_stats = {}
+                        for s in (p.get('stats') or []):
+                            if s and s.get('scoringPeriodId') == sp and s.get('statSplitTypeId') == 5:
+                                day_stats = s.get('stats') or {}
+                                break
+                                
+                        daily_rows.append({
+                            'season_year': year,
+                            'scoring_period_id': sp,
+                            'team_id': team_id,
+                            'player_id': pid,
+                            'full_name': pname,
+                            'lineup_slot_id': slot_id,
+                            'stats': day_stats
+                        })
+            done_count += 1
+            if done_count % 30 == 0 or done_count == final_sp:
+                print(f"[{year}] Progress: {done_count}/{final_sp} SPs ({time.time() - t0:.1f}s)")
 
-    # Fetch in pages
-    pages = (total_count + page_size - 1) // page_size
-    for p in range(pages):
-        start = p * page_size
-        end = start + page_size - 1
-        q = supabase.table(table_name).select(select_cols).range(start, end)
-        if is_historical:
-            q = q.eq('league_id', LEAGUE_ID).eq('season_year', year)
-        else:
-            q = q.eq('league_id', LEAGUE_ID)
+    print(f"[{year}] Scraped {len(daily_rows)} player-day records in {time.time() - t0:.1f}s. Saving to cache...")
+    with open(cache_file, "w") as f:
+        json.dump(daily_rows, f)
         
-        page_res = q.execute()
-        if page_res.data:
-            all_rows.extend(page_res.data)
-        if (p + 1) % 5 == 0 or p == pages - 1:
-            print(f"[{year}] Fetched {len(all_rows)} / {total_count} rows...")
+    return daily_rows
+
+
+def fetch_2020_season():
+    """Fetch 2020 season totals from ESPN leagueHistory mRoster."""
+    cache_file = os.path.join(CACHE_DIR, "2020.json")
+    if os.path.exists(cache_file):
+        print("[2020] Loading from cache...")
+        with open(cache_file, "r") as f:
+            return json.load(f)
+
+    print("[2020] Fetching season totals from ESPN leagueHistory...")
+    url = f"https://lm-api-reads.fantasy.espn.com/apis/v3/games/flb/leagueHistory/{LEAGUE_ID}?seasonId=2020&view=mRoster&view=mTeam"
+    r = requests.get(url, headers=HEADERS, cookies=COOKIES, timeout=15)
+    data = r.json()[0]
+    
+    rows = []
+    for t in (data.get('teams') or []):
+        team_id = t.get('id')
+        entries = (t.get('roster') or {}).get('entries') or []
+        for e in entries:
+            if not e:
+                continue
+            slot_id = e.get('lineupSlotId')
+            pool_entry = e.get('playerPoolEntry') or {}
+            p = pool_entry.get('player') or {}
+            pid = p.get('id')
+            if not pid:
+                continue
+            pname = p.get('fullName', 'Unknown')
             
+            season_stats = {}
+            for s in (p.get('stats') or []):
+                if s and s.get('statSplitTypeId') == 0 and s.get('seasonId') == 2020:
+                    season_stats = s.get('stats') or {}
+                    break
+                    
+            rows.append({
+                'season_year': 2020,
+                'team_id': team_id,
+                'player_id': pid,
+                'full_name': pname,
+                'lineup_slot_id': slot_id if slot_id is not None else 12,
+                'stats': season_stats
+            })
+            
+    print(f"[2020] Captured {len(rows)} player season totals. Saving cache...")
+    with open(cache_file, "w") as f:
+        json.dump(rows, f)
+        
+    return rows
+
+
+def fetch_2026_supabase():
+    """Fetch complete 2026 daily records from Supabase player_daily_stats."""
+    from supabase import create_client
+    sb = create_client(SUPABASE_URL, SUPABASE_KEY)
+    
+    print("[2026] Fetching daily stats from Supabase...")
+    all_rows = []
+    page_size = 1000
+    page = 0
+    while True:
+        res = sb.table('player_daily_stats').select('player_id, team_id, full_name, lineup_slot_id, stats').eq('league_id', LEAGUE_ID).range(page * page_size, (page + 1) * page_size - 1).execute()
+        if not res.data:
+            break
+        all_rows.extend(res.data)
+        page += 1
+        if page % 10 == 0:
+            print(f"[2026] Fetched {len(all_rows)} rows...")
+            
+    print(f"[2026] Fetched total {len(all_rows)} rows from Supabase.")
     return all_rows
 
 
-def aggregate_season_data(records, year):
-    """Aggregate raw daily rows into player-owner rows for a single season."""
-    is_historical = (year < 2026)
+def aggregate_season(records, year):
+    """Aggregate daily records for a season into player-owner rows."""
     groups = defaultdict(lambda: {
         'player_id': None,
         'player_name': '',
         'team_id': None,
         'owner_name': '',
         'season_year': year,
-        'positions_set': set(),
         'pos_counts': defaultdict(int),
         'days_active': 0,
         'days_bench': 0,
@@ -145,21 +269,13 @@ def aggregate_season_data(records, year):
         'is_batter': False,
     })
 
+    is_2020 = (year == 2020)
+
     for row in records:
-        if is_historical:
-            player_id = row.get('id')
-            player_name = row.get('fullName') or ''
-            team_id = row.get('team_id')
-            slot_id = row.get('lineupSlotID')
-            try:
-                slot_id = int(slot_id) if slot_id is not None else None
-            except:
-                slot_id = None
-        else:
-            player_id = row.get('player_id')
-            player_name = row.get('full_name') or ''
-            team_id = row.get('team_id')
-            slot_id = row.get('lineup_slot_id')
+        player_id = row.get('player_id')
+        player_name = row.get('full_name') or row.get('fullName') or ''
+        team_id = row.get('team_id')
+        slot_id = row.get('lineup_slot_id') if 'lineup_slot_id' in row else row.get('lineupSlotID')
 
         if not player_id or not team_id:
             continue
@@ -168,7 +284,7 @@ def aggregate_season_data(records, year):
         g = groups[key]
         g['player_id'] = player_id
         g['team_id'] = team_id
-        g['owner_name'] = TEAM_OWNERS.get(team_id, f"Team {team_id}")
+        g['owner_name'] = get_owner_name(year, team_id)
         if player_name and len(player_name) > len(g['player_name']):
             g['player_name'] = player_name
 
@@ -176,101 +292,71 @@ def aggregate_season_data(records, year):
         is_il = (slot_id == 17)
         is_active = (slot_id is not None and not is_bench and not is_il)
 
-        g['days_total'] += 1
-        if is_active:
-            g['days_active'] += 1
-            if slot_id in PRIMARY_POS_SLOTS:
-                g['pos_counts'][PRIMARY_POS_SLOTS[slot_id]] += 1
-            elif slot_id in SLOT_NAMES:
-                g['pos_counts'][SLOT_NAMES[slot_id]] += 1
-        elif is_bench:
-            g['days_bench'] += 1
-        elif is_il:
-            g['days_il'] += 1
-
         # Extract stats
-        if is_historical:
-            def get_hist_stat(col_id):
-                v = row.get(str(col_id))
-                try:
-                    return float(v) if v is not None and v != '' else 0.0
-                except:
-                    return 0.0
+        s = row.get('stats') or {}
+        def get_stat(name, col_id):
+            v = s.get(name) if name in s else s.get(str(col_id))
+            try:
+                return float(v) if v is not None and v != '' else 0.0
+            except:
+                return 0.0
 
-            pa = get_hist_stat(16)
-            ab = get_hist_stat(0)
-            h = get_hist_stat(1)
-            r = get_hist_stat(20)
-            hr = get_hist_stat(5)
-            rbi = get_hist_stat(21)
-            sb = get_hist_stat(23)
-            bb = get_hist_stat(10)
-            so = get_hist_stat(27)
-            d2 = get_hist_stat(3)
-            d3 = get_hist_stat(4)
-            tb = get_hist_stat(8)
-            hbp = get_hist_stat(12)
-            sf = get_hist_stat(13)
-            cs = get_hist_stat(24)
+        pa = get_stat('PA', 16)
+        ab = get_stat('AB', 0)
+        h = get_stat('H', 1)
+        r = get_stat('R', 20)
+        hr = get_stat('HR', 5)
+        rbi = get_stat('RBI', 21)
+        sb = get_stat('SB', 23)
+        bb = get_stat('BB', 10)
+        so = get_stat('SO', 27)
+        d2 = get_stat('2B', 3)
+        d3 = get_stat('3B', 4)
+        tb = get_stat('TB', 8)
+        hbp = get_stat('HBP', 12)
+        sf = get_stat('SF', 13)
+        cs = get_stat('CS', 24)
 
-            raw_ip = get_hist_stat(34) # outs
-            gs = get_hist_stat(33)
-            k = get_hist_stat(48)
-            qs = get_hist_stat(63)
-            w = get_hist_stat(53)
-            l = get_hist_stat(54)
-            sv = get_hist_stat(57)
-            hd = get_hist_stat(60)
-            er = get_hist_stat(45)
-            h_all = get_hist_stat(37)
-            bb_all = get_hist_stat(39)
-            r_all = get_hist_stat(44)
+        raw_ip = get_stat('IP_raw', 34)
+        if raw_ip == 0.0:
+            raw_ip = get_stat('IP', 34)
+        gs = get_stat('GS', 33)
+        k = get_stat('K', 48)
+        qs = get_stat('QS', 63)
+        w = get_stat('W', 53)
+        l = get_stat('L', 54)
+        sv = get_stat('SV', 57)
+        hd = get_stat('HD', 60)
+        er = get_stat('ER', 45)
+        h_all = get_stat('H_Allowed', 37)
+        bb_all = get_stat('BB_Allowed', 39)
+        r_all = get_stat('R_Allowed', 44)
+
+        if is_2020:
+            # 2020 season total entry
+            games_est = int(round(pa / 4.0)) if pa > 0 else (int(round(raw_ip / 3.0)) if raw_ip > 0 else 20)
+            g['days_total'] += max(games_est, 1)
+            g['days_active'] += max(games_est, 1)
+            g['pos_counts']['P' if raw_ip > 0 else 'OF'] += 1
         else:
-            s = row.get('stats') or {}
-            def get_daily_stat(name, col_id):
-                v = s.get(name) or s.get(str(col_id))
-                try:
-                    return float(v) if v is not None and v != '' else 0.0
-                except:
-                    return 0.0
-
-            pa = get_daily_stat('PA', 16)
-            ab = get_daily_stat('AB', 0)
-            h = get_daily_stat('H', 1)
-            r = get_daily_stat('R', 20)
-            hr = get_daily_stat('HR', 5)
-            rbi = get_daily_stat('RBI', 21)
-            sb = get_daily_stat('SB', 23)
-            bb = get_daily_stat('BB', 10)
-            so = get_daily_stat('SO', 27)
-            d2 = get_daily_stat('2B', 3)
-            d3 = get_daily_stat('3B', 4)
-            tb = get_daily_stat('TB', 8)
-            hbp = get_daily_stat('HBP', 12)
-            sf = get_daily_stat('SF', 13)
-            cs = get_daily_stat('CS', 24)
-
-            raw_ip = get_daily_stat('IP_raw', 34)
-            if raw_ip == 0.0:
-                raw_ip = get_daily_stat('IP', 34) * 3 if get_daily_stat('IP', 34) < 50 else get_daily_stat('IP', 34)
-            gs = get_daily_stat('GS', 33)
-            k = get_daily_stat('K', 48)
-            qs = get_daily_stat('QS', 63)
-            w = get_daily_stat('W', 53)
-            l = get_daily_stat('L', 54)
-            sv = get_daily_stat('SV', 57)
-            hd = get_daily_stat('HD', 60)
-            er = get_daily_stat('ER', 45)
-            h_all = get_daily_stat('H_Allowed', 37)
-            bb_all = get_daily_stat('BB_Allowed', 39)
-            r_all = get_daily_stat('R_Allowed', 44)
+            g['days_total'] += 1
+            if is_active:
+                g['days_active'] += 1
+                if slot_id in PRIMARY_POS_SLOTS:
+                    g['pos_counts'][PRIMARY_POS_SLOTS[slot_id]] += 1
+                elif slot_id in SLOT_NAMES:
+                    g['pos_counts'][SLOT_NAMES[slot_id]] += 1
+            elif is_bench:
+                g['days_bench'] += 1
+            elif is_il:
+                g['days_il'] += 1
 
         if raw_ip > 0 or k > 0 or er > 0 or qs > 0 or sv > 0 or hd > 0 or gs > 0:
             g['is_pitcher'] = True
         if pa > 0 or ab > 0 or h > 0 or r > 0 or hr > 0 or rbi > 0 or sb > 0:
             g['is_batter'] = True
 
-        if is_active:
+        if is_active or is_2020:
             g['pa'] += int(pa)
             g['ab'] += int(ab)
             g['h'] += int(h)
@@ -382,53 +468,64 @@ def aggregate_season_data(records, year):
     return final_rows
 
 
+def calculate_fantasy_points(rows):
+    """Compute league standard roto-composite points for valuation."""
+    for r in rows:
+        pts = 0.0
+        if r['is_batter']:
+            pts += r['r'] * 1.0
+            pts += r['hr'] * 4.0
+            pts += r['rbi'] * 1.0
+            pts += r['sb'] * 2.0
+            pts += r['bb'] * 0.5
+            pts += (r['h'] - r['hr'] - r['d2'] - r['d3']) * 0.5
+            pts += r['d2'] * 1.5
+            pts += r['d3'] * 2.5
+        if r['is_pitcher']:
+            pts += (r['ip_outs'] / 3.0) * 1.0
+            pts += r['k'] * 1.0
+            pts += r['qs'] * 3.0
+            pts += r['w'] * 2.0
+            pts += r['sv'] * 4.0
+            pts += r['hd'] * 2.5
+            pts -= r['er'] * 1.5
+            pts -= r['bb_allowed'] * 0.5
+        r['fantasy_points'] = round(pts, 1)
+
+
 def main():
     start_time = time.time()
-    print("=== Starting Player-Owner Flattening Pipeline ===")
-    supabase = get_supabase_client()
+    print("=== Starting Complete ESPN Historical Player-Owner Scrape (2018–2026) ===")
+    all_season_rows = []
 
-    all_seasons_data = []
+    # 1. Historical Scrapes (2018, 2019, 2021, 2022, 2023, 2024, 2025)
+    for year in [2018, 2019, 2021, 2022, 2023, 2024, 2025]:
+        daily_records = fetch_season_from_espn(year)
+        season_rows = aggregate_season(daily_records, year)
+        print(f"[{year}] Aggregated {len(season_rows)} player-owner records.")
+        all_season_rows.extend(season_rows)
 
-    # Available seasons: 2018 through 2026
-    seasons = list(range(2018, 2027))
-    for year in seasons:
-        try:
-            records = fetch_all_daily_records_for_year(supabase, year)
-            if not records:
-                print(f"[{year}] No records found. Skipping.")
-                continue
-            season_rows = aggregate_season_data(records, year)
-            print(f"[{year}] Successfully aggregated {len(season_rows)} player-owner-season rows.")
-            all_seasons_data.extend(season_rows)
-        except Exception as e:
-            print(f"[{year}] Error processing season: {e}")
+    # 2. 2020 Season (ESPN Season Totals)
+    records_2020 = fetch_2020_season()
+    rows_2020 = aggregate_season(records_2020, 2020)
+    print(f"[2020] Aggregated {len(rows_2020)} player-owner records.")
+    all_season_rows.extend(rows_2020)
 
-    print(f"\nTotal aggregated records across all seasons: {len(all_seasons_data)}")
+    # 3. 2026 Season (Supabase player_daily_stats)
+    records_2026 = fetch_2026_supabase()
+    rows_2026 = aggregate_season(records_2026, 2026)
+    print(f"[2026] Aggregated {len(rows_2026)} player-owner records.")
+    all_season_rows.extend(rows_2026)
 
-    # Save to local pre-bundled JSON
-    out_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src", "data", "playerOwnerSeasonStats.json")
-    os.makedirs(os.path.dirname(out_path), exist_ok=True)
-    with open(out_path, "w") as f:
-        json.dump(all_seasons_data, f, indent=2)
-    print(f"✅ Saved pre-bundled JSON to: {out_path} ({os.path.getsize(out_path) / 1024:.1f} KB)")
+    # 4. Calculate Fantasy Points
+    calculate_fantasy_points(all_season_rows)
 
-    # Attempt to upload to Supabase table player_owner_season_stats
-    try:
-        print("\nAttempting to upsert into Supabase table 'player_owner_season_stats'...")
-        # Check if table exists
-        test_q = supabase.table('player_owner_season_stats').select('id').limit(1).execute()
-        print("Table 'player_owner_season_stats' exists. Upserting in batches...")
-        batch_size = 500
-        for i in range(0, len(all_seasons_data), batch_size):
-            batch = all_seasons_data[i:i + batch_size]
-            supabase.table('player_owner_season_stats').upsert(batch, on_conflict='league_id,season_year,team_id,player_id').execute()
-            print(f"Upserted {min(i + batch_size, len(all_seasons_data))} / {len(all_seasons_data)} rows...")
-        print("✅ Successfully updated Supabase table 'player_owner_season_stats'.")
-    except Exception as e:
-        print(f"ℹ️ Note: Supabase direct upsert skipped ({e}). Pre-bundled JSON is active and fully functional for frontend.")
-
-    elapsed = time.time() - start_time
-    print(f"\n🎉 Pipeline complete in {elapsed:.1f}s!")
+    # 5. Save static JSON bundle
+    output_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src", "data", "playerOwnerSeasonStats.json")
+    with open(output_path, "w") as f:
+        json.dump(all_season_rows, f, indent=2)
+        
+    print(f"\n🎉 Successfully wrote {len(all_season_rows)} total records to {output_path} in {time.time() - start_time:.1f}s!")
 
 
 if __name__ == "__main__":
