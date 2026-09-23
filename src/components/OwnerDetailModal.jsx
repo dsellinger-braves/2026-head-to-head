@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
-import { SCORING_CATS, aggregateStats } from '../utils/scoring';
+import { SCORING_CATS, getStatMeta, aggregateStats } from '../utils/scoring';
 import TeamAvatar from './TeamAvatar';
 
 export default function OwnerDetailModal({ team, allStats, onClose, onPlayerClick }) {
@@ -55,7 +55,7 @@ export default function OwnerDetailModal({ team, allStats, onClose, onPlayerClic
 
   // Display Config
   const batCats = ['PA', 'R', 'HR', 'RBI', 'SB', 'OBP'];
-  const pitchCats = ['IP', 'QS', 'K', 'SV+HDs', 'ERA', 'WHIP'];
+  const pitchCats = ['IP', 'QS', 'QS_PCT', 'K', 'SV+HDs', 'ERA', 'WHIP'];
   
   const currentList = activeTab === 'batters' ? teamRoster.batters : teamRoster.pitchers;
   const currentCats = activeTab === 'batters' ? batCats : pitchCats;
@@ -68,6 +68,10 @@ export default function OwnerDetailModal({ team, allStats, onClose, onPlayerClic
       const innings = Math.floor(fullStatsObj.IP);
       const outs = Math.round((fullStatsObj.IP - innings) * 3);
       return `${innings}.${outs}`;
+    }
+    if (catKey === 'QS_PCT') {
+      const gs = fullStatsObj.GS || 0;
+      return gs > 0 ? `${parseFloat(val).toFixed(1)}%` : '-';
     }
     if (catKey === 'ERA') {
       const n = parseFloat(val);
@@ -129,8 +133,8 @@ export default function OwnerDetailModal({ team, allStats, onClose, onPlayerClic
               <tr>
                 <th className="p-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100 pl-6">Player</th>
                 {currentCats.map(c => (
-                  <th key={c} className="p-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100 w-24">
-                    {SCORING_CATS[c]?.label || c}
+                  <th key={c} title={getStatMeta(c)?.name || c} className="p-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100 w-24">
+                    {getStatMeta(c)?.label || SCORING_CATS[c]?.label || c}
                   </th>
                 ))}
               </tr>
