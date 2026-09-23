@@ -10,3 +10,4 @@ dist/
 __pycache__/
 *.py[cod]
 graphify-out/cache/
+src/data/espn_daily_cache/
