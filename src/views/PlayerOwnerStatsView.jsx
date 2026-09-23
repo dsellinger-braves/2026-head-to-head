@@ -36,6 +36,57 @@ export default function PlayerOwnerStatsView({
   const [pageSize, setPageSize] = useState(50);
   const [page, setPage] = useState(1);
 
+  const handleTypeFilterChange = (newType) => {
+    setTypeFilter(newType);
+    setPage(1);
+    if (newType === 'PITCHER') {
+      if (['pa', 'r', 'hr', 'rbi', 'sb', 'avg', 'obp', 'ops'].includes(sortKey)) {
+        setSortKey('ip');
+        setSortDir('desc');
+      }
+    } else if (newType === 'BATTER') {
+      if (['ip', 'k', 'qs', 'sv_hd', 'era', 'whip', 'w'].includes(sortKey)) {
+        setSortKey('pa');
+        setSortDir('desc');
+      }
+    }
+  };
+
+  const handlePosFilterChange = (newPos) => {
+    setPosFilter(newPos);
+    setPage(1);
+    if (newPos === 'SP' || newPos === 'RP') {
+      if (['pa', 'r', 'hr', 'rbi', 'sb', 'avg', 'obp', 'ops'].includes(sortKey)) {
+        setSortKey('ip');
+        setSortDir('desc');
+      }
+    } else if (newPos !== 'ALL') {
+      if (['ip', 'k', 'qs', 'sv_hd', 'era', 'whip', 'w'].includes(sortKey)) {
+        setSortKey('pa');
+        setSortDir('desc');
+      }
+    }
+  };
+
+  const hasActiveFilters = selectedSeason !== 'ALL' ||
+    selectedOwner !== 'ALL' ||
+    typeFilter !== 'ALL' ||
+    posFilter !== 'ALL' ||
+    minPA > 0 ||
+    minIP > 0 ||
+    searchQuery.trim() !== '';
+
+  const resetFilters = () => {
+    setSelectedSeason('ALL');
+    setSelectedOwner('ALL');
+    setTypeFilter('ALL');
+    setPosFilter('ALL');
+    setMinPA(0);
+    setMinIP(0);
+    setSearchQuery('');
+    setPage(1);
+  };
+
   // 1. Season-Grain Filtered Records
   const seasonRecords = useMemo(() => {
     return RAW_DATA.filter(r => {
@@ -47,8 +98,24 @@ export default function PlayerOwnerStatsView({
         const pList = (r.positions || '').split(',').map(s => s.trim().toUpperCase());
         if (!pList.includes(posFilter)) return false;
       }
-      if (minPA > 0 && (r.pa || 0) < minPA) return false;
-      if (minIP > 0 && (r.ip || 0) < minIP) return false;
+      
+      // Threshold filters (PA for Batters, IP for Pitchers)
+      if (typeFilter === 'BATTER') {
+        if (minPA > 0 && (r.pa || 0) < minPA) return false;
+      } else if (typeFilter === 'PITCHER') {
+        if (minIP > 0 && (r.ip || 0) < minIP) return false;
+      } else {
+        if (minPA > 0 && minIP > 0) {
+          const qualifiesBatter = r.is_batter && (r.pa || 0) >= minPA;
+          const qualifiesPitcher = r.is_pitcher && (r.ip || 0) >= minIP;
+          if (!qualifiesBatter && !qualifiesPitcher) return false;
+        } else if (minPA > 0) {
+          if ((r.pa || 0) < minPA) return false;
+        } else if (minIP > 0) {
+          if ((r.ip || 0) < minIP) return false;
+        }
+      }
+
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const pName = (r.player_name || '').toLowerCase();
@@ -197,8 +264,24 @@ export default function PlayerOwnerStatsView({
         const pList = (r.positions || '').split(',').map(s => s.trim().toUpperCase());
         if (!pList.includes(posFilter)) return false;
       }
-      if (minPA > 0 && (r.pa || 0) < minPA) return false;
-      if (minIP > 0 && (r.ip || 0) < minIP) return false;
+      
+      // Threshold filters (PA for Batters, IP for Pitchers)
+      if (typeFilter === 'BATTER') {
+        if (minPA > 0 && (r.pa || 0) < minPA) return false;
+      } else if (typeFilter === 'PITCHER') {
+        if (minIP > 0 && (r.ip || 0) < minIP) return false;
+      } else {
+        if (minPA > 0 && minIP > 0) {
+          const qualifiesBatter = r.is_batter && (r.pa || 0) >= minPA;
+          const qualifiesPitcher = r.is_pitcher && (r.ip || 0) >= minIP;
+          if (!qualifiesBatter && !qualifiesPitcher) return false;
+        } else if (minPA > 0) {
+          if ((r.pa || 0) < minPA) return false;
+        } else if (minIP > 0) {
+          if ((r.ip || 0) < minIP) return false;
+        }
+      }
+
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const pName = (r.player_name || '').toLowerCase();
@@ -389,19 +472,19 @@ export default function PlayerOwnerStatsView({
               <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Player Type</label>
               <div className="flex bg-gray-100 p-0.5 rounded-xl">
                 <button
-                  onClick={() => { setTypeFilter('ALL'); setPage(1); }}
+                  onClick={() => handleTypeFilterChange('ALL')}
                   className={`px-3 py-1 text-xs font-bold rounded-lg transition ${typeFilter === 'ALL' ? 'bg-white shadow-xs text-blue-600' : 'text-gray-600'}`}
                 >
                   All
                 </button>
                 <button
-                  onClick={() => { setTypeFilter('BATTER'); setPage(1); }}
+                  onClick={() => handleTypeFilterChange('BATTER')}
                   className={`px-3 py-1 text-xs font-bold rounded-lg transition ${typeFilter === 'BATTER' ? 'bg-white shadow-xs text-blue-600' : 'text-gray-600'}`}
                 >
                   Batters
                 </button>
                 <button
-                  onClick={() => { setTypeFilter('PITCHER'); setPage(1); }}
+                  onClick={() => handleTypeFilterChange('PITCHER')}
                   className={`px-3 py-1 text-xs font-bold rounded-lg transition ${typeFilter === 'PITCHER' ? 'bg-white shadow-xs text-blue-600' : 'text-gray-600'}`}
                 >
                   Pitchers
@@ -414,7 +497,7 @@ export default function PlayerOwnerStatsView({
               <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Position</label>
               <select
                 value={posFilter}
-                onChange={e => { setPosFilter(e.target.value); setPage(1); }}
+                onChange={e => handlePosFilterChange(e.target.value)}
                 className="bg-gray-50 border border-gray-300 rounded-xl px-3 py-1.5 text-xs font-bold text-gray-800 focus:ring-2 focus:ring-blue-500 outline-none"
               >
                 {POSITIONS.map(pos => (
@@ -423,38 +506,80 @@ export default function PlayerOwnerStatsView({
               </select>
             </div>
 
-            {/* Min PA / IP */}
-            <div>
-              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                {typeFilter === 'PITCHER' ? 'Min IP' : 'Min PA'}
-              </label>
-              <select
-                value={typeFilter === 'PITCHER' ? minIP : minPA}
-                onChange={e => {
-                  const val = Number(e.target.value);
-                  if (typeFilter === 'PITCHER') setMinIP(val);
-                  else setMinPA(val);
-                  setPage(1);
-                }}
-                className="bg-gray-50 border border-gray-300 rounded-xl px-3 py-1.5 text-xs font-bold text-gray-800 focus:ring-2 focus:ring-blue-500 outline-none"
-              >
-                {typeFilter === 'PITCHER' ? (
-                  <>
-                    <option value={0}>0+ IP</option>
-                    <option value={20}>20+ IP</option>
-                    <option value={50}>50+ IP</option>
-                    <option value={100}>100+ IP</option>
-                  </>
-                ) : (
-                  <>
-                    <option value={0}>0+ PA</option>
-                    <option value={50}>50+ PA</option>
-                    <option value={200}>200+ PA</option>
-                    <option value={400}>400+ PA</option>
-                  </>
-                )}
-              </select>
-            </div>
+            {/* Min PA Filter for Batters */}
+            {(typeFilter === 'BATTER' || (typeFilter === 'ALL' && (posFilter === 'ALL' || !['SP', 'RP'].includes(posFilter)))) && (
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  {typeFilter === 'ALL' ? 'Min PA (Batters)' : 'Min PA'}
+                </label>
+                <select
+                  value={minPA}
+                  onChange={e => {
+                    setMinPA(Number(e.target.value));
+                    setPage(1);
+                  }}
+                  className="bg-gray-50 border border-gray-300 rounded-xl px-3 py-1.5 text-xs font-bold text-gray-800 focus:ring-2 focus:ring-blue-500 outline-none"
+                >
+                  <option value={0}>All PA (0+)</option>
+                  {viewMode === 'season' ? (
+                    <>
+                      <option value={50}>50+ PA</option>
+                      <option value={100}>100+ PA</option>
+                      <option value={250}>250+ PA</option>
+                      <option value={400}>400+ PA</option>
+                      <option value={550}>550+ PA</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value={100}>100+ PA</option>
+                      <option value={250}>250+ PA</option>
+                      <option value={500}>500+ PA</option>
+                      <option value={1000}>1,000+ PA</option>
+                      <option value={2000}>2,000+ PA</option>
+                    </>
+                  )}
+                </select>
+              </div>
+            )}
+
+            {/* Min IP Filter for Pitchers */}
+            {(typeFilter === 'PITCHER' || (typeFilter === 'ALL' && (posFilter === 'ALL' || ['SP', 'RP'].includes(posFilter)))) && (
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  {typeFilter === 'ALL' ? 'Min IP (Pitchers)' : 'Min IP'}
+                </label>
+                <select
+                  value={minIP}
+                  onChange={e => {
+                    setMinIP(Number(e.target.value));
+                    setPage(1);
+                  }}
+                  className="bg-gray-50 border border-gray-300 rounded-xl px-3 py-1.5 text-xs font-bold text-gray-800 focus:ring-2 focus:ring-blue-500 outline-none"
+                >
+                  <option value={0}>All IP (0+)</option>
+                  {viewMode === 'season' ? (
+                    <>
+                      <option value={10}>10+ IP</option>
+                      <option value={25}>25+ IP</option>
+                      <option value={50}>50+ IP</option>
+                      <option value={75}>75+ IP</option>
+                      <option value={100}>100+ IP</option>
+                      <option value={150}>150+ IP</option>
+                      <option value={180}>180+ IP</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value={25}>25+ IP</option>
+                      <option value={50}>50+ IP</option>
+                      <option value={100}>100+ IP</option>
+                      <option value={250}>250+ IP</option>
+                      <option value={500}>500+ IP</option>
+                      <option value={1000}>1,000+ IP</option>
+                    </>
+                  )}
+                </select>
+              </div>
+            )}
           </div>
 
           {/* Search & Export */}
@@ -479,8 +604,18 @@ export default function PlayerOwnerStatsView({
 
         {/* Results Counter & Page Size */}
         <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-gray-100">
-          <div>
-            Showing <span className="font-bold text-gray-900">{sortedRecords.length}</span> {viewMode === 'season' ? 'player-owner-season' : 'player-owner career'} records
+          <div className="flex items-center gap-3">
+            <span>
+              Showing <span className="font-bold text-gray-900">{sortedRecords.length}</span> {viewMode === 'season' ? 'player-owner-season' : 'player-owner career'} records
+            </span>
+            {hasActiveFilters && (
+              <button
+                onClick={resetFilters}
+                className="text-xs text-blue-600 hover:text-blue-800 font-bold underline transition"
+              >
+                Reset filters
+              </button>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <span>Per Page:</span>
