@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>/ — graphify tree viewer</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f9f9f9;
+      color: #333;
+    }
+    h1 {
+      margin: 20px 0 0 24px;
+      font-size: 2.2rem;
+      font-weight: bold;
+      color: #1e3a56;
+    }
+    .controls {
+      margin: 20px 0 15px 24px;
+    }
+    button {
+      margin-right: 10px;
+      padding: 8px 18px;
+      background: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.2s ease-in-out;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    button:active {
+      background: #004085;
+    }
+    #tree-container {
+      width: calc(100vw - 48px); /* Adjust for body margin/padding */
+      height: 85vh;
+      overflow: auto;
+      border-radius: 8px;
+      background: #fff;
+      margin-left: 24px;
+      margin-right: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      border: 1px solid #ddd;
+    }
+    svg {
+      background: #fff;
+      border-radius: 8px;
+      display: block; /* Important for D3 */
+    }
+    .node circle {
+      stroke-width: 2.5px;
+    }
+    .node text { /* Base style for the <text> container */
+      font: 13px 'Segoe UI', sans-serif;
+      paint-order: stroke fill; /* Ensures text is readable over lines */
+      stroke: #fff; /* White halo */
+      stroke-width: 3px; /* Halo thickness */
+      stroke-linejoin: round;
+      stroke-opacity: 0.85; /* Halo opacity */
+    }
+    .link {
+      fill: none;
+      stroke-opacity: 0.7;
+      stroke-width: 2px;
+    }
+  </style>
+</head>
+<body>
+  <h1>/ — Knowledge Graph</h1>
+  <div class="controls">
+    <button onclick="expandAll()">Expand All</button>
+    <button onclick="collapseAll()">Collapse All</button>
+    <button onclick="resetView()">Reset View</button>
+  </div>
+  <div id="tree-container">
+    <svg id="tree-svg" width="6000" height="8000"></svg>
+  </div>
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script>
+    const initialJsonData = {"name":"/","total_count":682,"children":[{"name":"active-stats-pull.py","total_count":3,"children":[{"name":"get_espn_data()","total_count":1,"children":[]},{"name":"upload_to_gcs()","total_count":1,"children":[]},{"name":"upload_to_supabase()","total_count":1,"children":[]}]},{"name":"discord-bot.py","total_count":82,"children":[{"name":".__init__()","total_count":1,"children":[]},{"name":".on_message()","total_count":1,"children":[]},{"name":".on_ready()","total_count":1,"children":[]},{"name":".setup_hook()","total_count":1,"children":[]},{"name":"_game_field_value()","total_count":1,"children":[]},{"name":"_game_status_label()","total_count":1,"children":[]},{"name":"_game_time_et()","total_count":1,"children":[]},{"name":"_match_player()","total_count":1,"children":[]},{"name":"_mlb_get()","total_count":1,"children":[]},{"name":"_mlb_ip_to_decimal()","total_count":1,"children":[]},{"name":"_parse_window()","total_count":1,"children":[]},{"name":"_rostered_players_in_game()","total_count":1,"children":[]},{"name":"_team_abbrev()","total_count":1,"children":[]},{"name":"aggregate_by_player()","total_count":1,"children":[]},{"name":"aggregate_by_team()","total_count":1,"children":[]},{"name":"ask_command()","total_count":1,"children":[]},{"name":"before_check_trade_notifications()","total_count":1,"children":[]},{"name":"Best-available roster map for /live. Tries ESPN directly first (real-time),\u2026","total_count":1,"children":[]},{"name":"Build {normalized_name: {owner, team_id, full_name}} from a set of records.\u2026","total_count":1,"children":[]},{"name":"build_context()","total_count":1,"children":[]},{"name":"build_live_roster_map()","total_count":1,"children":[]},{"name":"build_mlb_live_context()","total_count":1,"children":[]},{"name":"build_mlb_live_data()","total_count":1,"children":[]},{"name":"build_mlb_live_embed_fields()","total_count":1,"children":[]},{"name":"build_roster_name_map()","total_count":1,"children":[]},{"name":"canonical_owner_name()","total_count":1,"children":[]},{"name":"check_trade_notifications()","total_count":1,"children":[]},{"name":"check_trades_command()","total_count":1,"children":[]},{"name":"Checks Supabase for pending trade lifecycle notifications and delivers DMs.","total_count":1,"children":[]},{"name":"Compact text version of live data for use in /ask Gemini context.","total_count":1,"children":[]},{"name":"compute_roto_standings()","total_count":1,"children":[]},{"name":"compute_standings_delta()","total_count":1,"children":[]},{"name":"Convert structured live data to Discord embed field dicts. Each game gets its\u2026","total_count":1,"children":[]},{"name":"current_scoring_period()","total_count":1,"children":[]},{"name":"Dedicated live game command \u2014 always pulls MLB data, no keyword detection\u2026","total_count":1,"children":[]},{"name":"ESPN stores IP as total outs. Divide by 3 for decimal innings.","total_count":1,"children":[]},{"name":"espn_ip_to_innings()","total_count":1,"children":[]},{"name":"Fetch boxscore and return rostered players split into hitters and pitchers.\u2026","total_count":1,"children":[]},{"name":"Fetch the most recent scoring period's active records for roster\u2026","total_count":1,"children":[]},{"name":"Fetch the most recent scoring period's records including bench and IL players.","total_count":1,"children":[]},{"name":"Fetch today's schedule and boxscores, return structured data: { \"live\":\u2026","total_count":1,"children":[]},{"name":"fetch_current_roster_records()","total_count":1,"children":[]},{"name":"fetch_current_roster_records_with_bench()","total_count":1,"children":[]},{"name":"fetch_espn_live_rosters()","total_count":1,"children":[]},{"name":"fetch_mlb_boxscore()","total_count":1,"children":[]},{"name":"fetch_mlb_schedule_today()","total_count":1,"children":[]},{"name":"fetch_recent_transactions()","total_count":1,"children":[]},{"name":"fetch_stats_for_periods()","total_count":1,"children":[]},{"name":"fetch_stats_up_to_period()","total_count":1,"children":[]},{"name":"fetch_team_transactions()","total_count":1,"children":[]},{"name":"filter_active()","total_count":1,"children":[]},{"name":"Format a game's rostered player lines into an embed field value.","total_count":1,"children":[]},{"name":"format_asset_list()","total_count":1,"children":[]},{"name":"format_trades_block()","total_count":1,"children":[]},{"name":"format_transaction_context()","total_count":1,"children":[]},{"name":"format_transaction_with_stats()","total_count":1,"children":[]},{"name":"generate_answer()","total_count":1,"children":[]},{"name":"get_player_leaders_block()","total_count":1,"children":[]},{"name":"get_supabase()","total_count":1,"children":[]},{"name":"get_team_player_block()","total_count":1,"children":[]},{"name":"get_trend_block()","total_count":1,"children":[]},{"name":"handle_ping()","total_count":1,"children":[]},{"name":"HEFTYBot","total_count":1,"children":[]},{"name":"HEFTYSTRONG Fantasy Baseball Discord Bot /ask [question] slash command \u2014\u2026","total_count":1,"children":[]},{"name":"live_command()","total_count":1,"children":[]},{"name":"Lowercase, strip punctuation and suffixes for fuzzy matching.","total_count":1,"children":[]},{"name":"MLB API returns IP as 'X.Y' where Y is outs (0, 1, or 2), not fractions. '6.2'\u2026","total_count":1,"children":[]},{"name":"normalize_name()","total_count":1,"children":[]},{"name":"Parse the game's UTC start time and return a human-readable ET string.","total_count":1,"children":[]},{"name":"ping_command()","total_count":1,"children":[]},{"name":"process_trade_notifications_once()","total_count":1,"children":[]},{"name":"Processes pending trade lifecycle notifications from Supabase and delivers DMs.","total_count":1,"children":[]},{"name":"Query ESPN Fantasy API directly for current roster assignments. Used by /live\u2026","total_count":1,"children":[]},{"name":"Remove bench and IL player records \u2014 their stats don't count in roto.","total_count":1,"children":[]},{"name":"Resolve a team dict from the MLB API to a 2-3 letter abbreviation. Prefers the\u2026","total_count":1,"children":[]},{"name":"Return a short status string: inning, FINAL, or start time.","total_count":1,"children":[]},{"name":"Return live/final feed for a game.","total_count":1,"children":[]},{"name":"Return today's MLB games with status, linescore, and probable pitchers.","total_count":1,"children":[]},{"name":"scoring_period_for_date()","total_count":1,"children":[]},{"name":"Slot-aware player-level aggregation. Hitting stats only accumulate from hitting\u2026","total_count":1,"children":[]},{"name":"Slot-aware team aggregation. Only hitting stats count from hitting slots and\u2026","total_count":1,"children":[]},{"name":"Try to match an MLB API player name to a fantasy roster entry.","total_count":1,"children":[]}]},{"name":"discord-daily-recap.py","total_count":42,"children":[{"name":"_hitter_score()","total_count":1,"children":[]},{"name":"_hitter_table()","total_count":1,"children":[]},{"name":"_pitcher_score()","total_count":1,"children":[]},{"name":"_pitcher_table()","total_count":1,"children":[]},{"name":"Aggregate active player stats across the 7-day period and find the best\u2026","total_count":1,"children":[]},{"name":"aggregate_by_team()","total_count":1,"children":[]},{"name":"build_daily_prompt()","total_count":1,"children":[]},{"name":"build_weekly_prompt()","total_count":1,"children":[]},{"name":"Compute exact weekly counting and rate stats for all teams from active player\u2026","total_count":1,"children":[]},{"name":"Compute roto standings. Pass filter_active(records) before calling.","total_count":1,"children":[]},{"name":"compute_averages()","total_count":1,"children":[]},{"name":"compute_roto_standings()","total_count":1,"children":[]},{"name":"compute_standings_delta()","total_count":1,"children":[]},{"name":"compute_weekly_team_rates()","total_count":1,"children":[]},{"name":"espn_ip_to_innings()","total_count":1,"children":[]},{"name":"Fetch all TRADE transactions for the season.","total_count":1,"children":[]},{"name":"fetch_all_trades()","total_count":1,"children":[]},{"name":"fetch_stats_for_periods()","total_count":1,"children":[]},{"name":"fetch_stats_up_to_period()","total_count":1,"children":[]},{"name":"filter_active()","total_count":1,"children":[]},{"name":"filter_trades_by_days()","total_count":1,"children":[]},{"name":"Find the leader in each of the 10 roto categories for the week.","total_count":1,"children":[]},{"name":"format_cat_values_block()","total_count":1,"children":[]},{"name":"format_delta_block()","total_count":1,"children":[]},{"name":"format_performance_embed_body()","total_count":1,"children":[]},{"name":"format_recap_context()","total_count":1,"children":[]},{"name":"format_standings_block()","total_count":1,"children":[]},{"name":"format_standings_changes_body()","total_count":1,"children":[]},{"name":"format_trades_block()","total_count":1,"children":[]},{"name":"format_weekly_performance_embed_body()","total_count":1,"children":[]},{"name":"format_weekly_production_block()","total_count":1,"children":[]},{"name":"generate_ai_summary()","total_count":1,"children":[]},{"name":"get_best_worst_players()","total_count":1,"children":[]},{"name":"get_supabase()","total_count":1,"children":[]},{"name":"get_weekly_category_leaders()","total_count":1,"children":[]},{"name":"get_weekly_top_players()","total_count":1,"children":[]},{"name":"HEFTYSTRONG Fantasy Baseball \u2014 Discord Daily Recap Produces three Discord posts\u2026","total_count":1,"children":[]},{"name":"post_to_discord()","total_count":1,"children":[]},{"name":"run_daily_recap()","total_count":1,"children":[]},{"name":"run_weekly_recap()","total_count":1,"children":[]},{"name":"scoring_period_for_date()","total_count":1,"children":[]},{"name":"stat_val()","total_count":1,"children":[]}]},{"name":"historical.py","total_count":14,"children":[{"name":"_canonical()","total_count":1,"children":[]},{"name":"avg_cat()","total_count":1,"children":[]},{"name":"Championship counts for all active owners.","total_count":1,"children":[]},{"name":"Fetch and cache the historical finish JSON from GCS. Active owners only.","total_count":1,"children":[]},{"name":"format_all_active_owner_summaries()","total_count":1,"children":[]},{"name":"format_league_champions()","total_count":1,"children":[]},{"name":"format_owner_history()","total_count":1,"children":[]},{"name":"Full season-by-season record for one owner, suitable for AI context.","total_count":1,"children":[]},{"name":"get_owner_seasons()","total_count":1,"children":[]},{"name":"historical.py \u2014 shared historical context module Import this in discord-bot.py\u2026","total_count":1,"children":[]},{"name":"load_historical_data()","total_count":1,"children":[]},{"name":"Normalize a raw Owner string to the canonical TEAM_NAMES key.","total_count":1,"children":[]},{"name":"One-liner summary for every active owner \u2014 always included in context.","total_count":1,"children":[]},{"name":"Return all historical seasons for one owner (canonical name).","total_count":1,"children":[]}]},{"name":"migrate_historical_data.py","total_count":1,"children":[{"name":"migrate_historical_data()","total_count":1,"children":[]}]},{"name":"migrate_supabase_data.py","total_count":1,"children":[{"name":"migrate_table()","total_count":1,"children":[]}]},{"name":"mlb_schedule_check.py","total_count":9,"children":[{"name":"check_game_status()","total_count":1,"children":[]},{"name":"Decide whether the scraper should proceed. mode=\"force\" \u2014 always run regardless\u2026","total_count":1,"children":[]},{"name":"get_periods_to_focus()","total_count":1,"children":[]},{"name":"log_status()","total_count":1,"children":[]},{"name":"mlb_schedule_check.py \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 Drop-in module for active-stats-\u2026","total_count":1,"children":[]},{"name":"Print a human-readable summary of today's game status.","total_count":1,"children":[]},{"name":"Query the MLB schedule for today (or a specific date) and return a summary of\u2026","total_count":1,"children":[]},{"name":"Return the list of scoring periods worth re-scraping on this run. Focus on\u2026","total_count":1,"children":[]},{"name":"should_scrape()","total_count":1,"children":[]}]},{"name":"package.json","total_count":55,"children":[{"name":"@eslint/js","total_count":1,"children":[]},{"name":"@eslint/js","total_count":1,"children":[]},{"name":"@supabase/supabase-js","total_count":1,"children":[]},{"name":"@supabase/supabase-js","total_count":1,"children":[]},{"name":"@types/react","total_count":1,"children":[]},{"name":"@types/react","total_count":1,"children":[]},{"name":"@types/react-dom","total_count":1,"children":[]},{"name":"@types/react-dom","total_count":1,"children":[]},{"name":"@vitejs/plugin-react","total_count":1,"children":[]},{"name":"@vitejs/plugin-react","total_count":1,"children":[]},{"name":"autoprefixer","total_count":1,"children":[]},{"name":"autoprefixer","total_count":1,"children":[]},{"name":"build","total_count":1,"children":[]},{"name":"date-fns","total_count":1,"children":[]},{"name":"date-fns","total_count":1,"children":[]},{"name":"dependencies","total_count":1,"children":[]},{"name":"deploy","total_count":1,"children":[]},{"name":"dev","total_count":1,"children":[]},{"name":"devDependencies","total_count":1,"children":[]},{"name":"eslint","total_count":1,"children":[]},{"name":"eslint","total_count":1,"children":[]},{"name":"eslint-plugin-react-hooks","total_count":1,"children":[]},{"name":"eslint-plugin-react-hooks","total_count":1,"children":[]},{"name":"eslint-plugin-react-refresh","total_count":1,"children":[]},{"name":"eslint-plugin-react-refresh","total_count":1,"children":[]},{"name":"gh-pages","total_count":1,"children":[]},{"name":"gh-pages","total_count":1,"children":[]},{"name":"globals","total_count":1,"children":[]},{"name":"globals","total_count":1,"children":[]},{"name":"homepage","total_count":1,"children":[]},{"name":"idb-keyval","total_count":1,"children":[]},{"name":"idb-keyval","total_count":1,"children":[]},{"name":"lint","total_count":1,"children":[]},{"name":"name","total_count":1,"children":[]},{"name":"overrides","total_count":1,"children":[]},{"name":"postcss","total_count":1,"children":[]},{"name":"postcss","total_count":1,"children":[]},{"name":"predeploy","total_count":1,"children":[]},{"name":"preview","total_count":1,"children":[]},{"name":"private","total_count":1,"children":[]},{"name":"react","total_count":1,"children":[]},{"name":"react","total_count":1,"children":[]},{"name":"react-dom","total_count":1,"children":[]},{"name":"react-dom","total_count":1,"children":[]},{"name":"recharts","total_count":1,"children":[]},{"name":"recharts","total_count":1,"children":[]},{"name":"scripts","total_count":1,"children":[]},{"name":"start","total_count":1,"children":[]},{"name":"tailwindcss","total_count":1,"children":[]},{"name":"tailwindcss","total_count":1,"children":[]},{"name":"type","total_count":1,"children":[]},{"name":"version","total_count":1,"children":[]},{"name":"vite","total_count":1,"children":[]},{"name":"vite","total_count":1,"children":[]},{"name":"vite","total_count":1,"children":[]}]},{"name":"pipelines","total_count":124,"children":[{"name":"build_recap_context.py","total_count":17,"children":[{"name":"Build a mapping of clean player name -> { team_id, owner_name, full_name } from\u2026","total_count":1,"children":[]},{"name":"build_roster_player_map()","total_count":1,"children":[]},{"name":"detect_active_roto_battles()","total_count":1,"children":[]},{"name":"Dynamically identify active category volatility and standings deadlocks where\u2026","total_count":1,"children":[]},{"name":"Ensure data/league_context.json is updated from Supabase if needed.","total_count":1,"children":[]},{"name":"ensure_context_is_fresh()","total_count":1,"children":[]},{"name":"Fetch top breaking MLB news headlines and summaries from RSS feeds.","total_count":1,"children":[]},{"name":"fetch_mlb_news()","total_count":1,"children":[]},{"name":"Find overlap between real MLB news articles and players rostered in our league.","total_count":1,"children":[]},{"name":"find_news_roster_overlap()","total_count":1,"children":[]},{"name":"fmt_cat_val()","total_count":1,"children":[]},{"name":"Format a category stat value cleanly.","total_count":1,"children":[]},{"name":"format_recap_context()","total_count":1,"children":[]},{"name":"Generate comprehensive context injection text prioritizing: 1. Real MLB\u2026","total_count":1,"children":[]},{"name":"Load the persistent league context document, optionally refreshing first.","total_count":1,"children":[]},{"name":"load_league_context()","total_count":1,"children":[]},{"name":"pipelines/build_recap_context.py Fetches real-time MLB news from ESPN and\u2026","total_count":1,"children":[]}]},{"name":"compute_player_values.py","total_count":24,"children":[{"name":"calculate_category_benchmarks()","total_count":1,"children":[]},{"name":"Compute mean and stddev for qualified players.","total_count":1,"children":[]},{"name":"Compute total PR and individual category PRs for a player in a given season.","total_count":1,"children":[]},{"name":"compute_player_season_pr()","total_count":1,"children":[]},{"name":"Fetch live FanGraphs projection JSON.","total_count":1,"children":[]},{"name":"Fetch live MLB season actual stats from FanGraphs Leaderboards API.","total_count":1,"children":[]},{"name":"Fetch raw CSV tab from Google Sheets.","total_count":1,"children":[]},{"name":"fetch_csv_from_gsheet()","total_count":1,"children":[]},{"name":"fetch_live_actuals()","total_count":1,"children":[]},{"name":"fetch_live_fangraphs()","total_count":1,"children":[]},{"name":"get_price_for_rank()","total_count":1,"children":[]},{"name":"get_supabase_headers()","total_count":1,"children":[]},{"name":"Load rank -> rounded dollar cost curve from Supabase.","total_count":1,"children":[]},{"name":"load_pricing_curve()","total_count":1,"children":[]},{"name":"make_lookup()","total_count":1,"children":[]},{"name":"mean_std()","total_count":1,"children":[]},{"name":"parse_rank()","total_count":1,"children":[]},{"name":"parse_zips_api_bat()","total_count":1,"children":[]},{"name":"parse_zips_api_pit()","total_count":1,"children":[]},{"name":"parse_zips_gsheet_bat()","total_count":1,"children":[]},{"name":"parse_zips_gsheet_pit()","total_count":1,"children":[]},{"name":"pipelines/compute_player_values.py Automated Player Valuation & Pricing Engine\u2026","total_count":1,"children":[]},{"name":"Return mapped price for a given rank.","total_count":1,"children":[]},{"name":"run_pipeline()","total_count":1,"children":[]}]},{"name":"ingest_draft_infrastructure.py","total_count":7,"children":[{"name":"clean_currency()","total_count":1,"children":[]},{"name":"fetch_csv()","total_count":1,"children":[]},{"name":"ingest_compensation_picks_and_budgets()","total_count":1,"children":[]},{"name":"ingest_keepers()","total_count":1,"children":[]},{"name":"main()","total_count":1,"children":[]},{"name":"pipelines/ingest_draft_infrastructure.py Ingests: 1. Compensation Picks & Team\u2026","total_count":1,"children":[]},{"name":"postgrest_upsert()","total_count":1,"children":[]}]},{"name":"ingest_draft_trades.py","total_count":9,"children":[{"name":"fetch_sheet_csv()","total_count":1,"children":[]},{"name":"Finds the trade table starting at the header row containing 'Trade ID'.","total_count":1,"children":[]},{"name":"main()","total_count":1,"children":[]},{"name":"parse_round_number()","total_count":1,"children":[]},{"name":"parse_trade_log()","total_count":1,"children":[]},{"name":"Parses round number from asset name (e.g., '14th round' -> 14, 'Worst\u2026","total_count":1,"children":[]},{"name":"pipelines/ingest_draft_trades.py Ingests traded draft assets from the Google\u2026","total_count":1,"children":[]},{"name":"save_local_json()","total_count":1,"children":[]},{"name":"upsert_to_supabase()","total_count":1,"children":[]}]},{"name":"ingest_historical_trades.py","total_count":18,"children":[{"name":"Compute player statistics accumulated strictly on the receiving team AFTER the\u2026","total_count":1,"children":[]},{"name":"Compute post-trade stats for a player from Supabase historical_data.","total_count":1,"children":[]},{"name":"compute_historical_post_trade_stats()","total_count":1,"children":[]},{"name":"compute_post_trade_stats()","total_count":1,"children":[]},{"name":"Extract and normalize counting stats from draft-history.json record.","total_count":1,"children":[]},{"name":"extract_stats_from_draft_record()","total_count":1,"children":[]},{"name":"Fetch 2026 daily player statistics from Supabase player_daily_stats for all\u2026","total_count":1,"children":[]},{"name":"fetch_sheet_rows()","total_count":1,"children":[]},{"name":"load_2026_daily_records()","total_count":1,"children":[]},{"name":"load_draft_history()","total_count":1,"children":[]},{"name":"main()","total_count":1,"children":[]},{"name":"normalize_name()","total_count":1,"children":[]},{"name":"parse_budget_amount()","total_count":1,"children":[]},{"name":"parse_date()","total_count":1,"children":[]},{"name":"parse_overall_pick_number()","total_count":1,"children":[]},{"name":"pipelines/ingest_historical_trades.py Ingests multi-year trades from\u2026","total_count":1,"children":[]},{"name":"process_espn_trades()","total_count":1,"children":[]},{"name":"process_sheet()","total_count":1,"children":[]}]},{"name":"ingest_pickem.py","total_count":10,"children":[{"name":"bootstrap_future_season()","total_count":1,"children":[]},{"name":"Fetch raw CSV rows for a tab from Google Sheets.","total_count":1,"children":[]},{"name":"fetch_tab_rows()","total_count":1,"children":[]},{"name":"get_supabase_headers()","total_count":1,"children":[]},{"name":"get_team_id()","total_count":1,"children":[]},{"name":"ingest_season()","total_count":1,"children":[]},{"name":"normalize_owner()","total_count":1,"children":[]},{"name":"pipelines/ingest_pickem.py Annual MLB Pick'em Ingestion & Management Pipeline\u2026","total_count":1,"children":[]},{"name":"run_pipeline()","total_count":1,"children":[]},{"name":"Seed questions for a brand new season and open it for owner submissions.","total_count":1,"children":[]}]},{"name":"migrate_gcs_to_supabase.py","total_count":6,"children":[{"name":"fetch_json()","total_count":1,"children":[]},{"name":"main()","total_count":1,"children":[]},{"name":"migrate_draft_history()","total_count":1,"children":[]},{"name":"migrate_historical_finishes()","total_count":1,"children":[]},{"name":"normalize_name()","total_count":1,"children":[]},{"name":"pipelines/migrate_gcs_to_supabase.py Migrates historical draft picks (draft-\u2026","total_count":1,"children":[]}]},{"name":"sync_draft_pool.py","total_count":7,"children":[{"name":"extract_player_record()","total_count":1,"children":[]},{"name":"fetch_espn_players()","total_count":1,"children":[]},{"name":"get_current_season()","total_count":1,"children":[]},{"name":"main()","total_count":1,"children":[]},{"name":"normalize_name()","total_count":1,"children":[]},{"name":"pipelines/sync_draft_pool.py Automated replacement for fantasy-baseball\u2026","total_count":1,"children":[]},{"name":"sync_pool()","total_count":1,"children":[]}]},{"name":"update_league_context.py","total_count":13,"children":[{"name":"calculate_roto_points()","total_count":1,"children":[]},{"name":"compare_teams()","total_count":1,"children":[]},{"name":"compute_playoff_matchups()","total_count":1,"children":[]},{"name":"compute_rates()","total_count":1,"children":[]},{"name":"Computes live head-to-head category scores for Playoff Semi-Finals (Week 24)\u2026","total_count":1,"children":[]},{"name":"Dynamically appends or updates the live playoff section in LEAGUE_STORYLINES.md.","total_count":1,"children":[]},{"name":"fetch_supabase_table()","total_count":1,"children":[]},{"name":"get_period_map()","total_count":1,"children":[]},{"name":"get_stat()","total_count":1,"children":[]},{"name":"pipelines/update_league_context.py Automatically refreshes\u2026","total_count":1,"children":[]},{"name":"Pull current stats from Supabase and rebuild league_context.json and\u2026","total_count":1,"children":[]},{"name":"refresh_context_files()","total_count":1,"children":[]},{"name":"update_storylines_playoff_section()","total_count":1,"children":[]}]},{"name":"update_live_pickem_standings.py","total_count":13,"children":[{"name":"build_live_in_progress_snapshot()","total_count":1,"children":[]},{"name":"Combine MLB standings and FanGraphs WAR into a complete 23-category live\u2026","total_count":1,"children":[]},{"name":"Evaluate current 2026 picks against the live in-progress snapshot.","total_count":1,"children":[]},{"name":"evaluate_owner_projected_scores()","total_count":1,"children":[]},{"name":"Fetch live FanGraphs YTD actuals and ROS projections to compute projected fWAR.","total_count":1,"children":[]},{"name":"Fetch live MLB team standings from MLB Stats API.","total_count":1,"children":[]},{"name":"fetch_mlb_standings()","total_count":1,"children":[]},{"name":"fetch_projected_war_leaders()","total_count":1,"children":[]},{"name":"get_team_code()","total_count":1,"children":[]},{"name":"matches_team_or_val()","total_count":1,"children":[]},{"name":"normalize_text()","total_count":1,"children":[]},{"name":"pipelines/update_live_pickem_standings.py Live YTD MLB Standings & WAR\u2026","total_count":1,"children":[]},{"name":"run()","total_count":1,"children":[]}]}]},{"name":"projections.py","total_count":28,"children":[{"name":"_compute_roto_points()","total_count":1,"children":[]},{"name":"_espn_ip_to_innings()","total_count":1,"children":[]},{"name":"_estimate_qs()","total_count":1,"children":[]},{"name":"_fg_get()","total_count":1,"children":[]},{"name":"_get_stat_val()","total_count":1,"children":[]},{"name":"Assign roto points per category across teams. Same logic as discord-bot.py.","total_count":1,"children":[]},{"name":"build_projection_map()","total_count":1,"children":[]},{"name":"Combine actual YTD stats with projected ROS stats to forecast final standings.\u2026","total_count":1,"children":[]},{"name":"Compute standings and category values based PURELY on the rest-of-season (ROS)\u2026","total_count":1,"children":[]},{"name":"Estimate quality starts from FanGraphs projection data. Heuristic: QS rate \u2248\u2026","total_count":1,"children":[]},{"name":"Fetch a FanGraphs projection endpoint with caching.","total_count":1,"children":[]},{"name":"Fetch both batting and pitching ROS projections.","total_count":1,"children":[]},{"name":"fetch_projections()","total_count":1,"children":[]},{"name":"forecast_final_standings()","total_count":1,"children":[]},{"name":"forecast_ros_only_standings()","total_count":1,"children":[]},{"name":"Format one or more player projections into a readable context block.","total_count":1,"children":[]},{"name":"Format projected final standings as a text block for Gemini context.","total_count":1,"children":[]},{"name":"Format pure rest-of-season projected standings as a text block.","total_count":1,"children":[]},{"name":"format_player_projection_block()","total_count":1,"children":[]},{"name":"format_projected_standings_block()","total_count":1,"children":[]},{"name":"format_ros_only_standings_block()","total_count":1,"children":[]},{"name":"Fuzzy-match a player name against projections. Returns a list of matching\u2026","total_count":1,"children":[]},{"name":"get_player_projection()","total_count":1,"children":[]},{"name":"normalize_name()","total_count":1,"children":[]},{"name":"project_team_ros()","total_count":1,"children":[]},{"name":"projections.py \u2014 FanGraphs ZiPS Rest-of-Season Projections Fetches batting and\u2026","total_count":1,"children":[]},{"name":"Sum ROS projections for all rostered players on a team (including bench and\u2026","total_count":1,"children":[]},{"name":"Transform raw FanGraphs JSON into {mlbam_id: projection_dict}. stat_type:\u2026","total_count":1,"children":[]}]},{"name":"railway.json","total_count":7,"children":[{"name":"$schema","total_count":1,"children":[]},{"name":"build","total_count":1,"children":[]},{"name":"builder","total_count":1,"children":[]},{"name":"deploy","total_count":1,"children":[]},{"name":"restartPolicyMaxRetries","total_count":1,"children":[]},{"name":"restartPolicyType","total_count":1,"children":[]},{"name":"startCommand","total_count":1,"children":[]}]},{"name":"src","total_count":265,"children":[{"name":"App.jsx","total_count":8,"children":[{"name":"App()","total_count":1,"children":[]},{"name":"AVAILABLE_SEASONS","total_count":1,"children":[]},{"name":"getSubTabsFromHash()","total_count":1,"children":[]},{"name":"getViewFromHash()","total_count":1,"children":[]},{"name":"HASH_TO_VIEW","total_count":1,"children":[]},{"name":"NOTE: Make sure to export calculateTrioMatchupResult from scoring.js!","total_count":1,"children":[]},{"name":"OFFSEASON_VIEWS","total_count":1,"children":[]},{"name":"VIEW_TO_HASH","total_count":1,"children":[]}]},{"name":"components","total_count":29,"children":[{"name":"BoxScoreModal.jsx","total_count":1,"children":[{"name":"BoxScoreModal()","total_count":1,"children":[]}]},{"name":"CommishActiveBanner.jsx","total_count":1,"children":[{"name":"CommishActiveBanner()","total_count":1,"children":[]}]},{"name":"CommishCheckoutModal.jsx","total_count":1,"children":[{"name":"CommishCheckoutModal()","total_count":1,"children":[]}]},{"name":"DayRosterModal.jsx","total_count":9,"children":[{"name":"BAT_CATS","total_count":1,"children":[]},{"name":"BATTER_SLOT_ORDER","total_count":1,"children":[]},{"name":"ColHeader()","total_count":1,"children":[]},{"name":"DayRosterModal()","total_count":1,"children":[]},{"name":"formatVal()","total_count":1,"children":[]},{"name":"PITCH_CATS","total_count":1,"children":[]},{"name":"PITCHER_SLOT_ORDER","total_count":1,"children":[]},{"name":"StatCell()","total_count":1,"children":[]},{"name":"TotalRow()","total_count":1,"children":[]}]},{"name":"GameDetailModal.jsx","total_count":2,"children":[{"name":"FantasyBadge()","total_count":1,"children":[]},{"name":"GameDetailModal()","total_count":1,"children":[]}]},{"name":"KeepersBudgetsPanel.jsx","total_count":7,"children":[{"name":"calculateKeeperCostFromRank()","total_count":1,"children":[]},{"name":"COMP_BUY_PRICES","total_count":1,"children":[]},{"name":"COMP_SELL_PRICES","total_count":1,"children":[]},{"name":"DRAFT_MANAGERS","total_count":1,"children":[]},{"name":"KeepersBudgetsPanel()","total_count":1,"children":[]},{"name":"loadSettings()","total_count":1,"children":[]},{"name":"normalizeManager()","total_count":1,"children":[]}]},{"name":"MatchupCard.jsx","total_count":1,"children":[{"name":"MatchupCard()","total_count":1,"children":[]}]},{"name":"OwnerDetailModal.jsx","total_count":1,"children":[{"name":"OwnerDetailModal()","total_count":1,"children":[]}]},{"name":"PlayerHistoryModal.jsx","total_count":4,"children":[{"name":"fetchPlayerOverallStats()","total_count":1,"children":[]},{"name":"loadOverall()","total_count":1,"children":[]},{"name":"overallStatsCache","total_count":1,"children":[]},{"name":"PlayerHistoryModal()","total_count":1,"children":[]}]},{"name":"TeamAvatar.jsx","total_count":1,"children":[{"name":"TeamAvatar()","total_count":1,"children":[]}]},{"name":"UserNavWidget.jsx","total_count":1,"children":[{"name":"UserNavWidget()","total_count":1,"children":[]}]}]},{"name":"context","total_count":6,"children":[{"name":"AuthContext.jsx","total_count":4,"children":[{"name":"AuthProvider()","total_count":1,"children":[]},{"name":"cleanupOAuthHash()","total_count":1,"children":[]},{"name":"initAuth()","total_count":1,"children":[]},{"name":"STATIC_LEAGUE_PROFILES","total_count":1,"children":[]}]},{"name":"authContextDef.js","total_count":1,"children":[{"name":"AuthContext","total_count":1,"children":[]}]},{"name":"useAuth.js","total_count":1,"children":[{"name":"useAuth()","total_count":1,"children":[]}]}]},{"name":"data","total_count":4,"children":[{"name":"historicalFranchiseData.js","total_count":4,"children":[{"name":"CANONICAL_OWNERS","total_count":1,"children":[]},{"name":"getFranchiseLeaderboard()","total_count":1,"children":[]},{"name":"getHistoricalSeasons()","total_count":1,"children":[]},{"name":"normalizeOwner()","total_count":1,"children":[]}]}]},{"name":"schedule.js","total_count":7,"children":[{"name":"generateSchedule()","total_count":1,"children":[]},{"name":"getDateFromPeriodId()","total_count":1,"children":[]},{"name":"getPeriodRangeForWeek()","total_count":1,"children":[]},{"name":"getTriosMatchups()","total_count":1,"children":[]},{"name":"SEASON_DATES","total_count":1,"children":[]},{"name":"SEASON_START_DATES","total_count":1,"children":[]},{"name":"TEAMS","total_count":1,"children":[]}]},{"name":"supabaseClient.js","total_count":4,"children":[{"name":"DEFAULT_SUPABASE_ANON_KEY","total_count":1,"children":[]},{"name":"DEFAULT_SUPABASE_URL","total_count":1,"children":[]},{"name":"supabase","total_count":1,"children":[]},{"name":"supabaseUrl","total_count":1,"children":[]}]},{"name":"utils","total_count":52,"children":[{"name":"acquisition.js","total_count":1,"children":[{"name":"getPlayerAcquisition()","total_count":1,"children":[]}]},{"name":"eraAdjustments.js","total_count":10,"children":[{"name":"ALL_COUNTING_STATS","total_count":1,"children":[]},{"name":"BAT_COUNTING_STATS","total_count":1,"children":[]},{"name":"calculateEraAdjustedStat()","total_count":1,"children":[]},{"name":"formatHighlightVal()","total_count":1,"children":[]},{"name":"getMlbMultiplier()","total_count":1,"children":[]},{"name":"getRosterMultiplier()","total_count":1,"children":[]},{"name":"MLB_LEAGUE_AVERAGES","total_count":1,"children":[]},{"name":"PITCH_COUNTING_STATS","total_count":1,"children":[]},{"name":"RATE_STATS","total_count":1,"children":[]},{"name":"ROSTER_CAPACITIES","total_count":1,"children":[]}]},{"name":"headshotUtils.js","total_count":4,"children":[{"name":"getPlayerHeadshotUrl()","total_count":1,"children":[]},{"name":"globalPlayerLookup","total_count":1,"children":[]},{"name":"handleHeadshotError()","total_count":1,"children":[]},{"name":"updateGlobalPlayerLookup()","total_count":1,"children":[]}]},{"name":"liveMLB.js","total_count":4,"children":[{"name":"buildRosterDictionary()","total_count":1,"children":[]},{"name":"fetchGameBoxscore()","total_count":1,"children":[]},{"name":"fetchLiveScoreboard()","total_count":1,"children":[]},{"name":"normalizeName()","total_count":1,"children":[]}]},{"name":"mlbTeams.js","total_count":7,"children":[{"name":"findMlbTeam()","total_count":1,"children":[]},{"name":"LEAGUE_OWNERS","total_count":1,"children":[]},{"name":"MLB_DIVISIONS","total_count":1,"children":[]},{"name":"MLB_TEAMS","total_count":1,"children":[]},{"name":"PICKEM_RULES","total_count":1,"children":[]},{"name":"PROMINENT_AWARD_CANDIDATES","total_count":1,"children":[]},{"name":"teamsMatch()","total_count":1,"children":[]}]},{"name":"replacementRecommender.js","total_count":4,"children":[{"name":"evaluatePlayerCapital()","total_count":1,"children":[]},{"name":"findWaiverReplacements()","total_count":1,"children":[]},{"name":"isPositionMatch()","total_count":1,"children":[]},{"name":"SLOT_TO_POS","total_count":1,"children":[]}]},{"name":"scoring.js","total_count":13,"children":[{"name":"aggregateBenchStats()","total_count":1,"children":[]},{"name":"aggregateStats()","total_count":1,"children":[]},{"name":"calculateBatterValue()","total_count":1,"children":[]},{"name":"calculateMatchupResult()","total_count":1,"children":[]},{"name":"calculatePitcherValue()","total_count":1,"children":[]},{"name":"calculateRotoPoints()","total_count":1,"children":[]},{"name":"calculateTrioMatchupResult()","total_count":1,"children":[]},{"name":"CATEGORIES","total_count":1,"children":[]},{"name":"ESPN_STAT_IDS","total_count":1,"children":[]},{"name":"getStatMeta()","total_count":1,"children":[]},{"name":"LINEUP_SLOTS","total_count":1,"children":[]},{"name":"MINUTIAE_STATS","total_count":1,"children":[]},{"name":"SCORING_CATS","total_count":1,"children":[]}]},{"name":"standings.js","total_count":1,"children":[{"name":"calculateStandings()","total_count":1,"children":[]}]},{"name":"tradeGrading.js","total_count":8,"children":[{"name":"calculateBudgetValue()","total_count":1,"children":[]},{"name":"calculatePickValue()","total_count":1,"children":[]},{"name":"calculatePlayerStatValue()","total_count":1,"children":[]},{"name":"evaluateAsset()","total_count":1,"children":[]},{"name":"getKeeperSurplus()","total_count":1,"children":[]},{"name":"getLetterGrade()","total_count":1,"children":[]},{"name":"gradeTrade()","total_count":1,"children":[]},{"name":"HISTORICAL_KEEPERS_BY_YEAR","total_count":1,"children":[]}]}]},{"name":"views","total_count":154,"children":[{"name":"BenchStatsView.jsx","total_count":3,"children":[{"name":"BenchStatsView()","total_count":1,"children":[]},{"name":"ESPN_STAT_NAMES","total_count":1,"children":[]},{"name":"parseRecordStats()","total_count":1,"children":[]}]},{"name":"DraftCapitalView.jsx","total_count":9,"children":[{"name":"canonicalOwnerName()","total_count":1,"children":[]},{"name":"compute2027DraftPicks()","total_count":1,"children":[]},{"name":"DRAFT_OWNERS","total_count":1,"children":[]},{"name":"DraftCapitalView()","total_count":1,"children":[]},{"name":"enqueueTradeNotification()","total_count":1,"children":[]},{"name":"getTeamId()","total_count":1,"children":[]},{"name":"isPickInAssets()","total_count":1,"children":[]},{"name":"isPlayerInAssets()","total_count":1,"children":[]},{"name":"LEAGUE_OWNERS_NORMALIZED","total_count":1,"children":[]}]},{"name":"DraftHistoryView.jsx","total_count":3,"children":[{"name":"AVAILABLE_YEARS","total_count":1,"children":[]},{"name":"DraftHistoryView()","total_count":1,"children":[]},{"name":"loadDraftHistory()","total_count":1,"children":[]}]},{"name":"DraftRoomView.jsx","total_count":45,"children":[{"name":"AnalysisHistoryPanel()","total_count":1,"children":[]},{"name":"callESPNProxy()","total_count":1,"children":[]},{"name":"callGemini()","total_count":1,"children":[]},{"name":"compute2027DraftPicks()","total_count":1,"children":[]},{"name":"CountdownTimer()","total_count":1,"children":[]},{"name":"DEFAULT_OWNER_PROFILES","total_count":1,"children":[]},{"name":"DRAFT_OWNERS","total_count":1,"children":[]},{"name":"DraftCapitalPanel()","total_count":1,"children":[]},{"name":"draftDbGet()","total_count":1,"children":[]},{"name":"draftDbSet()","total_count":1,"children":[]},{"name":"DraftLogPanel()","total_count":1,"children":[]},{"name":"DraftRoomView()","total_count":1,"children":[]},{"name":"fetchAllEspnPlayers()","total_count":1,"children":[]},{"name":"fetchFanGraphs()","total_count":1,"children":[]},{"name":"fetchFromGCS()","total_count":1,"children":[]},{"name":"fetchPlayerData()","total_count":1,"children":[]},{"name":"formatPlayerStats()","total_count":1,"children":[]},{"name":"GEMINI_MODELS","total_count":1,"children":[]},{"name":"generate2027DraftOrder()","total_count":1,"children":[]},{"name":"generateDefaultDraftOrder()","total_count":1,"children":[]},{"name":"generateDraftCommentary()","total_count":1,"children":[]},{"name":"generateLocalDraftCommentary()","total_count":1,"children":[]},{"name":"getDraftDb()","total_count":1,"children":[]},{"name":"getInjuryIndicator()","total_count":1,"children":[]},{"name":"LoginModal()","total_count":1,"children":[]},{"name":"mergeEspnData()","total_count":1,"children":[]},{"name":"mergeZipsData()","total_count":1,"children":[]},{"name":"ModeSelectionModal()","total_count":1,"children":[]},{"name":"MyPicksPanel()","total_count":1,"children":[]},{"name":"normalizeName()","total_count":1,"children":[]},{"name":"OnDeckSidebar()","total_count":1,"children":[]},{"name":"OWNER_AVATARS","total_count":1,"children":[]},{"name":"PlayerModal()","total_count":1,"children":[]},{"name":"PlayerNameButton()","total_count":1,"children":[]},{"name":"PlayerPoolPanel()","total_count":1,"children":[]},{"name":"playOwnerSound()","total_count":1,"children":[]},{"name":"QueuePreviewWidget()","total_count":1,"children":[]},{"name":"RecentActivityWidget()","total_count":1,"children":[]},{"name":"ROSTER_SLOTS","total_count":1,"children":[]},{"name":"RosterManagerPanel()","total_count":1,"children":[]},{"name":"roundNumber()","total_count":1,"children":[]},{"name":"StandingsPanel()","total_count":1,"children":[]},{"name":"styles","total_count":1,"children":[]},{"name":"TeamNeedsSummary()","total_count":1,"children":[]},{"name":"Ticker()","total_count":1,"children":[]}]},{"name":"FullRosterView.jsx","total_count":11,"children":[{"name":"AcquisitionChip()","total_count":1,"children":[]},{"name":"BATTER_SLOT_ORDER","total_count":1,"children":[]},{"name":"formatOBP()","total_count":1,"children":[]},{"name":"formatRate()","total_count":1,"children":[]},{"name":"FullRosterView()","total_count":1,"children":[]},{"name":"getBatterDailyScore()","total_count":1,"children":[]},{"name":"getRPDailyScore()","total_count":1,"children":[]},{"name":"getSPStartScore()","total_count":1,"children":[]},{"name":"PITCHER_SLOT_ORDER","total_count":1,"children":[]},{"name":"PlayerSparkline()","total_count":1,"children":[]},{"name":"RosterTableSection()","total_count":1,"children":[]}]},{"name":"HighlightsView.jsx","total_count":5,"children":[{"name":"AVAILABLE_SEASONS","total_count":1,"children":[]},{"name":"BAT_STATS","total_count":1,"children":[]},{"name":"HighlightsView()","total_count":1,"children":[]},{"name":"STAT_OPTIONS","total_count":1,"children":[]},{"name":"VOLUME_THRESHOLDS","total_count":1,"children":[]}]},{"name":"HistoricalDraftView.jsx","total_count":3,"children":[{"name":"DRAFT_OWNERS","total_count":1,"children":[]},{"name":"HistoricalDraftView()","total_count":1,"children":[]},{"name":"OWNER_COLORS","total_count":1,"children":[]}]},{"name":"KeepersBudgetsView.jsx","total_count":3,"children":[{"name":"calculateKeeperCostFromRank()","total_count":1,"children":[]},{"name":"KeepersBudgetsView()","total_count":1,"children":[]},{"name":"TEAM_OWNERS","total_count":1,"children":[]}]},{"name":"LeagueHistoryView.jsx","total_count":13,"children":[{"name":"AVAILABLE_SEASONS","total_count":1,"children":[]},{"name":"CANONICAL_OWNERS","total_count":1,"children":[]},{"name":"CAT_ICONS","total_count":1,"children":[]},{"name":"CATEGORIES","total_count":1,"children":[]},{"name":"fetchHistoricalFinishes()","total_count":1,"children":[]},{"name":"formatDiffStat()","total_count":1,"children":[]},{"name":"formatMeanStat()","total_count":1,"children":[]},{"name":"formatPctDiff()","total_count":1,"children":[]},{"name":"formatRawStat()","total_count":1,"children":[]},{"name":"getDisplayRawStat()","total_count":1,"children":[]},{"name":"LeagueHistoryView()","total_count":1,"children":[]},{"name":"LEGACY_CATEGORIES","total_count":1,"children":[]},{"name":"normalizeOwner()","total_count":1,"children":[]}]},{"name":"LiveScoreboardView.jsx","total_count":1,"children":[{"name":"LiveScoreboardView()","total_count":1,"children":[]}]},{"name":"OwnerDisparitiesView.jsx","total_count":4,"children":[{"name":"cleanPlayerName()","total_count":1,"children":[]},{"name":"loadMlbSeason()","total_count":1,"children":[]},{"name":"mlbSeasonDataCache","total_count":1,"children":[]},{"name":"OwnerDisparitiesView()","total_count":1,"children":[]}]},{"name":"OwnerLandingView.jsx","total_count":6,"children":[{"name":"DEFAULT_POS_MAP","total_count":1,"children":[]},{"name":"getPlayerPositions()","total_count":1,"children":[]},{"name":"LEAGUE_MANAGERS","total_count":1,"children":[]},{"name":"MLB_TEAMS","total_count":1,"children":[]},{"name":"OwnerLandingView()","total_count":1,"children":[]},{"name":"SLOT_MAP","total_count":1,"children":[]}]},{"name":"PickemView.jsx","total_count":3,"children":[{"name":"fetchInitialData()","total_count":1,"children":[]},{"name":"fetchSeasonDetails()","total_count":1,"children":[]},{"name":"PickemView()","total_count":1,"children":[]}]},{"name":"PlayerImpactSimulatorView.jsx","total_count":5,"children":[{"name":"BATTING_CATS","total_count":1,"children":[]},{"name":"ESPN_STAT_NAMES","total_count":1,"children":[]},{"name":"parseRecord()","total_count":1,"children":[]},{"name":"PITCHING_CATS","total_count":1,"children":[]},{"name":"PlayerImpactSimulatorView()","total_count":1,"children":[]}]},{"name":"PlayersView.jsx","total_count":5,"children":[{"name":"BAT_COLS","total_count":1,"children":[]},{"name":"formatStat()","total_count":1,"children":[]},{"name":"getLabel()","total_count":1,"children":[]},{"name":"PITCH_COLS","total_count":1,"children":[]},{"name":"PlayersView()","total_count":1,"children":[]}]},{"name":"PlayerValuationsView.jsx","total_count":7,"children":[{"name":"CategoryBox()","total_count":1,"children":[]},{"name":"CategoryChip()","total_count":1,"children":[]},{"name":"FANTASY_MANAGERS","total_count":1,"children":[]},{"name":"fetchKeepers()","total_count":1,"children":[]},{"name":"fetchValuations()","total_count":1,"children":[]},{"name":"PlayerValuationsView()","total_count":1,"children":[]},{"name":"StatBox()","total_count":1,"children":[]}]},{"name":"ProgressionView.jsx","total_count":5,"children":[{"name":"ALL_TIME_METRICS","total_count":1,"children":[]},{"name":"formatVal()","total_count":1,"children":[]},{"name":"ProgressionView()","total_count":1,"children":[]},{"name":"STAT_OPTIONS","total_count":1,"children":[]},{"name":"TEAM_COLORS","total_count":1,"children":[]}]},{"name":"RotoGapView.jsx","total_count":5,"children":[{"name":"computeDefendingBehindCushion()","total_count":1,"children":[]},{"name":"computeTargetAheadGap()","total_count":1,"children":[]},{"name":"formatStatValue()","total_count":1,"children":[]},{"name":"ROTO_CATEGORIES","total_count":1,"children":[]},{"name":"RotoGapView()","total_count":1,"children":[]}]},{"name":"SummaryView.jsx","total_count":4,"children":[{"name":"BracketMatch()","total_count":1,"children":[]},{"name":"getStandings()","total_count":1,"children":[]},{"name":"StandingsTable()","total_count":1,"children":[]},{"name":"SummaryView()","total_count":1,"children":[]}]},{"name":"TeamsView.jsx","total_count":6,"children":[{"name":"formatCellTooltip()","total_count":1,"children":[]},{"name":"formatStat()","total_count":1,"children":[]},{"name":"MINUTIAE_COLS","total_count":1,"children":[]},{"name":"SortIcon()","total_count":1,"children":[]},{"name":"STAT_COLS","total_count":1,"children":[]},{"name":"TeamsView()","total_count":1,"children":[]}]},{"name":"TradeRepositoryView.jsx","total_count":3,"children":[{"name":"ALL_MANAGERS","total_count":1,"children":[]},{"name":"AssetRow()","total_count":1,"children":[]},{"name":"TradeRepositoryView()","total_count":1,"children":[]}]},{"name":"TransactionsView.jsx","total_count":4,"children":[{"name":"groupTransactions()","total_count":1,"children":[]},{"name":"loadSupabaseTxns()","total_count":1,"children":[]},{"name":"TransactionsView()","total_count":1,"children":[]},{"name":"TYPE_CONFIG","total_count":1,"children":[]}]},{"name":"WeeklyView.jsx","total_count":1,"children":[{"name":"WeeklyView()","total_count":1,"children":[]}]}]},{"name":"main.jsx","total_count":1,"children":[]}]},{"name":"supabase","total_count":6,"children":[{"name":"functions","total_count":6,"children":[{"name":"fetch-espn-stats","total_count":6,"children":[{"name":"index.ts","total_count":6,"children":[{"name":"fetchTeamPeriod()","total_count":1,"children":[]},{"name":"getCurrentScoringPeriod()","total_count":1,"children":[]},{"name":"PlayerRecord","total_count":1,"children":[]},{"name":"runInBatches()","total_count":1,"children":[]},{"name":"SEASON_START","total_count":1,"children":[]},{"name":"TEAM_IDS","total_count":1,"children":[]}]}]}]}]},{"name":"test_trade_and_recommender.mjs","total_count":22,"children":[{"name":"candidateSP","total_count":1,"children":[]},{"name":"candidateSS","total_count":1,"children":[]},{"name":"capOhtani","total_count":1,"children":[]},{"name":"capR2","total_count":1,"children":[]},{"name":"capR22","total_count":1,"children":[]},{"name":"capR9","total_count":1,"children":[]},{"name":"coldSS","total_count":1,"children":[]},{"name":"graded2024_1","total_count":1,"children":[]},{"name":"graded2025_1","total_count":1,"children":[]},{"name":"mockFAs","total_count":1,"children":[]},{"name":"mockPicks","total_count":1,"children":[]},{"name":"ohtani","total_count":1,"children":[]},{"name":"pick100","total_count":1,"children":[]},{"name":"pick250","total_count":1,"children":[]},{"name":"pick50","total_count":1,"children":[]},{"name":"r22Player","total_count":1,"children":[]},{"name":"r2Player","total_count":1,"children":[]},{"name":"r9Player","total_count":1,"children":[]},{"name":"repsWithSBSynergy","total_count":1,"children":[]},{"name":"seasons","total_count":1,"children":[]},{"name":"t2024_1","total_count":1,"children":[]},{"name":"t2025_1","total_count":1,"children":[]}]},{"name":"transaction-scraper.py","total_count":16,"children":[{"name":"enrich_player_names()","total_count":1,"children":[]},{"name":"Fetch all historical transactions (adds, drops, waivers, trades) across seasons\u2026","total_count":1,"children":[]},{"name":"Fetch executed trades by safely paging through the Recent Activity feed.","total_count":1,"children":[]},{"name":"Fetch MLB player names from ESPN and database fallback.","total_count":1,"children":[]},{"name":"Fetch regular transactions (Adds/Drops) dynamically for the year.","total_count":1,"children":[]},{"name":"fetch_activity_trades()","total_count":1,"children":[]},{"name":"fetch_all_player_names()","total_count":1,"children":[]},{"name":"fetch_historical_transactions()","total_count":1,"children":[]},{"name":"fetch_period()","total_count":1,"children":[]},{"name":"fetch_transactions()","total_count":1,"children":[]},{"name":"Parse only the fully executed system trades from the activity feed.","total_count":1,"children":[]},{"name":"Parse standard add, drop, waiver claim, and trade transactions from\u2026","total_count":1,"children":[]},{"name":"parse_activity_trades()","total_count":1,"children":[]},{"name":"parse_standard_transactions()","total_count":1,"children":[]},{"name":"transaction-scraper.py Scrapes add/drop/trade transactions from the ESPN\u2026","total_count":1,"children":[]},{"name":"upsert_transactions()","total_count":1,"children":[]}]},{"name":"check_schema.py","total_count":1,"children":[]},{"name":"check_types.py","total_count":1,"children":[]},{"name":"eslint.config.js","total_count":1,"children":[]},{"name":"postcss.config.js","total_count":1,"children":[]},{"name":"tailwind.config.js","total_count":1,"children":[]},{"name":"tailwindcss","total_count":1,"children":[]},{"name":"vite.config.js","total_count":1,"children":[]}]};
+
+    function transformData(jsonData) {
+        // Helper function to recursively build the children structure
+        function processNode(node, parentL1StageName) {
+            let displayName = node.name;
+            // Append total_count if it exists and is not already in the name
+            if (node.total_count !== undefined) {
+                if (!/\(Total Count: \d+\)$/.test(displayName)) {
+                    displayName += ` (Total Count: ${node.total_count})`;
+                }
+            }
+
+            const newNode = { name: displayName };
+
+            if (parentL1StageName === "Root") {
+                 newNode.originalStageName = node.name;
+            } else {
+                newNode.originalStageName = parentL1StageName;
+            }
+
+            if (node.children && node.children.length > 0) {
+                const stageNameToPass = (parentL1StageName === "Root") ? node.name : parentL1StageName;
+                newNode.children = node.children.map(child => processNode(child, stageNameToPass));
+            }
+
+            return newNode;
+        }
+
+        let rootDisplayName = jsonData.name;
+        if (jsonData.total_count !== undefined && !/\(Total Count: \d+\)$/.test(rootDisplayName)) {
+            rootDisplayName += ` (Total Count: ${jsonData.total_count})`;
+        }
+
+        return {
+            name: rootDisplayName,
+            originalStageName: "Root",
+            children: (jsonData.children || []).map(child => processNode(child, "Root"))
+        };
+    }
+
+    const treeData = transformData(initialJsonData);
+
+    // Auto-populated phaseColors: every depth-1 child of the root gets
+    // a stable colour from a bigger palette so all top-level dirs are
+    // distinguishable.
+    const PALETTE = [
+      ["#3498DB","#2980B9","#AED6F1"], ["#2ECC71","#27AE60","#A9DFBF"],
+      ["#E74C3C","#C0392B","#F5B7B1"], ["#9B59B6","#8E44AD","#D7BDE2"],
+      ["#F39C12","#D68910","#FAD7A0"], ["#1ABC9C","#117864","#A2D9CE"],
+      ["#34495E","#1B2631","#ABB2B9"], ["#E67E22","#BA4A00","#F5CBA7"],
+      ["#16A085","#0E6655","#A2D9CE"], ["#D35400","#A04000","#EDBB99"],
+      ["#7F8C8D","#566573","#D5DBDB"], ["#C0392B","#7B241C","#F5B7B1"],
+      ["#2E86C1","#1B4F72","#A9CCE3"], ["#28B463","#196F3D","#A9DFBF"],
+      ["#AF7AC5","#6C3483","#D2B4DE"],
+    ];
+    const phaseColors = { "Root": { fill: "#4A4A4A", stroke: "#333333", collapsedFill: "#6C757D" },
+                          "Default": { fill: "#BDC3C7", stroke: "#95A5A6", collapsedFill: "#ECF0F1" } };
+    (initialJsonData.children || []).forEach((c, i) => {
+      const pal = PALETTE[i % PALETTE.length];
+      phaseColors[c.name] = { fill: pal[0], stroke: pal[1], collapsedFill: pal[2] };
+    });
+
+    const levelSpecificPalettes = {
+      0: { fill: "#4A4A4A", stroke: "#333333", collapsedFill: "#6C757D" },
+      2: { fill: "#6ab04c", stroke: "#508a38", collapsedFill: "#a3d391" },
+      3: { fill: "#f0932b", stroke: "#d0730f", collapsedFill: "#f6c07e" },
+      4: { fill: "#be2edd", stroke: "#a01cb3", collapsedFill: "#e08bf2" },
+      5: { fill: "#00a8ff", stroke: "#007ac1", collapsedFill: "#74d2ff" },
+      6: { fill: "#e55039", stroke: "#c23620", collapsedFill: "#f09a8d" },
+      default: { fill: "#747d8c", stroke: "#57606f", collapsedFill: "#a4b0be" }
+    };
+
+    const svgElement = d3.select("#tree-svg");
+    const initialSvgWidth = +svgElement.attr("width");
+    const initialSvgHeight = +svgElement.attr("height");
+    const margin = { top: 40, right: 120, bottom: 80, left: 450 };
+    let width = initialSvgWidth - margin.left - margin.right;
+    let height = initialSvgHeight - margin.top - margin.bottom;
+    const duration = 500;
+    let nodeCounter = 0;
+    const g = svgElement.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+    const treemap = d3.tree().nodeSize([40, 0]);
+    let rootNode = d3.hierarchy(treeData, d => d.children);
+    rootNode.x0 = 0;
+    rootNode.y0 = 0;
+
+    if (rootNode.children) {
+      rootNode.children.forEach(d_child => {
+        if (d_child.children) { collapseBranch(d_child); }
+      });
+    }
+    updateTree(rootNode);
+
+    function collapseBranch(d) { if (d.children) { d._children = d.children; d._children.forEach(collapseBranch); d.children = null; } }
+    function expandBranch(d) { if (d._children) { d.children = d._children; d._children = null; } if (d.children) { d.children.forEach(expandBranch); } }
+    window.expandAll = () => { expandBranch(rootNode); updateTree(rootNode); };
+    window.collapseAll = () => { if (rootNode.children) { rootNode.children.forEach(collapseBranch); } updateTree(rootNode); };
+    window.resetView = () => { if (rootNode.children) { rootNode.children.forEach(d_child => { if (d_child.children || d_child._children) { collapseBranch(d_child); } }); } if (rootNode._children && !rootNode.children) { rootNode.children = rootNode._children; rootNode._children = null; } updateTree(rootNode); };
+
+    function updateTree(source) {
+      const treeLayoutData = treemap(rootNode);
+      let nodes = treeLayoutData.descendants();
+      let links = treeLayoutData.descendants().slice(1);
+
+      let minX = 0;
+      let maxX = 0;
+      if (nodes.length > 0) {
+        minX = d3.min(nodes, d => d.x);
+        maxX = d3.max(nodes, d => d.x);
+      }
+
+      let neededHeight = Math.max(initialSvgHeight, maxX - minX + margin.top + margin.bottom + 100);
+      svgElement.transition().duration(duration / 2).attr("height", neededHeight);
+      g.transition().duration(duration / 2).attr("transform", `translate(${margin.left},${margin.top - minX + 40})`);
+
+      nodes.forEach(d => { d.y = d.depth * 400; }); // Adjust horizontal separation if needed
+
+      const node = g.selectAll('g.node').data(nodes, d => d.id || (d.id = ++nodeCounter));
+      const nodeEnter = node.enter().append('g')
+        .attr('class', d => "node" + (d.children || d._children ? " node--internal" : " node--leaf") + (d._children ? " _children" : ""))
+        .attr('transform', d => `translate(${source.y0},${source.x0})`)
+        .on('click', (event, d) => { if (d.children) { d._children = d.children; d.children = null; } else if (d._children) { d.children = d._children; d._children = null; } updateTree(d); })
+        .style('cursor', d => (d.children || d._children) ? 'pointer' : 'default');
+
+      nodeEnter.append('circle').attr('r', 1e-6);
+
+      nodeEnter.append('text')
+        .attr('dy', '.35em')
+        .attr('x', d => d.children || d._children ? -14 : 14)
+        .attr('text-anchor', d => d.children || d._children ? 'end' : 'start')
+        .style("fill-opacity", 1e-6)
+        .call(wrapText, 380);
+
+      const nodeUpdate = nodeEnter.merge(node);
+      nodeUpdate.transition().duration(duration)
+        .attr('transform', d => `translate(${d.y},${d.x})`)
+        .attr('class', d => "node" + (d.children ? " node--internal" : " node--leaf") + (d._children ? " node--internal _children" : ""));
+
+      nodeUpdate.select('circle').attr('r', 8.5)
+        .style('fill', d => {
+            let palette;
+            if (d.depth === 0) {
+                palette = levelSpecificPalettes[0];
+            } else if (d.depth === 1) {
+                palette = phaseColors[d.data.originalStageName] || phaseColors.Default;
+            } else {
+                palette = levelSpecificPalettes[d.depth] || levelSpecificPalettes.default;
+            }
+            if (d._children) return palette.collapsedFill;
+            if (d.children) return palette.fill;
+            return "#fff";
+        })
+        .style('stroke', d => {
+            let palette;
+            if (d.depth === 0) {
+                palette = levelSpecificPalettes[0];
+            } else if (d.depth === 1) {
+                palette = phaseColors[d.data.originalStageName] || phaseColors.Default;
+            } else {
+                palette = levelSpecificPalettes[d.depth] || levelSpecificPalettes.default;
+            }
+            return palette.stroke;
+        });
+      nodeUpdate.select('text').style("fill-opacity", 1).call(wrapText, 380);
+
+      const nodeExit = node.exit().transition().duration(duration).attr('transform', d => `translate(${source.y},${source.x})`).remove();
+      nodeExit.select('circle').attr('r', 1e-6);
+      nodeExit.select('text').style('fill-opacity', 1e-6);
+
+      const link = g.selectAll('path.link').data(links, d => d.id);
+      const linkEnter = link.enter().insert('path', "g").attr('class', 'link').attr('d', d => { const o = { x: source.x0, y: source.y0 }; return diagonal(o, o); });
+
+      linkEnter.merge(link).transition().duration(duration).attr('d', d => diagonal(d, d.parent))
+        .style('stroke', d => {
+            const sourceNode = d.parent;
+            if (!sourceNode) return phaseColors.Default.stroke;
+            const l1AncestorName = sourceNode.data.originalStageName;
+            const colorPalette = phaseColors[l1AncestorName] || phaseColors.Default;
+            return colorPalette.stroke;
+        });
+      link.exit().transition().duration(duration).attr('d', d => { const o = { x: source.x, y: source.y }; return diagonal(o, o); }).remove();
+      nodes.forEach(d => { d.x0 = d.x; d.y0 = d.y; });
+    }
+
+    function diagonal(s, d) { return `M ${s.y} ${s.x} C ${(s.y + d.y) / 2} ${s.x}, ${(s.y + d.y) / 2} ${d.x}, ${d.y} ${d.x}`; }
+
+    function wrapText(textElements, maxWidth) {
+        const textPartColors = {
+            name: '#343a40',
+            count: '#0056b3'
+        };
+        const countRegex = /(\s\(Total Count: \d+\))$/;
+
+        textElements.each(function () {
+            const textD3 = d3.select(this);
+            const originalNodeText = textD3.datum().data.name;
+            const x = parseFloat(textD3.attr("x") || 0);
+            const initialDy = textD3.attr("dy");
+            const textAnchor = textD3.attr("text-anchor");
+            const lineHeight = 1.1;
+
+            textD3.text(null);
+
+            let namePart = originalNodeText;
+            let countPartText = "";
+
+            const countMatch = originalNodeText.match(countRegex);
+            if (countMatch && originalNodeText.endsWith(countMatch[0])) {
+                namePart = originalNodeText.substring(0, originalNodeText.length - countMatch[0].length).trim();
+                countPartText = countMatch[0].trim();
+            }
+
+            const tokens = [];
+            namePart.split(/\s+/).filter(Boolean).forEach(word => {
+                tokens.push({ text: word, type: 'name' });
+            });
+            if (countPartText) {
+                tokens.push({ text: countPartText, type: 'count' });
+            }
+
+            if (tokens.length === 0 && originalNodeText) {
+                tokens.push({ text: originalNodeText, type: 'name' });
+            }
+
+            let currentTspan = textD3.append("tspan").attr("x", x).attr("dy", initialDy);
+            if (textAnchor === "end") currentTspan.attr("text-anchor", "end");
+
+            let lineTokens = [];
+
+            for (let i = 0; i < tokens.length; i++) {
+                const tokenObj = tokens[i];
+
+                lineTokens.push(tokenObj);
+                currentTspan.text(lineTokens.map(t => t.text).join(" "));
+
+                if (currentTspan.node().getComputedTextLength() > maxWidth && lineTokens.length > 1) {
+                    lineTokens.pop();
+
+                    currentTspan.text(null);
+                    lineTokens.forEach((prevToken, idx) => {
+                        currentTspan.append("tspan")
+                            .text((idx > 0 ? " " : "") + prevToken.text)
+                            .style("fill", textPartColors[prevToken.type] || textPartColors.name)
+                            .style("font-weight", prevToken.type === 'count' ? "bold" : "normal");
+                    });
+
+                    lineTokens = [tokenObj];
+                    currentTspan = textD3.append("tspan").attr("x", x).attr("dy", lineHeight + "em");
+                    if (textAnchor === "end") currentTspan.attr("text-anchor", "end");
+                }
+            }
+
+            currentTspan.text(null);
+            lineTokens.forEach((token, idx) => {
+                currentTspan.append("tspan")
+                    .text((idx > 0 ? " " : "") + token.text)
+                    .style("fill", textPartColors[token.type] || textPartColors.name)
+                    .style("font-weight", token.type === 'count' ? "bold" : "normal");
+            });
+
+            if (textD3.selectAll("tspan > tspan").empty() && textD3.select("tspan").text().length === 0 && originalNodeText) {
+                let t = textD3.select("tspan");
+                let displayText = originalNodeText;
+                t.text(displayText).style("fill", textPartColors.name);
+                if (t.node() && t.node().getComputedTextLength() > maxWidth && displayText.length > 20) {
+                    let estimatedChars = Math.floor(maxWidth / (t.node().getComputedTextLength()/displayText.length) );
+                    displayText = displayText.substring(0, Math.max(0, estimatedChars - 3)) + "...";
+                    t.text(displayText);
+                }
+            }
+        });
+    }
+  </script>
+</body>
+</html>

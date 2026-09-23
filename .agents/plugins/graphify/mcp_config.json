@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "graphify": {
+      "command": "/home/daniel/.local/share/graphify-env/bin/python3",
+      "args": [
+        "-m",
+        "graphify.serve",
+        "/home/daniel/Documents/2026 Head to Head Heftystrong/graphify-out/graph.json"
+      ]
+    }
+  }
+}
