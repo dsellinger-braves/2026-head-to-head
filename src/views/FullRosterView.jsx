@@ -809,7 +809,7 @@ function RosterTableSection({ title, badge, players, onPlayerClick, selectedTeam
                             {stats.IP ? `${Math.floor(parseFloat(stats.IP))}.${Math.round((parseFloat(stats.IP) % 1) * 3)} IP` : '0 IP'} · {stats.K || 0} K
                           </div>
                           <div className="text-[11px] text-gray-500 mt-0.5">
-                            {formatRate(stats.ERA, 2)} ERA · {formatRate(stats.WHIP, 2)} WHIP · {p.isSP ? `${stats.QS || 0} QS` : `${stats['SV+HDs'] || 0} SV+HD`}
+                            {formatRate(stats.ERA, 2)} ERA · {formatRate(stats.WHIP, 2)} WHIP · {p.isSP ? `${stats.QS || 0} QS${parseFloat(stats.GS ?? stats['33'] ?? 0) > 0 ? ` (${((parseFloat(stats.QS ?? stats['63'] ?? 0) / parseFloat(stats.GS ?? stats['33'] ?? 0)) * 100).toFixed(0)}%)` : ''}` : `${stats['SV+HDs'] || 0} SV+HD`}
                           </div>
                         </>
                       ) : (

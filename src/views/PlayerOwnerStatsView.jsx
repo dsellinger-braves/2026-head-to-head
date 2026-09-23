@@ -338,7 +338,7 @@ export default function PlayerOwnerStatsView({
     const headers = [
       'Player Name', 'Owner', 'Season', 'Positions', 'Days Active', 'Days Bench', 'Days IL',
       'PA', 'AB', 'H', 'R', 'HR', 'RBI', 'SB', 'BB', 'SO', 'AVG', 'OBP', 'SLG', 'OPS',
-      'GS', 'IP', 'K', 'QS', 'SV+HD', 'ERA', 'WHIP', 'W', 'L'
+      'GS', 'IP', 'K', 'QS', 'QS%', 'SV+HD', 'ERA', 'WHIP', 'W', 'L'
     ];
 
     const rows = sortedRecords.map(r => [
@@ -366,6 +366,7 @@ export default function PlayerOwnerStatsView({
       r.ip || 0,
       r.k || 0,
       r.qs || 0,
+      r.gs > 0 ? `${(r.qs_pct !== undefined ? r.qs_pct : (r.qs / r.gs * 100)).toFixed(1)}%` : '0.0%',
       r.sv_hd || 0,
       r.era || 0,
       r.whip || 0,
@@ -688,6 +689,9 @@ export default function PlayerOwnerStatsView({
                     <th onClick={() => handleSort('qs')} className="px-2.5 py-3 text-center cursor-pointer hover:bg-blue-50">
                       QS {sortKey === 'qs' ? (sortDir === 'desc' ? '↓' : '↑') : ''}
                     </th>
+                    <th onClick={() => handleSort('qs_pct')} className="px-2.5 py-3 text-center cursor-pointer hover:bg-blue-50 text-indigo-700">
+                      QS% {sortKey === 'qs_pct' ? (sortDir === 'desc' ? '↓' : '↑') : ''}
+                    </th>
                     <th onClick={() => handleSort('sv_hd')} className="px-2.5 py-3 text-center cursor-pointer hover:bg-blue-50">
                       SV+H {sortKey === 'sv_hd' ? (sortDir === 'desc' ? '↓' : '↑') : ''}
                     </th>
@@ -776,6 +780,9 @@ export default function PlayerOwnerStatsView({
                         <td className="px-2.5 py-2.5 text-center font-bold text-gray-900">{r.ip || 0}</td>
                         <td className="px-2.5 py-2.5 text-center font-bold text-indigo-700">{r.k || 0}</td>
                         <td className="px-2.5 py-2.5 text-center text-gray-700">{r.qs || 0}</td>
+                        <td className="px-2.5 py-2.5 text-center font-bold text-indigo-700">
+                          {r.gs > 0 ? `${(r.qs_pct !== undefined ? r.qs_pct : (r.qs / r.gs * 100)).toFixed(1)}%` : '-'}
+                        </td>
                         <td className="px-2.5 py-2.5 text-center font-bold text-purple-700">{r.sv_hd || 0}</td>
                         <td className="px-2.5 py-2.5 text-center font-bold text-blue-700">{formattedERA}</td>
                         <td className="px-2.5 py-2.5 text-center text-gray-700">{formattedWHIP}</td>
