@@ -5,6 +5,7 @@ import TeamAvatar from '../components/TeamAvatar';
 import RotoGapView from './RotoGapView';
 import BenchStatsView from './BenchStatsView';
 import PlayerImpactSimulatorView from './PlayerImpactSimulatorView';
+import OptimalLineupSimulatorView from './OptimalLineupSimulatorView';
 
 const STAT_COLS = ['PA', 'R', 'HR', 'RBI', 'SB', 'OBP', 'IP', 'K', 'QS', 'QS_PCT', 'SV+HDs', 'ERA', 'WHIP'];
 
@@ -122,7 +123,12 @@ function SortIcon({ col, sortKey, sortDir }) {
 export default function TeamsView({ allStats, onOwnerClick, onPlayerClick, selectedSeason = 2026, initialViewMode = 'raw', initialTeamId = 5 }) {
   const [sortKey, setSortKey] = useState('R');
   const [sortDir, setSortDir] = useState('desc');
-  const [viewMode, setViewMode] = useState(initialViewMode); // 'raw', 'roto', 'minutiae', 'bench', 'gap', 'simulator'
+  const [viewMode, setViewMode] = useState(initialViewMode); // 'raw', 'roto', 'minutiae', 'bench', 'gap', 'simulator', 'best-lineup'
+  const [prevInitial, setPrevInitial] = useState(initialViewMode);
+  if (initialViewMode !== prevInitial) {
+    setPrevInitial(initialViewMode);
+    setViewMode(initialViewMode);
+  }
 
   const teamRows = useMemo(() => {
     const groups = {};
@@ -233,6 +239,12 @@ export default function TeamsView({ allStats, onOwnerClick, onPlayerClick, selec
           >
             🧪 What-If Simulator
           </button>
+          <button
+            onClick={() => handleViewModeChange('best-lineup')}
+            className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${viewMode === 'best-lineup' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+          >
+            ✨ Best Lineup
+          </button>
         </div>
       </div>
 
@@ -250,6 +262,13 @@ export default function TeamsView({ allStats, onOwnerClick, onPlayerClick, selec
           allStats={allStats}
           selectedSeason={selectedSeason}
           initialTeamId={initialTeamId}
+          onOwnerClick={onOwnerClick}
+          onPlayerClick={onPlayerClick}
+        />
+      ) : viewMode === 'best-lineup' ? (
+        <OptimalLineupSimulatorView
+          allStats={allStats}
+          selectedSeason={selectedSeason}
           onOwnerClick={onOwnerClick}
           onPlayerClick={onPlayerClick}
         />

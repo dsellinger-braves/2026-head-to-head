@@ -31,6 +31,7 @@ import UserNavWidget from './components/UserNavWidget';
 import CommishActiveBanner from './components/CommishActiveBanner';
 import { useAuth } from './context/useAuth';
 import LeagueHistoryView from './views/LeagueHistoryView';
+import PlayerOwnerStatsView from './views/PlayerOwnerStatsView';
 
 const AVAILABLE_SEASONS = [2027, ...Array.from({ length: 2026 - 2012 + 1 }, (_, i) => 2026 - i)];
 
@@ -54,6 +55,7 @@ const VIEW_TO_HASH = {
   pickem: 'pickem',
   capital: 'draft-capital',
   keepers: 'keepers-budgets',
+  'player-owners': 'player-owners',
 };
 
 const HASH_TO_VIEW = {
@@ -70,8 +72,20 @@ const HASH_TO_VIEW = {
   'teams/bench': 'teams',
   'teams/gap': 'teams',
   'teams/minutiae': 'teams',
+  'teams/best-lineup': 'teams',
+  'best-lineup': 'teams',
+  'teams/optimal': 'teams',
+  'optimal': 'teams',
+  'simulator/best-lineup': 'teams',
   'player-simulator': 'teams',
   'impact-simulator': 'teams',
+  'player-owners': 'player-owners',
+  'player-owner': 'player-owners',
+  'players/owner-season': 'player-owners',
+  'players/owner-seasons': 'player-owners',
+  'players/owner-career': 'player-owners',
+  'players/owners': 'player-owners',
+  'owner-players': 'player-owners',
   rosters: 'rosters',
   roster: 'rosters',
   lineups: 'rosters',
@@ -167,6 +181,7 @@ function getSubTabsFromHash() {
   let keepersSubTab = 'matrix';
   let draftSubTab = 'board';
   let teamsSubTab = 'raw';
+  let playerOwnerMode = 'season';
 
   if (hash.includes('rosters') && !hash.includes('teams')) keepersSubTab = 'rosters';
   else if (hash.includes('comp') || (hash.includes('simulator') && hash.includes('keepers'))) keepersSubTab = 'simulator';
@@ -177,13 +192,16 @@ function getSubTabsFromHash() {
   else if (hash.includes('ledgers')) draftSubTab = 'ledgers';
   else if (hash.includes('traded') || hash.includes('board')) draftSubTab = 'board';
 
-  if (hash.includes('what-if') || hash.includes('teams/simulator') || hash.includes('impact') || hash === 'simulator' || hash === 'what-if') teamsSubTab = 'simulator';
+  if (hash.includes('best-lineup') || hash.includes('optimal')) teamsSubTab = 'best-lineup';
+  else if (hash.includes('what-if') || hash.includes('teams/simulator') || hash.includes('impact') || hash === 'simulator' || hash === 'what-if') teamsSubTab = 'simulator';
   else if (hash.includes('bench')) teamsSubTab = 'bench';
   else if (hash.includes('gap')) teamsSubTab = 'gap';
   else if (hash.includes('minutiae')) teamsSubTab = 'minutiae';
   else if (hash.includes('roto')) teamsSubTab = 'roto';
 
-  return { keepersSubTab, draftSubTab, teamsSubTab };
+  if (hash.includes('career') || hash.includes('all-time')) playerOwnerMode = 'career';
+
+  return { keepersSubTab, draftSubTab, teamsSubTab, playerOwnerMode };
 }
 
 function App() {
@@ -193,6 +211,7 @@ function App() {
   const [keepersSubTab, setKeepersSubTab] = useState(() => getSubTabsFromHash().keepersSubTab);
   const [draftSubTab, setDraftSubTab] = useState(() => getSubTabsFromHash().draftSubTab);
   const [teamsSubTab, setTeamsSubTab] = useState(() => getSubTabsFromHash().teamsSubTab);
+  const [playerOwnerMode, setPlayerOwnerMode] = useState(() => getSubTabsFromHash().playerOwnerMode);
   const [openDropdown, setOpenDropdown] = useState(null); // 'teams' | 'players' | 'keepers' | 'draft' | null
 
   const [rawData, setRawData] = useState([]);
@@ -269,11 +288,12 @@ function App() {
   useEffect(() => {
     const handleHashChange = () => {
       const newView = getViewFromHash();
-      const { keepersSubTab: kTab, draftSubTab: dTab, teamsSubTab: tTab } = getSubTabsFromHash();
+      const { keepersSubTab: kTab, draftSubTab: dTab, teamsSubTab: tTab, playerOwnerMode: poMode } = getSubTabsFromHash();
       setCurrentView((prev) => (prev !== newView ? newView : prev));
       setKeepersSubTab(kTab);
       setDraftSubTab(dTab);
       setTeamsSubTab(tTab);
+      setPlayerOwnerMode(poMode);
     };
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
@@ -977,7 +997,7 @@ function App() {
                       type="button"
                       onClick={() => setOpenDropdown(prev => prev === 'players' ? null : 'players')}
                       className={`px-3.5 py-1.5 rounded-xl font-black flex items-center gap-1.5 transition-all cursor-pointer ${
-                        ['players', 'transactions', 'trades', 'disparities'].includes(currentView)
+                        ['players', 'transactions', 'trades', 'disparities', 'player-owners'].includes(currentView)
                           ? 'bg-blue-600 text-white shadow-md ring-1 ring-blue-400'
                           : 'text-blue-200 hover:bg-blue-800/80 hover:text-white'
                       }`}
@@ -999,6 +1019,16 @@ function App() {
                         >
                           <span className="flex items-center gap-2"><span>📊</span><span>Stats</span></span>
                           {currentView === 'players' && <span className="text-[10px] text-blue-200">●</span>}
+                        </a>
+                        <a
+                          href="#/player-owners"
+                          onClick={(e) => { e.preventDefault(); setCurrentView('player-owners'); setOpenDropdown(null); }}
+                          className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-between transition cursor-pointer ${
+                            currentView === 'player-owners' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2"><span>👤</span><span>Player-Owner Stats</span></span>
+                          {currentView === 'player-owners' && <span className="text-[10px] text-blue-200">●</span>}
                         </a>
                         <a
                           href="#/transactions"
@@ -1383,6 +1413,13 @@ function App() {
                   allStats={rawData}
                   selectedSeason={selectedSeason}
                   onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
+                />
+              )}
+              {currentView === 'player-owners' && (
+                <PlayerOwnerStatsView
+                  initialMode={playerOwnerMode || 'season'}
+                  onPlayerClick={(p) => setSelectedPlayer(p)}
+                  onOwnerClick={(team) => setSelectedOwner(team)}
                 />
               )}
               {currentView === 'disparities' && (
