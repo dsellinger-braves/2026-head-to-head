@@ -4,7 +4,7 @@
   "season_year": 2026,
   "scoring_format": "10-Category Head-to-Head Each Category / Points (R, HR, RBI, OBP, SB | K, QS, SV+HD, ERA, WHIP)",
   "last_updated_scoring_period": 184,
-  "last_updated_timestamp": "2026-09-24T22:11:59.065364Z",
+  "last_updated_timestamp": "2026-09-25T01:19:34.162130Z",
   "current_week": 25,
   "season_structure": {
     "phase_1": {
@@ -437,9 +437,9 @@
           "name": "Sal Stewart",
           "hr": 32,
           "rbi": 108,
-          "r": 84,
+          "r": 85,
           "sb": 15,
-          "obp": 0.332
+          "obp": 0.333
         }
       ],
       "top_pitchers": [
@@ -742,10 +742,10 @@
         {
           "name": "Michael Harris II",
           "hr": 25,
-          "rbi": 83,
-          "r": 74,
+          "rbi": 84,
+          "r": 75,
           "sb": 12,
-          "obp": 0.316
+          "obp": 0.317
         }
       ],
       "top_pitchers": [
@@ -869,10 +869,18 @@
         {
           "name": "Bryce Harper",
           "hr": 28,
-          "rbi": 85,
+          "rbi": 86,
           "r": 92,
           "sb": 7,
           "obp": 0.381
+        },
+        {
+          "name": "Jackson Chourio",
+          "hr": 24,
+          "rbi": 70,
+          "r": 90,
+          "sb": 22,
+          "obp": 0.339
         },
         {
           "name": "Alec Burleson",
@@ -883,19 +891,11 @@
           "obp": 0.335
         },
         {
-          "name": "Jackson Chourio",
-          "hr": 23,
-          "rbi": 69,
-          "r": 88,
-          "sb": 21,
-          "obp": 0.336
-        },
-        {
           "name": "Jarren Duran",
           "hr": 20,
           "rbi": 69,
           "r": 65,
-          "sb": 20,
+          "sb": 21,
           "obp": 0.265
         }
       ],
@@ -1002,9 +1002,9 @@
           "name": "Kyle Schwarber",
           "hr": 45,
           "rbi": 95,
-          "r": 93,
+          "r": 94,
           "sb": 3,
-          "obp": 0.352
+          "obp": 0.353
         },
         {
           "name": "Randy Arozarena",
@@ -1026,9 +1026,9 @@
           "name": "Yandy Diaz",
           "hr": 22,
           "rbi": 85,
-          "r": 88,
+          "r": 90,
           "sb": 3,
-          "obp": 0.357
+          "obp": 0.359
         },
         {
           "name": "Julio Rodriguez",
@@ -1050,11 +1050,11 @@
         },
         {
           "name": "Cade Smith",
-          "k": 104,
+          "k": 107,
           "qs": 0,
-          "sv_hd": 40,
-          "era": 1.99,
-          "ip": 72.3
+          "sv_hd": 41,
+          "era": 1.96,
+          "ip": 73.3
         },
         {
           "name": "Mason Miller",
@@ -1302,7 +1302,7 @@
           "rbi": 58,
           "r": 100,
           "sb": 21,
-          "obp": 0.298
+          "obp": 0.296
         },
         {
           "name": "Ian Happ",
@@ -1439,9 +1439,9 @@
       "top_batters": [
         {
           "name": "Elly De La Cruz",
-          "hr": 29,
-          "rbi": 76,
-          "r": 97,
+          "hr": 30,
+          "rbi": 77,
+          "r": 98,
           "sb": 29,
           "obp": 0.367
         },
@@ -1592,14 +1592,14 @@
           "name": "Ben Rice",
           "hr": 41,
           "rbi": 97,
-          "r": 103,
+          "r": 104,
           "sb": 3,
           "obp": 0.362
         },
         {
           "name": "Junior Caminero",
           "hr": 41,
-          "rbi": 97,
+          "rbi": 99,
           "r": 96,
           "sb": 3,
           "obp": 0.36
@@ -1632,11 +1632,11 @@
       "top_pitchers": [
         {
           "name": "Cam Schlittler",
-          "k": 234,
+          "k": 239,
           "qs": 20,
           "sv_hd": 0,
-          "era": 1.94,
-          "ip": 190.7
+          "era": 1.95,
+          "ip": 193.7
         },
         {
           "name": "Bryan Woo",
@@ -3661,11 +3661,11 @@
       "end_date": "2026-09-27",
       "leader": {
         "owner": "Dan",
-        "points": 73.0
+        "points": 72.5
       },
       "second_place": {
         "owner": "Tim",
-        "points": 68.5
+        "points": 69.5
       },
       "fourth_place_cutline": {
         "owner": "Will",
@@ -3676,19 +3676,19 @@
           "rank": 1,
           "owner": "Dan",
           "team_name": "The Silver Bullets",
-          "points": 73.0
+          "points": 72.5
         },
         {
           "rank": 2,
           "owner": "Tim",
           "team_name": "Anti-lock Brake Systems",
-          "points": 68.5
+          "points": 69.5
         },
         {
           "rank": 3,
           "owner": "Adrian",
           "team_name": "D0ng Demolishers",
-          "points": 64.5
+          "points": 65.5
         },
         {
           "rank": 4,
@@ -3700,7 +3700,7 @@
           "rank": 5,
           "owner": "Garrett",
           "team_name": "There's Always Next Year",
-          "points": 48.0
+          "points": 46.5
         },
         {
           "rank": 6,
@@ -4067,23 +4067,23 @@
         "category_breakdown": {
           "R": {
             "winner": "Adrian",
-            "val_a": 24,
-            "val_b": 26
+            "val_a": 26,
+            "val_b": 27
           },
           "HR": {
             "winner": "Adrian",
             "val_a": 4,
-            "val_b": 7
+            "val_b": 8
           },
           "RBI": {
             "winner": "Adrian",
-            "val_a": 15,
-            "val_b": 29
+            "val_a": 17,
+            "val_b": 30
           },
           "OBP": {
             "winner": "Adrian",
-            "val_a": 0.3511,
-            "val_b": 0.3561
+            "val_a": 0.3433,
+            "val_b": 0.3519
           },
           "SB": {
             "winner": "Adrian",
@@ -4092,7 +4092,7 @@
           },
           "K": {
             "winner": "Dan",
-            "val_a": 56,
+            "val_a": 62,
             "val_b": 39
           },
           "QS": {
@@ -4102,12 +4102,12 @@
           },
           "SV_HD": {
             "winner": "Adrian",
-            "val_a": 3,
+            "val_a": 4,
             "val_b": 7
           },
           "ERA": {
             "winner": "Dan",
-            "val_a": 1.89,
+            "val_a": 1.76,
             "val_b": 4.68
           },
           "WHIP": {
@@ -4122,21 +4122,21 @@
           "team_id": 1,
           "owner": "Tim",
           "seed": 2,
-          "score": 7
+          "score": 8
         },
         "away": {
           "team_id": 12,
           "owner": "Will",
           "seed": 3,
-          "score": 3
+          "score": 2
         },
         "ties": 0,
         "leader": "Tim",
         "category_breakdown": {
           "R": {
             "winner": "Tim",
-            "val_a": 23,
-            "val_b": 11
+            "val_a": 24,
+            "val_b": 14
           },
           "HR": {
             "winner": "Tim",
@@ -4150,18 +4150,18 @@
           },
           "OBP": {
             "winner": "Tim",
-            "val_a": 0.3709,
-            "val_b": 0.3158
+            "val_a": 0.3734,
+            "val_b": 0.32
           },
           "SB": {
             "winner": "Will",
             "val_a": 5,
-            "val_b": 7
+            "val_b": 8
           },
           "K": {
-            "winner": "Will",
-            "val_a": 21,
-            "val_b": 24
+            "winner": "Tim",
+            "val_a": 33,
+            "val_b": 27
           },
           "QS": {
             "winner": "Will",
@@ -4171,104 +4171,104 @@
           "SV_HD": {
             "winner": "Tim",
             "val_a": 6,
-            "val_b": 1
+            "val_b": 2
           },
           "ERA": {
             "winner": "Tim",
-            "val_a": 2.25,
-            "val_b": 2.79
+            "val_a": 1.62,
+            "val_b": 2.7
           },
           "WHIP": {
             "winner": "Tim",
-            "val_a": 1.17,
-            "val_b": 1.34
+            "val_a": 0.92,
+            "val_b": 1.3
           }
         }
       },
       "consolation_stats": {
         "3": {
-          "R": 22,
+          "R": 23,
           "HR": 7,
           "RBI": 22,
-          "OBP": 0.3657,
-          "SB": 4,
+          "OBP": 0.3655,
+          "SB": 5,
           "K": 34,
           "QS": 2,
           "SV_HD": 0,
           "ERA": 2.88,
           "WHIP": 0.99,
           "raw_IP": 34.333333333333336,
-          "raw_AB": 117.0,
-          "raw_H": 34.0,
-          "raw_BB": 14.0,
+          "raw_AB": 127.0,
+          "raw_H": 37.0,
+          "raw_BB": 15.0,
           "raw_ER": 11.0
         },
         "8": {
-          "R": 8,
-          "HR": 2,
-          "RBI": 4,
-          "OBP": 0.2975,
-          "SB": 6,
+          "R": 12,
+          "HR": 3,
+          "RBI": 10,
+          "OBP": 0.3262,
+          "SB": 8,
           "K": 17,
-          "QS": 1,
+          "QS": 2,
           "SV_HD": 2,
           "ERA": 3.31,
           "WHIP": 1.71,
           "raw_IP": 16.333333333333332,
-          "raw_AB": 103.0,
-          "raw_H": 18.0,
-          "raw_BB": 14.0,
+          "raw_AB": 121.0,
+          "raw_H": 26.0,
+          "raw_BB": 15.0,
           "raw_ER": 6.0
         },
         "6": {
-          "R": 17,
+          "R": 18,
           "HR": 6,
-          "RBI": 16,
+          "RBI": 19,
           "OBP": 0.2857,
           "SB": 0,
-          "K": 14,
+          "K": 19,
           "QS": 0,
           "SV_HD": 4,
-          "ERA": 1.38,
-          "WHIP": 0.85,
-          "raw_IP": 13.0,
-          "raw_AB": 154.0,
-          "raw_H": 39.0,
-          "raw_BB": 7.0,
-          "raw_ER": 2.0
+          "ERA": 1.69,
+          "WHIP": 1.0,
+          "raw_IP": 16.0,
+          "raw_AB": 167.0,
+          "raw_H": 42.0,
+          "raw_BB": 8.0,
+          "raw_ER": 3.0
         },
         "13": {
           "R": 2,
           "HR": 0,
           "RBI": 3,
-          "OBP": 0.3385,
+          "OBP": 0.3188,
           "SB": 1,
-          "K": 31,
+          "K": 35,
           "QS": 2,
           "SV_HD": 2,
-          "ERA": 1.08,
-          "WHIP": 0.64,
-          "raw_IP": 25.0,
-          "raw_AB": 58.0,
+          "ERA": 2.4,
+          "WHIP": 0.8,
+          "raw_IP": 30.0,
+          "raw_AB": 62.0,
           "raw_H": 17.0,
           "raw_BB": 4.0,
-          "raw_ER": 3.0
+          "raw_ER": 8.0
         },
         "14": {
-          "R": 10,
+          "R": 12,
           "HR": 2,
-          "RBI": 6,
-          "OBP": 0.2652,
-          "SB": 5,
-          "K": 26,
+          "RBI": 7,
+          "OBP": 0.2436,
+          "SB": 6,
+          "K": 28,
           "QS": 2,
-          "SV_HD": 2,
-          "ERA": 3.16,
-          "WHIP": 0.97,
-          "raw_IP": 25.666666666666664,
-          "raw_AB": 121.0,
-          "raw_H": 25.0,
-          "raw_BB": 10.0,
+          "SV_HD": 3,
+          "ERA": 3.04,
+          "WHIP": 0.98,
+          "raw_IP": 26.666666666666664,
+          "raw_AB": 144.0,
+          "raw_H": 27.0,
+          "raw_BB": 11.0,
           "raw_ER": 9.0
         }
       }
