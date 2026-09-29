@@ -32,7 +32,7 @@
             "espn_player_id": 4619649,
             "stats": {
               "is_pitcher": false,
-              "games_post_trade": 27,
+              "games_post_trade": 28,
               "PA": 70.0,
               "AB": 60.0,
               "H": 14.0,
@@ -147,7 +147,7 @@
             "espn_player_id": 4619649,
             "stats": {
               "is_pitcher": false,
-              "games_post_trade": 27,
+              "games_post_trade": 28,
               "PA": 70.0,
               "AB": 60.0,
               "H": 14.0,
@@ -186,7 +186,7 @@
         "espn_player_id": 4619649,
         "stats": {
           "is_pitcher": false,
-          "games_post_trade": 27,
+          "games_post_trade": 28,
           "PA": 70.0,
           "AB": 60.0,
           "H": 14.0,
@@ -274,7 +274,7 @@
             "espn_player_id": 5182933,
             "stats": {
               "is_pitcher": true,
-              "games_post_trade": 25,
+              "games_post_trade": 26,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -309,7 +309,7 @@
             "espn_player_id": 5148964,
             "stats": {
               "is_pitcher": false,
-              "games_post_trade": 45,
+              "games_post_trade": 46,
               "PA": 140.0,
               "AB": 126.0,
               "H": 35.0,
@@ -494,7 +494,7 @@
             "espn_player_id": 5182933,
             "stats": {
               "is_pitcher": true,
-              "games_post_trade": 25,
+              "games_post_trade": 26,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -529,7 +529,7 @@
             "espn_player_id": 5148964,
             "stats": {
               "is_pitcher": false,
-              "games_post_trade": 45,
+              "games_post_trade": 46,
               "PA": 140.0,
               "AB": 126.0,
               "H": 35.0,
@@ -638,7 +638,7 @@
         "espn_player_id": 5182933,
         "stats": {
           "is_pitcher": true,
-          "games_post_trade": 25,
+          "games_post_trade": 26,
           "PA": 0.0,
           "AB": 0.0,
           "H": 0.0,
@@ -673,7 +673,7 @@
         "espn_player_id": 5148964,
         "stats": {
           "is_pitcher": false,
-          "games_post_trade": 45,
+          "games_post_trade": 46,
           "PA": 140.0,
           "AB": 126.0,
           "H": 35.0,
@@ -724,7 +724,7 @@
             "espn_player_id": 32760,
             "stats": {
               "is_pitcher": true,
-              "games_post_trade": 57,
+              "games_post_trade": 58,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -887,7 +887,7 @@
             "espn_player_id": 32760,
             "stats": {
               "is_pitcher": true,
-              "games_post_trade": 57,
+              "games_post_trade": 58,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -942,7 +942,7 @@
         "espn_player_id": 32760,
         "stats": {
           "is_pitcher": true,
-          "games_post_trade": 57,
+          "games_post_trade": 58,
           "PA": 0.0,
           "AB": 0.0,
           "H": 0.0,
@@ -1113,7 +1113,7 @@
             "espn_player_id": 42453,
             "stats": {
               "is_pitcher": false,
-              "games_post_trade": 72,
+              "games_post_trade": 73,
               "PA": 278.0,
               "AB": 233.0,
               "H": 61.0,
@@ -1170,7 +1170,7 @@
             "espn_player_id": 42453,
             "stats": {
               "is_pitcher": false,
-              "games_post_trade": 72,
+              "games_post_trade": 73,
               "PA": 278.0,
               "AB": 233.0,
               "H": 61.0,
@@ -1329,7 +1329,7 @@
         "espn_player_id": 42453,
         "stats": {
           "is_pitcher": false,
-          "games_post_trade": 72,
+          "games_post_trade": 73,
           "PA": 278.0,
           "AB": 233.0,
           "H": 61.0,
@@ -1396,7 +1396,7 @@
             "espn_player_id": 4719511,
             "stats": {
               "is_pitcher": false,
-              "games_post_trade": 73,
+              "games_post_trade": 74,
               "PA": 240.0,
               "AB": 221.0,
               "H": 52.0,
@@ -1431,7 +1431,7 @@
             "espn_player_id": 4918156,
             "stats": {
               "is_pitcher": true,
-              "games_post_trade": 73,
+              "games_post_trade": 74,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -1484,7 +1484,7 @@
             "espn_player_id": 35241,
             "stats": {
               "is_pitcher": true,
-              "games_post_trade": 73,
+              "games_post_trade": 74,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -1519,7 +1519,7 @@
             "espn_player_id": 39667,
             "stats": {
               "is_pitcher": true,
-              "games_post_trade": 73,
+              "games_post_trade": 74,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -1576,7 +1576,7 @@
             "espn_player_id": 35241,
             "stats": {
               "is_pitcher": true,
-              "games_post_trade": 73,
+              "games_post_trade": 74,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -1611,7 +1611,7 @@
             "espn_player_id": 39667,
             "stats": {
               "is_pitcher": true,
-              "games_post_trade": 73,
+              "games_post_trade": 74,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -1664,7 +1664,7 @@
             "espn_player_id": 4719511,
             "stats": {
               "is_pitcher": false,
-              "games_post_trade": 73,
+              "games_post_trade": 74,
               "PA": 240.0,
               "AB": 221.0,
               "H": 52.0,
@@ -1699,7 +1699,7 @@
             "espn_player_id": 4918156,
             "stats": {
               "is_pitcher": true,
-              "games_post_trade": 73,
+              "games_post_trade": 74,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -1754,7 +1754,7 @@
         "espn_player_id": 4719511,
         "stats": {
           "is_pitcher": false,
-          "games_post_trade": 73,
+          "games_post_trade": 74,
           "PA": 240.0,
           "AB": 221.0,
           "H": 52.0,
@@ -1789,7 +1789,7 @@
         "espn_player_id": 4918156,
         "stats": {
           "is_pitcher": true,
-          "games_post_trade": 73,
+          "games_post_trade": 74,
           "PA": 0.0,
           "AB": 0.0,
           "H": 0.0,
@@ -1840,7 +1840,7 @@
         "espn_player_id": 35241,
         "stats": {
           "is_pitcher": true,
-          "games_post_trade": 73,
+          "games_post_trade": 74,
           "PA": 0.0,
           "AB": 0.0,
           "H": 0.0,
@@ -1875,7 +1875,7 @@
         "espn_player_id": 39667,
         "stats": {
           "is_pitcher": true,
-          "games_post_trade": 73,
+          "games_post_trade": 74,
           "PA": 0.0,
           "AB": 0.0,
           "H": 0.0,
@@ -1942,7 +1942,7 @@
             "espn_player_id": 4949041,
             "stats": {
               "is_pitcher": true,
-              "games_post_trade": 79,
+              "games_post_trade": 80,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -2030,7 +2030,7 @@
             "espn_player_id": 42584,
             "stats": {
               "is_pitcher": true,
-              "games_post_trade": 79,
+              "games_post_trade": 80,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -2065,7 +2065,7 @@
             "espn_player_id": 32767,
             "stats": {
               "is_pitcher": false,
-              "games_post_trade": 79,
+              "games_post_trade": 80,
               "PA": 278.0,
               "AB": 254.0,
               "H": 58.0,
@@ -2122,7 +2122,7 @@
             "espn_player_id": 42584,
             "stats": {
               "is_pitcher": true,
-              "games_post_trade": 79,
+              "games_post_trade": 80,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -2157,7 +2157,7 @@
             "espn_player_id": 32767,
             "stats": {
               "is_pitcher": false,
-              "games_post_trade": 79,
+              "games_post_trade": 80,
               "PA": 278.0,
               "AB": 254.0,
               "H": 58.0,
@@ -2210,7 +2210,7 @@
             "espn_player_id": 4949041,
             "stats": {
               "is_pitcher": true,
-              "games_post_trade": 79,
+              "games_post_trade": 80,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -2300,7 +2300,7 @@
         "espn_player_id": 4949041,
         "stats": {
           "is_pitcher": true,
-          "games_post_trade": 79,
+          "games_post_trade": 80,
           "PA": 0.0,
           "AB": 0.0,
           "H": 0.0,
@@ -2386,7 +2386,7 @@
         "espn_player_id": 42584,
         "stats": {
           "is_pitcher": true,
-          "games_post_trade": 79,
+          "games_post_trade": 80,
           "PA": 0.0,
           "AB": 0.0,
           "H": 0.0,
@@ -2421,7 +2421,7 @@
         "espn_player_id": 32767,
         "stats": {
           "is_pitcher": false,
-          "games_post_trade": 79,
+          "games_post_trade": 80,
           "PA": 278.0,
           "AB": 254.0,
           "H": 58.0,
@@ -2541,7 +2541,7 @@
             "espn_player_id": 32512,
             "stats": {
               "is_pitcher": false,
-              "games_post_trade": 79,
+              "games_post_trade": 80,
               "PA": 213.0,
               "AB": 191.0,
               "H": 45.0,
@@ -2598,7 +2598,7 @@
             "espn_player_id": 32512,
             "stats": {
               "is_pitcher": false,
-              "games_post_trade": 79,
+              "games_post_trade": 80,
               "PA": 213.0,
               "AB": 191.0,
               "H": 45.0,
@@ -2757,7 +2757,7 @@
         "espn_player_id": 32512,
         "stats": {
           "is_pitcher": false,
-          "games_post_trade": 79,
+          "games_post_trade": 80,
           "PA": 213.0,
           "AB": 191.0,
           "H": 45.0,
@@ -3278,7 +3278,7 @@
             "espn_player_id": 33039,
             "stats": {
               "is_pitcher": false,
-              "games_post_trade": 66,
+              "games_post_trade": 65,
               "PA": 197.0,
               "AB": 184.0,
               "H": 48.0,
@@ -3315,7 +3315,7 @@
             "espn_player_id": 41509,
             "stats": {
               "is_pitcher": true,
-              "games_post_trade": 113,
+              "games_post_trade": 112,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -3356,7 +3356,7 @@
             "espn_player_id": 41509,
             "stats": {
               "is_pitcher": true,
-              "games_post_trade": 113,
+              "games_post_trade": 112,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -3393,7 +3393,7 @@
             "espn_player_id": 33039,
             "stats": {
               "is_pitcher": false,
-              "games_post_trade": 66,
+              "games_post_trade": 65,
               "PA": 197.0,
               "AB": 184.0,
               "H": 48.0,
@@ -3432,7 +3432,7 @@
         "espn_player_id": 41509,
         "stats": {
           "is_pitcher": true,
-          "games_post_trade": 113,
+          "games_post_trade": 112,
           "PA": 0.0,
           "AB": 0.0,
           "H": 0.0,
@@ -3467,7 +3467,7 @@
         "espn_player_id": 33039,
         "stats": {
           "is_pitcher": false,
-          "games_post_trade": 66,
+          "games_post_trade": 65,
           "PA": 197.0,
           "AB": 184.0,
           "H": 48.0,
@@ -3534,7 +3534,7 @@
             "espn_player_id": 41217,
             "stats": {
               "is_pitcher": false,
-              "games_post_trade": 75,
+              "games_post_trade": 74,
               "PA": 223.0,
               "AB": 213.0,
               "H": 48.0,
@@ -3571,7 +3571,7 @@
             "espn_player_id": 33912,
             "stats": {
               "is_pitcher": false,
-              "games_post_trade": 51,
+              "games_post_trade": 50,
               "PA": 149.0,
               "AB": 135.0,
               "H": 32.0,
@@ -3612,7 +3612,7 @@
             "espn_player_id": 33912,
             "stats": {
               "is_pitcher": false,
-              "games_post_trade": 51,
+              "games_post_trade": 50,
               "PA": 149.0,
               "AB": 135.0,
               "H": 32.0,
@@ -3665,7 +3665,7 @@
             "espn_player_id": 41217,
             "stats": {
               "is_pitcher": false,
-              "games_post_trade": 75,
+              "games_post_trade": 74,
               "PA": 223.0,
               "AB": 213.0,
               "H": 48.0,
@@ -3704,7 +3704,7 @@
         "espn_player_id": 33912,
         "stats": {
           "is_pitcher": false,
-          "games_post_trade": 51,
+          "games_post_trade": 50,
           "PA": 149.0,
           "AB": 135.0,
           "H": 32.0,
@@ -3755,7 +3755,7 @@
         "espn_player_id": 41217,
         "stats": {
           "is_pitcher": false,
-          "games_post_trade": 75,
+          "games_post_trade": 74,
           "PA": 223.0,
           "AB": 213.0,
           "H": 48.0,
@@ -3845,7 +3845,7 @@
             "espn_player_id": 32767,
             "stats": {
               "is_pitcher": false,
-              "games_post_trade": 40,
+              "games_post_trade": 39,
               "PA": 125.0,
               "AB": 113.0,
               "H": 30.0,
@@ -3886,7 +3886,7 @@
             "espn_player_id": 32767,
             "stats": {
               "is_pitcher": false,
-              "games_post_trade": 40,
+              "games_post_trade": 39,
               "PA": 125.0,
               "AB": 113.0,
               "H": 30.0,
@@ -3997,7 +3997,7 @@
         "espn_player_id": 32767,
         "stats": {
           "is_pitcher": false,
-          "games_post_trade": 40,
+          "games_post_trade": 39,
           "PA": 125.0,
           "AB": 113.0,
           "H": 30.0,
@@ -4050,7 +4050,7 @@
             "espn_player_id": 40939,
             "stats": {
               "is_pitcher": true,
-              "games_post_trade": 125,
+              "games_post_trade": 124,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -4087,7 +4087,7 @@
             "espn_player_id": 41199,
             "stats": {
               "is_pitcher": true,
-              "games_post_trade": 125,
+              "games_post_trade": 124,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -4128,7 +4128,7 @@
             "espn_player_id": 41199,
             "stats": {
               "is_pitcher": true,
-              "games_post_trade": 125,
+              "games_post_trade": 124,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -4165,7 +4165,7 @@
             "espn_player_id": 40939,
             "stats": {
               "is_pitcher": true,
-              "games_post_trade": 125,
+              "games_post_trade": 124,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -4204,7 +4204,7 @@
         "espn_player_id": 41199,
         "stats": {
           "is_pitcher": true,
-          "games_post_trade": 125,
+          "games_post_trade": 124,
           "PA": 0.0,
           "AB": 0.0,
           "H": 0.0,
@@ -4239,7 +4239,7 @@
         "espn_player_id": 40939,
         "stats": {
           "is_pitcher": true,
-          "games_post_trade": 125,
+          "games_post_trade": 124,
           "PA": 0.0,
           "AB": 0.0,
           "H": 0.0,
@@ -5091,7 +5091,7 @@
             "espn_player_id": 35241,
             "stats": {
               "is_pitcher": true,
-              "games_post_trade": 85,
+              "games_post_trade": 84,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -5128,7 +5128,7 @@
             "espn_player_id": 38980,
             "stats": {
               "is_pitcher": false,
-              "games_post_trade": 144,
+              "games_post_trade": 143,
               "PA": 506.0,
               "AB": 447.0,
               "H": 120.0,
@@ -5169,7 +5169,7 @@
             "espn_player_id": 38980,
             "stats": {
               "is_pitcher": false,
-              "games_post_trade": 144,
+              "games_post_trade": 143,
               "PA": 506.0,
               "AB": 447.0,
               "H": 120.0,
@@ -5206,7 +5206,7 @@
             "espn_player_id": 35241,
             "stats": {
               "is_pitcher": true,
-              "games_post_trade": 85,
+              "games_post_trade": 84,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -5245,7 +5245,7 @@
         "espn_player_id": 35241,
         "stats": {
           "is_pitcher": true,
-          "games_post_trade": 85,
+          "games_post_trade": 84,
           "PA": 0.0,
           "AB": 0.0,
           "H": 0.0,
@@ -5280,7 +5280,7 @@
         "espn_player_id": 38980,
         "stats": {
           "is_pitcher": false,
-          "games_post_trade": 144,
+          "games_post_trade": 143,
           "PA": 506.0,
           "AB": 447.0,
           "H": 120.0,
@@ -5333,7 +5333,7 @@
             "espn_player_id": 37515,
             "stats": {
               "is_pitcher": true,
-              "games_post_trade": 83,
+              "games_post_trade": 82,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -5370,7 +5370,7 @@
             "espn_player_id": 32760,
             "stats": {
               "is_pitcher": true,
-              "games_post_trade": 112,
+              "games_post_trade": 111,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -5446,7 +5446,7 @@
             "espn_player_id": 32760,
             "stats": {
               "is_pitcher": true,
-              "games_post_trade": 112,
+              "games_post_trade": 111,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -5518,7 +5518,7 @@
             "espn_player_id": 37515,
             "stats": {
               "is_pitcher": true,
-              "games_post_trade": 83,
+              "games_post_trade": 82,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -5557,7 +5557,7 @@
         "espn_player_id": 32760,
         "stats": {
           "is_pitcher": true,
-          "games_post_trade": 112,
+          "games_post_trade": 111,
           "PA": 0.0,
           "AB": 0.0,
           "H": 0.0,
@@ -5627,7 +5627,7 @@
         "espn_player_id": 37515,
         "stats": {
           "is_pitcher": true,
-          "games_post_trade": 83,
+          "games_post_trade": 82,
           "PA": 0.0,
           "AB": 0.0,
           "H": 0.0,
@@ -6685,7 +6685,7 @@
             "espn_player_id": 41054,
             "stats": {
               "is_pitcher": true,
-              "games_post_trade": 99,
+              "games_post_trade": 98,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -6726,7 +6726,7 @@
             "espn_player_id": 41054,
             "stats": {
               "is_pitcher": true,
-              "games_post_trade": 99,
+              "games_post_trade": 98,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -6837,7 +6837,7 @@
         "espn_player_id": 41054,
         "stats": {
           "is_pitcher": true,
-          "games_post_trade": 99,
+          "games_post_trade": 98,
           "PA": 0.0,
           "AB": 0.0,
           "H": 0.0,
@@ -6890,7 +6890,7 @@
             "espn_player_id": 41216,
             "stats": {
               "is_pitcher": true,
-              "games_post_trade": 180,
+              "games_post_trade": 179,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -7005,7 +7005,7 @@
             "espn_player_id": 41216,
             "stats": {
               "is_pitcher": true,
-              "games_post_trade": 180,
+              "games_post_trade": 179,
               "PA": 0.0,
               "AB": 0.0,
               "H": 0.0,
@@ -7079,7 +7079,7 @@
         "espn_player_id": 41216,
         "stats": {
           "is_pitcher": true,
-          "games_post_trade": 180,
+          "games_post_trade": 179,
           "PA": 0.0,
           "AB": 0.0,
           "H": 0.0,
