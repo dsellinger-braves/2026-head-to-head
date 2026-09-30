@@ -1,7 +1,7 @@
 # Graph Report - 2026 Head to Head Heftystrong  (2026-09-30)
 
 ## Corpus Check
-- 136 files · ~1,800,359 words
+- 136 files · ~1,803,188 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 10 file(s) not represented in the graph (top: (none) 5, .toml 2, .css 2)
 
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `7635967a`
+- Built from commit: `771cbf88`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
