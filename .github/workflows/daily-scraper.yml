@@ -51,6 +51,16 @@ jobs:
         run: |
           python pipelines/update_league_context.py
 
+      - name: Update Live Pickem Standings
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_KEY }}
+          PYTHONIOENCODING: utf-8
+        run: |
+          python pipelines/update_live_pickem_standings.py
+
       - name: Commit and Push Updated Context
         run: |
           git config --global user.name "github-actions[bot]"

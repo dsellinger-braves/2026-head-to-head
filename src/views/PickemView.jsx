@@ -192,15 +192,30 @@ export default function PickemView({ initialSeason = 2027, onSeasonChange }) {
     }
   }
 
-  // Live In-Browser Refresh from MLB Stats API
+  // Live In-Browser Refresh from MLB Stats API & Supabase
   const handleRefreshLiveStandings = async () => {
     setRefreshingLive(true);
+    setErrorMessage(null);
     try {
+      // 1. First fetch latest comprehensive live_projections from Supabase
+      const { data: seasonData, error: sErr } = await supabase
+        .from('pickem_seasons')
+        .select('live_projections')
+        .eq('season_year', selectedSeason)
+        .single();
+
+      if (!sErr && seasonData?.live_projections) {
+        setLiveProjectionsData(seasonData.live_projections);
+        setSaveSuccess('Live Pick\'em Standings updated with latest official data! ⚡');
+        setTimeout(() => setSaveSuccess(null), 4000);
+        return;
+      }
+
+      // 2. Fallback direct MLB Stats API fetch
       const resp = await fetch('https://statsapi.mlb.com/api/v1/standings?leagueId=103,104&hydrate=team');
       if (!resp.ok) throw new Error('Failed to fetch from MLB Stats API');
       const data = await resp.json();
 
-      // Simple real-time update of division standings
       const updatedCats = { ...(liveProjectionsData?.categories || {}) };
       const divMap = { 201: 'al_east', 202: 'al_central', 200: 'al_west', 204: 'nl_east', 205: 'nl_central', 203: 'nl_west' };
 
@@ -228,7 +243,7 @@ export default function PickemView({ initialSeason = 2027, onSeasonChange }) {
       setTimeout(() => setSaveSuccess(null), 4000);
     } catch (err) {
       console.error('Error refreshing MLB standings:', err);
-      setErrorMessage('Could not refresh live standings directly: ' + err.message);
+      setErrorMessage('Could not refresh live standings: ' + err.message);
     } finally {
       setRefreshingLive(false);
     }
