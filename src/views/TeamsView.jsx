@@ -289,6 +289,7 @@ export default function TeamsView({ allStats, onOwnerClick, onPlayerClick, selec
         <OptimalLineupSimulatorView
           allStats={allStats}
           selectedSeason={selectedSeason}
+          initialTeamId={initialTeamId}
           onOwnerClick={onOwnerClick}
           onPlayerClick={onPlayerClick}
         />

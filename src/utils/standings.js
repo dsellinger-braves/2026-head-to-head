@@ -1,5 +1,5 @@
 // src/utils/standings.js
-import { TEAMS } from '../schedule';
+import { TEAMS } from '../schedule.js';
 
 export function calculateStandings(processedWeeks, options = 100) {
   const upToWeek = typeof options === 'number' ? options : (options?.upToWeek ?? 100);
