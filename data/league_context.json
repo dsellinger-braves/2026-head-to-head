@@ -4,7 +4,7 @@
   "season_year": 2026,
   "scoring_format": "10-Category Head-to-Head Each Category / Points (R, HR, RBI, OBP, SB | K, QS, SV+HD, ERA, WHIP)",
   "last_updated_scoring_period": 187,
-  "last_updated_timestamp": "2026-09-30T16:50:46.647516Z",
+  "last_updated_timestamp": "2026-09-30T19:00:58.338279Z",
   "current_week": 25,
   "season_structure": {
     "phase_1": {
@@ -1313,14 +1313,6 @@
           "obp": 0.325
         },
         {
-          "name": "Max Muncy",
-          "hr": 24,
-          "rbi": 71,
-          "r": 68,
-          "sb": 3,
-          "obp": 0.349
-        },
-        {
           "name": "Jake McCarthy",
           "hr": 13,
           "rbi": 64,
@@ -1329,12 +1321,20 @@
           "obp": 0.337
         },
         {
-          "name": "Mauricio Dubon",
-          "hr": 12,
-          "rbi": 68,
-          "r": 65,
-          "sb": 10,
-          "obp": 0.318
+          "name": "Max Muncy",
+          "hr": 24,
+          "rbi": 71,
+          "r": 68,
+          "sb": 3,
+          "obp": 0.349
+        },
+        {
+          "name": "Daylen Lile",
+          "hr": 16,
+          "rbi": 66,
+          "r": 51,
+          "sb": 12,
+          "obp": 0.283
         }
       ],
       "top_pitchers": [
