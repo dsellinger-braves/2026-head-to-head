@@ -7,25 +7,40 @@ import TeamAvatar from '../components/TeamAvatar';
 export default function OptimalLineupSimulatorView({
   allStats = [],
   selectedSeason = 2026,
+  initialTeamId = 2,
   onOwnerClick,
   onPlayerClick
 }) {
   const [activeTab, setActiveTab] = useState('efficiency'); // 'efficiency' | 'standings' | 'blunders' | 'inspector'
-  const [selectedTeamId, setSelectedTeamId] = useState(5); // Default to Dan (5) or first team
+  const [selectedTeamId, setSelectedTeamId] = useState(Number(initialTeamId) || 2);
+  const [prevInitialTeamId, setPrevInitialTeamId] = useState(initialTeamId);
+  if (initialTeamId !== prevInitialTeamId) {
+    setPrevInitialTeamId(initialTeamId);
+    if (initialTeamId !== undefined && initialTeamId !== null) {
+      setSelectedTeamId(Number(initialTeamId));
+    }
+  }
   const [selectedPeriod, setSelectedPeriod] = useState(1);
   const [blunderFilter, setBlunderFilter] = useState('ALL'); // 'ALL' | 'BATTER' | 'PITCHER'
+  const [blunderTeamFilter, setBlunderTeamFilter] = useState('ALL'); // 'ALL' | teamId
   const [searchBlunder, setSearchBlunder] = useState('');
+
+  // Isolate records to the selected season to prevent cross-season contamination
+  const seasonStats = useMemo(() => {
+    if (!allStats || allStats.length === 0) return [];
+    return allStats.filter(r => (r.season_year ? Number(r.season_year) === Number(selectedSeason) : true));
+  }, [allStats, selectedSeason]);
 
   // 1. Run simulation across the season
   const simulation = useMemo(() => {
-    if (!allStats || allStats.length === 0) return null;
-    return simulateSeasonBestLineups(allStats, TEAMS);
-  }, [allStats]);
+    if (!seasonStats || seasonStats.length === 0) return null;
+    return simulateSeasonBestLineups(seasonStats, TEAMS);
+  }, [seasonStats]);
 
   // Position registry for quick lookup
   const registry = useMemo(() => {
-    return buildPlayerPositionRegistry(allStats);
-  }, [allStats]);
+    return buildPlayerPositionRegistry(seasonStats);
+  }, [seasonStats]);
 
   // Available periods from simulation
   const periods = useMemo(() => simulation?.periods || [], [simulation]);
@@ -39,13 +54,13 @@ export default function OptimalLineupSimulatorView({
 
   // 2. Day-by-Day Inspector data for current team and current period
   const dayInspectorData = useMemo(() => {
-    if (!allStats || allStats.length === 0) return null;
-    const teamDayRecords = allStats.filter(
-      r => r.team_id === selectedTeamId && r.scoring_period_id === currentPeriod
+    if (!seasonStats || seasonStats.length === 0) return null;
+    const teamDayRecords = seasonStats.filter(
+      r => Number(r.team_id) === Number(selectedTeamId) && Number(r.scoring_period_id) === Number(currentPeriod)
     );
     if (teamDayRecords.length === 0) return null;
     return optimizeDailyTeamLineup(teamDayRecords, registry);
-  }, [allStats, selectedTeamId, currentPeriod, registry]);
+  }, [seasonStats, selectedTeamId, currentPeriod, registry]);
 
   if (!simulation) {
     return (
@@ -61,6 +76,7 @@ export default function OptimalLineupSimulatorView({
 
   // Filtered blunders
   const filteredBlunders = topBenchBlunders.filter(b => {
+    if (blunderTeamFilter !== 'ALL' && Number(b.teamId) !== Number(blunderTeamFilter)) return false;
     if (blunderFilter === 'BATTER' && b.isPitcher) return false;
     if (blunderFilter === 'PITCHER' && !b.isPitcher) return false;
     if (searchBlunder.trim()) {
@@ -69,6 +85,8 @@ export default function OptimalLineupSimulatorView({
     }
     return true;
   });
+
+  const activeTeamObj = TEAMS[selectedTeamId] || { id: selectedTeamId, name: `Team ${selectedTeamId}`, owner: '' };
 
   return (
     <div className="space-y-6">
@@ -183,6 +201,7 @@ export default function OptimalLineupSimulatorView({
                     <th className="px-4 py-3 text-center">Net RBI Lost</th>
                     <th className="px-4 py-3 text-center">Net K Lost</th>
                     <th className="px-4 py-3 text-center">Net QS Lost</th>
+                    <th className="px-4 py-3 text-center">Inspect</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -191,17 +210,19 @@ export default function OptimalLineupSimulatorView({
                     return (
                       <tr
                         key={m.teamId}
-                        onClick={() => onOwnerClick && onOwnerClick(teamObj)}
-                        className="hover:bg-blue-50/60 cursor-pointer transition-colors"
+                        className="hover:bg-blue-50/60 transition-colors"
                       >
                         <td className="px-4 py-3.5 font-mono font-bold text-gray-600">
                           #{m.actualRank}
                         </td>
                         <td className="px-4 py-3.5">
-                          <div className="flex items-center gap-3">
+                          <div
+                            onClick={() => onOwnerClick && onOwnerClick(teamObj)}
+                            className="flex items-center gap-3 cursor-pointer group"
+                          >
                             <TeamAvatar team={teamObj} size="sm" />
                             <div>
-                              <div className="font-bold text-gray-900">{m.teamName}</div>
+                              <div className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{m.teamName}</div>
                               <div className="text-xs text-gray-400 font-medium">{m.owner}</div>
                             </div>
                           </div>
@@ -245,6 +266,19 @@ export default function OptimalLineupSimulatorView({
                         <td className="px-4 py-3.5 text-center font-mono font-bold text-indigo-600">
                           +{m.categoryDeltas.QS}
                         </td>
+                        <td className="px-4 py-3.5 text-center">
+                          <button
+                            onClick={() => {
+                              setSelectedTeamId(Number(m.teamId));
+                              setActiveTab('inspector');
+                            }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white transition shadow-2xs"
+                            title={`Inspect ${m.teamName}'s day-by-day lineups`}
+                          >
+                            <span>🔍</span>
+                            <span>Inspect</span>
+                          </button>
+                        </td>
                       </tr>
                     );
                   })}
@@ -283,6 +317,7 @@ export default function OptimalLineupSimulatorView({
                   <th className="px-4 py-3 text-center">K</th>
                   <th className="px-4 py-3 text-center">QS</th>
                   <th className="px-4 py-3 text-center">SV+H</th>
+                  <th className="px-4 py-3 text-center">Inspect</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -294,8 +329,7 @@ export default function OptimalLineupSimulatorView({
                   return (
                     <tr
                       key={m.teamId}
-                      onClick={() => onOwnerClick && onOwnerClick(teamObj)}
-                      className="hover:bg-blue-50/60 cursor-pointer transition-colors"
+                      className="hover:bg-blue-50/60 transition-colors"
                     >
                       <td className="px-4 py-3.5 text-center font-mono text-gray-400">
                         #{m.actualRank}
@@ -319,10 +353,13 @@ export default function OptimalLineupSimulatorView({
                         )}
                       </td>
                       <td className="px-4 py-3.5">
-                        <div className="flex items-center gap-3">
+                        <div
+                          onClick={() => onOwnerClick && onOwnerClick(teamObj)}
+                          className="flex items-center gap-3 cursor-pointer group"
+                        >
                           <TeamAvatar team={teamObj} size="sm" />
                           <div>
-                            <div className="font-bold text-gray-900">{m.teamName}</div>
+                            <div className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{m.teamName}</div>
                             <div className="text-xs text-gray-400 font-medium">{m.owner}</div>
                           </div>
                         </div>
@@ -357,6 +394,19 @@ export default function OptimalLineupSimulatorView({
                       <td className="px-4 py-3.5 text-center font-mono text-xs">
                         +{m.categoryDeltas['SV+HDs']}
                       </td>
+                      <td className="px-4 py-3.5 text-center">
+                        <button
+                          onClick={() => {
+                            setSelectedTeamId(Number(m.teamId));
+                            setActiveTab('inspector');
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white transition shadow-2xs"
+                          title={`Inspect ${m.teamName}'s day-by-day lineups`}
+                        >
+                          <span>🔍</span>
+                          <span>Inspect</span>
+                        </button>
+                      </td>
                     </tr>
                   );
                 })}
@@ -376,6 +426,19 @@ export default function OptimalLineupSimulatorView({
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
+              <select
+                value={blunderTeamFilter}
+                onChange={e => setBlunderTeamFilter(e.target.value)}
+                className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-700 focus:ring-2 focus:ring-blue-500 outline-none"
+              >
+                <option value="ALL">All Teams</option>
+                {managers.map(m => (
+                  <option key={m.teamId} value={m.teamId}>
+                    {m.teamName} ({m.owner})
+                  </option>
+                ))}
+              </select>
+
               <div className="flex bg-gray-100 p-1 rounded-xl">
                 <button
                   onClick={() => setBlunderFilter('ALL')}
@@ -484,6 +547,24 @@ export default function OptimalLineupSimulatorView({
       {/* TAB 4: Day-by-Day Roster Inspector */}
       {activeTab === 'inspector' && (
         <div className="space-y-6">
+          {/* Active Team Identity Banner */}
+          <div className="flex items-center gap-3.5 bg-gradient-to-r from-blue-50/90 via-indigo-50/70 to-white border border-blue-100/90 p-4 rounded-2xl shadow-2xs">
+            <TeamAvatar team={activeTeamObj} size="md" />
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-base font-black text-gray-900">{activeTeamObj.name}</span>
+                {activeTeamObj.owner && (
+                  <span className="text-xs font-bold text-blue-700 bg-blue-100/80 px-2 py-0.5 rounded-md">
+                    {activeTeamObj.owner}
+                  </span>
+                )}
+              </div>
+              <div className="text-xs text-gray-500 mt-0.5">
+                Day-by-Day Optimal Roster & Lineup for Scoring Period #{currentPeriod} ({getDateFromPeriodId(currentPeriod) || `Day ${currentPeriod}`})
+              </div>
+            </div>
+          </div>
+
           {/* Controls Bar */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex flex-wrap items-center gap-4">
@@ -551,6 +632,18 @@ export default function OptimalLineupSimulatorView({
               </div>
             )}
           </div>
+
+          {/* Empty State when no records exist for selected team on selected day */}
+          {!dayInspectorData && (
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12 text-center">
+              <div className="text-4xl mb-3">📋</div>
+              <h4 className="text-base font-bold text-gray-800">No Roster Records Found</h4>
+              <p className="text-xs text-gray-500 mt-1 max-w-md mx-auto">
+                No active roster stats recorded for {activeTeamObj.name} on Scoring Period #{currentPeriod} ({getDateFromPeriodId(currentPeriod) || `Day ${currentPeriod}`}).
+                Try selecting a different day using the slider above or selecting another team.
+              </p>
+            </div>
+          )}
 
           {/* Side-by-Side Comparison */}
           {dayInspectorData && (

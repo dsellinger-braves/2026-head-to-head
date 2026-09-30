@@ -74,6 +74,18 @@ CAT_DISPLAY = {
 }
 
 SEASON_START = date(2026, 3, 25)
+SEASON_END   = date(2026, 9, 27)
+
+def is_season_active(target_date: date | None = None) -> bool:
+    """
+    Check if target_date falls within the active MLB regular season window.
+    Can be bypassed by setting IGNORE_SEASON_WINDOW=1 or FORCE_RUN=1.
+    """
+    if os.environ.get("IGNORE_SEASON_WINDOW", "").strip().lower() in ("1", "true", "yes") or \
+       os.environ.get("FORCE_RUN", "").strip().lower() in ("1", "true", "yes"):
+        return True
+    check = target_date or (date.today() - timedelta(days=1))
+    return SEASON_START <= check <= SEASON_END
 
 def scoring_period_for_date(target_date: date) -> int:
     return max(1, (target_date - SEASON_START).days + 1)
@@ -900,6 +912,11 @@ def run_daily_recap(target_date: date | None = None):
         # If running today (N), the target text describes yesterday (N-1)
         target_date = date.today() - timedelta(days=1)
 
+    if not is_season_active(target_date):
+        print(f"Season check: Date {target_date} is outside the active MLB regular season window ({SEASON_START} to {SEASON_END}).")
+        print("Skipping daily recap execution. Exiting cleanly (0).")
+        return
+
     period_id      = scoring_period_for_date(target_date) # Yesterday (N-1)
     prev_period_id = period_id - 1                        # Day Before Yesterday (N-2)
     print(f"Running daily recap for {target_date} (Scoring Period {period_id})")
@@ -959,6 +976,11 @@ def run_weekly_recap(week_end_date: date | None = None):
     if week_end_date is None:
         today         = date.today()
         week_end_date = today - timedelta(days=today.weekday() + 1)
+
+    if not is_season_active(week_end_date):
+        print(f"Season check: Week end {week_end_date} is outside the active MLB regular season window ({SEASON_START} to {SEASON_END}).")
+        print("Skipping weekly recap execution. Exiting cleanly (0).")
+        return
 
     week_start_date = week_end_date - timedelta(days=6)
     periods = [scoring_period_for_date(week_start_date + timedelta(days=i)) for i in range(7)]
@@ -1070,6 +1092,14 @@ if __name__ == "__main__":
     mode = sys.argv[1] if len(sys.argv) > 1 else "daily"
     target_arg = sys.argv[2] if len(sys.argv) > 2 and sys.argv[2].strip() else None
     target_date = date.fromisoformat(target_arg) if target_arg else None
+
+    # Top-level season check before doing any network queries or setup
+    check_date = target_date or (date.today() - timedelta(days=1))
+    if not is_season_active(check_date):
+        print(f"Season check: {check_date} is outside the active MLB regular season ({SEASON_START} to {SEASON_END}).")
+        print("Bot is configured to run only during the active MLB regular season. Exiting (0).")
+        sys.exit(0)
+
     if mode == "weekly":
         run_weekly_recap(target_date)
     else:

@@ -1383,6 +1383,7 @@ function App() {
                   allStats={rawData}
                   selectedSeason={selectedSeason}
                   initialViewMode={teamsSubTab}
+                  initialTeamId={selectedOwner?.id || 2}
                   onOwnerClick={(team) => setSelectedOwner(team)}
                   onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
                 />

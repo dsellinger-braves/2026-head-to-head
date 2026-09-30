@@ -4,6 +4,7 @@ HEFTYSTRONG Fantasy Baseball Discord Bot
 """
 
 import os
+import sys
 import re
 import json
 import time
@@ -47,6 +48,20 @@ LEAGUE_ID  = 130215
 YEAR       = 2026
 ESPN_S2    = os.environ.get("ESPN_S2",   "")
 ESPN_SWID  = os.environ.get("ESPN_SWID", "")
+
+SEASON_START = date(2026, 3, 25)
+SEASON_END   = date(2026, 9, 27)
+
+def is_season_active(check_date: date | None = None) -> bool:
+    """
+    Check if check_date (defaults to today) falls within the active MLB regular season window.
+    Bypassed by setting IGNORE_SEASON_WINDOW=1 or FORCE_RUN=1.
+    """
+    if os.environ.get("IGNORE_SEASON_WINDOW", "").strip().lower() in ("1", "true", "yes") or \
+       os.environ.get("FORCE_RUN", "").strip().lower() in ("1", "true", "yes"):
+        return True
+    target = check_date or date.today()
+    return SEASON_START <= target <= SEASON_END
 
 TEAM_NAMES = {
     1:  "Tim",
@@ -1330,6 +1345,10 @@ class HEFTYBot(discord.Client):
             check_trade_notifications.start()
             print("Trade notifications background worker started.")
 
+        if not season_sentinel_loop.is_running():
+            season_sentinel_loop.start()
+            print("Season sentinel monitor started.")
+
     async def on_message(self, message: discord.Message):
         if message.author.bot:
             return
@@ -1633,11 +1652,26 @@ async def process_trade_notifications_once() -> int:
 @tasks.loop(seconds=15)
 async def check_trade_notifications():
     """Checks Supabase for pending trade lifecycle notifications and delivers DMs."""
+    if not is_season_active():
+        return
     await process_trade_notifications_once()
 
 
 @check_trade_notifications.before_loop
 async def before_check_trade_notifications():
+    await bot.wait_until_ready()
+
+
+@tasks.loop(hours=24)
+async def season_sentinel_loop():
+    """Daily check to disconnect the bot if regular season has concluded."""
+    if not is_season_active():
+        print(f"[SeasonSentinel] Regular season has concluded ({SEASON_END}). Disconnecting Discord bot...")
+        await bot.close()
+
+
+@season_sentinel_loop.before_loop
+async def before_season_sentinel_loop():
     await bot.wait_until_ready()
 
 
@@ -1673,6 +1707,11 @@ async def live_command(interaction: discord.Interaction):
     """Dedicated live game command — always pulls MLB data, no keyword detection needed."""
     await interaction.response.defer(thinking=True)
     print(f"[{datetime.now().strftime('%H:%M:%S')}] /live from {interaction.user}")
+    if not is_season_active():
+        await interaction.followup.send(
+            f"⏸️ The MLB regular season is currently inactive ({SEASON_START.strftime('%b %d, %Y')} – {SEASON_END.strftime('%b %d, %Y')}). Live in-game stats resume on Opening Day!"
+        )
+        return
     try:
         # Use ESPN directly for real-time roster (reflects today's adds/drops up to game time).
         # Falls back to Supabase if ESPN is unreachable.
@@ -1728,11 +1767,53 @@ async def ask_command(interaction: discord.Interaction, question: str):
         )
 
 
-# ---------------------------------------------------------------------------
-# ENTRY POINT
-# ---------------------------------------------------------------------------
+async def offseason_sleep_service():
+    """
+    Keeps process alive (and HTTP healthcheck responsive for Railway)
+    while completely keeping the Discord bot offline until Opening Day.
+    """
+    port_str = os.environ.get("PORT")
+    if port_str:
+        try:
+            port = int(port_str)
+            async def handle_ping(reader, writer):
+                await reader.read(512)
+                writer.write(b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nOK")
+                await writer.drain()
+                writer.close()
+                await writer.wait_closed()
+            server = await asyncio.start_server(handle_ping, "0.0.0.0", port)
+            print(f"Health check HTTP server bound to 0.0.0.0:{port}")
+            asyncio.create_task(server.serve_forever())
+        except Exception as e:
+            print(f"Failed to start health check server on port {port_str}: {e}")
+
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Offseason mode: Current date {date.today()} is outside active MLB regular season ({SEASON_START} to {SEASON_END}).")
+    print(f"Discord bot is standing by offline until Opening Day ({SEASON_START}).")
+
+    while not is_season_active():
+        await asyncio.sleep(3600)
+
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Season window opened! Connecting bot to Discord...")
+
 
 if __name__ == "__main__":
     if not DISCORD_BOT_TOKEN:
         raise ValueError("DISCORD_BOT_TOKEN environment variable is not set.")
-    bot.run(DISCORD_BOT_TOKEN)
+
+    while True:
+        if not is_season_active():
+            offseason_mode = os.environ.get("BOT_OFFSEASON_MODE", "sleep").strip().lower()
+            if offseason_mode == "exit":
+                print(f"Season check: {date.today()} is outside active MLB regular season ({SEASON_START} to {SEASON_END}). Exiting cleanly (0).")
+                sys.exit(0)
+            else:
+                asyncio.run(offseason_sleep_service())
+
+        # When season is active, run the bot
+        bot.run(DISCORD_BOT_TOKEN)
+
+        # If bot closed because season concluded, loop back to offseason sleep service
+        if not is_season_active():
+            continue
+        break

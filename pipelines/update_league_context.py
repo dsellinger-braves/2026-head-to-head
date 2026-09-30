@@ -483,5 +483,21 @@ def update_storylines_playoff_section(filepath: str, playoff_data: dict, current
     except Exception as e:
         print(f"⚠️ Could not update storylines markdown: {e}")
 
+def is_season_active() -> bool:
+    """
+    Returns True if current date falls within active regular season.
+    Bypassed by IGNORE_SEASON_WINDOW=1 or FORCE_RUN=1.
+    """
+    if os.environ.get("IGNORE_SEASON_WINDOW", "").strip().lower() in ("1", "true", "yes") or \
+       os.environ.get("FORCE_RUN", "").strip().lower() in ("1", "true", "yes"):
+        return True
+    from datetime import date
+    today = date.today()
+    return date(2026, 3, 25) <= today <= date(2026, 9, 27)
+
 if __name__ == "__main__":
+    if not is_season_active():
+        from datetime import date
+        print(f"Season check: {date.today()} is outside active MLB regular season (2026-03-25 to 2026-09-27). Skipping context refresh.")
+        sys.exit(0)
     refresh_context_files(save_to_disk=True)
