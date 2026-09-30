@@ -242,29 +242,40 @@ def compute_player_season_pr(
         is_sp = (gs / g >= 0.5) if g > 0 else (gs > 5)
         role = "SP" if is_sp else "RP"
 
-        mean, std = benchmarks.get(f"{role}_SO", (100.0, 30.0))
-        cat_prs["SO"] = (so - mean) / std
-
         if is_sp:
+            mean, std = benchmarks.get("SP_SO", (100.0, 30.0))
+            cat_prs["SO"] = (so - mean) / std if std > 0 else 0.0
+
             mean, std = benchmarks.get("SP_QS", (10.0, 6.0))
-            cat_prs["QS"] = (qs - mean) / std
+            cat_prs["QS"] = (qs - mean) / std if std > 0 else 0.0
             cat_prs["SV_HD"] = 0.0
 
             mean_era, std_era = benchmarks.get("SP_ERA", (4.00, 0.50))
-            cat_prs["ERA"] = ((era - mean_era) / std_era) * (ip / min_sp_ip) * -1.0
+            cat_prs["ERA"] = ((era - mean_era) / std_era) * (ip / min_sp_ip) * -1.0 if std_era > 0 else 0.0
 
             mean_whip, std_whip = benchmarks.get("SP_WHIP", (1.25, 0.10))
-            cat_prs["WHIP"] = ((whip - mean_whip) / std_whip) * (ip / min_sp_ip) * -1.0
+            cat_prs["WHIP"] = ((whip - mean_whip) / std_whip) * (ip / min_sp_ip) * -1.0 if std_whip > 0 else 0.0
         else:
+            # Relief Pitchers (RP): Nerfing factor of 2.5x applied to std dev for all RP categories
+            RP_NERF = 2.5
+
+            mean, raw_std = benchmarks.get("RP_SO", (60.0, 20.0))
+            std = raw_std * RP_NERF
+            cat_prs["SO"] = (so - mean) / std if std > 0 else 0.0
+
             cat_prs["QS"] = 0.0
-            mean, std = benchmarks.get("RP_SVHD", (30.0, 9.0))
-            cat_prs["SV_HD"] = (svhd - mean) / std
 
-            mean_era, std_era = benchmarks.get("RP_ERA", (4.00, 1.00))
-            cat_prs["ERA"] = (((era - mean_era) / std_era) * (ip / min_sp_ip) * -1.0) / 2.5
+            mean, raw_std = benchmarks.get("RP_SVHD", (30.0, 9.0))
+            std = raw_std * RP_NERF
+            cat_prs["SV_HD"] = (svhd - mean) / std if std > 0 else 0.0
 
-            mean_whip, std_whip = benchmarks.get("RP_WHIP", (1.30, 0.20))
-            cat_prs["WHIP"] = (((whip - mean_whip) / std_whip) * (ip / min_sp_ip) * -1.0) / 2.5
+            mean_era, raw_std_era = benchmarks.get("RP_ERA", (4.00, 1.00))
+            std_era = raw_std_era * RP_NERF
+            cat_prs["ERA"] = ((era - mean_era) / std_era) * (ip / min_sp_ip) * -1.0 if std_era > 0 else 0.0
+
+            mean_whip, raw_std_whip = benchmarks.get("RP_WHIP", (1.30, 0.20))
+            std_whip = raw_std_whip * RP_NERF
+            cat_prs["WHIP"] = ((whip - mean_whip) / std_whip) * (ip / min_sp_ip) * -1.0 if std_whip > 0 else 0.0
 
     total_pr = sum(cat_prs.values())
     return total_pr, cat_prs
@@ -365,20 +376,80 @@ def run_pipeline():
                 data[name_clean] = item
         return data
 
-    def parse_zips_api_pit(records: List[Dict]) -> Dict[str, Dict]:
+    # 1. Base 2026 Batters & Pitchers (FanGraphs Depth Charts)
+    batters_keeper_2026: Dict[str, Dict] = {}
+    for b in fg_dc_bat:
+        pid = str(b.get("playerid") or "").strip()
+        name = b.get("PlayerName", "")
+        name_clean = name.lower().replace(".", "").replace("'", "").strip()
+        item = {
+            "playerid": pid,
+            "name": name,
+            "AB": float(b.get("AB", 0) or 0),
+            "R": float(b.get("R", 0) or 0),
+            "HR": float(b.get("HR", 0) or 0),
+            "RBI": float(b.get("RBI", 0) or 0),
+            "SB": float(b.get("SB", 0) or 0),
+            "OBP": float(b.get("OBP", 0) or 0),
+        }
+        if pid:
+            batters_keeper_2026[pid] = item
+        if name_clean:
+            batters_keeper_2026[name_clean] = item
+
+    pitchers_keeper_2026: Dict[str, Dict] = {}
+    for p in fg_dc_pit:
+        pid = str(p.get("playerid") or "").strip()
+        name = p.get("PlayerName", "")
+        name_clean = name.lower().replace(".", "").replace("'", "").strip()
+        sv = float(p.get("SV", 0) or 0)
+        hld = float(p.get("HLD", 0) or 0)
+        item = {
+            "playerid": pid,
+            "name": name,
+            "IP": float(p.get("IP", 0) or 0),
+            "G": float(p.get("G", 0) or 0),
+            "GS": float(p.get("GS", 0) or 0),
+            "SO": float(p.get("SO", 0) or 0),
+            "QS": float(p.get("QS", 0) or 0),
+            "SVHD": sv + hld,
+            "ERA": float(p.get("ERA", 0) or 0),
+            "WHIP": float(p.get("WHIP", 0) or 0),
+        }
+        if pid:
+            pitchers_keeper_2026[pid] = item
+        if name_clean:
+            pitchers_keeper_2026[name_clean] = item
+
+    def parse_zips_api_pit(records: List[Dict], prev_pit: Dict[str, Dict] = None) -> Dict[str, Dict]:
         data = {}
         for r in records:
             pid = str(r.get("playerid") or "").strip()
             name = str(r.get("PlayerName") or "").strip()
             name_clean = name.lower().replace(".", "").replace("'", "").strip()
+            ip = float(r.get("IP", 0) or 0)
+            gs = float(r.get("GS", 0) or 0)
+            qs = float(r.get("QS", 0) or 0)
+            svhd = float(r.get("SV", 0) or 0) + float(r.get("HLD", 0) or 0)
+
+            if prev_pit and qs == 0 and svhd == 0:
+                prev_p = prev_pit.get(pid) or prev_pit.get(name_clean, {})
+                prev_ip = float(prev_p.get("IP", 0) or 0)
+                if prev_ip > 0:
+                    ip_ratio = ip / prev_ip
+                    qs = round(float(prev_p.get("QS", 0) or 0) * ip_ratio, 1)
+                    svhd = round(float(prev_p.get("SVHD", 0) or 0) * ip_ratio, 1)
+                elif gs >= 5:
+                    qs = round(gs * 0.45, 1)
+
             item = {
                 "name": name,
-                "IP": float(r.get("IP", 0) or 0),
+                "IP": ip,
                 "G": float(r.get("G", 0) or 0),
-                "GS": float(r.get("GS", 0) or 0),
+                "GS": gs,
                 "SO": float(r.get("SO", 0) or 0),
-                "QS": float(r.get("QS", 0) or 0),
-                "SVHD": float(r.get("SV", 0) or 0) + float(r.get("HLD", 0) or 0),
+                "QS": qs,
+                "SVHD": svhd,
                 "ERA": float(r.get("ERA", 0) or 0),
                 "WHIP": float(r.get("WHIP", 0) or 0),
             }
@@ -436,6 +507,7 @@ def run_pipeline():
             pid = row_dict.get("playerid") or row_dict.get("PlayerId")
             ip = float(row_dict.get("IP", 0) or 0)
             name_clean = name.lower().replace(".", "").replace("'", "").strip()
+
             key = str(pid).strip() if pid else name_clean
             y1_player = y1_pit.get(key, {})
             y1_ip = float(y1_player.get("IP", 0) or 0)
@@ -462,58 +534,9 @@ def run_pipeline():
 
     # Parse 2027 & 2028 multi-year datasets
     batters_2027 = parse_zips_api_bat(fg_zips1_bat) if fg_zips1_bat else parse_zips_gsheet_bat(zips_bat_2027_raw)
-    pitchers_2027 = parse_zips_api_pit(fg_zips1_pit) if fg_zips1_pit else parse_zips_gsheet_pit(zips_pit_2027_raw, dc_pit_map)
+    pitchers_2027 = parse_zips_api_pit(fg_zips1_pit, pitchers_keeper_2026) if fg_zips1_pit else parse_zips_gsheet_pit(zips_pit_2027_raw, dc_pit_map)
     batters_2028 = parse_zips_api_bat(fg_zips2_bat) if fg_zips2_bat else parse_zips_gsheet_bat(zips_bat_2028_raw)
-    pitchers_2028 = parse_zips_api_pit(fg_zips2_pit) if fg_zips2_pit else parse_zips_gsheet_pit(zips_pit_2028_raw, dc_pit_map)
-
-    # -------------------------------------------------------------
-    # 5. Build Season Datasets for Keeper Model vs Single-Year Model
-    # -------------------------------------------------------------
-
-    # === DATASET A: Keeper Model 2026 (Live Depth Charts) ===
-    batters_keeper_2026: Dict[str, Dict] = {}
-    for b in fg_dc_bat:
-        pid = str(b.get("playerid") or "").strip()
-        name = b.get("PlayerName", "")
-        name_clean = name.lower().replace(".", "").replace("'", "").strip()
-        item = {
-            "playerid": pid,
-            "name": name,
-            "AB": float(b.get("AB", 0) or 0),
-            "R": float(b.get("R", 0) or 0),
-            "HR": float(b.get("HR", 0) or 0),
-            "RBI": float(b.get("RBI", 0) or 0),
-            "SB": float(b.get("SB", 0) or 0),
-            "OBP": float(b.get("OBP", 0) or 0),
-        }
-        if pid:
-            batters_keeper_2026[pid] = item
-        if name_clean:
-            batters_keeper_2026[name_clean] = item
-
-    pitchers_keeper_2026: Dict[str, Dict] = {}
-    for p in fg_dc_pit:
-        pid = str(p.get("playerid") or "").strip()
-        name = p.get("PlayerName", "")
-        name_clean = name.lower().replace(".", "").replace("'", "").strip()
-        sv = float(p.get("SV", 0) or 0)
-        hld = float(p.get("HLD", 0) or 0)
-        item = {
-            "playerid": pid,
-            "name": name,
-            "IP": float(p.get("IP", 0) or 0),
-            "G": float(p.get("G", 0) or 0),
-            "GS": float(p.get("GS", 0) or 0),
-            "SO": float(p.get("SO", 0) or 0),
-            "QS": float(p.get("QS", 0) or 0),
-            "SVHD": sv + hld,
-            "ERA": float(p.get("ERA", 0) or 0),
-            "WHIP": float(p.get("WHIP", 0) or 0),
-        }
-        if pid:
-            pitchers_keeper_2026[pid] = item
-        if name_clean:
-            pitchers_keeper_2026[name_clean] = item
+    pitchers_2028 = parse_zips_api_pit(fg_zips2_pit, pitchers_2027) if fg_zips2_pit else parse_zips_gsheet_pit(zips_pit_2028_raw, dc_pit_map)
 
     # === DATASET B: Single-Year Model (Actuals YTD + ROS Projections) ===
     # Matches workbook methodology: Full 2026 = Current Actuals + ROS FanGraphs

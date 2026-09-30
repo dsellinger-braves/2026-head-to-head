@@ -100,23 +100,23 @@ def compute_detailed_player_pr(
         is_sp = (gs / g >= 0.5) if g > 0 else (gs > 5)
         role = "SP" if is_sp else "RP"
 
-        # Strikeouts
-        mean_so, std_so = benchmarks.get(f"{role}_SO", (100.0, 30.0))
-        z_so = (so - mean_so) / std_so if std_so > 0 else 0.0
-        cat_prs["SO"] = z_so
-        calcs["SO"] = {
-            "stat": "SO",
-            "category_type": f"{role} Counting",
-            "val": round(so, 1),
-            "mean": round(mean_so, 1),
-            "std": round(std_so, 1),
-            "z_score": round(z_so, 2),
-            "weight": 1.0,
-            "formula": f"({so:.1f} - {mean_so:.1f}) / {std_so:.2f}",
-            "pr": round(z_so, 2)
-        }
-
         if is_sp:
+            # Strikeouts (SP)
+            mean_so, std_so = benchmarks.get("SP_SO", (100.0, 30.0))
+            z_so = (so - mean_so) / std_so if std_so > 0 else 0.0
+            cat_prs["SO"] = z_so
+            calcs["SO"] = {
+                "stat": "SO",
+                "category_type": "SP Counting",
+                "val": round(so, 1),
+                "mean": round(mean_so, 1),
+                "std": round(std_so, 1),
+                "z_score": round(z_so, 2),
+                "weight": 1.0,
+                "formula": f"({so:.1f} - {mean_so:.1f}) / {std_so:.2f}",
+                "pr": round(z_so, 2)
+            }
+
             # SP Quality Starts
             mean_qs, std_qs = benchmarks.get("SP_QS", (10.0, 6.0))
             z_qs = (qs - mean_qs) / std_qs if std_qs > 0 else 0.0
@@ -179,6 +179,27 @@ def compute_detailed_player_pr(
                 "pr": round(z_whip, 2)
             }
         else:
+            # Relief Pitchers (RP): Nerfing factor of 2.5x applied to std dev for all RP categories
+            RP_NERF = 2.5
+
+            # RP Strikeouts (std nerfed by 2.5x)
+            mean_so, raw_std_so = benchmarks.get("RP_SO", (60.0, 20.0))
+            std_so = raw_std_so * RP_NERF
+            z_so = (so - mean_so) / std_so if std_so > 0 else 0.0
+            cat_prs["SO"] = z_so
+            calcs["SO"] = {
+                "stat": "SO",
+                "category_type": "RP Counting (2.5x Nerfed σ)",
+                "val": round(so, 1),
+                "mean": round(mean_so, 1),
+                "std": round(raw_std_so, 1),
+                "eff_std": round(std_so, 1),
+                "z_score": round(z_so, 2),
+                "weight": 1.0,
+                "formula": f"({so:.1f} - {mean_so:.1f}) / ({raw_std_so:.1f} * 2.5)",
+                "pr": round(z_so, 2)
+            }
+
             # RP QS floored at 0
             cat_prs["QS"] = 0.0
             calcs["QS"] = {
@@ -193,51 +214,57 @@ def compute_detailed_player_pr(
                 "pr": 0.0
             }
 
-            # RP SV+HD
-            mean_svhd, std_svhd = benchmarks.get("RP_SVHD", (30.0, 9.0))
+            # RP SV+HD (std nerfed by 2.5x)
+            mean_svhd, raw_std_svhd = benchmarks.get("RP_SVHD", (30.0, 9.0))
+            std_svhd = raw_std_svhd * RP_NERF
             z_svhd = (svhd - mean_svhd) / std_svhd if std_svhd > 0 else 0.0
             cat_prs["SV_HD"] = z_svhd
             calcs["SV_HD"] = {
                 "stat": "SV_HD",
-                "category_type": "RP Counting",
+                "category_type": "RP Counting (2.5x Nerfed σ)",
                 "val": round(svhd, 1),
                 "mean": round(mean_svhd, 1),
-                "std": round(std_svhd, 1),
+                "std": round(raw_std_svhd, 1),
+                "eff_std": round(std_svhd, 1),
                 "z_score": round(z_svhd, 2),
                 "weight": 1.0,
-                "formula": f"({svhd:.1f} - {mean_svhd:.1f}) / {std_svhd:.2f}",
+                "formula": f"({svhd:.1f} - {mean_svhd:.1f}) / ({raw_std_svhd:.1f} * 2.5)",
                 "pr": round(z_svhd, 2)
             }
 
-            # RP ERA (inverted, volume weighted, divided by 2.5)
-            mean_era, std_era = benchmarks.get("RP_ERA", (4.00, 1.00))
-            z_era = (((era - mean_era) / std_era) * (ip / min_sp_ip) * -1.0) / 2.5 if std_era > 0 else 0.0
+            # RP ERA (inverted, volume weighted, 2.5x nerfed std)
+            mean_era, raw_std_era = benchmarks.get("RP_ERA", (4.00, 1.00))
+            std_era = raw_std_era * RP_NERF
+            z_era = ((era - mean_era) / std_era) * (ip / min_sp_ip) * -1.0 if std_era > 0 else 0.0
             cat_prs["ERA"] = z_era
             calcs["ERA"] = {
                 "stat": "ERA",
-                "category_type": "RP Rate (Inverted & Volume / 2.5)",
+                "category_type": "RP Rate (Inverted, Vol Weighted, 2.5x Nerfed σ)",
                 "val": round(era, 2),
                 "mean": round(mean_era, 2),
-                "std": round(std_era, 2),
+                "std": round(raw_std_era, 2),
+                "eff_std": round(std_era, 2),
                 "ip": round(ip, 1),
-                "weight": round((ip / min_sp_ip) / 2.5, 3),
-                "formula": f"((({era:.2f} - {mean_era:.2f}) / {std_era:.2f}) * ({ip:.1f} / {min_sp_ip:.0f}) * -1) / 2.5",
+                "weight": round(ip / min_sp_ip, 2),
+                "formula": f"(({era:.2f} - {mean_era:.2f}) / ({raw_std_era:.2f} * 2.5)) * ({ip:.1f} / {min_sp_ip:.0f}) * -1",
                 "pr": round(z_era, 2)
             }
 
-            # RP WHIP
-            mean_whip, std_whip = benchmarks.get("RP_WHIP", (1.30, 0.20))
-            z_whip = (((whip - mean_whip) / std_whip) * (ip / min_sp_ip) * -1.0) / 2.5 if std_whip > 0 else 0.0
+            # RP WHIP (inverted, volume weighted, 2.5x nerfed std)
+            mean_whip, raw_std_whip = benchmarks.get("RP_WHIP", (1.30, 0.20))
+            std_whip = raw_std_whip * RP_NERF
+            z_whip = ((whip - mean_whip) / std_whip) * (ip / min_sp_ip) * -1.0 if std_whip > 0 else 0.0
             cat_prs["WHIP"] = z_whip
             calcs["WHIP"] = {
                 "stat": "WHIP",
-                "category_type": "RP Rate (Inverted & Volume / 2.5)",
+                "category_type": "RP Rate (Inverted, Vol Weighted, 2.5x Nerfed σ)",
                 "val": round(whip, 2),
                 "mean": round(mean_whip, 2),
-                "std": round(std_whip, 2),
+                "std": round(raw_std_whip, 2),
+                "eff_std": round(std_whip, 2),
                 "ip": round(ip, 1),
-                "weight": round((ip / min_sp_ip) / 2.5, 3),
-                "formula": f"((({whip:.2f} - {mean_whip:.2f}) / {std_whip:.2f}) * ({ip:.1f} / {min_sp_ip:.0f}) * -1) / 2.5",
+                "weight": round(ip / min_sp_ip, 2),
+                "formula": f"(({whip:.2f} - {mean_whip:.2f}) / ({raw_std_whip:.2f} * 2.5)) * ({ip:.1f} / {min_sp_ip:.0f}) * -1",
                 "pr": round(z_whip, 2)
             }
 
@@ -342,11 +369,7 @@ def main():
         except Exception:
             return 999
 
-    batters_2027 = parse_zips_api_bat(fg_zips1_bat)
-    pitchers_2027 = parse_zips_api_pit(fg_zips1_pit)
-    batters_2028 = parse_zips_api_bat(fg_zips2_bat)
-    pitchers_2028 = parse_zips_api_pit(fg_zips2_pit)
-
+    # 1. Base 2026 Batters & Pitchers (FanGraphs Depth Charts)
     batters_keeper_2026 = {}
     for b in fg_dc_bat:
         pid = str(b.get("playerid") or "").strip()
@@ -385,7 +408,95 @@ def main():
         if pid: pitchers_keeper_2026[pid] = item
         if name_clean: pitchers_keeper_2026[name_clean] = item
 
-    # Benchmarks
+    # 2. Parse 2027 with proportional IP scaling for QS and SVHD from 2026
+    batters_2027 = parse_zips_api_bat(fg_zips1_bat)
+    pitchers_2027 = {}
+    for r in fg_zips1_pit:
+        pid = str(r.get("playerid") or "").strip()
+        name = str(r.get("PlayerName") or "").strip()
+        name_clean = name.lower().replace(".", "").replace("'", "").strip()
+        ip_27 = float(r.get("IP", 0) or 0)
+        gs_27 = float(r.get("GS", 0) or 0)
+
+        p26 = pitchers_keeper_2026.get(pid) or pitchers_keeper_2026.get(name_clean, {})
+        ip_26 = float(p26.get("IP", 0) or 0)
+        qs_26 = float(p26.get("QS", 0) or 0)
+        svhd_26 = float(p26.get("SVHD", 0) or 0)
+
+        # Proportional IP scaling from 2026
+        if ip_26 > 0:
+            ip_ratio = ip_27 / ip_26
+            qs_27 = round(qs_26 * ip_ratio, 1)
+            svhd_27 = round(svhd_26 * ip_ratio, 1)
+        elif gs_27 >= 5:
+            qs_27 = round(gs_27 * 0.45, 1)
+            svhd_27 = 0.0
+        else:
+            qs_27 = 0.0
+            svhd_27 = 0.0
+
+        item = {
+            "name": name,
+            "playerid": pid,
+            "IP": ip_27,
+            "G": float(r.get("G", 0) or 0),
+            "GS": gs_27,
+            "SO": float(r.get("SO", 0) or 0),
+            "QS": qs_27,
+            "SVHD": svhd_27,
+            "ERA": float(r.get("ERA", 0) or 0),
+            "WHIP": float(r.get("WHIP", 0) or 0),
+        }
+        if pid: pitchers_2027[pid] = item
+        if name_clean: pitchers_2027[name_clean] = item
+
+    # 3. Parse 2028 with proportional IP scaling for QS and SVHD from 2027
+    batters_2028 = parse_zips_api_bat(fg_zips2_bat)
+    pitchers_2028 = {}
+    for r in fg_zips2_pit:
+        pid = str(r.get("playerid") or "").strip()
+        name = str(r.get("PlayerName") or "").strip()
+        name_clean = name.lower().replace(".", "").replace("'", "").strip()
+        ip_28 = float(r.get("IP", 0) or 0)
+        gs_28 = float(r.get("GS", 0) or 0)
+
+        p27 = pitchers_2027.get(pid) or pitchers_2027.get(name_clean, {})
+        ip_27 = float(p27.get("IP", 0) or 0)
+        p26 = pitchers_keeper_2026.get(pid) or pitchers_keeper_2026.get(name_clean, {})
+        ip_26 = float(p26.get("IP", 0) or 0)
+
+        # Proportional IP scaling: from 2027 to 2028
+        if ip_27 > 0:
+            ip_ratio = ip_28 / ip_27
+            qs_28 = round(float(p27.get("QS", 0) or 0) * ip_ratio, 1)
+            svhd_28 = round(float(p27.get("SVHD", 0) or 0) * ip_ratio, 1)
+        elif ip_26 > 0:
+            ip_ratio = ip_28 / ip_26
+            qs_28 = round(float(p26.get("QS", 0) or 0) * ip_ratio, 1)
+            svhd_28 = round(float(p26.get("SVHD", 0) or 0) * ip_ratio, 1)
+        elif gs_28 >= 5:
+            qs_28 = round(gs_28 * 0.45, 1)
+            svhd_28 = 0.0
+        else:
+            qs_28 = 0.0
+            svhd_28 = 0.0
+
+        item = {
+            "name": name,
+            "playerid": pid,
+            "IP": ip_28,
+            "G": float(r.get("G", 0) or 0),
+            "GS": gs_28,
+            "SO": float(r.get("SO", 0) or 0),
+            "QS": qs_28,
+            "SVHD": svhd_28,
+            "ERA": float(r.get("ERA", 0) or 0),
+            "WHIP": float(r.get("WHIP", 0) or 0),
+        }
+        if pid: pitchers_2028[pid] = item
+        if name_clean: pitchers_2028[name_clean] = item
+
+    # Benchmarks computed with scaled stats
     benchmarks_k26 = cpv.calculate_category_benchmarks(
         list(batters_keeper_2026.values()), list(pitchers_keeper_2026.values()), min_ab=400.0, min_sp_ip=130.0, min_rp_ip=45.0
     )
@@ -401,6 +512,7 @@ def main():
             "min_ab": min_ab,
             "min_sp_ip": min_sp_ip,
             "min_rp_ip": min_rp_ip,
+            "rp_nerf_factor": 2.5,
             "batting": {
                 "R": {"mean": round(b_dict.get("BAT_R", (0, 1))[0], 2), "std": round(b_dict.get("BAT_R", (0, 1))[1], 2)},
                 "HR": {"mean": round(b_dict.get("BAT_HR", (0, 1))[0], 2), "std": round(b_dict.get("BAT_HR", (0, 1))[1], 2)},
@@ -415,10 +527,10 @@ def main():
                 "WHIP": {"mean": round(b_dict.get("SP_WHIP", (1.25, 0.10))[0], 2), "std": round(b_dict.get("SP_WHIP", (1.25, 0.10))[1], 2)},
             },
             "rp": {
-                "SO": {"mean": round(b_dict.get("RP_SO", (60, 20))[0], 2), "std": round(b_dict.get("RP_SO", (60, 20))[1], 2)},
-                "SV_HD": {"mean": round(b_dict.get("RP_SVHD", (30, 9))[0], 2), "std": round(b_dict.get("RP_SVHD", (30, 9))[1], 2)},
-                "ERA": {"mean": round(b_dict.get("RP_ERA", (4.0, 1.0))[0], 2), "std": round(b_dict.get("RP_ERA", (4.0, 1.0))[1], 2)},
-                "WHIP": {"mean": round(b_dict.get("RP_WHIP", (1.30, 0.20))[0], 2), "std": round(b_dict.get("RP_WHIP", (1.30, 0.20))[1], 2)},
+                "SO": {"mean": round(b_dict.get("RP_SO", (60, 20))[0], 2), "std": round(b_dict.get("RP_SO", (60, 20))[1], 2), "eff_std": round(b_dict.get("RP_SO", (60, 20))[1] * 2.5, 2)},
+                "SV_HD": {"mean": round(b_dict.get("RP_SVHD", (30, 9))[0], 2), "std": round(b_dict.get("RP_SVHD", (30, 9))[1], 2), "eff_std": round(b_dict.get("RP_SVHD", (30, 9))[1] * 2.5, 2)},
+                "ERA": {"mean": round(b_dict.get("RP_ERA", (4.0, 1.0))[0], 2), "std": round(b_dict.get("RP_ERA", (4.0, 1.0))[1], 2), "eff_std": round(b_dict.get("RP_ERA", (4.0, 1.0))[1] * 2.5, 2)},
+                "WHIP": {"mean": round(b_dict.get("RP_WHIP", (1.30, 0.20))[0], 2), "std": round(b_dict.get("RP_WHIP", (1.30, 0.20))[1], 2), "eff_std": round(b_dict.get("RP_WHIP", (1.30, 0.20))[1] * 2.5, 2)},
             }
         }
 
@@ -470,13 +582,22 @@ def main():
             is_pitcher = True
             is_sp = False
 
+        avail = player.get("Availability")
+        fantasy_owner = avail.strip() if avail and avail.strip() != "Available" else "Available"
+        mlbam_id_val = int(mlbam_id) if mlbam_id and str(mlbam_id).isdigit() else None
+        espn_id_val = int(espn_id) if espn_id and str(espn_id).isdigit() else espn_id
+
         evaluated.append({
-            "player_id": int(espn_id) if espn_id and str(espn_id).isdigit() else espn_id,
+            "player_id": espn_id_val,
             "player_name": full_name,
             "team": team,
             "position": pos,
+            "fantasy_owner": fantasy_owner,
             "fangraphs_id": fg_id if fg_id != "None" else None,
-            "mlbam_id": int(mlbam_id) if mlbam_id and str(mlbam_id).isdigit() else None,
+            "mlbam_id": mlbam_id_val,
+            "MLBAMID": str(mlbam_id_val) if mlbam_id_val else None,
+            "ESPN PlayerID": str(espn_id_val) if espn_id_val else None,
+            "espn_player_id": espn_id_val,
             "is_pitcher": is_pitcher,
             "pitcher_role": "SP" if is_sp else ("RP" if is_pitcher else None),
             "overall_pr": round(overall_pr, 2),
