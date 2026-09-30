@@ -615,7 +615,7 @@
       "file_type": "code",
       "norm_label": "analysishistorypanel()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2840"
+      "source_location": "L3517"
     },
     {
       "id": "src_views_draftroomview_callespnproxy",
@@ -651,7 +651,7 @@
       "file_type": "code",
       "norm_label": "compute2027draftpicks()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1794"
+      "source_location": "L2471"
     },
     {
       "id": "src_views_draftroomview_countdowntimer",
@@ -663,7 +663,7 @@
       "file_type": "code",
       "norm_label": "countdowntimer()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1140"
+      "source_location": "L1817"
     },
     {
       "id": "src_views_draftroomview_draftcapitalpanel",
@@ -675,7 +675,7 @@
       "file_type": "code",
       "norm_label": "draftcapitalpanel()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2169"
+      "source_location": "L2846"
     },
     {
       "id": "src_views_draftroomview_draftdbget",
@@ -711,7 +711,7 @@
       "file_type": "code",
       "norm_label": "draftlogpanel()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2943"
+      "source_location": "L3620"
     },
     {
       "id": "src_views_draftroomview_draftroomview",
@@ -723,7 +723,7 @@
       "file_type": "code",
       "norm_label": "draftroomview()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L3159"
+      "source_location": "L3836"
     },
     {
       "id": "src_views_draftroomview_fetchallespnplayers",
@@ -783,7 +783,7 @@
       "file_type": "code",
       "norm_label": "generate2027draftorder()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1835"
+      "source_location": "L2512"
     },
     {
       "id": "src_views_draftroomview_generatedefaultdraftorder",
@@ -855,7 +855,7 @@
       "file_type": "code",
       "norm_label": "loginmodal()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1107"
+      "source_location": "L1784"
     },
     {
       "id": "src_views_draftroomview_mergeespndata",
@@ -891,7 +891,7 @@
       "file_type": "code",
       "norm_label": "modeselectionmodal()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L959"
+      "source_location": "L1636"
     },
     {
       "id": "src_views_draftroomview_mypickspanel",
@@ -903,7 +903,7 @@
       "file_type": "code",
       "norm_label": "mypickspanel()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1930"
+      "source_location": "L2607"
     },
     {
       "id": "src_views_draftroomview_normalizename",
@@ -927,7 +927,7 @@
       "file_type": "code",
       "norm_label": "ondecksidebar()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1186"
+      "source_location": "L1863"
     },
     {
       "id": "src_views_draftroomview_playermodal",
@@ -939,7 +939,7 @@
       "file_type": "code",
       "norm_label": "playermodal()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L614"
+      "source_location": "L615"
     },
     {
       "id": "src_views_draftroomview_playermodal_fetchplayerdata",
@@ -951,7 +951,7 @@
       "file_type": "code",
       "norm_label": "fetchplayerdata()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L622"
+      "source_location": "L672"
     },
     {
       "id": "src_views_draftroomview_playernamebutton",
@@ -963,7 +963,7 @@
       "file_type": "code",
       "norm_label": "playernamebutton()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L904"
+      "source_location": "L1581"
     },
     {
       "id": "src_views_draftroomview_playerpoolpanel",
@@ -975,7 +975,7 @@
       "file_type": "code",
       "norm_label": "playerpoolpanel()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1360"
+      "source_location": "L2037"
     },
     {
       "id": "src_views_draftroomview_playownersound",
@@ -999,7 +999,7 @@
       "file_type": "code",
       "norm_label": "queuepreviewwidget()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1320"
+      "source_location": "L1997"
     },
     {
       "id": "src_views_draftroomview_recentactivitywidget",
@@ -1011,7 +1011,7 @@
       "file_type": "code",
       "norm_label": "recentactivitywidget()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1269"
+      "source_location": "L1946"
     },
     {
       "id": "src_views_draftroomview_rostermanagerpanel",
@@ -1023,7 +1023,7 @@
       "file_type": "code",
       "norm_label": "rostermanagerpanel()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1606"
+      "source_location": "L2283"
     },
     {
       "id": "src_views_draftroomview_roundnumber",
@@ -1047,7 +1047,7 @@
       "file_type": "code",
       "norm_label": "standingspanel()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L3082"
+      "source_location": "L3759"
     },
     {
       "id": "src_views_draftroomview_teamneedssummary",
@@ -1059,7 +1059,7 @@
       "file_type": "code",
       "norm_label": "teamneedssummary()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1227"
+      "source_location": "L1904"
     },
     {
       "id": "src_views_draftroomview_ticker",
@@ -1071,7 +1071,7 @@
       "file_type": "code",
       "norm_label": "ticker()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1166"
+      "source_location": "L1843"
     },
     {
       "id": "src_views_historicaldraftview_historicaldraftview",
@@ -4323,7 +4323,7 @@
       "file_type": "code",
       "norm_label": "run_pipeline()",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L273"
+      "source_location": "L284"
     },
     {
       "id": "pipelines_compute_player_values_run_pipeline_make_lookup",
@@ -4335,7 +4335,7 @@
       "file_type": "code",
       "norm_label": "make_lookup()",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L314"
+      "source_location": "L325"
     },
     {
       "id": "pipelines_compute_player_values_run_pipeline_parse_rank",
@@ -4347,7 +4347,7 @@
       "file_type": "code",
       "norm_label": "parse_rank()",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L666"
+      "source_location": "L689"
     },
     {
       "id": "pipelines_compute_player_values_run_pipeline_parse_zips_api_bat",
@@ -4359,7 +4359,7 @@
       "file_type": "code",
       "norm_label": "parse_zips_api_bat()",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L347"
+      "source_location": "L358"
     },
     {
       "id": "pipelines_compute_player_values_run_pipeline_parse_zips_api_pit",
@@ -4371,7 +4371,7 @@
       "file_type": "code",
       "norm_label": "parse_zips_api_pit()",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L368"
+      "source_location": "L424"
     },
     {
       "id": "pipelines_compute_player_values_run_pipeline_parse_zips_gsheet_bat",
@@ -4383,7 +4383,7 @@
       "file_type": "code",
       "norm_label": "parse_zips_gsheet_bat()",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L391"
+      "source_location": "L462"
     },
     {
       "id": "pipelines_compute_player_values_run_pipeline_parse_zips_gsheet_pit",
@@ -4395,7 +4395,7 @@
       "file_type": "code",
       "norm_label": "parse_zips_gsheet_pit()",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L426"
+      "source_location": "L497"
     },
     {
       "id": "pipelines_generate_keeper_calculations_compute_detailed_player_pr",
@@ -5533,7 +5533,7 @@
       "file_type": "code",
       "norm_label": "default_owner_profiles",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L945"
+      "source_location": "L1622"
     },
     {
       "id": "src_views_draftroomview_draft_owners",
@@ -5566,7 +5566,7 @@
       "file_type": "code",
       "norm_label": "owner_avatars",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L931"
+      "source_location": "L1608"
     },
     {
       "id": "src_views_draftroomview_roster_slots",
@@ -5588,7 +5588,7 @@
       "file_type": "code",
       "norm_label": "styles",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L5069"
+      "source_location": "L5775"
     },
     {
       "id": "src_views_historicaldraftview",
@@ -14042,7 +14042,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L278",
+      "source_location": "L289",
       "weight": 1.0
     },
     {
@@ -14054,7 +14054,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L282",
+      "source_location": "L293",
       "weight": 1.0
     },
     {
@@ -14066,7 +14066,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L302",
+      "source_location": "L313",
       "weight": 1.0
     },
     {
@@ -14078,7 +14078,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L310",
+      "source_location": "L321",
       "weight": 1.0
     },
     {
@@ -14090,7 +14090,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L342",
+      "source_location": "L353",
       "weight": 1.0
     },
     {
@@ -14102,7 +14102,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L641",
+      "source_location": "L664",
       "weight": 1.0
     },
     {
@@ -14114,7 +14114,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L697",
+      "source_location": "L720",
       "weight": 1.0
     },
     {
@@ -14126,7 +14126,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L719",
+      "source_location": "L742",
       "weight": 1.0
     },
     {
@@ -15962,7 +15962,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2175",
+      "source_location": "L2852",
       "weight": 1.0
     },
     {
@@ -15998,7 +15998,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L3044",
+      "source_location": "L3721",
       "weight": 1.0
     },
     {
@@ -16010,7 +16010,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L3047",
+      "source_location": "L3724",
       "weight": 1.0
     },
     {
@@ -16022,7 +16022,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L3270",
+      "source_location": "L3947",
       "weight": 1.0
     },
     {
@@ -16034,7 +16034,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L3289",
+      "source_location": "L3966",
       "weight": 1.0
     },
     {
@@ -16046,7 +16046,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L3323",
+      "source_location": "L4000",
       "weight": 1.0
     },
     {
@@ -16058,7 +16058,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L3419",
+      "source_location": "L4096",
       "weight": 1.0
     },
     {
@@ -16070,7 +16070,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L3448",
+      "source_location": "L4125",
       "weight": 1.0
     },
     {
@@ -16082,7 +16082,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L3525",
+      "source_location": "L4202",
       "weight": 1.0
     },
     {
@@ -16094,7 +16094,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L3538",
+      "source_location": "L4215",
       "weight": 1.0
     },
     {
@@ -16106,7 +16106,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L3553",
+      "source_location": "L4230",
       "weight": 1.0
     },
     {
@@ -16118,7 +16118,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L3563",
+      "source_location": "L4240",
       "weight": 1.0
     },
     {
@@ -16130,7 +16130,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L3565",
+      "source_location": "L4242",
       "weight": 1.0
     },
     {
@@ -16142,7 +16142,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L3577",
+      "source_location": "L4254",
       "weight": 1.0
     },
     {
@@ -16154,7 +16154,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L3581",
+      "source_location": "L4258",
       "weight": 1.0
     },
     {
@@ -16166,7 +16166,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L4196",
+      "source_location": "L4880",
       "weight": 1.0
     },
     {
@@ -16178,7 +16178,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L4199",
+      "source_location": "L4883",
       "weight": 1.0
     },
     {
@@ -16190,7 +16190,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L4828",
+      "source_location": "L5527",
       "weight": 1.0
     },
     {
@@ -16238,7 +16238,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1871",
+      "source_location": "L2548",
       "weight": 1.0
     },
     {
@@ -16310,7 +16310,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1940",
+      "source_location": "L2617",
       "weight": 1.0
     },
     {
@@ -16322,7 +16322,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L713",
+      "source_location": "L927",
       "weight": 1.0
     },
     {
@@ -16334,7 +16334,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L716",
+      "source_location": "L930",
       "weight": 1.0
     },
     {
@@ -16346,7 +16346,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L630",
+      "source_location": "L678",
       "weight": 1.0
     },
     {
@@ -16358,7 +16358,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1474",
+      "source_location": "L2151",
       "weight": 1.0
     },
     {
@@ -16370,7 +16370,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1506",
+      "source_location": "L2183",
       "weight": 1.0
     },
     {
@@ -16382,7 +16382,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1509",
+      "source_location": "L2186",
       "weight": 1.0
     },
     {
@@ -16394,7 +16394,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1329",
+      "source_location": "L2006",
       "weight": 1.0
     },
     {
@@ -16406,7 +16406,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1335",
+      "source_location": "L2012",
       "weight": 1.0
     },
     {
@@ -16418,7 +16418,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1338",
+      "source_location": "L2015",
       "weight": 1.0
     },
     {
@@ -16430,7 +16430,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1281",
+      "source_location": "L1958",
       "weight": 1.0
     },
     {
@@ -16442,7 +16442,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1292",
+      "source_location": "L1969",
       "weight": 1.0
     },
     {
@@ -16454,7 +16454,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1295",
+      "source_location": "L1972",
       "weight": 1.0
     },
     {
@@ -17534,7 +17534,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L314",
+      "source_location": "L325",
       "weight": 1.0
     },
     {
@@ -17546,7 +17546,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L347",
+      "source_location": "L358",
       "weight": 1.0
     },
     {
@@ -17558,7 +17558,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L368",
+      "source_location": "L424",
       "weight": 1.0
     },
     {
@@ -17570,7 +17570,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L391",
+      "source_location": "L462",
       "weight": 1.0
     },
     {
@@ -17582,7 +17582,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L426",
+      "source_location": "L497",
       "weight": 1.0
     },
     {
@@ -17594,7 +17594,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L666",
+      "source_location": "L689",
       "weight": 1.0
     },
     {
@@ -17738,7 +17738,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L622",
+      "source_location": "L672",
       "weight": 1.0
     },
     {
@@ -29122,7 +29122,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L273",
+      "source_location": "L284",
       "weight": 1.0
     },
     {
@@ -31789,17 +31789,6 @@
     },
     {
       "source": "src_views_draftroomview",
-      "target": "src_views_draftroomview_loginmodal",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1107",
-      "weight": 1.0
-    },
-    {
-      "source": "src_views_draftroomview",
       "target": "src_views_draftroomview_fetchfangraphs",
       "relation": "contains",
       "_origin": "ast",
@@ -31807,50 +31796,6 @@
       "confidence_score": 1.0,
       "source_file": "src/views/DraftRoomView.jsx",
       "source_location": "L111",
-      "weight": 1.0
-    },
-    {
-      "source": "src_views_draftroomview",
-      "target": "src_views_draftroomview_countdowntimer",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1140",
-      "weight": 1.0
-    },
-    {
-      "source": "src_views_draftroomview",
-      "target": "src_views_draftroomview_ticker",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1166",
-      "weight": 1.0
-    },
-    {
-      "source": "src_views_draftroomview",
-      "target": "src_views_draftroomview_ondecksidebar",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1186",
-      "weight": 1.0
-    },
-    {
-      "source": "src_views_draftroomview",
-      "target": "src_views_draftroomview_teamneedssummary",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1227",
       "weight": 1.0
     },
     {
@@ -31866,39 +31811,6 @@
     },
     {
       "source": "src_views_draftroomview",
-      "target": "src_views_draftroomview_recentactivitywidget",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1269",
-      "weight": 1.0
-    },
-    {
-      "source": "src_views_draftroomview",
-      "target": "src_views_draftroomview_queuepreviewwidget",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1320",
-      "weight": 1.0
-    },
-    {
-      "source": "src_views_draftroomview",
-      "target": "src_views_draftroomview_playerpoolpanel",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1360",
-      "weight": 1.0
-    },
-    {
-      "source": "src_views_draftroomview",
       "target": "src_views_draftroomview_fetchallespnplayers",
       "relation": "contains",
       "_origin": "ast",
@@ -31910,13 +31822,46 @@
     },
     {
       "source": "src_views_draftroomview",
-      "target": "src_views_draftroomview_rostermanagerpanel",
+      "target": "src_views_draftroomview_playernamebutton",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1606",
+      "source_location": "L1581",
+      "weight": 1.0
+    },
+    {
+      "source": "src_views_draftroomview",
+      "target": "src_views_draftroomview_owner_avatars",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/views/DraftRoomView.jsx",
+      "source_location": "L1608",
+      "weight": 1.0
+    },
+    {
+      "source": "src_views_draftroomview",
+      "target": "src_views_draftroomview_default_owner_profiles",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/views/DraftRoomView.jsx",
+      "source_location": "L1622",
+      "weight": 1.0
+    },
+    {
+      "source": "src_views_draftroomview",
+      "target": "src_views_draftroomview_modeselectionmodal",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/views/DraftRoomView.jsx",
+      "source_location": "L1636",
       "weight": 1.0
     },
     {
@@ -31932,24 +31877,46 @@
     },
     {
       "source": "src_views_draftroomview",
-      "target": "src_views_draftroomview_compute2027draftpicks",
+      "target": "src_views_draftroomview_loginmodal",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1794",
+      "source_location": "L1784",
       "weight": 1.0
     },
     {
       "source": "src_views_draftroomview",
-      "target": "src_views_draftroomview_generate2027draftorder",
+      "target": "src_views_draftroomview_countdowntimer",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1835",
+      "source_location": "L1817",
+      "weight": 1.0
+    },
+    {
+      "source": "src_views_draftroomview",
+      "target": "src_views_draftroomview_ticker",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/views/DraftRoomView.jsx",
+      "source_location": "L1843",
+      "weight": 1.0
+    },
+    {
+      "source": "src_views_draftroomview",
+      "target": "src_views_draftroomview_ondecksidebar",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/views/DraftRoomView.jsx",
+      "source_location": "L1863",
       "weight": 1.0
     },
     {
@@ -31965,6 +31932,17 @@
     },
     {
       "source": "src_views_draftroomview",
+      "target": "src_views_draftroomview_teamneedssummary",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/views/DraftRoomView.jsx",
+      "source_location": "L1904",
+      "weight": 1.0
+    },
+    {
+      "source": "src_views_draftroomview",
       "target": "src_views_draftroomview_mergeespndata",
       "relation": "contains",
       "_origin": "ast",
@@ -31976,24 +31954,46 @@
     },
     {
       "source": "src_views_draftroomview",
-      "target": "src_views_draftroomview_mypickspanel",
+      "target": "src_views_draftroomview_recentactivitywidget",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1930",
+      "source_location": "L1946",
       "weight": 1.0
     },
     {
       "source": "src_views_draftroomview",
-      "target": "src_views_draftroomview_draftcapitalpanel",
+      "target": "src_views_draftroomview_queuepreviewwidget",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2169",
+      "source_location": "L1997",
+      "weight": 1.0
+    },
+    {
+      "source": "src_views_draftroomview",
+      "target": "src_views_draftroomview_playerpoolpanel",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/views/DraftRoomView.jsx",
+      "source_location": "L2037",
+      "weight": 1.0
+    },
+    {
+      "source": "src_views_draftroomview",
+      "target": "src_views_draftroomview_rostermanagerpanel",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/views/DraftRoomView.jsx",
+      "source_location": "L2283",
       "weight": 1.0
     },
     {
@@ -32020,13 +32020,57 @@
     },
     {
       "source": "src_views_draftroomview",
+      "target": "src_views_draftroomview_compute2027draftpicks",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/views/DraftRoomView.jsx",
+      "source_location": "L2471",
+      "weight": 1.0
+    },
+    {
+      "source": "src_views_draftroomview",
+      "target": "src_views_draftroomview_generate2027draftorder",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/views/DraftRoomView.jsx",
+      "source_location": "L2512",
+      "weight": 1.0
+    },
+    {
+      "source": "src_views_draftroomview",
+      "target": "src_views_draftroomview_mypickspanel",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/views/DraftRoomView.jsx",
+      "source_location": "L2607",
+      "weight": 1.0
+    },
+    {
+      "source": "src_views_draftroomview",
+      "target": "src_views_draftroomview_draftcapitalpanel",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/views/DraftRoomView.jsx",
+      "source_location": "L2846",
+      "weight": 1.0
+    },
+    {
+      "source": "src_views_draftroomview",
       "target": "src_views_draftroomview_analysishistorypanel",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2840",
+      "source_location": "L3517",
       "weight": 1.0
     },
     {
@@ -32037,7 +32081,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2943",
+      "source_location": "L3620",
       "weight": 1.0
     },
     {
@@ -32048,7 +32092,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L3082",
+      "source_location": "L3759",
       "weight": 1.0
     },
     {
@@ -32059,7 +32103,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L3159",
+      "source_location": "L3836",
       "weight": 1.0
     },
     {
@@ -32152,17 +32196,6 @@
     },
     {
       "source": "src_views_draftroomview",
-      "target": "src_views_draftroomview_styles",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L5069",
-      "weight": 1.0
-    },
-    {
-      "source": "src_views_draftroomview",
       "target": "src_views_draftroomview_generatedraftcommentary",
       "relation": "contains",
       "_origin": "ast",
@@ -32181,6 +32214,17 @@
       "confidence_score": 1.0,
       "source_file": "src/views/DraftRoomView.jsx",
       "source_location": "L571",
+      "weight": 1.0
+    },
+    {
+      "source": "src_views_draftroomview",
+      "target": "src_views_draftroomview_styles",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/views/DraftRoomView.jsx",
+      "source_location": "L5775",
       "weight": 1.0
     },
     {
@@ -32213,7 +32257,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L614",
+      "source_location": "L615",
       "weight": 1.0
     },
     {
@@ -32225,50 +32269,6 @@
       "confidence_score": 1.0,
       "source_file": "src/views/DraftRoomView.jsx",
       "source_location": "L74",
-      "weight": 1.0
-    },
-    {
-      "source": "src_views_draftroomview",
-      "target": "src_views_draftroomview_playernamebutton",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L904",
-      "weight": 1.0
-    },
-    {
-      "source": "src_views_draftroomview",
-      "target": "src_views_draftroomview_owner_avatars",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L931",
-      "weight": 1.0
-    },
-    {
-      "source": "src_views_draftroomview",
-      "target": "src_views_draftroomview_default_owner_profiles",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L945",
-      "weight": 1.0
-    },
-    {
-      "source": "src_views_draftroomview",
-      "target": "src_views_draftroomview_modeselectionmodal",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L959",
       "weight": 1.0
     },
     {
@@ -35297,5 +35297,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "7635967a44e4f5444356b8a74ddfdb7c3d777d9a"
+  "built_at_commit": "771cbf885d4f8da31179413499b440bda1805ed0"
 }
