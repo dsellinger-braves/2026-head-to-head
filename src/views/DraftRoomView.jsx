@@ -1795,8 +1795,8 @@ function compute2027DraftPicks(draftTrades = []) {
   const owners = ["Adrian", "Alex", "Anil", "Daniel", "Garrett", "Mark", "Preston", "Tim", "Will"].sort();
   const picks = [];
 
-  // Base draft order: 27 rounds (Rounds 6 through 32), 1 pick per owner per round (243 total picks)
-  for (let round = 6; round <= 32; round++) {
+  // Base draft order: 26 rounds (Rounds 7 through 32), 1 pick per owner per round (234 total picks)
+  for (let round = 7; round <= 32; round++) {
     owners.forEach(owner => {
       picks.push({
         round,
@@ -1836,8 +1836,8 @@ function generate2027DraftOrder(draftTrades = [], keepers2027 = [], compPicks202
   const fullOrder = [];
   let overall = 1;
 
-  // Rounds 1-5: Keepers (45 picks across 9 owners)
-  for (let r = 1; r <= 5; r++) {
+  // Rounds 1-6: Keepers (54 picks across 9 owners)
+  for (let r = 1; r <= 6; r++) {
     const roundOwners = r % 2 === 1 ? [...DRAFT_OWNERS] : [...DRAFT_OWNERS].reverse();
     roundOwners.forEach((owner, idx) => {
       // Find keeper assigned to this owner and slot if submitted
@@ -1867,12 +1867,12 @@ function generate2027DraftOrder(draftTrades = [], keepers2027 = [], compPicks202
     });
   }
 
-  // Rounds 6-32: Drafted rounds with 2026 trades applied
+  // Rounds 7-32: Drafted rounds with 2026/2027 trades applied
   const basePicks = compute2027DraftPicks(draftTrades);
   const ownerPickCounters = {};
   DRAFT_OWNERS.forEach(o => { ownerPickCounters[o] = 1; });
 
-  for (let r = 6; r <= 32; r++) {
+  for (let r = 7; r <= 32; r++) {
     const roundPicks = basePicks.filter(p => p.round === r);
     const roundCompPicks = (compPicks2027 || []).filter(cp => cp.round_num === r);
 
@@ -2185,7 +2185,7 @@ function DraftCapitalPanel({ draftTrades = [], compPicks = [], keepers = [], cur
       stats[owner] = {
         owner,
         total: ownedPicks.length,
-        diff: ownedPicks.length - 27,
+        diff: ownedPicks.length - 26,
         acquired,
         tradedAway,
         ownedPicks
@@ -2204,10 +2204,10 @@ function DraftCapitalPanel({ draftTrades = [], compPicks = [], keepers = [], cur
   // Filtered rounds for round-by-round board
   const rounds = useMemo(() => {
     const list = [];
-    for (let r = 6; r <= 32; r++) list.push(r);
+    for (let r = 7; r <= 32; r++) list.push(r);
     if (roundFilter === 'ALL') return list;
-    if (roundFilter === 'EARLY') return list.filter(r => r <= 14);
-    if (roundFilter === 'MID') return list.filter(r => r >= 15 && r <= 23);
+    if (roundFilter === 'EARLY') return list.filter(r => r <= 15);
+    if (roundFilter === 'MID') return list.filter(r => r >= 16 && r <= 23);
     if (roundFilter === 'LATE') return list.filter(r => r >= 24);
     return list;
   }, [roundFilter]);
@@ -2283,7 +2283,7 @@ function DraftCapitalPanel({ draftTrades = [], compPicks = [], keepers = [], cur
         </div>
 
         <span style={{ fontSize: '13px', color: '#aaa' }}>
-          243 Total Draft Picks (Rounds 6–32 across 9 teams)
+          234 Total Draft Picks (Rounds 7–32 across 9 teams)
         </span>
       </div>
 
@@ -2296,7 +2296,7 @@ function DraftCapitalPanel({ draftTrades = [], compPicks = [], keepers = [], cur
           marginBottom: '20px'
         }}>
           {DRAFT_OWNERS.map(owner => {
-            const stat = ownerStats[owner] || { total: 27, diff: 0, acquired: [], tradedAway: [] };
+            const stat = ownerStats[owner] || { total: 26, diff: 0, acquired: [], tradedAway: [] };
             const isSelected = selectedOwner === owner;
             const hasActivity = stat.acquired.length > 0 || stat.tradedAway.length > 0;
 
@@ -2403,7 +2403,7 @@ function DraftCapitalPanel({ draftTrades = [], compPicks = [], keepers = [], cur
                       cursor: 'pointer'
                     }}
                   >
-                    {rf === 'ALL' ? 'All (R6-32)' : rf === 'EARLY' ? 'Early (R6-14)' : rf === 'MID' ? 'Mid (R15-23)' : 'Late (R24-32)'}
+                    {rf === 'ALL' ? 'All (R7-32)' : rf === 'EARLY' ? 'Early (R7-15)' : rf === 'MID' ? 'Mid (R16-23)' : 'Late (R24-32)'}
                   </button>
                 ))}
               </div>
@@ -2488,7 +2488,7 @@ function DraftCapitalPanel({ draftTrades = [], compPicks = [], keepers = [], cur
                   style={styles.filterControl}
                 >
                   {DRAFT_OWNERS.map(o => (
-                    <option key={o} value={o}>{o} ({ownerStats[o]?.total || 27} picks)</option>
+                    <option key={o} value={o}>{o} ({ownerStats[o]?.total || 26} picks)</option>
                   ))}
                 </select>
               </div>
@@ -3272,8 +3272,8 @@ export default function DraftRoomView({
 
   const currentPick = useMemo(() => {
     if (roomSeason === 2027) {
-      // In 2027 draft prep, live drafting begins at pick 46 (picks 1-45 are 5 keeper rounds)
-      return displayPicks.find(p => p['Overall Pick'] >= 46 && !p['ESPN PlayerID']);
+      // In 2027 draft prep, live drafting begins at pick 55 (picks 1-54 are 6 keeper rounds)
+      return displayPicks.find(p => p['Overall Pick'] >= 55 && !p['ESPN PlayerID']);
     }
     return displayPicks.find(p => !p['ESPN PlayerID']);
   }, [displayPicks, roomSeason]);
@@ -3678,27 +3678,29 @@ export default function DraftRoomView({
 
   useEffect(() => {
     if (picks.length > 0) {
+      const liveCutoff = roomSeason === 2027 ? 55 : 46;
       if (draftMode === 'test' && testModePicks.length === 0) {
-        setTestModePicks(picks.map(p => p['Overall Pick'] >= 46 ? {
+        setTestModePicks(picks.map(p => p['Overall Pick'] >= liveCutoff ? {
           ...p,
           'ESPN PlayerID': null,
           Selection: null
         } : { ...p }));
       } else if (draftMode === 'mockdraft' && testModePicks.length === 0) {
-        setTestModePicks(picks.map(p => p['Overall Pick'] >= 46 ? {
+        setTestModePicks(picks.map(p => p['Overall Pick'] >= liveCutoff ? {
           ...p,
           'ESPN PlayerID': null,
           Selection: null
         } : { ...p }));
       }
     }
-  }, [draftMode, picks, testModePicks.length]);
+  }, [draftMode, picks, testModePicks.length, roomSeason]);
 
   const handleModeSelect = (mode) => {
     localStorage.setItem('draftMode', mode);
     setDraftMode(mode);
+    const liveCutoff = roomSeason === 2027 ? 55 : 46;
     if ((mode === 'test' || mode === 'mockdraft') && testModePicks.length === 0) {
-      setTestModePicks(picks.map(p => p['Overall Pick'] >= 46 ? {
+      setTestModePicks(picks.map(p => p['Overall Pick'] >= liveCutoff ? {
         ...p,
         'ESPN PlayerID': null,
         Selection: null
@@ -3834,7 +3836,8 @@ export default function DraftRoomView({
   }, [draftMode, isRunningMock, mockSpeed, currentPick, currentUser, stepMockPick]);
 
   const handleResetDraft = async () => {
-    if (!window.confirm(`Are you sure you want to reset all ${roomSeason} draft picks? This will clear selections from pick 46 onwards.`)) return;
+    const liveCutoff = roomSeason === 2027 ? 55 : 46;
+    if (!window.confirm(`Are you sure you want to reset all ${roomSeason} draft picks? This will clear selections from pick ${liveCutoff} onwards.`)) return;
     setResetting(true);
     try {
       if (roomSeason === 2027) {
@@ -3842,17 +3845,17 @@ export default function DraftRoomView({
           .from('draft_picks')
           .delete()
           .eq('season_year', 2027)
-          .gte('overall_pick', 46);
+          .gte('overall_pick', liveCutoff);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('draft-order')
           .update({ 'ESPN PlayerID': null, 'Selection': null })
-          .gte('Overall Pick', 46);
+          .gte('Overall Pick', liveCutoff);
         if (error) throw error;
       }
-      setTestModePicks(prev => prev.map(p => p['Overall Pick'] >= 46 ? { ...p, 'ESPN PlayerID': null, Selection: null } : p));
-      setPicks(prev => prev.map(p => p['Overall Pick'] >= 46 ? { ...p, 'ESPN PlayerID': null, Selection: null } : p));
+      setTestModePicks(prev => prev.map(p => p['Overall Pick'] >= liveCutoff ? { ...p, 'ESPN PlayerID': null, Selection: null } : p));
+      setPicks(prev => prev.map(p => p['Overall Pick'] >= liveCutoff ? { ...p, 'ESPN PlayerID': null, Selection: null } : p));
       setLastPickCommentary(roomSeason === 2026 ? "Viewing 2026 completed draft archive." : "Draft has not started.");
       setAnalysisHistory([]);
       alert("Draft reset successfully!");
@@ -3870,9 +3873,10 @@ export default function DraftRoomView({
   const isMyTurn = (currentPick && currentUser && currentPick.Owner === currentUser) || draftMode === 'test' || draftMode === 'multitest';
 
   const upcomingPicks = useMemo(() => {
+    const liveCutoff = roomSeason === 2027 ? 55 : 46;
     const currentIdx = displayPicks.findIndex(p => 
       roomSeason === 2027
-        ? (p['Overall Pick'] >= 46 && !p['ESPN PlayerID'])
+        ? (p['Overall Pick'] >= liveCutoff && !p['ESPN PlayerID'])
         : !p['ESPN PlayerID']
     );
     if (currentIdx === -1) return [];

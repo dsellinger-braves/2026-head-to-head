@@ -112,8 +112,8 @@ function compute2027DraftPicks(draftTrades = []) {
   const owners = [...DRAFT_OWNERS].sort();
   const picks = [];
 
-  // Base draft order: 27 rounds (Rounds 6 through 32), 1 pick per owner per round (243 total picks)
-  for (let round = 6; round <= 32; round++) {
+  // Base draft order: 26 rounds (Rounds 7 through 32), 1 pick per owner per round (234 total picks)
+  for (let round = 7; round <= 32; round++) {
     owners.forEach(owner => {
       picks.push({
         id: `pick-${round}-${owner}`,
@@ -1068,7 +1068,7 @@ export default function DraftCapitalView({
       stats[owner] = {
         owner,
         total: ownedPicks.length,
-        diff: ownedPicks.length - 27,
+        diff: ownedPicks.length - 26,
         acquired,
         tradedAway,
         ownedPicks,
@@ -1084,13 +1084,13 @@ export default function DraftCapitalView({
     );
   }, [draftTrades]);
 
-  // Filtered rounds for round-by-round board
+  // Filtered rounds for round-by-round board (2027 draft rounds start at Round 7 after 6 keepers)
   const rounds = useMemo(() => {
     const list = [];
-    for (let r = 6; r <= 32; r++) list.push(r);
+    for (let r = 7; r <= 32; r++) list.push(r);
     if (roundFilter === 'ALL') return list;
-    if (roundFilter === 'EARLY') return list.filter(r => r <= 14);
-    if (roundFilter === 'MID') return list.filter(r => r >= 15 && r <= 23);
+    if (roundFilter === 'EARLY') return list.filter(r => r <= 15);
+    if (roundFilter === 'MID') return list.filter(r => r >= 16 && r <= 23);
     if (roundFilter === 'LATE') return list.filter(r => r >= 24);
     return list;
   }, [roundFilter]);
@@ -1307,7 +1307,7 @@ export default function DraftCapitalView({
                 }`}
               >
                 <div className="text-[11px] font-bold text-slate-300 truncate">{owner}</div>
-                <div className="text-sm font-black text-white mt-0.5">{stat?.total ?? 27}</div>
+                <div className="text-sm font-black text-white mt-0.5">{stat?.total ?? 26}</div>
                 <div className={`text-[10px] font-extrabold ${diff > 0 ? 'text-emerald-400' : diff < 0 ? 'text-rose-400' : 'text-slate-500'}`}>
                   {diff > 0 ? `+${diff}` : diff === 0 ? '±0' : `${diff}`}
                 </div>
@@ -1325,9 +1325,9 @@ export default function DraftCapitalView({
               <span className="text-xs font-black uppercase tracking-wider text-slate-400">Rounds Filter:</span>
               <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800 text-xs font-bold">
                 {[
-                  { id: 'ALL', label: 'All (R6–32)' },
-                  { id: 'EARLY', label: 'Early (R6–14)' },
-                  { id: 'MID', label: 'Mid (R15–23)' },
+                  { id: 'ALL', label: 'All (R7–32)' },
+                  { id: 'EARLY', label: 'Early (R7–15)' },
+                  { id: 'MID', label: 'Mid (R16–23)' },
                   { id: 'LATE', label: 'Late (R24–32)' },
                 ].map(f => (
                   <button
@@ -1431,7 +1431,7 @@ export default function DraftCapitalView({
                     : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white hover:border-slate-700'
                 }`}
               >
-                {owner} ({ownerStats[owner]?.total ?? 27})
+                {owner} ({ownerStats[owner]?.total ?? 26})
               </button>
             ))}
           </div>
@@ -1440,8 +1440,8 @@ export default function DraftCapitalView({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl">
               <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Owned 2027 Picks</div>
-              <div className="text-3xl font-black text-white mt-1">{ownerStats[selectedOwner]?.total ?? 27}</div>
-              <div className="text-xs text-slate-500 mt-1">27 base rounds in draft</div>
+              <div className="text-3xl font-black text-white mt-1">{ownerStats[selectedOwner]?.total ?? 26}</div>
+              <div className="text-xs text-slate-500 mt-1">26 base rounds in draft (R7–32)</div>
             </div>
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl">
               <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Acquired from Others</div>
@@ -2102,7 +2102,7 @@ export default function DraftCapitalView({
                         Pick Imbalance Warning: Unequal Draft Picks ({builderOfferedPicksCount} offered vs {builderRequestedPicksCount} requested)
                       </div>
                       <p className="text-[11px] text-amber-200/90 leading-relaxed">
-                        In our 27-round draft format (Rounds 6 through 32), trading an unequal number of draft picks leaves teams with unequal roster sizes unless an offsetting pick (such as a late-round Round 32 pick swap) is included. You may still proceed if this disparity is intentional.
+                        In our 26-round draft format (Rounds 7 through 32), trading an unequal number of draft picks leaves teams with unequal roster sizes unless an offsetting pick (such as a late-round Round 32 pick swap) is included. You may still proceed if this disparity is intentional.
                       </p>
                     </div>
                   </div>
@@ -2930,7 +2930,7 @@ export default function DraftCapitalView({
                       <div className="p-3 bg-amber-950/40 border border-amber-500/50 rounded-xl text-xs text-amber-200 flex items-center gap-2">
                         <span>⚠️</span>
                         <span>
-                          <strong>Pick Disparity:</strong> This trade involves {oPicks} offered pick(s) vs {rPicks} requested pick(s). Unequal picks will cause uneven roster sizes at the 27-round draft.
+                          <strong>Pick Disparity:</strong> This trade involves {oPicks} offered pick(s) vs {rPicks} requested pick(s). Unequal picks will cause uneven roster sizes at the 26-round draft (Rounds 7–32).
                         </span>
                       </div>
                     );
