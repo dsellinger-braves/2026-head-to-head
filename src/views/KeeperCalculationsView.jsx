@@ -1,9 +1,10 @@
 // src/views/KeeperCalculationsView.jsx
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import defaultCalculations from '../data/keeperCalculations.json';
-import { getPlayerHeadshotUrl, handleHeadshotError } from '../utils/headshotUtils';
+import { getPlayerHeadshotUrl, handleHeadshotError, updateGlobalPlayerLookup } from '../utils/headshotUtils';
 
 const POSITIONS = ['ALL', 'C', '1B', '2B', '3B', 'SS', 'OF', 'SP', 'RP', 'DH'];
+const LEAGUE_MANAGERS = ['Adrian', 'Alex', 'Anil', 'Daniel', 'Garrett', 'Mark', 'Preston', 'Tim', 'Will'];
 const PRICE_TIERS = [
   { id: 'ALL', label: 'All Tiers' },
   { id: 'TIER_TOP', label: 'Elite ($25+)' },
@@ -25,11 +26,18 @@ export default function KeeperCalculationsView({
   // Filter states
   const [search, setSearch] = useState('');
   const [posFilter, setPosFilter] = useState('ALL');
+  const [ownerFilter, setOwnerFilter] = useState('ALL');
   const [priceTier, setPriceTier] = useState('ALL');
   const [sortConfig, setSortConfig] = useState({ key: 'overall_rank', direction: 'asc' });
 
   const benchmarks = data?.benchmarks?.[selectedBenchmarkYear] || data?.benchmarks?.['2026'] || {};
   const playersList = useMemo(() => data?.players || [], [data]);
+
+  useEffect(() => {
+    if (playersList.length > 0) {
+      updateGlobalPlayerLookup(playersList);
+    }
+  }, [playersList]);
 
   // Filter players
   const filteredPlayers = useMemo(() => {
@@ -55,6 +63,13 @@ export default function KeeperCalculationsView({
         }
       }
 
+      if (ownerFilter !== 'ALL') {
+        const o = p.fantasy_owner || 'Available';
+        if (ownerFilter === 'ROSTERED' && o === 'Available') return false;
+        if (ownerFilter === 'AVAILABLE' && o !== 'Available') return false;
+        if (ownerFilter !== 'ROSTERED' && ownerFilter !== 'AVAILABLE' && o !== ownerFilter) return false;
+      }
+
       if (priceTier !== 'ALL') {
         const price = p.overall_price || 0;
         if (priceTier === 'TIER_TOP' && price < 25) return false;
@@ -65,7 +80,7 @@ export default function KeeperCalculationsView({
 
       return true;
     });
-  }, [playersList, search, posFilter, priceTier]);
+  }, [playersList, search, posFilter, ownerFilter, priceTier]);
 
   // Sort players
   const sortedPlayers = useMemo(() => {
@@ -90,10 +105,18 @@ export default function KeeperCalculationsView({
       if (sortConfig.key === 'y3_rank') aVal = a.y3?.rank;
       if (sortConfig.key === 'y3_rank') bVal = b.y3?.rank;
 
-      if (sortConfig.key === 'player_name') {
+      if (sortConfig.key === 'player_name' || sortConfig.key === 'position' || sortConfig.key === 'team') {
         return sortConfig.direction === 'asc'
           ? (aVal || '').localeCompare(bVal || '')
           : (bVal || '').localeCompare(aVal || '');
+      }
+
+      if (sortConfig.key === 'fantasy_owner') {
+        const oA = a.fantasy_owner === 'Available' ? 'ZZZ' : (a.fantasy_owner || 'ZZZ');
+        const oB = b.fantasy_owner === 'Available' ? 'ZZZ' : (b.fantasy_owner || 'ZZZ');
+        return sortConfig.direction === 'asc'
+          ? oA.localeCompare(oB)
+          : oB.localeCompare(oA);
       }
 
       const numA = parseFloat(aVal) || 0;
@@ -253,17 +276,40 @@ export default function KeeperCalculationsView({
                 <span className="text-xs font-black text-purple-400 uppercase tracking-wider flex items-center gap-1.5">
                   <span>🔥</span> Relief Pitching (Qual ≥ {benchmarks.min_rp_ip || 45} IP)
                 </span>
-                <span className="text-[10px] text-slate-500">RP Roles</span>
+                <span className="text-[10px] bg-purple-500/20 text-purple-300 border border-purple-500/40 px-1.5 py-0.5 rounded font-bold" title="2.5x standard deviation nerfing factor applied to RP stats">
+                  2.5x σ Nerf
+                </span>
               </div>
               <div className="grid grid-cols-4 gap-1.5 text-center">
                 {Object.entries(benchmarks.rp || {}).map(([cat, b]) => (
                   <div key={cat} className="bg-slate-900/90 border border-slate-800/80 rounded p-1.5">
                     <div className="text-[10px] font-black text-slate-400">{cat}</div>
                     <div className="text-xs font-bold text-white mt-0.5">μ {b.mean}</div>
-                    <div className="text-[10px] text-slate-400">σ {b.std}</div>
+                    <div className="text-[10px] text-purple-300 font-semibold" title={`Effective nerfed σ = ${b.eff_std || b.std} (raw: ${b.std})`}>
+                      σ {b.eff_std || b.std}
+                    </div>
+                    {b.eff_std && (
+                      <div className="text-[8px] text-slate-500 font-mono">raw {b.std}</div>
+                    )}
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+
+          {/* Proportional Scaling & Nerf Factor Explanatory Sub-banner */}
+          <div className="mt-3.5 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-400 bg-slate-950/60 border border-slate-800/80 rounded-xl px-3.5 py-2">
+            <div className="flex items-center gap-2">
+              <span className="text-teal-400 font-bold flex items-center gap-1">
+                <span>📈</span> Proportional IP Scaling:
+              </span>
+              <span>FanGraphs 2027 &amp; 2028 omit QS and SV+HD; values are scaled proportionally to projected IP changes.</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-purple-400 font-bold flex items-center gap-1">
+                <span>⚖️</span> RP 2.5x σ Nerf:
+              </span>
+              <span>Std dev multiplied by 2.5x for RP across SO, SV+HD, ERA, and WHIP to balance reliever valuations.</span>
             </div>
           </div>
         </div>
@@ -299,6 +345,22 @@ export default function KeeperCalculationsView({
             className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 w-full sm:w-56"
           />
 
+          {/* Owner Filter */}
+          <select
+            value={ownerFilter}
+            onChange={(e) => setOwnerFilter(e.target.value)}
+            className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500 cursor-pointer"
+          >
+            <option value="ALL">All Owners</option>
+            <option value="ROSTERED">Rostered Only</option>
+            <option value="AVAILABLE">Free Agents (FA)</option>
+            <optgroup label="Fantasy Managers">
+              {LEAGUE_MANAGERS.map(owner => (
+                <option key={owner} value={owner}>{owner}</option>
+              ))}
+            </optgroup>
+          </select>
+
           <select
             value={priceTier}
             onChange={(e) => setPriceTier(e.target.value)}
@@ -332,6 +394,13 @@ export default function KeeperCalculationsView({
                 </th>
                 <th className="py-3 px-3 text-center">Pos</th>
                 <th className="py-3 px-3 text-center">MLB</th>
+                <th
+                  onClick={() => requestSort('fantasy_owner')}
+                  className="py-3 px-3 text-center cursor-pointer hover:text-white transition-colors"
+                  title="Owning Fantasy Manager"
+                >
+                  Owner {getSortIcon('fantasy_owner')}
+                </th>
                 <th
                   onClick={() => requestSort('overall_price')}
                   className="py-3 px-3 text-right cursor-pointer hover:text-white transition-colors"
@@ -397,7 +466,7 @@ export default function KeeperCalculationsView({
             </thead>
             <tbody className="divide-y divide-slate-800/60 font-medium text-slate-200">
               {sortedPlayers.slice(0, 200).map(player => {
-                const headshotUrl = getPlayerHeadshotUrl(player.mlbam_id || player.player_id);
+                const headshotUrl = getPlayerHeadshotUrl(player);
                 const isTop10 = player.overall_rank <= 10;
                 const isTop25 = player.overall_rank <= 25;
 
@@ -429,7 +498,7 @@ export default function KeeperCalculationsView({
                         <img
                           src={headshotUrl}
                           alt={player.player_name}
-                          onError={handleHeadshotError}
+                          onError={(e) => handleHeadshotError(e, player)}
                           className="w-7 h-7 rounded-full object-cover bg-slate-800 border border-slate-700/60 shrink-0"
                         />
                         <div>
@@ -458,6 +527,19 @@ export default function KeeperCalculationsView({
                     {/* MLB Team */}
                     <td className="py-3 px-3 text-center text-slate-400 font-semibold">
                       {player.team || 'FA'}
+                    </td>
+
+                    {/* Fantasy Team Owner */}
+                    <td className="py-3 px-3 text-center">
+                      {player.fantasy_owner && player.fantasy_owner !== 'Available' ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-sky-500/15 text-sky-300 border border-sky-500/30">
+                          <span className="text-[9px]">👤</span> {player.fantasy_owner}
+                        </span>
+                      ) : (
+                        <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-950 text-slate-500 border border-slate-800">
+                          FA
+                        </span>
+                      )}
                     </td>
 
                     {/* Overall Price */}
@@ -539,9 +621,9 @@ export default function KeeperCalculationsView({
             <div className="p-6 border-b border-slate-800 flex items-start justify-between gap-4 sticky top-0 bg-slate-900/95 backdrop-blur-md z-10">
               <div className="flex items-center gap-4">
                 <img
-                  src={getPlayerHeadshotUrl(selectedPlayer.mlbam_id || selectedPlayer.player_id)}
+                  src={getPlayerHeadshotUrl(selectedPlayer)}
                   alt={selectedPlayer.player_name}
-                  onError={handleHeadshotError}
+                  onError={(e) => handleHeadshotError(e, selectedPlayer)}
                   className="w-14 h-14 rounded-2xl object-cover bg-slate-950 border border-slate-700 shadow-md shrink-0"
                 />
                 <div>
@@ -551,6 +633,15 @@ export default function KeeperCalculationsView({
                       {selectedPlayer.position}
                     </span>
                     <span className="text-xs text-slate-400 font-bold">{selectedPlayer.team}</span>
+                    {selectedPlayer.fantasy_owner && selectedPlayer.fantasy_owner !== 'Available' ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold bg-sky-500/20 text-sky-300 border border-sky-500/40">
+                        👤 {selectedPlayer.fantasy_owner}
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded text-xs font-medium bg-slate-800 text-slate-400 border border-slate-700">
+                        Free Agent
+                      </span>
+                    )}
                   </div>
                   <div className="flex flex-wrap items-center gap-3 mt-1 text-xs">
                     <span className="text-amber-400 font-black">
@@ -579,6 +670,35 @@ export default function KeeperCalculationsView({
 
             {/* Modal Body */}
             <div className="p-6 space-y-6">
+              {/* RP Nerf & Scaling Info Badges */}
+              {selectedPlayer.pitcher_role === 'RP' && (
+                <div className="bg-purple-950/40 border border-purple-500/40 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🔥</span>
+                    <span className="text-purple-200 font-bold">
+                      Relief Pitcher 2.5x σ Nerf Factor Active
+                    </span>
+                  </div>
+                  <span className="text-purple-300 text-[11px]">
+                    Std dev multiplied by 2.5x across SO, SV+HD, ERA, and WHIP to balance RP keeper valuations.
+                  </span>
+                </div>
+              )}
+
+              {modalYear !== 'y1' && selectedPlayer.is_pitcher && (
+                <div className="bg-teal-950/30 border border-teal-500/30 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">📈</span>
+                    <span className="text-teal-200 font-bold">
+                      Proportional IP Scaling ({selectedPlayer[modalYear]?.year})
+                    </span>
+                  </div>
+                  <span className="text-teal-300 text-[11px]">
+                    QS and SV+HD are scaled proportionally based on projected IP ({selectedPlayer[modalYear]?.stats?.IP || 0} IP) from baseline.
+                  </span>
+                </div>
+              )}
+
               {/* Multi-Year Blend Breakdown */}
               <div className="bg-slate-950 border border-slate-800 rounded-xl p-4">
                 <div className="text-xs font-black uppercase tracking-wider text-slate-400 mb-2">
@@ -716,7 +836,16 @@ export default function KeeperCalculationsView({
                               <td className="py-2.5 px-3 text-[11px] text-slate-400">{c.category_type}</td>
                               <td className="py-2.5 px-3 text-right font-bold text-white">{c.val}</td>
                               <td className="py-2.5 px-3 text-right text-slate-400">{c.mean}</td>
-                              <td className="py-2.5 px-3 text-right text-slate-400">{c.std}</td>
+                              <td className="py-2.5 px-3 text-right text-slate-400">
+                                {c.eff_std ? (
+                                  <span title={`Effective σ: ${c.eff_std} (nerfed 2.5x from raw ${c.std})`}>
+                                    <span className="text-purple-300 font-bold">{c.eff_std}</span>{' '}
+                                    <span className="text-[10px] text-slate-500 font-mono">({c.std})</span>
+                                  </span>
+                                ) : (
+                                  c.std
+                                )}
+                              </td>
                               <td className="py-2.5 px-4 font-mono text-[11px] text-slate-400">
                                 {c.formula}
                               </td>
