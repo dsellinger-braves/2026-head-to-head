@@ -142,6 +142,13 @@ const HASH_TO_VIEW = {
   'keepers/rosters': 'keepers',
   'keepers/comp-picks': 'keepers',
   'keepers/planner': 'keepers',
+  'keepers/calculations': 'keepers',
+  'keepers/math': 'keepers',
+  'keeper-calculations': 'keepers',
+  'keeper-calc': 'keepers',
+  'keeper-math': 'keepers',
+  'calculations': 'keepers',
+  'pr-math': 'keepers',
   budgets: 'keepers',
 };
 
@@ -186,6 +193,7 @@ function getSubTabsFromHash() {
   if (hash.includes('rosters') && !hash.includes('teams')) keepersSubTab = 'rosters';
   else if (hash.includes('comp') || (hash.includes('simulator') && hash.includes('keepers'))) keepersSubTab = 'simulator';
   else if (hash.includes('planner')) keepersSubTab = 'planner';
+  else if (hash.includes('calc') || hash.includes('math')) keepersSubTab = 'calculations';
   else if (hash.includes('prices') || hash.includes('matrix')) keepersSubTab = 'matrix';
 
   if (hash.includes('proposal')) draftSubTab = 'proposals';
@@ -250,6 +258,7 @@ function App() {
       if (keepersSubTab === 'rosters') slug = 'keepers/rosters';
       else if (keepersSubTab === 'simulator') slug = 'keepers/comp-picks';
       else if (keepersSubTab === 'planner') slug = 'keepers/planner';
+      else if (keepersSubTab === 'calculations') slug = 'keeper-calculations';
       else slug = 'keepers/prices';
     } else if (currentView === 'capital') {
       if (draftSubTab === 'proposals') slug = 'draft/trade-proposals';
@@ -1139,6 +1148,16 @@ function App() {
                         >
                           <span className="flex items-center gap-2"><span>🔮</span><span>Planner</span></span>
                           {currentView === 'keepers' && keepersSubTab === 'planner' && <span className="text-[10px] text-emerald-200">●</span>}
+                        </a>
+                        <a
+                          href="#/keeper-calculations"
+                          onClick={(e) => { e.preventDefault(); setCurrentView('keepers'); setKeepersSubTab('calculations'); setOpenDropdown(null); }}
+                          className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-between transition cursor-pointer ${
+                            currentView === 'keepers' && keepersSubTab === 'calculations' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2"><span>🧮</span><span>PR Calculations</span></span>
+                          {currentView === 'keepers' && keepersSubTab === 'calculations' && <span className="text-[10px] text-emerald-200">●</span>}
                         </a>
                       </div>
                     )}

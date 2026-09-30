@@ -1,17 +1,40 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useAuth } from '../context/useAuth';
 import { supabase } from '../supabaseClient';
+import KeeperCalculationsView from '../views/KeeperCalculationsView';
 
-// Price schedule constants matching Google Sheet 'Compensation Picks' (tab 904314503)
-const COMP_BUY_PRICES = {
+// Price schedule constants matching Google Sheet 'Compensation Picks'
+// For 2026: 5 keepers, comp picks start at Round 6 (buy $15, sell $8)
+const COMP_BUY_PRICES_2026 = {
   6: 15, 7: 14, 8: 13, 9: 12, 10: 11,
   11: 10, 12: 9, 13: 8, 14: 7, 15: 6,
   16: 5, 17: 4, 18: 3, 19: 2, 20: 1
 };
-
-const COMP_SELL_PRICES = {
+const COMP_SELL_PRICES_2026 = {
   6: 8, 7: 4, 8: 2, 9: 1
 };
+
+// Starting in 2027: 6 keepers, comp picks start at Round 7 (buy $15, sell $8)
+const COMP_BUY_PRICES_2027 = {
+  7: 15, 8: 14, 9: 13, 10: 12, 11: 11,
+  12: 10, 13: 9, 14: 8, 15: 7, 16: 6,
+  17: 5, 18: 4, 19: 3, 20: 2, 21: 1
+};
+const COMP_SELL_PRICES_2027 = {
+  7: 8, 8: 4, 9: 2, 10: 1
+};
+
+function getCompBuyPrices(year) {
+  return year >= 2027 ? COMP_BUY_PRICES_2027 : COMP_BUY_PRICES_2026;
+}
+
+function getCompSellPrices(year) {
+  return year >= 2027 ? COMP_SELL_PRICES_2027 : COMP_SELL_PRICES_2026;
+}
+
+function getKeeperSlots(year) {
+  return year >= 2027 ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5];
+}
 
 const DRAFT_MANAGERS = [
   'Tim', 'Daniel', 'Will', 'Adrian', 'Garrett', 'Alex', 'Mark', 'Preston', 'Anil'
@@ -77,7 +100,11 @@ export default function KeepersBudgetsPanel({
   const { user, profile, isCommissioner: authIsCommissioner, effectiveOwner, governanceTitle = 'Commissioner' } = useAuth();
   const isCommissioner = propIsCommissioner || authIsCommissioner;
 
-  const [activeTab, setActiveTab] = useState(initialTab || 'matrix'); // 'matrix' | 'rosters' | 'simulator' | 'planner' | 'settings'
+  const [activeTab, setActiveTab] = useState(initialTab || 'matrix'); // 'matrix' | 'rosters' | 'simulator' | 'planner' | 'settings' | 'calculations'
+
+  const compBuyPrices = useMemo(() => getCompBuyPrices(seasonYear), [seasonYear]);
+  const compSellPrices = useMemo(() => getCompSellPrices(seasonYear), [seasonYear]);
+  const keeperSlots = useMemo(() => getKeeperSlots(seasonYear), [seasonYear]);
 
   useEffect(() => {
     if (initialTab) {
@@ -270,7 +297,7 @@ export default function KeepersBudgetsPanel({
     Object.keys(simBoughtRounds).forEach(rStr => {
       if (simBoughtRounds[rStr]) {
         const r = parseInt(rStr, 10);
-        const cost = COMP_BUY_PRICES[r] || (21 - r);
+        const cost = compBuyPrices[r] || (seasonYear >= 2027 ? (22 - r) : (21 - r));
         spend += cost;
         boughtList.push({ round: r, cost });
       }
@@ -279,7 +306,7 @@ export default function KeepersBudgetsPanel({
     Object.keys(simSoldRounds).forEach(rStr => {
       if (simSoldRounds[rStr]) {
         const r = parseInt(rStr, 10);
-        const inc = COMP_SELL_PRICES[r] || 0;
+        const inc = compSellPrices[r] || 0;
         income += inc;
         soldList.push({ round: r, income: inc });
       }
@@ -311,7 +338,7 @@ export default function KeepersBudgetsPanel({
       simulatedRemaining,
       netPicks
     };
-  }, [simBoughtRounds, simSoldRounds, activeRealBudgets]);
+  }, [simBoughtRounds, simSoldRounds, activeRealBudgets, compBuyPrices, compSellPrices, seasonYear]);
 
   // Sync tokenSlot when plannerOwner changes or keepers update
   useEffect(() => {
@@ -323,8 +350,8 @@ export default function KeepersBudgetsPanel({
   // Planner calculations for keeper replacements
   const plannerData = useMemo(() => {
     const originalKeepers = keepersByOwner[plannerOwner] || [];
-    // Ensure all 5 keeper slots (1 through 5) are present for planning
-    const currentKeepers = [1, 2, 3, 4, 5].map(slotNum => {
+    // Ensure all keeper slots (1 through 6 in 2027, 1 through 5 in 2026) are present for planning
+    const currentKeepers = keeperSlots.map(slotNum => {
       const existing = originalKeepers.find(k => k.keeper_slot === slotNum);
       const isToken = tokenSlot === slotNum;
 
@@ -418,7 +445,7 @@ export default function KeepersBudgetsPanel({
       baseBudget,
       remainingBudget
     };
-  }, [keepersByOwner, plannerOwner, replacedKeepers, teamBudgets, tokenSlot, getPriorCost]);
+  }, [keepersByOwner, plannerOwner, replacedKeepers, teamBudgets, tokenSlot, getPriorCost, keeperSlots]);
 
   // Selected owner's total roster count
   const plannerOwnerRosterCount = useMemo(() => {
@@ -886,6 +913,22 @@ export default function KeepersBudgetsPanel({
             📋 Keeper What-If Planner
           </button>
           <button
+            onClick={() => setActiveTab('calculations')}
+            style={{
+              background: activeTab === 'calculations' ? '#00e676' : 'transparent',
+              color: activeTab === 'calculations' ? '#000' : '#888',
+              border: 'none',
+              borderRadius: '4px',
+              padding: '6px 12px',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            🧮 PR Math & Calculations
+          </button>
+          <button
             onClick={() => setActiveTab('settings')}
             style={{
               background: activeTab === 'settings' ? '#f59e0b' : 'transparent',
@@ -1173,7 +1216,7 @@ export default function KeepersBudgetsPanel({
                 fontSize: '12px'
               }}
             >
-              <option value="ALL">All Owners (45 Keepers)</option>
+              <option value="ALL">All Owners ({seasonYear >= 2027 ? 54 : 45} Keepers)</option>
               {DRAFT_MANAGERS.map(m => (
                 <option key={m} value={m}>{m}</option>
               ))}
@@ -1483,11 +1526,11 @@ export default function KeepersBudgetsPanel({
             </div>
 
             <div style={{ fontSize: '11px', color: '#888', borderTop: '1px solid #222', paddingTop: '6px', marginTop: '4px' }}>
-              ⚖️ <strong>Roster Rule:</strong> Fixed roster size of 32 players (5 keepers + 27 drafted players). Buying earlier picks automatically drops late-round selections.
+              ⚖️ <strong>Roster Rule:</strong> Fixed roster size of 32 players ({seasonYear >= 2027 ? '6 keepers + 26 drafted players' : '5 keepers + 27 drafted players'}). Buying earlier picks automatically drops late-round selections.
             </div>
           </div>
 
-          {/* Interactive Buy Board (Rounds 6 to 20) */}
+          {/* Interactive Buy Board */}
           <div style={{
             background: '#181818',
             borderRadius: '8px',
@@ -1495,16 +1538,16 @@ export default function KeepersBudgetsPanel({
             padding: '14px'
           }}>
             <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#fff', marginBottom: '10px' }}>
-              🛍️ Purchase Additional Draft Picks (Rounds 6–20)
+              🛍️ Purchase Additional Draft Picks ({seasonYear >= 2027 ? 'Rounds 7–21' : 'Rounds 6–20'})
             </div>
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fill, minmax(135px, 1fr))',
               gap: '8px'
             }}>
-              {Object.keys(COMP_BUY_PRICES).map(rStr => {
+              {Object.keys(compBuyPrices).map(rStr => {
                 const r = parseInt(rStr, 10);
-                const cost = COMP_BUY_PRICES[r];
+                const cost = compBuyPrices[r];
                 const isBought = !!simBoughtRounds[r];
 
                 return (
@@ -1546,7 +1589,7 @@ export default function KeepersBudgetsPanel({
             </div>
           </div>
 
-          {/* Interactive Sell Board (Rounds 6 to 9) */}
+          {/* Interactive Sell Board */}
           <div style={{
             background: '#181818',
             borderRadius: '8px',
@@ -1554,16 +1597,16 @@ export default function KeepersBudgetsPanel({
             padding: '14px'
           }}>
             <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#fff', marginBottom: '10px' }}>
-              💵 Sell Draft Picks for Budget Income (Rounds 6–9)
+              💵 Sell Draft Picks for Budget Income ({seasonYear >= 2027 ? 'Rounds 7–10' : 'Rounds 6–9'})
             </div>
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fill, minmax(135px, 1fr))',
               gap: '8px'
             }}>
-              {Object.keys(COMP_SELL_PRICES).map(rStr => {
+              {Object.keys(compSellPrices).map(rStr => {
                 const r = parseInt(rStr, 10);
-                const income = COMP_SELL_PRICES[r];
+                const income = compSellPrices[r];
                 const isSold = !!simSoldRounds[r];
 
                 return (
@@ -1728,7 +1771,7 @@ export default function KeepersBudgetsPanel({
               <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#bb86fc', marginTop: '4px' }}>
                 {plannerData.avgRank}
               </div>
-              <div style={{ fontSize: '11px', color: '#666', marginTop: '2px' }}>Across 5 Keepers</div>
+              <div style={{ fontSize: '11px', color: '#666', marginTop: '2px' }}>Across {keeperSlots.length} Keepers</div>
             </div>
             {seasonYear === 2027 && (
               <div style={{ background: '#1c1c1c', padding: '12px', borderRadius: '6px', border: '1px solid #333' }}>
@@ -2058,7 +2101,7 @@ export default function KeepersBudgetsPanel({
                   const isFreeAgent = !p.rosterOwner || p.rosterOwner === 'Available' || p.rosterOwner === 'Free Agent' || p.isFreeAgent;
 
                   // Check if player is currently in one of the keeper slots
-                  const currentKeeperSlot = [1, 2, 3, 4, 5].find(slotNum => {
+                  const currentKeeperSlot = keeperSlots.find(slotNum => {
                     const slotKeeper = plannerData.keepers.find(k => k.keeper_slot === slotNum);
                     if (!slotKeeper || slotKeeper.isEmpty) return false;
                     const skId = String(slotKeeper.espn_player_id || '');
@@ -2182,7 +2225,7 @@ export default function KeepersBudgetsPanel({
 
                       {/* Swap Buttons */}
                       <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                        {[1, 2, 3, 4, 5].map(slot => {
+                        {keeperSlots.map(slot => {
                           const isThisSlot = currentKeeperSlot === slot;
                           return (
                             <button
@@ -2535,6 +2578,15 @@ export default function KeepersBudgetsPanel({
             </div>
           </div>
         )
+      )}
+
+      {/* SUB-TAB 6: KEEPER VALUATION MATH & DETAILED PR CALCULATIONS */}
+      {activeTab === 'calculations' && (
+        <KeeperCalculationsView
+          onPlayerClick={onPlayerClick}
+          seasonYear={seasonYear}
+          onSeasonYearChange={onSeasonYearChange}
+        />
       )}
     </div>
   );
