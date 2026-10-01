@@ -609,8 +609,82 @@ function getInjuryIndicator(playerId, playerInfoArray) {
   return { color, status: displayText };
 }
 
+// Helper to fetch live player news from ESPN (syndicated from RotoWire) with IndexedDB caching & fallback
+async function fetchPlayerNews(playerId) {
+  if (!playerId) return [];
+  const cacheKey = `espn_player_news_${playerId}`;
+  try {
+    const cached = await draftDbGet(cacheKey);
+    if (cached && cached.data) {
+      const { data, timestamp } = cached;
+      // 30 minute cache TTL for fresh news
+      if (Date.now() - timestamp < 1800000 && Array.isArray(data) && data.length > 0) {
+        return data;
+      }
+    }
+  } catch (err) {
+    console.warn(`Cache read error for player news (${playerId}):`, err);
+  }
 
-// --- PLAYER MODAL ---
+  // 1. Fetch live from ESPN Fantasy News API (official public endpoint with RotoWire syndication)
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
+    const res = await fetch(`https://site.api.espn.com/apis/fantasy/v2/games/flb/news/players?playerId=${encodeURIComponent(playerId)}`, {
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
+    if (res.ok) {
+      const json = await res.json();
+      if (json && Array.isArray(json.feed) && json.feed.length > 0) {
+        const items = json.feed.map(item => ({
+          player_id: String(item.playerId || playerId),
+          headline: item.headline || '',
+          story: item.story || item.description || '',
+          lastModified: item.lastModified || item.published || item.categorized || new Date().toISOString(),
+          type: item.type || 'RotoWire',
+          source: item.type || 'RotoWire'
+        }));
+        await draftDbSet(cacheKey, { data: items, timestamp: Date.now() });
+        return items;
+      }
+    }
+  } catch (err) {
+    console.warn(`Live ESPN/RotoWire news fetch failed for player ${playerId}:`, err);
+  }
+
+  // 2. Fallback: Check stale IndexedDB cache if available
+  try {
+    const stale = await draftDbGet(cacheKey);
+    if (stale && Array.isArray(stale.data) && stale.data.length > 0) {
+      return stale.data;
+    }
+  } catch {
+    /* ignore stale cache lookup error */
+  }
+
+  // 3. Fallback: Query static GCS player-news archive
+  try {
+    const gcsNews = await fetchFromGCS('player-news.json', 'gcs_player_news');
+    if (Array.isArray(gcsNews)) {
+      const matched = gcsNews
+        .filter(n => String(n.player_id).trim() === String(playerId).trim())
+        .sort((a, b) => new Date(b.lastModified) - new Date(a.lastModified))
+        .slice(0, 10)
+        .map(n => ({
+          ...n,
+          type: n.type || 'RotoWire Archive'
+        }));
+      return matched;
+    }
+  } catch (err) {
+    console.warn(`Fallback GCS news failed for player ${playerId}:`, err);
+  }
+
+  return [];
+}
+
 // --- PLAYER MODAL ---
 function PlayerModal({
   player,
@@ -626,6 +700,7 @@ function PlayerModal({
   isMobile = false
 }) {
   const [playerNews, setPlayerNews] = useState([]);
+  const [newsLoading, setNewsLoading] = useState(false);
   const [playerInfo, setPlayerInfo] = useState(null);
   const [externalLinks, setExternalLinks] = useState(null);
   const [internalDraftHistory, setInternalDraftHistory] = useState([]);
@@ -672,10 +747,28 @@ function PlayerModal({
     async function fetchPlayerData() {
       if (!player) return;
       setLoading(true);
+      setNewsLoading(true);
+
+      // Fetch live ESPN / RotoWire news in parallel
+      if (playerId) {
+        fetchPlayerNews(playerId)
+          .then((news) => {
+            setPlayerNews(news || []);
+          })
+          .catch((err) => {
+            console.warn(`Error loading news for player ${playerId}:`, err);
+            setPlayerNews([]);
+          })
+          .finally(() => {
+            setNewsLoading(false);
+          });
+      } else {
+        setPlayerNews([]);
+        setNewsLoading(false);
+      }
 
       try {
         const promises = [
-          fetchFromGCS('player-news.json', 'gcs_player_news'),
           fetchFromGCS('player-info.json', 'gcs_player_info'),
           fetchFromGCS('player-links.json', 'gcs_player_links')
         ];
@@ -693,7 +786,6 @@ function PlayerModal({
         const results = await Promise.allSettled(promises);
         let rIdx = 0;
 
-        const newsData = results[rIdx++].status === 'fulfilled' ? results[rIdx - 1].value || [] : [];
         const infoData = results[rIdx++].status === 'fulfilled' ? results[rIdx - 1].value || [] : [];
         const linksData = results[rIdx++].status === 'fulfilled' ? results[rIdx - 1].value || [] : [];
 
@@ -714,18 +806,12 @@ function PlayerModal({
           setInternalSavantPitchers(sPitch);
         }
 
-        const playerNewsFiltered = (newsData || [])
-          .filter(n => String(n.player_id).trim() === playerId)
-          .sort((a, b) => new Date(b.lastModified) - new Date(a.lastModified))
-          .slice(0, 10);
-
         const playerInfoFiltered = (infoData || []).find(i => String(i.player_id).trim() === playerId);
         const playerLinksFiltered = (linksData || []).find(l => {
           const lId = String(l.player_id || l['ESPN PlayerID'] || l.espn_player_id || '').trim();
           return lId === playerId;
         });
 
-        setPlayerNews(playerNewsFiltered || []);
         setPlayerInfo(playerInfoFiltered || null);
         setExternalLinks(playerLinksFiltered || null);
 
@@ -1141,23 +1227,56 @@ function PlayerModal({
 
               {/* Recent News */}
               <div style={styles.modalSection}>
-                <h3 style={styles.modalSectionTitle}>Recent News</h3>
-                {playerNews.length === 0 ? (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                  <h3 style={{ ...styles.modalSectionTitle, margin: 0 }}>Recent News</h3>
+                  <span style={{ fontSize: '11px', color: '#9ca3af', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{
+                      display: 'inline-block',
+                      width: '7px',
+                      height: '7px',
+                      borderRadius: '50%',
+                      background: '#10b981',
+                      boxShadow: '0 0 6px #10b981'
+                    }} />
+                    Live RotoWire / ESPN
+                  </span>
+                </div>
+                {newsLoading ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '16px 0', color: '#9ca3af', fontSize: '13px' }}>
+                    <span className="inline-block animate-spin rounded-full h-4 w-4 border-2 border-emerald-400 border-t-transparent" />
+                    Fetching latest player updates from RotoWire...
+                  </div>
+                ) : playerNews.length === 0 ? (
                   <p style={{ color: '#666', fontSize: '14px', fontStyle: 'italic', margin: 0 }}>
                     No recent news available
                   </p>
                 ) : (
-                  <div style={{ maxHeight: '220px', overflowY: 'auto' }}>
+                  <div style={{ maxHeight: '240px', overflowY: 'auto', paddingRight: '4px' }}>
                     {playerNews.map((news, idx) => (
                       <div key={idx} style={styles.newsItem}>
-                        <div style={{ color: '#888', fontSize: '12px', marginBottom: '4px' }}>
-                          {new Date(news.lastModified).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric'
-                          })}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                          <span style={{ color: '#888', fontSize: '12px' }}>
+                            {new Date(news.lastModified).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric'
+                            })}
+                          </span>
+                          <span style={{
+                            fontSize: '10px',
+                            fontWeight: '700',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            background: news.type?.toLowerCase().includes('archive') ? 'rgba(156, 163, 175, 0.15)' : 'rgba(3, 218, 198, 0.12)',
+                            color: news.type?.toLowerCase().includes('archive') ? '#9ca3af' : '#03dac6',
+                            border: news.type?.toLowerCase().includes('archive') ? '1px solid rgba(156, 163, 175, 0.3)' : '1px solid rgba(3, 218, 198, 0.3)'
+                          }}>
+                            {news.type || 'RotoWire'}
+                          </span>
                         </div>
-                        <div style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold', marginBottom: '6px' }}>
+                        <div style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold', marginBottom: '6px', lineHeight: '1.4' }}>
                           {news.headline}
                         </div>
                         <div
