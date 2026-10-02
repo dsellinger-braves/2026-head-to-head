@@ -4,9 +4,58 @@ import defaultDraftAssetTrades from '../data/draftAssetTrades2026.json';
 import defaultTeamBudgets from '../data/teamBudgets2026.json';
 import defaultCompPicks from '../data/compensationPicks2026.json';
 import defaultKeepers from '../data/keeperInput2026.json';
+import defaultDraft2026 from '../data/draft2026.json';
 import KeepersBudgetsPanel from '../components/KeepersBudgetsPanel';
 import HistoricalDraftView from './HistoricalDraftView';
 import { getPlayerHeadshotUrl, handleHeadshotError, updateGlobalPlayerLookup } from '../utils/headshotUtils';
+
+function getFriendlyOwnerName(raw) {
+  if (!raw && raw !== 0) return 'Unknown';
+  const str = String(raw).trim();
+  const match = str.match(/^team\s*(\d+)$/i);
+  const id = match ? parseInt(match[1], 10) : (isNaN(parseInt(str, 10)) ? null : parseInt(str, 10));
+  
+  if (id !== null) {
+    if (id === 1) return 'Tim';
+    if (id === 2) return 'Adrian';
+    if (id === 3) return 'Garrett';
+    if (id === 5) return 'Daniel';
+    if (id === 6 || id === 10) return 'Anil';
+    if (id === 8) return 'Alex';
+    if (id === 11) return 'Owens';
+    if (id === 12) return 'Will';
+    if (id === 13) return 'Mark';
+    if (id === 9 || id === 14) return 'Preston';
+  }
+  
+  const lower = str.toLowerCase();
+  if (lower === 'dan' || lower === 'dsellinger') return 'Daniel';
+  if (lower === 'timothy') return 'Tim';
+  if (lower === 'owens' || lower === 'team owens') return 'Owens';
+  if (lower === 'joseph mattingly') return 'Joseph';
+  return str;
+}
+
+const mappedDraft2026History = (defaultDraft2026 || []).map(p => ({
+  Year: '2026',
+  year: 2026,
+  Round: String(p.round || ''),
+  round: p.round,
+  Pick_Overall: String(p.overall_pick),
+  overall_pick: p.overall_pick,
+  Player_Name: p.player_name,
+  player_name: p.player_name,
+  Player: p.player_name,
+  Team_ID: p.team_owner || p.team_id,
+  Owner: p.team_owner,
+  owner: p.team_owner,
+  team_id: p.team_id,
+  player_id: String(p.player_id || ''),
+  'ESPN PlayerID': String(p.player_id || ''),
+  Keeper: p.is_keeper ? 'True' : 'False',
+  is_keeper: Boolean(p.is_keeper),
+  cost: p.cost || 0
+}));
 
 // --- CONFIGURATION ---
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyDQ0eRBz6jSsORZrnG19jR5mzmd0QE0DWg';
@@ -791,7 +840,9 @@ function PlayerModal({
 
         if (needDraftHistory) {
           const dHist = results[rIdx++].status === 'fulfilled' ? results[rIdx - 1].value || [] : [];
-          setInternalDraftHistory(dHist);
+          const has2026 = dHist.some(d => String(d.Year || d.year) === '2026');
+          const mergedHist = has2026 ? dHist : [...mappedDraft2026History, ...dHist];
+          setInternalDraftHistory(mergedHist);
         }
         if (needHistoricalFinish) {
           const hFinish = results[rIdx++].status === 'fulfilled' ? results[rIdx - 1].value || [] : [];
@@ -874,21 +925,25 @@ function PlayerModal({
   const isChampion = (year, owner) => {
     if (!effectiveHistoricalFinish || !effectiveHistoricalFinish.length || !year || !owner) return false;
     const yStr = String(year).trim();
-    const oStr = String(owner).trim().toLowerCase();
+    const oStr = getFriendlyOwnerName(owner).trim().toLowerCase();
     return !!effectiveHistoricalFinish.find(f => {
       const fYear = String(f.Year || f.season_year || '').trim();
-      const fOwner = String(f.Owner || f.team_owner || f.team_id || f.Team_ID || '').trim().toLowerCase();
+      const fOwner = getFriendlyOwnerName(f.Owner || f.team_owner || f.team_id || f.Team_ID || '').trim().toLowerCase();
       const fRank = String(f['Final Rank'] || f.final_place || f.rank || '').trim();
       return fYear === yStr && fOwner === oStr && fRank === '1';
     });
   };
 
-  const playerDraftHistory = (effectiveDraftHistory || [])
+  let hist = effectiveDraftHistory || [];
+  if (!hist.some(d => String(d.Year || d.year) === '2026') && mappedDraft2026History.length > 0) {
+    hist = [...mappedDraft2026History, ...hist];
+  }
+  const playerDraftHistory = hist
     .filter(h => {
       const hPid = String(h.player_id || h['ESPN PlayerID'] || h.espn_player_id || '').trim();
       const hMlb = String(h.MLBAMID || h.mlbamid || '').trim();
       const hName = String(h.Player_Name || h.Player || h.player_name || '').trim().toLowerCase();
-      const pName = String(player.Player || '').trim().toLowerCase();
+      const pName = String(player.Player || player.player_name || '').trim().toLowerCase();
       if (playerId && hPid && playerId === hPid) return true;
       if (mlbamId && hMlb && mlbamId === hMlb) return true;
       if (pName && hName && pName === hName) return true;
@@ -1297,7 +1352,7 @@ function PlayerModal({
 
               {/* League History */}
               <div style={{ ...styles.modalSection, borderLeft: '4px solid #ff9800' }}>
-                <h3 style={styles.modalSectionTitle}>League History (2012-2025)</h3>
+                <h3 style={styles.modalSectionTitle}>League History (2012-2026)</h3>
                 {playerDraftHistory.length === 0 ? (
                   <p style={{ color: '#666', fontSize: '14px', fontStyle: 'italic', margin: 0 }}>
                     No previous draft history in this league
@@ -1309,7 +1364,8 @@ function PlayerModal({
                     gap: '8px'
                   }}>
                     {playerDraftHistory.map((entry, idx) => {
-                      const owner = entry.Owner || entry.owner || entry.Team_ID || entry.team_id || 'Unknown';
+                      const rawOwner = entry.Owner || entry.owner || entry.Team_ID || entry.team_id || 'Unknown';
+                      const owner = getFriendlyOwnerName(rawOwner);
                       const year = entry.Year || entry.year;
                       const champ = isChampion(year, owner);
                       const isKeeper = String(entry.Keeper).toLowerCase() === 'true' || entry.Keeper === true;
@@ -2154,7 +2210,7 @@ function QueuePreviewWidget({ queue, onPlayerClick, playerInfo }) {
 
 // --- PLAYER POOL PANEL ---
 function PlayerPoolPanel({ players, onDraft, isMyTurn, queue, onAddToQueue, onRemoveFromQueue, draftMode, testModePicks, allPicks, onPlayerClick, playerInfo, isMobile = false }) {
-  const [sortConfig, setSortConfig] = useState({ key: 'ADP', direction: 'asc' });
+  const [sortConfig, setSortConfig] = useState({ key: 'Hefty Keeper Rank', direction: 'asc' });
   const [filterPos, setFilterPos] = useState('');
   const [searchText, setSearchText] = useState('');
 
@@ -2180,18 +2236,41 @@ function PlayerPoolPanel({ players, onDraft, isMyTurn, queue, onAddToQueue, onRe
     if (filterPos) {
       filtered = filtered.filter(p => p.Position?.includes(filterPos));
     }
+
+    const getPlayerRank = (p) => {
+      const r = p['Hefty Keeper Rank'] ?? p['Hefty Single Season Rank'] ?? p['ESPN Keeper Rank'] ?? p.rank;
+      const num = parseFloat(r);
+      return isNaN(num) || num <= 0 ? 9999 : num;
+    };
+
+    const getPlayerPrice = (p) => {
+      const pr = p['Hefty Keeper Price'] ?? p['Hefty Single Season Price'] ?? p['ESPN Price'] ?? p.price;
+      const num = parseFloat(pr);
+      return isNaN(num) ? -999 : num;
+    };
     
     filtered.sort((a, b) => {
-      const aVal = a[sortConfig.key] ?? '';
-      const bVal = b[sortConfig.key] ?? '';
-      const aNum = parseFloat(aVal);
-      const bNum = parseFloat(bVal);
-      
       let comparison = 0;
-      if (!isNaN(aNum) && !isNaN(bNum)) {
-        comparison = aNum - bNum;
+      if (sortConfig.key === 'Hefty Keeper Rank' || sortConfig.key === 'rank') {
+        comparison = getPlayerRank(a) - getPlayerRank(b);
+      } else if (sortConfig.key === 'Hefty Keeper Price' || sortConfig.key === 'price') {
+        comparison = getPlayerPrice(a) - getPlayerPrice(b);
+      } else if (sortConfig.key === 'ZIPSERA' || sortConfig.key === 'ZIPSWHIP') {
+        const aVal = parseFloat(a[sortConfig.key]);
+        const bVal = parseFloat(b[sortConfig.key]);
+        const aSafe = isNaN(aVal) || aVal <= 0 ? 999 : aVal;
+        const bSafe = isNaN(bVal) || bVal <= 0 ? 999 : bVal;
+        comparison = aSafe - bSafe;
       } else {
-        comparison = String(aVal).localeCompare(String(bVal));
+        const aVal = a[sortConfig.key] ?? '';
+        const bVal = b[sortConfig.key] ?? '';
+        const aNum = parseFloat(aVal);
+        const bNum = parseFloat(bVal);
+        if (!isNaN(aNum) && !isNaN(bNum)) {
+          comparison = aNum - bNum;
+        } else {
+          comparison = String(aVal).localeCompare(String(bVal));
+        }
       }
       
       return sortConfig.direction === 'asc' ? comparison : -comparison;
@@ -2200,11 +2279,34 @@ function PlayerPoolPanel({ players, onDraft, isMyTurn, queue, onAddToQueue, onRe
     return filtered;
   }, [players, sortConfig, filterPos, searchText, draftMode, testModePicks, allPicks]);
 
+  const DESC_FIRST_KEYS = useMemo(() => new Set([
+    'Hefty Keeper Price',
+    'ZIPSR',
+    'ZIPSHR',
+    'ZIPSRBI',
+    'ZIPSSB',
+    'ZIPSOBP',
+    'ZIPSK',
+    'ZIPSQS',
+    'ZIPSSV+HDs'
+  ]), []);
+
   const requestSort = (key) => {
-    setSortConfig(prev => ({
-      key,
-      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
-    }));
+    setSortConfig(prev => {
+      if (prev.key === key) {
+        return {
+          key,
+          direction: prev.direction === 'asc' ? 'desc' : 'asc'
+        };
+      }
+      const initialDirection = DESC_FIRST_KEYS.has(key) ? 'desc' : 'asc';
+      return { key, direction: initialDirection };
+    });
+  };
+
+  const getSortIcon = (key) => {
+    if (sortConfig.key !== key) return '';
+    return sortConfig.direction === 'asc' ? ' ▲' : ' ▼';
   };
 
   const isQueued = (playerId) => queue.some(p => String(p['ESPN PlayerID']) === String(playerId));
@@ -2246,21 +2348,21 @@ function PlayerPoolPanel({ players, onDraft, isMyTurn, queue, onAddToQueue, onRe
             <thead style={styles.tableHead}>
               <tr>
                 <th style={styles.th} width="75">Action</th>
-                <th style={styles.th} onClick={() => requestSort('Player')}>Player</th>
-                <th style={styles.th} onClick={() => requestSort('Position')}>Pos</th>
-                <th style={styles.th} onClick={() => requestSort('Team')}>Team</th>
-                <th style={{ ...styles.th, color: '#ffc107' }} onClick={() => requestSort('Hefty Keeper Price')}>Hefty $</th>
-                <th style={{ ...styles.th, color: '#90caf9' }} onClick={() => requestSort('Hefty Keeper Rank')}>Rank</th>
-                <th style={styles.th} onClick={() => requestSort('ZIPSR')}>R</th>
-                <th style={styles.th} onClick={() => requestSort('ZIPSHR')}>HR</th>
-                <th style={styles.th} onClick={() => requestSort('ZIPSRBI')}>RBI</th>
-                <th style={styles.th} onClick={() => requestSort('ZIPSSB')}>SB</th>
-                <th style={styles.th} onClick={() => requestSort('ZIPSOBP')}>OBP</th>
-                <th style={styles.th} onClick={() => requestSort('ZIPSK')}>K</th>
-                <th style={styles.th} onClick={() => requestSort('ZIPSQS')}>QS</th>
-                <th style={styles.th} onClick={() => requestSort('ZIPSERA')}>ERA</th>
-                <th style={styles.th} onClick={() => requestSort('ZIPSWHIP')}>WHIP</th>
-                <th style={styles.th} onClick={() => requestSort('ZIPSSV+HDs')}>SV+H</th>
+                <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('Player')}>Player{getSortIcon('Player')}</th>
+                <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('Position')}>Pos{getSortIcon('Position')}</th>
+                <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('Team')}>Team{getSortIcon('Team')}</th>
+                <th style={{ ...styles.th, color: '#ffc107', cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('Hefty Keeper Price')}>Hefty ${getSortIcon('Hefty Keeper Price')}</th>
+                <th style={{ ...styles.th, color: '#90caf9', cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('Hefty Keeper Rank')}>Rank{getSortIcon('Hefty Keeper Rank')}</th>
+                <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('ZIPSR')}>R{getSortIcon('ZIPSR')}</th>
+                <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('ZIPSHR')}>HR{getSortIcon('ZIPSHR')}</th>
+                <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('ZIPSRBI')}>RBI{getSortIcon('ZIPSRBI')}</th>
+                <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('ZIPSSB')}>SB{getSortIcon('ZIPSSB')}</th>
+                <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('ZIPSOBP')}>OBP{getSortIcon('ZIPSOBP')}</th>
+                <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('ZIPSK')}>K{getSortIcon('ZIPSK')}</th>
+                <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('ZIPSQS')}>QS{getSortIcon('ZIPSQS')}</th>
+                <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('ZIPSERA')}>ERA{getSortIcon('ZIPSERA')}</th>
+                <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('ZIPSWHIP')}>WHIP{getSortIcon('ZIPSWHIP')}</th>
+                <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('ZIPSSV+HDs')}>SV+H{getSortIcon('ZIPSSV+HDs')}</th>
               </tr>
             </thead>
             <tbody>
@@ -4233,13 +4335,32 @@ export default function DraftRoomView({
           setPicks(generated);
         }
       } else {
-        const { data, error } = await supabase
-          .from('draft-order')
-          .select('*')
-          .order('Overall Pick', { ascending: true });
-        if (error) throw error;
-        if (data && data.length > 0) {
-          setPicks(data);
+        let loadedPicks = null;
+        try {
+          const { data, error } = await supabase
+            .from('draft-order')
+            .select('*')
+            .order('Overall Pick', { ascending: true });
+          if (!error && data && data.length > 0) {
+            loadedPicks = data;
+          }
+        } catch (e) {
+          console.warn('Supabase draft-order fetch error:', e);
+        }
+
+        if (loadedPicks && loadedPicks.length > 0) {
+          setPicks(loadedPicks);
+        } else if (roomSeason === 2026 && defaultDraft2026?.length > 0) {
+          setPicks(defaultDraft2026.map(p => ({
+            'Overall Pick': p.overall_pick,
+            Round: p.round,
+            Pick: p.pick,
+            Owner: p.team_owner,
+            'ESPN PlayerID': p.player_id,
+            Selection: p.player_name,
+            isKeeper: Boolean(p.is_keeper),
+            is_keeper: Boolean(p.is_keeper)
+          })));
         } else {
           setPicks(generateDefaultDraftOrder());
         }
@@ -4263,6 +4384,17 @@ export default function DraftRoomView({
       console.warn('Draft order fetch error, fallback:', err);
       if (roomSeason === 2027) {
         setPicks(generate2027DraftOrder(draftTrades, [], []));
+      } else if (roomSeason === 2026 && defaultDraft2026?.length > 0) {
+        setPicks(defaultDraft2026.map(p => ({
+          'Overall Pick': p.overall_pick,
+          Round: p.round,
+          Pick: p.pick,
+          Owner: p.team_owner,
+          'ESPN PlayerID': p.player_id,
+          Selection: p.player_name,
+          isKeeper: Boolean(p.is_keeper),
+          is_keeper: Boolean(p.is_keeper)
+        })));
       } else {
         setPicks(generateDefaultDraftOrder());
       }
@@ -4322,6 +4454,10 @@ export default function DraftRoomView({
       }
       if (!history.length) {
         history = await fetchFromGCS('draft-history.json', 'gcs_draft_history_v2') || [];
+      }
+      const has2026 = history.some(d => String(d.Year || d.year) === '2026');
+      if (!has2026 && mappedDraft2026History.length > 0) {
+        history = [...mappedDraft2026History, ...history];
       }
       if (!finishes.length) {
         finishes = await fetchFromGCS('historical-finish.json', 'gcs_league_history') || [];

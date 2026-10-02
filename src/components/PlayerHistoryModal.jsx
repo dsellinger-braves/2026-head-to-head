@@ -5,6 +5,24 @@ import { supabase } from '../supabaseClient';
 import TeamAvatar from './TeamAvatar';
 import { getPlayerAcquisition } from '../utils/acquisition';
 
+const getTeamDisplayName = (tid) => {
+  if (!tid && tid !== 0) return 'Unknown';
+  if (TEAMS[tid]?.owner) return TEAMS[tid].owner;
+  if (TEAMS[tid]?.name) return TEAMS[tid].name;
+  const num = parseInt(tid, 10);
+  if (num === 1) return 'Tim';
+  if (num === 2) return 'Adrian';
+  if (num === 3) return 'Garrett';
+  if (num === 5) return 'Daniel';
+  if (num === 6 || num === 10) return 'Anil';
+  if (num === 8) return 'Alex';
+  if (num === 11) return 'Owens';
+  if (num === 12) return 'Will';
+  if (num === 13) return 'Mark';
+  if (num === 9 || num === 14) return 'Preston';
+  return `Team ${tid}`;
+};
+
 // In-memory cache for full MLB season stats to avoid redundant network calls
 const overallStatsCache = new Map();
 
@@ -278,7 +296,7 @@ export default function PlayerHistoryModal({ playerId, playerName, teamId = null
       if (!groups[tid]) {
         groups[tid] = {
           teamId: tid,
-          teamName: TEAMS[tid]?.name || `Team ${tid}`,
+          teamName: getTeamDisplayName(tid),
           allRecords: [],
           activeRecords: [],
           benchRecords: [],
@@ -539,11 +557,11 @@ export default function PlayerHistoryModal({ playerId, playerName, teamId = null
                   </span>
                   <span>
                     {tx.transaction_type === 'TRADE'
-                      ? `Traded: Team ${tx.from_team_id} ➔ Team ${tx.to_team_id}`
+                      ? `Traded: ${getTeamDisplayName(tx.from_team_id)} ➔ ${getTeamDisplayName(tx.to_team_id)}`
                       : tx.transaction_type === 'ADD'
-                      ? `Added by Team ${tx.to_team_id}`
+                      ? `Added by ${getTeamDisplayName(tx.to_team_id)}`
                       : tx.transaction_type === 'DROP'
-                      ? `Dropped by Team ${tx.from_team_id}`
+                      ? `Dropped by ${getTeamDisplayName(tx.from_team_id)}`
                       : `Drafted`}
                   </span>
                 </div>
@@ -847,8 +865,8 @@ export default function PlayerHistoryModal({ playerId, playerName, teamId = null
                         </td>
                         <td className="p-3">
                           <div className="flex items-center gap-2">
-                            <TeamAvatar team={{ id: st.team_id, name: TEAMS[st.team_id]?.name }} size="xs" />
-                            <span className="font-semibold text-gray-800">{TEAMS[st.team_id]?.name || `Team ${st.team_id}`}</span>
+                            <TeamAvatar team={{ id: st.team_id, name: getTeamDisplayName(st.team_id) }} size="xs" />
+                            <span className="font-semibold text-gray-800">{getTeamDisplayName(st.team_id)}</span>
                           </div>
                         </td>
                         <td className="p-3 text-center">
