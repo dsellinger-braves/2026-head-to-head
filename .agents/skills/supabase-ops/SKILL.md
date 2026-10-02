@@ -67,7 +67,27 @@ python check_types.py
 
 ---
 
-## 4. Applying Schema Migrations
+## 4. Database Inspection CLI (`scripts/inspect_db.py`)
+
+To inspect Supabase tables without writing error-prone ad-hoc bash one-liners, use the repository CLI tool:
+
+```bash
+# View official keepers for a season or owner
+python scripts/inspect_db.py keepers --season 2027 --owner Daniel
+
+# View all team draft budgets
+python scripts/inspect_db.py budgets --season 2027
+
+# View active roster players from a scoring period (defaults to latest)
+python scripts/inspect_db.py roster --owner Will
+
+# Search the player pool
+python scripts/inspect_db.py pool --search "Ohtani"
+```
+
+---
+
+## 5. Applying Schema Migrations
 
 When altering tables or adding indexes:
 1. Write the SQL statements to a `.sql` migration file (e.g. `schema_migration.sql`).
