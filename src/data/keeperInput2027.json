@@ -1,6 +1,6 @@
 {
   "season_year": 2027,
-  "updated_at": "2026-10-02T01:06:59.840700+00:00",
+  "updated_at": "2026-10-02T03:17:28.326859+00:00",
   "keepers": [
     {
       "season_year": 2027,
@@ -16,7 +16,7 @@
       "token_applied": false,
       "prior_cost": 33.0,
       "new_cost": 33.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
@@ -32,7 +32,7 @@
       "token_applied": false,
       "prior_cost": 25.0,
       "new_cost": 25.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
@@ -43,12 +43,12 @@
       "espn_player_id": "41221",
       "position": "SP",
       "mlb_team": "SEA",
-      "rank": 30,
-      "cost": 17.0,
+      "rank": 27,
+      "cost": 18.0,
       "token_applied": false,
       "prior_cost": 16.0,
-      "new_cost": 17.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "new_cost": 18.0,
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
@@ -59,12 +59,12 @@
       "espn_player_id": "30948",
       "position": "SP",
       "mlb_team": "ATL",
-      "rank": 34,
-      "cost": 16.0,
+      "rank": 31,
+      "cost": 17.0,
       "token_applied": false,
-      "prior_cost": 16.0,
-      "new_cost": 16.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "prior_cost": 17.0,
+      "new_cost": 17.0,
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
@@ -75,12 +75,12 @@
       "espn_player_id": "32685",
       "position": "SP",
       "mlb_team": "NYY",
-      "rank": 39,
-      "cost": 15.0,
+      "rank": 32,
+      "cost": 17.0,
       "token_applied": false,
       "prior_cost": 14.0,
-      "new_cost": 15.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "new_cost": 17.0,
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
@@ -91,12 +91,12 @@
       "espn_player_id": "41054",
       "position": "SP",
       "mlb_team": "KC",
-      "rank": 47,
-      "cost": 13.0,
+      "rank": 40,
+      "cost": 15.0,
       "token_applied": false,
       "prior_cost": 13.0,
-      "new_cost": 13.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "new_cost": 15.0,
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
@@ -112,7 +112,7 @@
       "token_applied": false,
       "prior_cost": 36.0,
       "new_cost": 36.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
@@ -128,7 +128,7 @@
       "token_applied": false,
       "prior_cost": 19.0,
       "new_cost": 21.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
@@ -139,60 +139,60 @@
       "espn_player_id": "41292",
       "position": "C, DH",
       "mlb_team": "SEA",
-      "rank": 33,
-      "cost": 16.0,
+      "rank": 29,
+      "cost": 17.0,
       "token_applied": false,
       "prior_cost": 17.0,
-      "new_cost": 16.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "new_cost": 17.0,
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
       "owner": "Alex",
       "team_id": 8,
       "keeper_slot": 4,
-      "player_name": "Jhoan Duran",
-      "espn_player_id": "41109",
-      "position": "RP",
-      "mlb_team": "PHI",
-      "rank": 36,
+      "player_name": "Pete Crow-Armstrong",
+      "espn_player_id": "4717833",
+      "position": "OF",
+      "mlb_team": "CHC",
+      "rank": 35,
       "cost": 16.0,
       "token_applied": false,
       "prior_cost": 16.0,
       "new_cost": 16.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
       "owner": "Alex",
       "team_id": 8,
       "keeper_slot": 5,
-      "player_name": "Pete Crow-Armstrong",
-      "espn_player_id": "4717833",
+      "player_name": "Jackson Chourio",
+      "espn_player_id": "4917869",
       "position": "OF",
-      "mlb_team": "CHC",
+      "mlb_team": "MIL",
       "rank": 37,
       "cost": 15.0,
       "token_applied": false,
       "prior_cost": 15.0,
       "new_cost": 15.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
       "owner": "Alex",
       "team_id": 8,
       "keeper_slot": 6,
-      "player_name": "Jackson Chourio",
-      "espn_player_id": "4917869",
-      "position": "OF",
-      "mlb_team": "MIL",
-      "rank": 43,
+      "player_name": "Bryce Harper",
+      "espn_player_id": "30951",
+      "position": "1B",
+      "mlb_team": "PHI",
+      "rank": 45,
       "cost": 14.0,
       "token_applied": false,
-      "prior_cost": 14.0,
+      "prior_cost": 13.0,
       "new_cost": 14.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
@@ -208,7 +208,7 @@
       "token_applied": false,
       "prior_cost": 26.0,
       "new_cost": 26.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
@@ -219,12 +219,12 @@
       "espn_player_id": "4629089",
       "position": "SP",
       "mlb_team": "SEA",
-      "rank": 15,
-      "cost": 22.0,
+      "rank": 13,
+      "cost": 23.0,
       "token_applied": false,
       "prior_cost": 22.0,
-      "new_cost": 22.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "new_cost": 23.0,
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
@@ -240,55 +240,55 @@
       "token_applied": false,
       "prior_cost": 20.0,
       "new_cost": 18.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
       "owner": "Anil",
       "team_id": 6,
       "keeper_slot": 4,
-      "player_name": "Daniel Palencia",
-      "espn_player_id": "4875225",
-      "position": "RP",
-      "mlb_team": "CHC",
-      "rank": 63,
+      "player_name": "Shane McClanahan",
+      "espn_player_id": "41199",
+      "position": "SP",
+      "mlb_team": "TB",
+      "rank": 59,
       "cost": 11.0,
       "token_applied": false,
       "prior_cost": 11.0,
       "new_cost": 11.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
       "owner": "Anil",
       "team_id": 6,
       "keeper_slot": 5,
-      "player_name": "Grant Taylor",
-      "espn_player_id": "4927630",
-      "position": "RP",
-      "mlb_team": "CWS",
-      "rank": 65,
-      "cost": 10.0,
+      "player_name": "Freddy Peralta",
+      "espn_player_id": "39825",
+      "position": "SP",
+      "mlb_team": "NYM",
+      "rank": 73,
+      "cost": 9.0,
       "token_applied": false,
-      "prior_cost": 10.0,
-      "new_cost": 10.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "prior_cost": 9.0,
+      "new_cost": 9.0,
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
       "owner": "Anil",
       "team_id": 6,
       "keeper_slot": 6,
-      "player_name": "Shane McClanahan",
-      "espn_player_id": "41199",
-      "position": "SP",
-      "mlb_team": "TB",
-      "rank": 75,
-      "cost": 9.0,
+      "player_name": "Daniel Palencia",
+      "espn_player_id": "4875225",
+      "position": "RP",
+      "mlb_team": "CHC",
+      "rank": 81,
+      "cost": 8.0,
       "token_applied": false,
-      "prior_cost": 9.0,
-      "new_cost": 9.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "prior_cost": 8.0,
+      "new_cost": 8.0,
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
@@ -304,7 +304,7 @@
       "token_applied": false,
       "prior_cost": 40.0,
       "new_cost": 40.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
@@ -315,12 +315,12 @@
       "espn_player_id": "41216",
       "position": "SP",
       "mlb_team": "SF",
-      "rank": 16,
-      "cost": 22.0,
+      "rank": 12,
+      "cost": 24.0,
       "token_applied": false,
       "prior_cost": 21.0,
-      "new_cost": 22.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "new_cost": 24.0,
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
@@ -336,55 +336,55 @@
       "token_applied": false,
       "prior_cost": 20.0,
       "new_cost": 18.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
       "owner": "Daniel",
       "team_id": 5,
       "keeper_slot": 4,
-      "player_name": "Andres Munoz",
-      "espn_player_id": "40939",
-      "position": "RP",
-      "mlb_team": "SEA",
-      "rank": 41,
-      "cost": 15.0,
+      "player_name": "Geraldo Perdomo",
+      "espn_player_id": "41355",
+      "position": "SS",
+      "mlb_team": "ARI",
+      "rank": 42,
+      "cost": 14.0,
       "token_applied": false,
-      "prior_cost": 15.0,
-      "new_cost": 15.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "prior_cost": 14.0,
+      "new_cost": 14.0,
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
       "owner": "Daniel",
       "team_id": 5,
       "keeper_slot": 5,
-      "player_name": "Abner Uribe",
-      "espn_player_id": "4917865",
-      "position": "RP",
-      "mlb_team": "MIL",
-      "rank": 52,
+      "player_name": "Zack Wheeler",
+      "espn_player_id": "31267",
+      "position": "",
+      "mlb_team": "PHI",
+      "rank": 54,
       "cost": 12.0,
       "token_applied": false,
       "prior_cost": 12.0,
       "new_cost": 12.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
       "owner": "Daniel",
       "team_id": 5,
       "keeper_slot": 6,
-      "player_name": "Geraldo Perdomo",
-      "espn_player_id": "41355",
-      "position": "SS",
-      "mlb_team": "ARI",
-      "rank": 55,
-      "cost": 12.0,
+      "player_name": "Andres Munoz",
+      "espn_player_id": "40939",
+      "position": "RP",
+      "mlb_team": "SEA",
+      "rank": 63,
+      "cost": 11.0,
       "token_applied": false,
-      "prior_cost": 12.0,
-      "new_cost": 12.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "prior_cost": 11.0,
+      "new_cost": 11.0,
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
@@ -400,7 +400,7 @@
       "token_applied": false,
       "prior_cost": 29.0,
       "new_cost": 28.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
@@ -411,12 +411,12 @@
       "espn_player_id": "4717803",
       "position": "SP",
       "mlb_team": "HOU",
-      "rank": 22,
-      "cost": 19.0,
+      "rank": 19,
+      "cost": 21.0,
       "token_applied": false,
-      "prior_cost": 19.0,
-      "new_cost": 19.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "prior_cost": 21.0,
+      "new_cost": 21.0,
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
@@ -427,12 +427,12 @@
       "espn_player_id": "40926",
       "position": "OF, DH",
       "mlb_team": "ATH",
-      "rank": 29,
-      "cost": 17.0,
+      "rank": 28,
+      "cost": 18.0,
       "token_applied": false,
       "prior_cost": 18.0,
-      "new_cost": 17.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "new_cost": 18.0,
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
@@ -443,12 +443,12 @@
       "espn_player_id": "32129",
       "position": "SS",
       "mlb_team": "NYM",
-      "rank": 46,
-      "cost": 14.0,
+      "rank": 38,
+      "cost": 15.0,
       "token_applied": false,
-      "prior_cost": 14.0,
-      "new_cost": 14.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "prior_cost": 15.0,
+      "new_cost": 15.0,
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
@@ -459,12 +459,12 @@
       "espn_player_id": "33859",
       "position": "1B, DH",
       "mlb_team": "SF",
-      "rank": 54,
-      "cost": 12.0,
+      "rank": 43,
+      "cost": 14.0,
       "token_applied": false,
-      "prior_cost": 12.0,
-      "new_cost": 12.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "prior_cost": 14.0,
+      "new_cost": 14.0,
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
@@ -475,44 +475,44 @@
       "espn_player_id": "42179",
       "position": "OF, DH",
       "mlb_team": "DET",
-      "rank": 66,
-      "cost": 10.0,
+      "rank": 50,
+      "cost": 13.0,
       "token_applied": false,
-      "prior_cost": 10.0,
-      "new_cost": 10.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "prior_cost": 13.0,
+      "new_cost": 13.0,
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
       "owner": "Mark",
       "team_id": 13,
       "keeper_slot": 1,
-      "player_name": "Aaron Judge",
-      "espn_player_id": "33192",
-      "position": "OF, DH",
-      "mlb_team": "NYY",
+      "player_name": "Paul Skenes",
+      "espn_player_id": "4719507",
+      "position": "SP",
+      "mlb_team": "PIT",
       "rank": 4,
       "cost": 31.0,
       "token_applied": false,
-      "prior_cost": 31.0,
+      "prior_cost": 30.0,
       "new_cost": 31.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
       "owner": "Mark",
       "team_id": 13,
       "keeper_slot": 2,
-      "player_name": "Paul Skenes",
-      "espn_player_id": "4719507",
-      "position": "SP",
-      "mlb_team": "PIT",
+      "player_name": "Aaron Judge",
+      "espn_player_id": "33192",
+      "position": "OF, DH",
+      "mlb_team": "NYY",
       "rank": 5,
       "cost": 30.0,
       "token_applied": false,
-      "prior_cost": 30.0,
+      "prior_cost": 31.0,
       "new_cost": 30.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
@@ -528,7 +528,7 @@
       "token_applied": false,
       "prior_cost": 28.0,
       "new_cost": 29.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
@@ -539,12 +539,12 @@
       "espn_player_id": "34967",
       "position": "OF",
       "mlb_team": "LAD",
-      "rank": 12,
-      "cost": 24.0,
+      "rank": 14,
+      "cost": 23.0,
       "token_applied": false,
       "prior_cost": 26.0,
-      "new_cost": 24.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "new_cost": 23.0,
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
@@ -555,28 +555,28 @@
       "espn_player_id": "38303",
       "position": "RP",
       "mlb_team": "NYY",
-      "rank": 50,
-      "cost": 13.0,
+      "rank": 64,
+      "cost": 11.0,
       "token_applied": false,
-      "prior_cost": 13.0,
-      "new_cost": 13.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "prior_cost": 11.0,
+      "new_cost": 11.0,
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
       "owner": "Mark",
       "team_id": 13,
       "keeper_slot": 6,
-      "player_name": "Aroldis Chapman",
-      "espn_player_id": "30442",
-      "position": "RP",
-      "mlb_team": "BOS",
-      "rank": 56,
-      "cost": 12.0,
+      "player_name": "Tanner Bibee",
+      "espn_player_id": "4345278",
+      "position": "SP",
+      "mlb_team": "CLE",
+      "rank": 66,
+      "cost": 10.0,
       "token_applied": false,
-      "prior_cost": 12.0,
-      "new_cost": 12.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "prior_cost": 10.0,
+      "new_cost": 10.0,
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
@@ -587,12 +587,12 @@
       "espn_player_id": "35002",
       "position": "1B, DH",
       "mlb_team": "TOR",
-      "rank": 13,
-      "cost": 23.0,
+      "rank": 15,
+      "cost": 22.0,
       "token_applied": false,
       "prior_cost": 23.0,
-      "new_cost": 23.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "new_cost": 22.0,
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
@@ -603,76 +603,76 @@
       "espn_player_id": "42507",
       "position": "SS",
       "mlb_team": "BAL",
-      "rank": 19,
+      "rank": 18,
       "cost": 21.0,
       "token_applied": false,
       "prior_cost": 24.0,
       "new_cost": 21.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
       "owner": "Preston",
       "team_id": 14,
       "keeper_slot": 3,
-      "player_name": "Devin Williams",
-      "espn_player_id": "33224",
-      "position": "RP",
-      "mlb_team": "NYM",
-      "rank": 42,
-      "cost": 14.0,
+      "player_name": "Dylan Cease",
+      "espn_player_id": "34943",
+      "position": "SP",
+      "mlb_team": "TOR",
+      "rank": 34,
+      "cost": 16.0,
       "token_applied": false,
       "prior_cost": 14.0,
-      "new_cost": 14.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "new_cost": 16.0,
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
       "owner": "Preston",
       "team_id": 14,
       "keeper_slot": 4,
-      "player_name": "Dylan Cease",
-      "espn_player_id": "34943",
+      "player_name": "Jesus Luzardo",
+      "espn_player_id": "39667",
       "position": "SP",
-      "mlb_team": "TOR",
-      "rank": 44,
-      "cost": 14.0,
+      "mlb_team": "PHI",
+      "rank": 47,
+      "cost": 13.0,
       "token_applied": false,
-      "prior_cost": 14.0,
-      "new_cost": 14.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "prior_cost": 13.0,
+      "new_cost": 13.0,
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
       "owner": "Preston",
       "team_id": 14,
       "keeper_slot": 5,
-      "player_name": "Josh Hader",
-      "espn_player_id": "32760",
-      "position": "RP",
-      "mlb_team": "HOU",
-      "rank": 49,
-      "cost": 13.0,
+      "player_name": "Ketel Marte",
+      "espn_player_id": "32512",
+      "position": "2B, DH",
+      "mlb_team": "ARI",
+      "rank": 57,
+      "cost": 12.0,
       "token_applied": false,
-      "prior_cost": 13.0,
-      "new_cost": 13.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "prior_cost": 12.0,
+      "new_cost": 12.0,
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
       "owner": "Preston",
       "team_id": 14,
       "keeper_slot": 6,
-      "player_name": "Jesus Luzardo",
-      "espn_player_id": "39667",
-      "position": "SP",
-      "mlb_team": "PHI",
+      "player_name": "Devin Williams",
+      "espn_player_id": "33224",
+      "position": "RP",
+      "mlb_team": "NYM",
       "rank": 62,
       "cost": 11.0,
       "token_applied": false,
       "prior_cost": 11.0,
       "new_cost": 11.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
@@ -688,7 +688,7 @@
       "token_applied": false,
       "prior_cost": 27.0,
       "new_cost": 27.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
@@ -704,7 +704,7 @@
       "token_applied": false,
       "prior_cost": 23.0,
       "new_cost": 25.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
@@ -720,7 +720,7 @@
       "token_applied": false,
       "prior_cost": 21.0,
       "new_cost": 20.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
@@ -729,46 +729,46 @@
       "keeper_slot": 4,
       "player_name": "Zach Neto",
       "espn_player_id": "4666100",
-      "position": "UTIL",
+      "position": "",
       "mlb_team": "LAA",
-      "rank": 35,
-      "cost": 16.0,
+      "rank": 30,
+      "cost": 17.0,
       "token_applied": false,
-      "prior_cost": 16.0,
-      "new_cost": 16.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "prior_cost": 17.0,
+      "new_cost": 17.0,
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
       "owner": "Tim",
       "team_id": 1,
       "keeper_slot": 5,
-      "player_name": "Pete Alonso",
-      "espn_player_id": "37498",
-      "position": "1B",
-      "mlb_team": "BAL",
-      "rank": 38,
-      "cost": 15.0,
+      "player_name": "George Kirby",
+      "espn_player_id": "42406",
+      "position": "SP",
+      "mlb_team": "SEA",
+      "rank": 33,
+      "cost": 16.0,
       "token_applied": false,
-      "prior_cost": 17.0,
-      "new_cost": 15.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "prior_cost": 16.0,
+      "new_cost": 16.0,
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
       "owner": "Tim",
       "team_id": 1,
       "keeper_slot": 6,
-      "player_name": "George Kirby",
-      "espn_player_id": "42406",
-      "position": "SP",
-      "mlb_team": "SEA",
-      "rank": 40,
-      "cost": 15.0,
+      "player_name": "Pete Alonso",
+      "espn_player_id": "37498",
+      "position": "1B",
+      "mlb_team": "BAL",
+      "rank": 36,
+      "cost": 16.0,
       "token_applied": false,
-      "prior_cost": 15.0,
-      "new_cost": 15.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "prior_cost": 17.0,
+      "new_cost": 16.0,
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
@@ -779,34 +779,18 @@
       "espn_player_id": "41044",
       "position": "OF",
       "mlb_team": "SEA",
-      "rank": 14,
-      "cost": 23.0,
+      "rank": 16,
+      "cost": 22.0,
       "token_applied": false,
       "prior_cost": 22.0,
-      "new_cost": 23.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "new_cost": 22.0,
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
       "owner": "Will",
       "team_id": 12,
       "keeper_slot": 2,
-      "player_name": "Mason Miller",
-      "espn_player_id": "4730225",
-      "position": "RP",
-      "mlb_team": "SD",
-      "rank": 18,
-      "cost": 21.0,
-      "token_applied": false,
-      "prior_cost": 21.0,
-      "new_cost": 21.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
-    },
-    {
-      "season_year": 2027,
-      "owner": "Will",
-      "team_id": 12,
-      "keeper_slot": 3,
       "player_name": "Wyatt Langford",
       "espn_player_id": "4719324",
       "position": "OF",
@@ -816,55 +800,71 @@
       "token_applied": false,
       "prior_cost": 18.0,
       "new_cost": 20.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
+    },
+    {
+      "season_year": 2027,
+      "owner": "Will",
+      "team_id": 12,
+      "keeper_slot": 3,
+      "player_name": "Kyle Schwarber",
+      "espn_player_id": "33712",
+      "position": "DH",
+      "mlb_team": "PHI",
+      "rank": 22,
+      "cost": 19.0,
+      "token_applied": false,
+      "prior_cost": 21.0,
+      "new_cost": 19.0,
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
       "owner": "Will",
       "team_id": 12,
       "keeper_slot": 4,
-      "player_name": "Kyle Schwarber",
-      "espn_player_id": "33712",
-      "position": "DH",
-      "mlb_team": "PHI",
+      "player_name": "Jose Ramirez",
+      "espn_player_id": "32801",
+      "position": "3B, DH",
+      "mlb_team": "CLE",
       "rank": 23,
       "cost": 19.0,
       "token_applied": false,
-      "prior_cost": 21.0,
+      "prior_cost": 19.0,
       "new_cost": 19.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
       "owner": "Will",
       "team_id": 12,
       "keeper_slot": 5,
-      "player_name": "Jose Ramirez",
-      "espn_player_id": "32801",
-      "position": "3B, DH",
-      "mlb_team": "CLE",
+      "player_name": "Yoshinobu Yamamoto",
+      "espn_player_id": "4872587",
+      "position": "SP",
+      "mlb_team": "LAD",
       "rank": 24,
       "cost": 19.0,
       "token_applied": false,
       "prior_cost": 19.0,
       "new_cost": 19.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     },
     {
       "season_year": 2027,
       "owner": "Will",
       "team_id": 12,
       "keeper_slot": 6,
-      "player_name": "Yoshinobu Yamamoto",
-      "espn_player_id": "4872587",
+      "player_name": "Jacob deGrom",
+      "espn_player_id": "32796",
       "position": "SP",
-      "mlb_team": "LAD",
-      "rank": 27,
-      "cost": 18.0,
+      "mlb_team": "TEX",
+      "rank": 39,
+      "cost": 15.0,
       "token_applied": false,
-      "prior_cost": 18.0,
-      "new_cost": 18.0,
-      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+      "prior_cost": 14.0,
+      "new_cost": 15.0,
+      "updated_at": "2026-10-02T03:17:28.326859+00:00"
     }
   ]
 }

@@ -6,6 +6,7 @@ import defaultTeamBudgets2027 from '../data/teamBudgets2027.json';
 import defaultCompPicks from '../data/compensationPicks2026.json';
 import defaultKeepers2026 from '../data/keeperInput2026.json';
 import defaultKeepers2027 from '../data/keeperInput2027.json';
+import defaultCalculations from '../data/keeperCalculations.json';
 import KeepersBudgetsPanel from '../components/KeepersBudgetsPanel';
 
 // Team ID mapping matching 2026 Head to Head league structure
@@ -61,6 +62,7 @@ const defaultBudgets2027List = defaultTeamBudgets2027?.budgets || defaultTeamBud
 const defaultCompPicksList = defaultCompPicks?.comp_picks || defaultCompPicks || [];
 const defaultKeepers2026List = defaultKeepers2026?.keepers || defaultKeepers2026 || [];
 const defaultKeepers2027List = defaultKeepers2027?.keepers || defaultKeepers2027 || [];
+const defaultCalcPlayers = defaultCalculations?.players || [];
 
 export default function KeepersBudgetsView({
   currentUser = 'Daniel',
@@ -142,6 +144,16 @@ export default function KeepersBudgetsView({
         ...(p4?.data || [])
       ];
 
+      // Build calculation lookups from official PR calculations
+      const calcById = new Map();
+      const calcByName = new Map();
+      defaultCalcPlayers.forEach(cp => {
+        const cpid = String(cp.espn_player_id || cp.player_id || '').trim();
+        const cpName = (cp.player_name || '').toLowerCase().replace(/\./g, '').replace(/'/g, '').trim();
+        if (cpid) calcById.set(cpid, cp);
+        if (cpName) calcByName.set(cpName, cp);
+      });
+
       // Build active roster lookup strictly from the most recent scoring period in player_daily_stats
       const rosterById = new Map();
       const rosterByName = new Map();
@@ -163,38 +175,36 @@ export default function KeepersBudgetsView({
         const poolNames = new Set();
 
         const mapped = rawPool.map(p => {
-          const pid = String(p['ESPN PlayerID'] || p.id || '');
+          const pid = String(p['ESPN PlayerID'] || p.id || '').trim();
           const pName = p.Player || p.full_name || '';
           const nameKey = pName.toLowerCase().trim();
+          const cleanNameKey = nameKey.replace(/\./g, '').replace(/'/g, '');
           if (pid) poolIds.add(pid);
           if (nameKey) poolNames.add(nameKey);
 
           const isDupName = (poolNameCounts.get(nameKey) || 0) > 1;
 
+          // Match calculation record by ESPN ID or unique name
+          const calcMatch = (pid ? calcById.get(pid) : null) || (!isDupName ? calcByName.get(cleanNameKey) : null) || null;
+
           // Strictly use the most recent scoring period's active roster
-          // Duplication check: if name is duplicated in the pool, only match by exact player ID
-          const rosterOwner = rosterById.get(pid) || (!isDupName ? rosterByName.get(nameKey) : null) || null;
+          const rosterOwner = rosterById.get(pid) || (!isDupName ? rosterByName.get(nameKey) : null) || (calcMatch && calcMatch.fantasy_owner !== 'Available' ? calcMatch.fantasy_owner : null) || null;
           const isRostered = Boolean(rosterOwner);
           const availability = rosterOwner || 'Available';
 
-          // Role check to prevent cross-contamination for duplicate names
-          const posStr = (p.Position || p.position || '').toUpperCase();
-          const isPitcherPos = posStr.includes('SP') || posStr.includes('RP') || posStr === 'P';
-          const isBatterPos = !isPitcherPos && (posStr.includes('1B') || posStr.includes('2B') || posStr.includes('3B') || posStr.includes('SS') || posStr.includes('OF') || posStr.includes('C') || posStr.includes('DH'));
-          const bpType = String(p['Batter/Pitcher'] || '').toLowerCase();
+          let rank = 999;
+          let cost = 0;
 
-          let rank = parseInt(p['Hefty Keeper Rank'] || p['Hefty Single Season Rank'] || p['ESPN Keeper Rank'] || p.rank || 999);
-          let rawCost = p['Hefty Keeper Price'] !== undefined && p['Hefty Keeper Price'] !== null && p['Hefty Keeper Price'] !== ''
-            ? parseFloat(p['Hefty Keeper Price'])
-            : null;
-
-          // Duplication safety check: if player is a pure batter with no keeper rank or very low single season rank but has an elite rank from a namesake pitcher, reset
-          if (isDupName && isBatterPos && bpType === 'batter' && (p['ESPN Keeper Rank'] === 'NR' || parseInt(p['ESPN Single Season Rank'] || '999') > 500)) {
-            rank = 999;
-            rawCost = 0;
+          if (seasonYear >= 2027 && calcMatch) {
+            rank = calcMatch.overall_rank || 999;
+            cost = calcMatch.overall_price !== undefined ? calcMatch.overall_price : calculateKeeperCostFromRank(rank);
+          } else {
+            rank = parseInt(p['Hefty Keeper Rank'] || p['Hefty Single Season Rank'] || p['ESPN Keeper Rank'] || p.rank || 999);
+            const rawCost = p['Hefty Keeper Price'] !== undefined && p['Hefty Keeper Price'] !== null && p['Hefty Keeper Price'] !== ''
+              ? parseFloat(p['Hefty Keeper Price'])
+              : null;
+            cost = rawCost !== null && !isNaN(rawCost) ? rawCost : calculateKeeperCostFromRank(rank);
           }
-
-          const cost = rawCost !== null && !isNaN(rawCost) ? rawCost : calculateKeeperCostFromRank(rank);
 
           return {
             ...p,
@@ -204,10 +214,10 @@ export default function KeepersBudgetsView({
             name: pName,
             Player: pName,
             full_name: pName,
-            position: p.Position || p.position || 'UTIL',
-            Position: p.Position || p.position || 'UTIL',
-            team: p.Team || p.team || 'FA',
-            Team: p.Team || p.team || 'FA',
+            position: p.Position || p.position || calcMatch?.pos || 'UTIL',
+            Position: p.Position || p.position || calcMatch?.pos || 'UTIL',
+            team: p.Team || p.team || calcMatch?.team || 'FA',
+            Team: p.Team || p.team || calcMatch?.team || 'FA',
             rank: isNaN(rank) ? 999 : rank,
             cost: isNaN(cost) ? 0 : cost,
             rosterOwner: rosterOwner,
@@ -220,11 +230,15 @@ export default function KeepersBudgetsView({
         // Ensure any active roster players in the latest scoring period missing from rawPool are synthesized
         const extraRosterPlayers = [];
         (pdsRes?.data || []).forEach(r => {
-          const pid = String(r.player_id || '');
+          const pid = String(r.player_id || '').trim();
           const pName = r.full_name || '';
           const nameKey = pName.toLowerCase().trim();
+          const cleanNameKey = nameKey.replace(/\./g, '').replace(/'/g, '');
           if ((pid && !poolIds.has(pid)) && (nameKey && !poolNames.has(nameKey))) {
             const owner = TEAM_OWNERS[r.team_id] || `Team ${r.team_id}`;
+            const calcMatch = (pid ? calcById.get(pid) : null) || calcByName.get(cleanNameKey) || null;
+            const rank = calcMatch?.overall_rank || 999;
+            const cost = calcMatch?.overall_price !== undefined ? calcMatch.overall_price : 0;
             extraRosterPlayers.push({
               id: parseInt(pid) || pid,
               espn_player_id: pid,
@@ -232,12 +246,12 @@ export default function KeepersBudgetsView({
               name: pName,
               Player: pName,
               full_name: pName,
-              position: 'UTIL',
-              Position: 'UTIL',
-              team: 'MLB',
-              Team: 'MLB',
-              rank: 999,
-              cost: 0,
+              position: calcMatch?.pos || 'UTIL',
+              Position: calcMatch?.pos || 'UTIL',
+              team: calcMatch?.team || 'MLB',
+              Team: calcMatch?.team || 'MLB',
+              rank: rank,
+              cost: cost,
               rosterOwner: owner,
               Availability: owner,
               isRostered: true,
@@ -247,6 +261,34 @@ export default function KeepersBudgetsView({
         });
 
         setPlayers([...mapped, ...extraRosterPlayers]);
+      } else {
+        // Fallback directly to official calculation dataset if player-pool query is empty
+        const fallbackMapped = defaultCalcPlayers.map(cp => {
+          const pid = String(cp.espn_player_id || cp.player_id || '').trim();
+          const pName = cp.player_name || '';
+          const nameKey = pName.toLowerCase().trim();
+          const rosterOwner = rosterById.get(pid) || rosterByName.get(nameKey) || (cp.fantasy_owner !== 'Available' ? cp.fantasy_owner : null) || null;
+          const isRostered = Boolean(rosterOwner);
+          return {
+            id: parseInt(pid) || pid,
+            espn_player_id: pid,
+            'ESPN PlayerID': pid,
+            name: pName,
+            Player: pName,
+            full_name: pName,
+            position: cp.pos || 'UTIL',
+            Position: cp.pos || 'UTIL',
+            team: cp.team || 'MLB',
+            Team: cp.team || 'MLB',
+            rank: cp.overall_rank || 999,
+            cost: cp.overall_price !== undefined ? cp.overall_price : 0,
+            rosterOwner: rosterOwner,
+            Availability: rosterOwner || 'Available',
+            isRostered: isRostered,
+            isFreeAgent: !isRostered
+          };
+        });
+        setPlayers(fallbackMapped);
       }
     } catch (err) {
       console.warn('Using local fallbacks for Keepers & Budgets:', err);

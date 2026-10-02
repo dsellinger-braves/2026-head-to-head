@@ -283,7 +283,7 @@ def main():
     curve = cpv.load_pricing_curve(supabase_url, headers)
     print(f"Loaded pricing curve ({len(curve)} ranks)")
 
-    # 2. Fetch Player Pool
+    # 2. Fetch Player Pool & Active Roster
     players_res = requests.get(
         f"{supabase_url}/rest/v1/player-pool?select=ESPN PlayerID,Player,Position,Team,Availability,FangraphsID,MLBAMID,ESPN Single Season Rank,ESPN Keeper Rank&limit=3000",
         headers=headers,
@@ -291,6 +291,16 @@ def main():
     )
     pool_players = players_res.json() if players_res.status_code == 200 else []
     print(f"Loaded {len(pool_players)} players from pool")
+
+    TEAM_OWNERS = {1: "Tim", 2: "Adrian", 3: "Garrett", 5: "Daniel", 6: "Anil", 8: "Alex", 12: "Will", 13: "Mark", 14: "Preston"}
+    sp_res = requests.get(f"{supabase_url}/rest/v1/player_daily_stats?select=scoring_period_id&order=scoring_period_id.desc&limit=1", headers=headers, timeout=15)
+    latest_sp = sp_res.json()[0]["scoring_period_id"] if sp_res.status_code == 200 and sp_res.json() else 195
+    pds_res = requests.get(f"{supabase_url}/rest/v1/player_daily_stats?scoring_period_id=eq.{latest_sp}&select=team_id,player_id,full_name,lineup_slot_id", headers=headers, timeout=15)
+    active_roster = pds_res.json() if pds_res.status_code == 200 else []
+    print(f"Loaded {len(active_roster)} active roster records from scoring period {latest_sp}")
+
+    active_owner_by_id = {str(r["player_id"]): TEAM_OWNERS.get(r["team_id"]) for r in active_roster if r.get("player_id")}
+    active_owner_by_name = {r["full_name"].lower().strip(): TEAM_OWNERS.get(r["team_id"]) for r in active_roster if r.get("full_name")}
 
     # 3. Fetch FanGraphs data
     fg_dc_bat = cpv.fetch_live_fangraphs("bat", "fangraphsdc")
@@ -685,8 +695,8 @@ def main():
             is_pitcher = False
             is_sp = False
 
-        avail = player.get("Availability")
-        fantasy_owner = avail.strip() if avail and avail.strip() != "Available" else "Available"
+        active_owner = active_owner_by_id.get(str(espn_id)) or active_owner_by_name.get(name_clean)
+        fantasy_owner = active_owner if active_owner else "Available"
         mlbam_id_val = int(mlbam_id) if mlbam_id and str(mlbam_id).isdigit() else None
         espn_id_val = int(espn_id) if espn_id and str(espn_id).isdigit() else espn_id
 
@@ -772,8 +782,48 @@ def main():
         p["overall_price"] = price
         p["surplus_value"] = price - p["espn_price"]
 
-    # Filter to top 1,000 players for high performance and lightweight payload
-    evaluated = evaluated[:1000]
+    # Ensure all actively rostered players across the league are kept in the dataset alongside the top 1,000 overall players
+    top_1000 = evaluated[:1000]
+    rostered_eval = [p for p in evaluated if p.get("fantasy_owner") and p.get("fantasy_owner") != "Available"]
+    seen_ids = set()
+    final_evaluated = []
+    for p in top_1000 + rostered_eval:
+        pid = str(p.get("player_id") or p.get("espn_player_id") or "")
+        if pid and pid not in seen_ids:
+            seen_ids.add(pid)
+            final_evaluated.append(p)
+
+    # Synthesize any active roster players in SP that were not in pool_players
+    for r in active_roster:
+        pid = str(r.get("player_id"))
+        pname = r.get("full_name", "")
+        if pid not in seen_ids:
+            seen_ids.add(pid)
+            owner = TEAM_OWNERS.get(r.get("team_id"), "Available")
+            final_evaluated.append({
+                "player_id": int(pid) if pid.isdigit() else pid,
+                "player_name": pname,
+                "team": "MLB",
+                "position": "UTIL",
+                "fantasy_owner": owner,
+                "fangraphs_id": None,
+                "mlbam_id": None,
+                "MLBAMID": None,
+                "ESPN PlayerID": pid,
+                "espn_player_id": int(pid) if pid.isdigit() else pid,
+                "is_pitcher": False,
+                "pitcher_role": None,
+                "overall_pr": 0.0,
+                "espn_rank": 999,
+                "espn_price": 0,
+                "overall_rank": 999,
+                "overall_price": 0,
+                "surplus_value": 0,
+                "y1": {"year": 2026, "label": "2026 (FanGraphs Depth Charts)", "weight": 0.60, "pr": 0.0, "rank": 999, "stats": {}, "category_prs": {}, "calcs": {}},
+                "y2": {"year": 2027, "label": "2027 (ZiPS +1)", "weight": 0.30, "pr": 0.0, "rank": 999, "effective_pr": 0.0, "is_fallback": True, "stats": {}, "category_prs": {}, "calcs": {}},
+                "y3": {"year": 2028, "label": "2028 (ZiPS +2)", "weight": 0.10, "pr": 0.0, "rank": 999, "effective_pr": 0.0, "is_fallback": True, "stats": {}, "category_prs": {}, "calcs": {}}
+            })
+    evaluated = final_evaluated
 
     print(f"\n🏆 Top 5 Players by Overall Keeper PR:")
     for p in evaluated[:5]:
