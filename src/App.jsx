@@ -194,7 +194,7 @@ function getSubTabsFromHash() {
   else if (hash.includes('comp') || (hash.includes('simulator') && hash.includes('keepers'))) keepersSubTab = 'simulator';
   else if (hash.includes('planner')) keepersSubTab = 'planner';
   else if (hash.includes('calc') || hash.includes('math')) keepersSubTab = 'calculations';
-  else if (hash.includes('prices') || hash.includes('matrix')) keepersSubTab = 'matrix';
+  else if (hash.includes('prices') || hash.includes('matrix') || hash.includes('summary')) keepersSubTab = 'matrix';
 
   if (hash.includes('proposal')) draftSubTab = 'proposals';
   else if (hash.includes('ledgers')) draftSubTab = 'ledgers';
@@ -259,7 +259,7 @@ function App() {
       else if (keepersSubTab === 'simulator') slug = 'keepers/comp-picks';
       else if (keepersSubTab === 'planner') slug = 'keepers/planner';
       else if (keepersSubTab === 'calculations') slug = 'keeper-calculations';
-      else slug = 'keepers/prices';
+      else slug = 'keepers/summary';
     } else if (currentView === 'capital') {
       if (draftSubTab === 'proposals') slug = 'draft/trade-proposals';
       else if (draftSubTab === 'ledgers') slug = 'draft/ledgers';
@@ -1110,13 +1110,13 @@ function App() {
                     {openDropdown === 'keepers' && (
                       <div className="absolute top-full left-0 mt-1.5 min-w-[210px] bg-slate-900/95 border border-slate-700/80 rounded-2xl shadow-2xl backdrop-blur-xl p-1.5 z-50 animate-fade-in flex flex-col gap-0.5">
                         <a
-                          href="#/keepers/prices"
+                          href="#/keepers/summary"
                           onClick={(e) => { e.preventDefault(); setCurrentView('keepers'); setKeepersSubTab('matrix'); setOpenDropdown(null); }}
                           className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-between transition cursor-pointer ${
                             currentView === 'keepers' && keepersSubTab === 'matrix' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                           }`}
                         >
-                          <span className="flex items-center gap-2"><span>💰</span><span>Prices</span></span>
+                          <span className="flex items-center gap-2"><span>📊</span><span>Keeper Summary</span></span>
                           {currentView === 'keepers' && keepersSubTab === 'matrix' && <span className="text-[10px] text-emerald-200">●</span>}
                         </a>
                         <a

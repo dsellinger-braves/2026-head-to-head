@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useAuth } from '../context/useAuth';
 import { supabase } from '../supabaseClient';
 import KeeperCalculationsView from '../views/KeeperCalculationsView';
+import defaultCalculations from '../data/keeperCalculations.json';
 
 // Price schedule constants matching Google Sheet 'Compensation Picks'
 // For 2026: 5 keepers, comp picks start at Round 6 (buy $15, sell $8)
@@ -45,6 +46,59 @@ function normalizeManager(mgr) {
   const s = String(mgr).trim();
   if (s.toLowerCase() === 'dan') return 'Daniel';
   return s;
+}
+
+// Canonical league finishes to guarantee correct #1-#9 display regardless of DB schema team IDs
+const CANONICAL_FINISHES = {
+  2026: {
+    'Tim': 1,
+    'Daniel': 2,
+    'Dan': 2,
+    'Will': 3,
+    'Adrian': 4,
+    'Garrett': 5,
+    'Alex': 6,
+    'Mark': 7,
+    'Preston': 8,
+    'Anil': 9
+  },
+  2027: {
+    'Daniel': 1,
+    'Dan': 1,
+    'Tim': 2,
+    'Will': 3,
+    'Adrian': 4,
+    'Garrett': 5,
+    'Anil': 6,
+    'Alex': 7,
+    'Preston': 8,
+    'Mark': 9
+  }
+};
+
+function getActualFinish(season, owner, dbRank) {
+  const norm = normalizeManager(owner);
+  if (CANONICAL_FINISHES[season]?.[norm] !== undefined) {
+    return CANONICAL_FINISHES[season][norm];
+  }
+  if (dbRank && dbRank >= 1 && dbRank <= 9) return dbRank;
+  return CANONICAL_FINISHES[2027]?.[norm] || dbRank || '-';
+}
+
+function getRotoBadgeStyle(pts) {
+  if (pts >= 8.0) return { bg: 'rgba(16, 185, 129, 0.2)', text: '#10b981', border: 'rgba(16, 185, 129, 0.45)' };
+  if (pts >= 6.0) return { bg: 'rgba(3, 218, 198, 0.18)', text: '#03dac6', border: 'rgba(3, 218, 198, 0.4)' };
+  if (pts >= 4.0) return { bg: 'rgba(251, 191, 36, 0.18)', text: '#fbbf24', border: 'rgba(251, 191, 36, 0.4)' };
+  if (pts >= 2.5) return { bg: 'rgba(249, 115, 22, 0.18)', text: '#f97316', border: 'rgba(249, 115, 22, 0.4)' };
+  return { bg: 'rgba(244, 63, 94, 0.18)', text: '#f43f5e', border: 'rgba(244, 63, 94, 0.4)' };
+}
+
+function formatRotoStat(key, val) {
+  if (val === undefined || val === null || isNaN(val)) return '-';
+  if (key === 'OBP') return (val < 1 ? val.toFixed(3).replace(/^0/, '') : val.toFixed(3));
+  if (key === 'ERA' || key === 'WHIP') return val >= 90 ? 'N/A' : val.toFixed(2);
+  if (key === 'QS') return val.toFixed(1);
+  return String(Math.round(val));
 }
 
 // Helper to compute keeper cost from rank based on Keeper Costs tab
@@ -114,6 +168,13 @@ export default function KeepersBudgetsPanel({
 
   const [selectedOwner, setSelectedOwner] = useState(currentUser || 'Daniel');
   const [keeperOwnerFilter, setKeeperOwnerFilter] = useState('ALL');
+
+  // Keeper Summary & Roto sub-view states
+  const [summaryViewMode, setSummaryViewMode] = useState('both'); // 'roto' | 'ledger' | 'both'
+  const [rotoDisplayMode, setRotoDisplayMode] = useState('both'); // 'both' | 'points' | 'stats'
+  const [rotoSortCol, setRotoSortCol] = useState('total');
+  const [rotoSortDir, setRotoSortDir] = useState('desc');
+  const [expandedRotoOwner, setExpandedRotoOwner] = useState(null);
 
   // Simulation state for the interactive comp pick simulator
   const [simulatedOwner, setSimulatedOwner] = useState(currentUser || 'Daniel');
@@ -297,6 +358,250 @@ export default function KeepersBudgetsPanel({
     });
     return map;
   }, [compPicks]);
+
+  // Sort team budgets sequentially by canonical finish rank (1 through 9)
+  const sortedTeamBudgets = useMemo(() => {
+    return [...teamBudgets].sort((a, b) => {
+      const finA = getActualFinish(seasonYear, a.owner, a.finish_rank);
+      const finB = getActualFinish(seasonYear, b.owner, b.finish_rank);
+      return (typeof finA === 'number' ? finA : 99) - (typeof finB === 'number' ? finB : 99);
+    });
+  }, [teamBudgets, seasonYear]);
+
+  // Fast lookup for player projection stats from keeperCalculations.json and players prop
+  const calcLookup = useMemo(() => {
+    const byId = new Map();
+    const byName = new Map();
+    (defaultCalculations?.players || []).forEach(p => {
+      const pid = String(p.espn_player_id || p.player_id || '').trim();
+      const name = (p.player_name || '').toLowerCase().replace(/\./g, '').replace(/'/g, '').trim();
+      if (pid) byId.set(pid, p);
+      if (name) byName.set(name, p);
+    });
+    return { byId, byName };
+  }, []);
+
+  const keeperRotoData = useMemo(() => {
+    const getKeeperStats = (keeper) => {
+      const pid = String(keeper.espn_player_id || keeper.player_id || keeper.id || '').trim();
+      const cleanName = (keeper.player_name || keeper.Player || keeper.name || '').toLowerCase().replace(/\./g, '').replace(/'/g, '').trim();
+      const calcMatch = (pid ? calcLookup.byId.get(pid) : null) || (cleanName ? calcLookup.byName.get(cleanName) : null);
+
+      const seasonStats = seasonYear >= 2027
+        ? (calcMatch?.y2?.stats || calcMatch?.y1?.stats)
+        : (calcMatch?.y1?.stats || calcMatch?.y2?.stats);
+
+      const fallbackStats = keeper.stats || {};
+      return {
+        ...(fallbackStats || {}),
+        ...(seasonStats || {})
+      };
+    };
+
+    const CATEGORIES = [
+      { key: 'R', label: 'R', type: 'batting', lowerIsBetter: false },
+      { key: 'HR', label: 'HR', type: 'batting', lowerIsBetter: false },
+      { key: 'RBI', label: 'RBI', type: 'batting', lowerIsBetter: false },
+      { key: 'SB', label: 'SB', type: 'batting', lowerIsBetter: false },
+      { key: 'OBP', label: 'OBP', type: 'batting', lowerIsBetter: false },
+      { key: 'K', label: 'K', type: 'pitching', lowerIsBetter: false },
+      { key: 'QS', label: 'QS', type: 'pitching', lowerIsBetter: false },
+      { key: 'SVHD', label: 'SV+HD', type: 'pitching', lowerIsBetter: false },
+      { key: 'ERA', label: 'ERA', type: 'pitching', lowerIsBetter: true },
+      { key: 'WHIP', label: 'WHIP', type: 'pitching', lowerIsBetter: true }
+    ];
+
+    const teamAggs = DRAFT_MANAGERS.map(owner => {
+      const ownerKeepers = keepersByOwner[owner] || [];
+      const statsAccum = {
+        R: 0,
+        HR: 0,
+        RBI: 0,
+        SB: 0,
+        AB: 0,
+        totOBPNum: 0,
+        K: 0,
+        QS: 0,
+        SVHD: 0,
+        IP: 0,
+        totERANum: 0,
+        totWHIPNum: 0
+      };
+
+      const enrichedKeepers = ownerKeepers.map(k => {
+        const s = getKeeperStats(k);
+        const r = parseFloat(s.R) || 0;
+        const hr = parseFloat(s.HR) || 0;
+        const rbi = parseFloat(s.RBI) || 0;
+        const sb = parseFloat(s.SB) || 0;
+        const ab = parseFloat(s.AB) || 0;
+        const obp = parseFloat(s.OBP) || 0;
+
+        const kCount = parseFloat(s.SO !== undefined ? s.SO : (s.K !== undefined ? s.K : 0)) || 0;
+        const qs = parseFloat(s.QS) || 0;
+        const svhd = parseFloat(s.SVHD !== undefined ? s.SVHD : (s.SV_HD !== undefined ? s.SV_HD : 0)) || 0;
+        const ip = parseFloat(s.IP) || 0;
+        const era = parseFloat(s.ERA) || 0;
+        const whip = parseFloat(s.WHIP) || 0;
+
+        statsAccum.R += r;
+        statsAccum.HR += hr;
+        statsAccum.RBI += rbi;
+        statsAccum.SB += sb;
+        if (ab > 0 && obp > 0) {
+          statsAccum.AB += ab;
+          statsAccum.totOBPNum += ab * obp;
+        }
+
+        statsAccum.K += kCount;
+        statsAccum.QS += qs;
+        statsAccum.SVHD += svhd;
+        if (ip > 0) {
+          statsAccum.IP += ip;
+          statsAccum.totERANum += era * ip;
+          statsAccum.totWHIPNum += whip * ip;
+        }
+
+        return {
+          ...k,
+          stats: {
+            R: r,
+            HR: hr,
+            RBI: rbi,
+            SB: sb,
+            OBP: obp,
+            K: kCount,
+            QS: qs,
+            SVHD: svhd,
+            ERA: era,
+            WHIP: whip,
+            IP: ip,
+            AB: ab
+          }
+        };
+      });
+
+      const teamOBP = statsAccum.AB > 0 ? (statsAccum.totOBPNum / statsAccum.AB) : 0;
+      const teamERA = statsAccum.IP > 0 ? (statsAccum.totERANum / statsAccum.IP) : 99.0;
+      const teamWHIP = statsAccum.IP > 0 ? (statsAccum.totWHIPNum / statsAccum.IP) : 99.0;
+
+      return {
+        owner,
+        keeperCount: ownerKeepers.length,
+        keepers: enrichedKeepers,
+        rawStats: {
+          R: Math.round(statsAccum.R),
+          HR: Math.round(statsAccum.HR),
+          RBI: Math.round(statsAccum.RBI),
+          SB: Math.round(statsAccum.SB),
+          OBP: teamOBP,
+          K: Math.round(statsAccum.K),
+          QS: Math.round(statsAccum.QS * 10) / 10,
+          SVHD: Math.round(statsAccum.SVHD),
+          ERA: teamERA,
+          WHIP: teamWHIP,
+          IP: Math.round(statsAccum.IP * 10) / 10,
+          AB: Math.round(statsAccum.AB)
+        },
+        points: {
+          R: 0, HR: 0, RBI: 0, SB: 0, OBP: 0,
+          K: 0, QS: 0, SVHD: 0, ERA: 0, WHIP: 0
+        },
+        battingPoints: 0,
+        pitchingPoints: 0,
+        totalPoints: 0
+      };
+    });
+
+    CATEGORIES.forEach(({ key, lowerIsBetter }) => {
+      const sorted = [...teamAggs].sort((a, b) => {
+        const valA = a.rawStats[key];
+        const valB = b.rawStats[key];
+        return lowerIsBetter ? valA - valB : valB - valA;
+      });
+
+      let i = 0;
+      while (i < sorted.length) {
+        let j = i;
+        const val = sorted[i].rawStats[key];
+        while (j < sorted.length && Math.abs(sorted[j].rawStats[key] - val) < 0.0001) {
+          j++;
+        }
+        let sumPts = 0;
+        for (let k = i; k < j; k++) {
+          sumPts += (9.0 - k);
+        }
+        const avgPts = sumPts / (j - i);
+        for (let k = i; k < j; k++) {
+          sorted[k].points[key] = avgPts;
+        }
+        i = j;
+      }
+    });
+
+    teamAggs.forEach(t => {
+      t.battingPoints = t.points.R + t.points.HR + t.points.RBI + t.points.SB + t.points.OBP;
+      t.pitchingPoints = t.points.K + t.points.QS + t.points.SVHD + t.points.ERA + t.points.WHIP;
+      t.totalPoints = t.battingPoints + t.pitchingPoints;
+    });
+
+    // Default sort by total points
+    teamAggs.sort((a, b) => b.totalPoints - a.totalPoints);
+    teamAggs.forEach((t, idx) => {
+      t.rank = idx + 1;
+    });
+
+    const categoryLeaders = {};
+    CATEGORIES.forEach(({ key, lowerIsBetter }) => {
+      const leader = [...teamAggs].sort((a, b) => lowerIsBetter ? a.rawStats[key] - b.rawStats[key] : b.rawStats[key] - a.rawStats[key])[0];
+      categoryLeaders[key] = {
+        owner: leader.owner,
+        val: leader.rawStats[key]
+      };
+    });
+
+    return { teams: teamAggs, leaders: categoryLeaders, categories: CATEGORIES };
+  }, [keepersByOwner, seasonYear, calcLookup]);
+
+  const sortedRotoTeams = useMemo(() => {
+    if (!keeperRotoData?.teams) return [];
+    const list = [...keeperRotoData.teams];
+    const col = rotoSortCol;
+    const isAsc = rotoSortDir === 'asc';
+
+    return list.sort((a, b) => {
+      let valA, valB;
+      if (col === 'rank') {
+        valA = a.rank; valB = b.rank;
+      } else if (col === 'owner') {
+        return isAsc ? a.owner.localeCompare(b.owner) : b.owner.localeCompare(a.owner);
+      } else if (col === 'total') {
+        valA = a.totalPoints; valB = b.totalPoints;
+      } else if (col === 'batting') {
+        valA = a.battingPoints; valB = b.battingPoints;
+      } else if (col === 'pitching') {
+        valA = a.pitchingPoints; valB = b.pitchingPoints;
+      } else if (a.points[col] !== undefined) {
+        valA = a.points[col]; valB = b.points[col];
+      } else {
+        valA = a.totalPoints; valB = b.totalPoints;
+      }
+      return isAsc ? valA - valB : valB - valA;
+    });
+  }, [keeperRotoData, rotoSortCol, rotoSortDir]);
+
+  const handleRotoSort = (col) => {
+    if (rotoSortCol === col) {
+      setRotoSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setRotoSortCol(col);
+      if (col === 'rank' || col === 'owner' || col === 'ERA' || col === 'WHIP') {
+        setRotoSortDir('asc');
+      } else {
+        setRotoSortDir('desc');
+      }
+    }
+  };
 
   // Dynamic simulation calculations
   const simCalculations = useMemo(() => {
@@ -921,7 +1226,7 @@ export default function KeepersBudgetsPanel({
               transition: 'all 0.15s ease'
             }}
           >
-            💰 Budget Matrix
+            📋 Keeper Summary
           </button>
           <button
             onClick={() => setActiveTab('rosters')}
@@ -1044,216 +1349,698 @@ export default function KeepersBudgetsPanel({
         </div>
       )}
 
-      {/* SUB-TAB 1: BUDGET & COMP PICK MATRIX */}
+      {/* SUB-TAB 1: KEEPER SUMMARY & ROTO MATRIX */}
       {activeTab === 'matrix' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {/* Quick Metrics Header */}
+          {/* Sub-view switcher bar within Keeper Summary */}
           <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-            gap: '10px'
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px',
+            background: '#161616',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            border: '1px solid #2a2a2a'
           }}>
-            <div style={{ background: '#1c1c1c', padding: '12px', borderRadius: '6px', border: '1px solid #333' }}>
-              <div style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase' }}>League Base Budget</div>
-              <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#03dac6', marginTop: '4px' }}>$100.00</div>
-              <div style={{ fontSize: '11px', color: '#666', marginTop: '2px' }}>Per Team Cap</div>
-            </div>
-            <div style={{ background: '#1c1c1c', padding: '12px', borderRadius: '6px', border: '1px solid #333' }}>
-              <div style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase' }}>Total Keeper Spend</div>
-              <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#ffb74d', marginTop: '4px' }}>
-                ${teamBudgets.reduce((s, b) => s + (b.keeper_spend || 0), 0)}
-              </div>
-              <div style={{ fontSize: '11px', color: '#666', marginTop: '2px' }}>Across {keepers.length} Keepers</div>
-            </div>
-            <div style={{ background: '#1c1c1c', padding: '12px', borderRadius: '6px', border: '1px solid #333' }}>
-              <div style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase' }}>Comp Pick Spend</div>
-              <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#bb86fc', marginTop: '4px' }}>
-                ${teamBudgets.reduce((s, b) => s + (b.comp_pick_spend || 0), 0)}
-              </div>
-              <div style={{ fontSize: '11px', color: '#666', marginTop: '2px' }}>{compPicks.filter(p => p.action_type === 'BOUGHT').length} Compensations Added</div>
-            </div>
-            <div style={{ background: '#1c1c1c', padding: '12px', borderRadius: '6px', border: '1px solid #333' }}>
-              <div style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase' }}>Net Late Picks Offset</div>
-              <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#f44336', marginTop: '4px' }}>
-                {compPicks.filter(p => p.action_type === 'OFFSET_LOST').length > 0 ? `-${compPicks.filter(p => p.action_type === 'OFFSET_LOST').length}` : '0'} Picks
-              </div>
-              <div style={{ fontSize: '11px', color: '#666', marginTop: '2px' }}>Forfeited from Rds 27-32</div>
-            </div>
-          </div>
-
-          {/* 9 Owner Cards */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-            gap: '12px'
-          }}>
-            {teamBudgets.map(b => {
-              const picks = compPicksByOwner[b.owner] || { bought: [], lost: [], sold: [] };
-              const ownerKeepers = keepersByOwner[b.owner] || [];
-              const tokenKeeper = ownerKeepers.find(k => k.token_applied);
-              const isSelected = selectedOwner === b.owner;
-              return (
-                <div
-                  key={b.owner}
-                  onClick={() => setSelectedOwner(b.owner)}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Summary View:
+              </span>
+              <div style={{ display: 'flex', background: '#202020', borderRadius: '6px', padding: '3px', border: '1px solid #333', gap: '4px' }}>
+                <button
+                  onClick={() => setSummaryViewMode('roto')}
                   style={{
-                    background: isSelected ? '#22272e' : '#181818',
-                    border: isSelected ? '1px solid #03dac6' : '1px solid #2a2a2a',
-                    borderRadius: '8px',
-                    padding: '14px',
+                    background: summaryViewMode === 'roto' ? '#10b981' : 'transparent',
+                    color: summaryViewMode === 'roto' ? '#000' : '#aaa',
+                    border: 'none',
+                    borderRadius: '4px',
+                    padding: '6px 14px',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
                     cursor: 'pointer',
                     transition: 'all 0.15s ease'
                   }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '16px', fontWeight: 'bold', color: '#fff' }}>{b.owner}</span>
-                      <span style={{ fontSize: '11px', color: '#888' }}>Fin #{b.finish_rank}</span>
-                    </div>
-                    <span style={{
+                  🏆 Keeper Roto Standings
+                </button>
+                <button
+                  onClick={() => setSummaryViewMode('ledger')}
+                  style={{
+                    background: summaryViewMode === 'ledger' ? '#03dac6' : 'transparent',
+                    color: summaryViewMode === 'ledger' ? '#000' : '#aaa',
+                    border: 'none',
+                    borderRadius: '4px',
+                    padding: '6px 14px',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  💼 Budget & Pick Ledger
+                </button>
+                <button
+                  onClick={() => setSummaryViewMode('both')}
+                  style={{
+                    background: summaryViewMode === 'both' ? '#bb86fc' : 'transparent',
+                    color: summaryViewMode === 'both' ? '#000' : '#aaa',
+                    border: 'none',
+                    borderRadius: '4px',
+                    padding: '6px 14px',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  📊 All-in-One Overview
+                </button>
+              </div>
+            </div>
+
+            {/* Display Mode Toggle for Roto */}
+            {(summaryViewMode === 'roto' || summaryViewMode === 'both') && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '11px', color: '#777' }}>Detail:</span>
+                <div style={{ display: 'flex', background: '#202020', borderRadius: '4px', padding: '2px', border: '1px solid #333' }}>
+                  <button
+                    onClick={() => setRotoDisplayMode('both')}
+                    style={{
+                      background: rotoDisplayMode === 'both' ? '#333' : 'transparent',
+                      color: rotoDisplayMode === 'both' ? '#fff' : '#888',
+                      border: 'none',
+                      borderRadius: '3px',
+                      padding: '4px 10px',
                       fontSize: '11px',
                       fontWeight: 'bold',
-                      padding: '2px 8px',
-                      borderRadius: '10px',
-                      background: b.final_budget < 0 ? 'rgba(244, 67, 54, 0.2)' : 'rgba(76, 175, 80, 0.2)',
-                      color: b.final_budget < 0 ? '#f44336' : '#4caf50'
-                    }}>
-                      Rem: ${b.final_budget}
-                    </span>
-                  </div>
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Pts + Stats
+                  </button>
+                  <button
+                    onClick={() => setRotoDisplayMode('points')}
+                    style={{
+                      background: rotoDisplayMode === 'points' ? '#333' : 'transparent',
+                      color: rotoDisplayMode === 'points' ? '#fff' : '#888',
+                      border: 'none',
+                      borderRadius: '3px',
+                      padding: '4px 10px',
+                      fontSize: '11px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Points Only
+                  </button>
+                  <button
+                    onClick={() => setRotoDisplayMode('stats')}
+                    style={{
+                      background: rotoDisplayMode === 'stats' ? '#333' : 'transparent',
+                      color: rotoDisplayMode === 'stats' ? '#fff' : '#888',
+                      border: 'none',
+                      borderRadius: '3px',
+                      padding: '4px 10px',
+                      fontSize: '11px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Raw Stats
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
 
-                  {/* Budget breakdown progress bar */}
-                  <div style={{ display: 'flex', height: '6px', borderRadius: '3px', overflow: 'hidden', background: '#333', marginBottom: '10px' }}>
-                    <div style={{ width: `${Math.min(100, (b.keeper_spend / b.base_budget) * 100)}%`, background: '#ffb74d' }} title={`Keepers: $${b.keeper_spend}`} />
-                    <div style={{ width: `${Math.min(100, (b.comp_pick_spend / b.base_budget) * 100)}%`, background: '#bb86fc' }} title={`Comp Picks: $${b.comp_pick_spend}`} />
+          {/* SECTION A: KEEPER ROTO STANDINGS */}
+          {(summaryViewMode === 'roto' || summaryViewMode === 'both') && (
+            <div style={{
+              background: '#181818',
+              borderRadius: '8px',
+              border: '1px solid #2a2a2a',
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px',
+              padding: '16px'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span>🏆</span>
+                    <span>{seasonYear} Keeper Projected Roto Standings</span>
+                  </h3>
+                  <div style={{ fontSize: '12px', color: '#888', marginTop: '2px' }}>
+                    10-category rotisserie standings computed from currently selected keepers ({seasonYear >= 2027 ? 6 : 5} per owner). Max 90.0 pts (45.0 Batting / 45.0 Pitching).
                   </div>
+                </div>
+                <div style={{ fontSize: '11px', color: '#aaa', background: 'rgba(255,255,255,0.04)', padding: '4px 10px', borderRadius: '6px', border: '1px solid #333' }}>
+                  Click any column header to sort • Click row to expand roster
+                </div>
+              </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', fontSize: '11px', color: '#aaa', marginBottom: '10px' }}>
-                    <div>Base Budget: <strong style={{ color: '#fff' }}>${b.base_budget}</strong></div>
-                    <div>Keeper Spend: <strong style={{ color: '#ffb74d' }}>${b.keeper_spend}</strong></div>
-                    <div>Comp Pick Spend: <strong style={{ color: '#bb86fc' }}>${b.comp_pick_spend}</strong></div>
-                    <div>Net Draft Picks: <strong style={{ color: b.net_picks > 0 ? '#03dac6' : '#fff' }}>{b.net_picks > 0 ? `+${b.net_picks}` : b.net_picks}</strong></div>
-                  </div>
+              {/* Category Leaders Pill Bar */}
+              {keeperRotoData?.leaders && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  flexWrap: 'wrap',
+                  background: '#121212',
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  border: '1px solid #242424'
+                }}>
+                  <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#888', marginRight: '4px' }}>Leaders:</span>
+                  <span style={{ fontSize: '11px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(16, 185, 129, 0.25)' }}>
+                    🏃 R: <strong>{keeperRotoData.leaders.R?.owner}</strong> ({formatRotoStat('R', keeperRotoData.leaders.R?.val)})
+                  </span>
+                  <span style={{ fontSize: '11px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(16, 185, 129, 0.25)' }}>
+                    💥 HR: <strong>{keeperRotoData.leaders.HR?.owner}</strong> ({formatRotoStat('HR', keeperRotoData.leaders.HR?.val)})
+                  </span>
+                  <span style={{ fontSize: '11px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(16, 185, 129, 0.25)' }}>
+                    🎯 RBI: <strong>{keeperRotoData.leaders.RBI?.owner}</strong> ({formatRotoStat('RBI', keeperRotoData.leaders.RBI?.val)})
+                  </span>
+                  <span style={{ fontSize: '11px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(16, 185, 129, 0.25)' }}>
+                    ⚡ SB: <strong>{keeperRotoData.leaders.SB?.owner}</strong> ({formatRotoStat('SB', keeperRotoData.leaders.SB?.val)})
+                  </span>
+                  <span style={{ fontSize: '11px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(16, 185, 129, 0.25)' }}>
+                    👁️ OBP: <strong>{keeperRotoData.leaders.OBP?.owner}</strong> ({formatRotoStat('OBP', keeperRotoData.leaders.OBP?.val)})
+                  </span>
+                  <span style={{ fontSize: '11px', background: 'rgba(187, 134, 252, 0.1)', color: '#bb86fc', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(187, 134, 252, 0.25)' }}>
+                    🔥 K: <strong>{keeperRotoData.leaders.K?.owner}</strong> ({formatRotoStat('K', keeperRotoData.leaders.K?.val)})
+                  </span>
+                  <span style={{ fontSize: '11px', background: 'rgba(187, 134, 252, 0.1)', color: '#bb86fc', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(187, 134, 252, 0.25)' }}>
+                    ⭐ QS: <strong>{keeperRotoData.leaders.QS?.owner}</strong> ({formatRotoStat('QS', keeperRotoData.leaders.QS?.val)})
+                  </span>
+                  <span style={{ fontSize: '11px', background: 'rgba(187, 134, 252, 0.1)', color: '#bb86fc', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(187, 134, 252, 0.25)' }}>
+                    🛡️ SV+HD: <strong>{keeperRotoData.leaders.SVHD?.owner}</strong> ({formatRotoStat('SVHD', keeperRotoData.leaders.SVHD?.val)})
+                  </span>
+                  <span style={{ fontSize: '11px', background: 'rgba(187, 134, 252, 0.1)', color: '#bb86fc', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(187, 134, 252, 0.25)' }}>
+                    🎯 ERA: <strong>{keeperRotoData.leaders.ERA?.owner}</strong> ({formatRotoStat('ERA', keeperRotoData.leaders.ERA?.val)})
+                  </span>
+                  <span style={{ fontSize: '11px', background: 'rgba(187, 134, 252, 0.1)', color: '#bb86fc', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(187, 134, 252, 0.25)' }}>
+                    🔒 WHIP: <strong>{keeperRotoData.leaders.WHIP?.owner}</strong> ({formatRotoStat('WHIP', keeperRotoData.leaders.WHIP?.val)})
+                  </span>
+                </div>
+              )}
 
-                  {/* Bought & Offset Pills */}
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                    {picks.bought.map(p => (
-                      <span key={p.round_num} style={{
-                        background: 'rgba(187, 134, 252, 0.15)',
-                        border: '1px solid rgba(187, 134, 252, 0.4)',
-                        color: '#bb86fc',
-                        fontSize: '10px',
-                        padding: '1px 6px',
-                        borderRadius: '4px'
+              {/* Roto Table */}
+              <div style={{ overflowX: 'auto', borderRadius: '6px', border: '1px solid #292929' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'center' }}>
+                  <thead>
+                    {/* Top Category Groupings */}
+                    <tr style={{ background: '#121212', borderBottom: '1px solid #2d2d2d', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      <th colSpan={5} style={{ padding: '6px 10px', textAlign: 'left', color: '#888' }}>
+                        Team Standings
+                      </th>
+                      <th colSpan={5} style={{ padding: '6px 10px', color: '#10b981', borderLeft: '1px solid #333', borderRight: '1px solid #333', background: 'rgba(16, 185, 129, 0.05)' }}>
+                        ⚾ Batting Categories
+                      </th>
+                      <th colSpan={5} style={{ padding: '6px 10px', color: '#bb86fc', background: 'rgba(187, 134, 252, 0.05)' }}>
+                        🎯 Pitching Categories
+                      </th>
+                    </tr>
+
+                    {/* Column Headers */}
+                    <tr style={{ background: '#1c1c1c', color: '#aaa', borderBottom: '2px solid #333', userSelect: 'none' }}>
+                      <th
+                        onClick={() => handleRotoSort('rank')}
+                        style={{ padding: '10px 8px', width: '50px', cursor: 'pointer', textAlign: 'center' }}
+                      >
+                        Rank {rotoSortCol === 'rank' ? (rotoSortDir === 'asc' ? '▲' : '▼') : ''}
+                      </th>
+                      <th
+                        onClick={() => handleRotoSort('owner')}
+                        style={{ padding: '10px 14px', textAlign: 'left', minWidth: '120px', cursor: 'pointer' }}
+                      >
+                        Owner {rotoSortCol === 'owner' ? (rotoSortDir === 'asc' ? '▲' : '▼') : ''}
+                      </th>
+                      <th
+                        onClick={() => handleRotoSort('total')}
+                        style={{ padding: '10px 12px', cursor: 'pointer', color: '#03dac6', minWidth: '85px' }}
+                      >
+                        Total Pts {rotoSortCol === 'total' ? (rotoSortDir === 'asc' ? '▲' : '▼') : ''}
+                      </th>
+                      <th
+                        onClick={() => handleRotoSort('batting')}
+                        style={{ padding: '10px 10px', cursor: 'pointer', color: '#10b981', minWidth: '65px' }}
+                      >
+                        Bat Pts {rotoSortCol === 'batting' ? (rotoSortDir === 'asc' ? '▲' : '▼') : ''}
+                      </th>
+                      <th
+                        onClick={() => handleRotoSort('pitching')}
+                        style={{ padding: '10px 10px', cursor: 'pointer', color: '#bb86fc', borderRight: '1px solid #333', minWidth: '65px' }}
+                      >
+                        Pit Pts {rotoSortCol === 'pitching' ? (rotoSortDir === 'asc' ? '▲' : '▼') : ''}
+                      </th>
+
+                      {/* Batting Columns */}
+                      {['R', 'HR', 'RBI', 'SB', 'OBP'].map(cat => (
+                        <th
+                          key={cat}
+                          onClick={() => handleRotoSort(cat)}
+                          style={{
+                            padding: '10px 8px',
+                            cursor: 'pointer',
+                            color: '#10b981',
+                            background: rotoSortCol === cat ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.03)',
+                            minWidth: rotoDisplayMode === 'both' ? '68px' : '55px'
+                          }}
+                        >
+                          {cat} {rotoSortCol === cat ? (rotoSortDir === 'asc' ? '▲' : '▼') : ''}
+                        </th>
+                      ))}
+
+                      {/* Pitching Columns */}
+                      {[
+                        { key: 'K', label: 'K' },
+                        { key: 'QS', label: 'QS' },
+                        { key: 'SVHD', label: 'SV+HD' },
+                        { key: 'ERA', label: 'ERA' },
+                        { key: 'WHIP', label: 'WHIP' }
+                      ].map(cat => (
+                        <th
+                          key={cat.key}
+                          onClick={() => handleRotoSort(cat.key)}
+                          style={{
+                            padding: '10px 8px',
+                            cursor: 'pointer',
+                            color: '#bb86fc',
+                            background: rotoSortCol === cat.key ? 'rgba(187, 134, 252, 0.15)' : 'rgba(187, 134, 252, 0.03)',
+                            minWidth: rotoDisplayMode === 'both' ? '68px' : '55px'
+                          }}
+                        >
+                          {cat.label} {rotoSortCol === cat.key ? (rotoSortDir === 'asc' ? '▲' : '▼') : ''}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sortedRotoTeams.map((t, idx) => {
+                      const isExpanded = expandedRotoOwner === t.owner;
+                      const isUser = t.owner === 'Daniel';
+                      const rankBadge = t.rank === 1 ? '🥇' : t.rank === 2 ? '🥈' : t.rank === 3 ? '🥉' : `#${t.rank}`;
+
+                      return (
+                        <React.Fragment key={t.owner}>
+                          <tr
+                            onClick={() => setExpandedRotoOwner(isExpanded ? null : t.owner)}
+                            style={{
+                              borderBottom: '1px solid #262626',
+                              background: isUser ? 'rgba(3, 218, 198, 0.07)' : idx % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)',
+                              cursor: 'pointer',
+                              transition: 'background 0.12s ease'
+                            }}
+                          >
+                            <td style={{ padding: '10px 8px', fontWeight: 'bold', fontSize: '13px', color: t.rank <= 3 ? '#fff' : '#888' }}>
+                              {rankBadge}
+                            </td>
+                            <td style={{ padding: '10px 14px', textAlign: 'left' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span style={{ fontWeight: 'bold', color: '#fff', fontSize: '13px' }}>
+                                  {t.owner}
+                                </span>
+                                {isUser && (
+                                  <span style={{ fontSize: '9px', background: '#03dac6', color: '#000', padding: '1px 5px', borderRadius: '3px', fontWeight: 'bold' }}>
+                                    YOU
+                                  </span>
+                                )}
+                                <span style={{ fontSize: '10px', color: '#666', marginLeft: 'auto' }}>
+                                  {isExpanded ? '▲' : '▼'}
+                                </span>
+                              </div>
+                              <div style={{ fontSize: '10px', color: '#777', marginTop: '1px' }}>
+                                {t.keeperCount} {t.keeperCount === 1 ? 'Keeper' : 'Keepers'}
+                              </div>
+                            </td>
+
+                            {/* Total Points */}
+                            <td style={{ padding: '10px 12px' }}>
+                              <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#03dac6' }}>
+                                {t.totalPoints.toFixed(1)}
+                              </div>
+                              <div style={{
+                                width: '100%',
+                                height: '4px',
+                                background: '#333',
+                                borderRadius: '2px',
+                                overflow: 'hidden',
+                                marginTop: '3px'
+                              }}>
+                                <div style={{
+                                  width: `${Math.min(100, (t.totalPoints / 90) * 100)}%`,
+                                  height: '100%',
+                                  background: 'linear-gradient(90deg, #10b981, #03dac6)'
+                                }} />
+                              </div>
+                            </td>
+
+                            {/* Batting Points */}
+                            <td style={{ padding: '10px 10px', fontWeight: 'bold', color: '#10b981' }}>
+                              {t.battingPoints.toFixed(1)}
+                            </td>
+
+                            {/* Pitching Points */}
+                            <td style={{ padding: '10px 10px', fontWeight: 'bold', color: '#bb86fc', borderRight: '1px solid #333' }}>
+                              {t.pitchingPoints.toFixed(1)}
+                            </td>
+
+                            {/* 5 Batting Categories */}
+                            {['R', 'HR', 'RBI', 'SB', 'OBP'].map(cat => {
+                              const pts = t.points[cat];
+                              const raw = t.rawStats[cat];
+                              const bStyle = getRotoBadgeStyle(pts);
+
+                              return (
+                                <td key={cat} style={{ padding: '8px 6px' }}>
+                                  {rotoDisplayMode !== 'stats' && (
+                                    <div style={{
+                                      display: 'inline-block',
+                                      background: bStyle.bg,
+                                      color: bStyle.text,
+                                      border: `1px solid ${bStyle.border}`,
+                                      borderRadius: '4px',
+                                      padding: '1px 6px',
+                                      fontSize: '11px',
+                                      fontWeight: 'bold',
+                                      minWidth: '28px'
+                                    }}>
+                                      {pts.toFixed(1)}
+                                    </div>
+                                  )}
+                                  {rotoDisplayMode !== 'points' && (
+                                    <div style={{ fontSize: '10px', color: '#aaa', marginTop: rotoDisplayMode === 'both' ? '2px' : '0' }}>
+                                      {formatRotoStat(cat, raw)}
+                                    </div>
+                                  )}
+                                </td>
+                              );
+                            })}
+
+                            {/* 5 Pitching Categories */}
+                            {[
+                              { key: 'K', label: 'K' },
+                              { key: 'QS', label: 'QS' },
+                              { key: 'SVHD', label: 'SV+HD' },
+                              { key: 'ERA', label: 'ERA' },
+                              { key: 'WHIP', label: 'WHIP' }
+                            ].map(cat => {
+                              const pts = t.points[cat.key];
+                              const raw = t.rawStats[cat.key];
+                              const bStyle = getRotoBadgeStyle(pts);
+
+                              return (
+                                <td key={cat.key} style={{ padding: '8px 6px' }}>
+                                  {rotoDisplayMode !== 'stats' && (
+                                    <div style={{
+                                      display: 'inline-block',
+                                      background: bStyle.bg,
+                                      color: bStyle.text,
+                                      border: `1px solid ${bStyle.border}`,
+                                      borderRadius: '4px',
+                                      padding: '1px 6px',
+                                      fontSize: '11px',
+                                      fontWeight: 'bold',
+                                      minWidth: '28px'
+                                    }}>
+                                      {pts.toFixed(1)}
+                                    </div>
+                                  )}
+                                  {rotoDisplayMode !== 'points' && (
+                                    <div style={{ fontSize: '10px', color: '#aaa', marginTop: rotoDisplayMode === 'both' ? '2px' : '0' }}>
+                                      {formatRotoStat(cat.key, raw)}
+                                    </div>
+                                  )}
+                                </td>
+                              );
+                            })}
+                          </tr>
+
+                          {/* Expanded Keepers Detail Row */}
+                          {isExpanded && (
+                            <tr style={{ background: '#121212', borderBottom: '1px solid #333' }}>
+                              <td colSpan={15} style={{ padding: '14px 16px', textAlign: 'left' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                  <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#03dac6' }}>
+                                    💎 {t.owner}'s Kept Players ({t.keepers.length})
+                                  </span>
+                                  <span style={{ fontSize: '11px', color: '#777' }}>
+                                    Total Spend: ${t.keepers.reduce((s, k) => s + (k.cost || 0), 0)}
+                                  </span>
+                                </div>
+                                <div style={{ overflowX: 'auto' }}>
+                                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
+                                    <thead>
+                                      <tr style={{ background: '#1c1c1c', color: '#888', borderBottom: '1px solid #333' }}>
+                                        <th style={{ padding: '6px 8px', textAlign: 'center', width: '35px' }}>Slot</th>
+                                        <th style={{ padding: '6px 10px', textAlign: 'left' }}>Player</th>
+                                        <th style={{ padding: '6px 8px', textAlign: 'center' }}>Pos</th>
+                                        <th style={{ padding: '6px 8px', textAlign: 'center' }}>MLB</th>
+                                        <th style={{ padding: '6px 8px', textAlign: 'center' }}>Rank</th>
+                                        <th style={{ padding: '6px 8px', textAlign: 'center' }}>Cost</th>
+                                        <th style={{ padding: '6px 8px', textAlign: 'center' }}>Token</th>
+                                        <th style={{ padding: '6px 6px', textAlign: 'center', color: '#10b981' }}>R</th>
+                                        <th style={{ padding: '6px 6px', textAlign: 'center', color: '#10b981' }}>HR</th>
+                                        <th style={{ padding: '6px 6px', textAlign: 'center', color: '#10b981' }}>RBI</th>
+                                        <th style={{ padding: '6px 6px', textAlign: 'center', color: '#10b981' }}>SB</th>
+                                        <th style={{ padding: '6px 6px', textAlign: 'center', color: '#10b981' }}>OBP</th>
+                                        <th style={{ padding: '6px 6px', textAlign: 'center', color: '#bb86fc' }}>K</th>
+                                        <th style={{ padding: '6px 6px', textAlign: 'center', color: '#bb86fc' }}>QS</th>
+                                        <th style={{ padding: '6px 6px', textAlign: 'center', color: '#bb86fc' }}>SV+HD</th>
+                                        <th style={{ padding: '6px 6px', textAlign: 'center', color: '#bb86fc' }}>ERA</th>
+                                        <th style={{ padding: '6px 6px', textAlign: 'center', color: '#bb86fc' }}>WHIP</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {t.keepers.map(k => (
+                                        <tr key={k.player_name || k.keeper_slot} style={{ borderBottom: '1px solid #222' }}>
+                                          <td style={{ padding: '6px 8px', textAlign: 'center', color: '#888' }}>#{k.keeper_slot}</td>
+                                          <td style={{ padding: '6px 10px', fontWeight: 'bold', color: '#fff' }}>{k.player_name}</td>
+                                          <td style={{ padding: '6px 8px', textAlign: 'center', color: '#aaa' }}>{k.position || '-'}</td>
+                                          <td style={{ padding: '6px 8px', textAlign: 'center', color: '#aaa' }}>{k.mlb_team || '-'}</td>
+                                          <td style={{ padding: '6px 8px', textAlign: 'center', color: '#888' }}>#{k.rank}</td>
+                                          <td style={{ padding: '6px 8px', textAlign: 'center', fontWeight: 'bold', color: '#ffb74d' }}>${k.cost}</td>
+                                          <td style={{ padding: '6px 8px', textAlign: 'center' }}>
+                                            {k.token_applied ? (
+                                              <span style={{ background: 'rgba(16, 185, 129, 0.2)', color: '#10b981', padding: '1px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold' }}>
+                                                🎫 Midpoint
+                                              </span>
+                                            ) : (
+                                              <span style={{ color: '#555' }}>-</span>
+                                            )}
+                                          </td>
+                                          <td style={{ padding: '6px 6px', textAlign: 'center', color: '#aaa' }}>{k.stats?.R > 0 ? k.stats.R : '-'}</td>
+                                          <td style={{ padding: '6px 6px', textAlign: 'center', color: '#aaa' }}>{k.stats?.HR > 0 ? k.stats.HR : '-'}</td>
+                                          <td style={{ padding: '6px 6px', textAlign: 'center', color: '#aaa' }}>{k.stats?.RBI > 0 ? k.stats.RBI : '-'}</td>
+                                          <td style={{ padding: '6px 6px', textAlign: 'center', color: '#aaa' }}>{k.stats?.SB > 0 ? k.stats.SB : '-'}</td>
+                                          <td style={{ padding: '6px 6px', textAlign: 'center', color: '#aaa' }}>{k.stats?.OBP > 0 ? formatRotoStat('OBP', k.stats.OBP) : '-'}</td>
+                                          <td style={{ padding: '6px 6px', textAlign: 'center', color: '#aaa' }}>{k.stats?.K > 0 ? k.stats.K : '-'}</td>
+                                          <td style={{ padding: '6px 6px', textAlign: 'center', color: '#aaa' }}>{k.stats?.QS > 0 ? k.stats.QS : '-'}</td>
+                                          <td style={{ padding: '6px 6px', textAlign: 'center', color: '#aaa' }}>{k.stats?.SVHD > 0 ? k.stats.SVHD : '-'}</td>
+                                          <td style={{ padding: '6px 6px', textAlign: 'center', color: '#aaa' }}>{k.stats?.ERA > 0 && k.stats.IP > 0 ? formatRotoStat('ERA', k.stats.ERA) : '-'}</td>
+                                          <td style={{ padding: '6px 6px', textAlign: 'center', color: '#aaa' }}>{k.stats?.WHIP > 0 && k.stats.IP > 0 ? formatRotoStat('WHIP', k.stats.WHIP) : '-'}</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* SECTION B: 9 OWNER KEEPER & BUDGET CARDS */}
+          {(summaryViewMode === 'ledger' || summaryViewMode === 'both') && (
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+              gap: '12px'
+            }}>
+              {sortedTeamBudgets.map(b => {
+                const picks = compPicksByOwner[b.owner] || { bought: [], lost: [], sold: [] };
+                const ownerKeepers = keepersByOwner[b.owner] || [];
+                const tokenKeeper = ownerKeepers.find(k => k.token_applied);
+                const isSelected = selectedOwner === b.owner;
+                const actualFinish = getActualFinish(seasonYear, b.owner, b.finish_rank);
+
+                return (
+                  <div
+                    key={b.owner}
+                    onClick={() => setSelectedOwner(b.owner)}
+                    style={{
+                      background: isSelected ? '#22272e' : '#181818',
+                      border: isSelected ? '1px solid #03dac6' : '1px solid #2a2a2a',
+                      borderRadius: '8px',
+                      padding: '14px',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '16px', fontWeight: 'bold', color: '#fff' }}>{b.owner}</span>
+                        <span style={{ fontSize: '11px', color: '#888', fontWeight: 'bold' }}>Fin #{actualFinish}</span>
+                      </div>
+                      <span style={{
+                        fontSize: '11px',
+                        fontWeight: 'bold',
+                        padding: '2px 8px',
+                        borderRadius: '10px',
+                        background: b.final_budget < 0 ? 'rgba(244, 67, 54, 0.2)' : 'rgba(76, 175, 80, 0.2)',
+                        color: b.final_budget < 0 ? '#f44336' : '#4caf50'
                       }}>
-                        +Rd {p.round_num} (${p.cost_or_income})
+                        Rem: ${b.final_budget}
                       </span>
-                    ))}
-                    {picks.lost.map(p => (
-                      <span key={p.round_num} style={{
-                        background: 'rgba(244, 67, 54, 0.15)',
-                        border: '1px solid rgba(244, 67, 54, 0.4)',
-                        color: '#f44336',
-                        fontSize: '10px',
-                        padding: '1px 6px',
-                        borderRadius: '4px'
-                      }}>
-                        -Rd {p.round_num} (Offset)
-                      </span>
-                    ))}
-                    {picks.bought.length === 0 && picks.lost.length === 0 && (
-                      <span style={{ fontSize: '10px', color: '#666', fontStyle: 'italic' }}>No comp picks traded</span>
-                    )}
-                  </div>
+                    </div>
 
-                  {/* Token Status Badge for 2027 */}
-                  {seasonYear === 2027 && (
-                    <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid #2a2a2a', fontSize: '11px' }}>
-                      {tokenKeeper ? (
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}>
-                            <span>🎫</span>
-                            <span>Token: {tokenKeeper.player_name}</span>
-                          </span>
-                          <span style={{ color: '#03dac6', fontSize: '10px', fontWeight: 'bold' }}>
-                            Midpoint: ${tokenKeeper.cost}
-                          </span>
-                        </div>
-                      ) : (
-                        <span style={{ color: '#888', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <span>🎫</span>
-                          <span>Midpoint Token: Unused (1 Available)</span>
+                    {/* Budget breakdown progress bar */}
+                    <div style={{ display: 'flex', height: '6px', borderRadius: '3px', overflow: 'hidden', background: '#333', marginBottom: '10px' }}>
+                      <div style={{ width: `${Math.min(100, (b.keeper_spend / b.base_budget) * 100)}%`, background: '#ffb74d' }} title={`Keepers: $${b.keeper_spend}`} />
+                      <div style={{ width: `${Math.min(100, (b.comp_pick_spend / b.base_budget) * 100)}%`, background: '#bb86fc' }} title={`Comp Picks: $${b.comp_pick_spend}`} />
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', fontSize: '11px', color: '#aaa', marginBottom: '10px' }}>
+                      <div>Base Budget: <strong style={{ color: '#fff' }}>${b.base_budget}</strong></div>
+                      <div>Keeper Spend: <strong style={{ color: '#ffb74d' }}>${b.keeper_spend}</strong></div>
+                      <div>Comp Pick Spend: <strong style={{ color: '#bb86fc' }}>${b.comp_pick_spend}</strong></div>
+                      <div>Net Draft Picks: <strong style={{ color: b.net_picks > 0 ? '#03dac6' : '#fff' }}>{b.net_picks > 0 ? `+${b.net_picks}` : b.net_picks}</strong></div>
+                    </div>
+
+                    {/* Bought & Offset Pills */}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                      {picks.bought.map(p => (
+                        <span key={p.round_num} style={{
+                          background: 'rgba(187, 134, 252, 0.15)',
+                          border: '1px solid rgba(187, 134, 252, 0.4)',
+                          color: '#bb86fc',
+                          fontSize: '10px',
+                          padding: '1px 6px',
+                          borderRadius: '4px'
+                        }}>
+                          +Rd {p.round_num} (${p.cost_or_income})
                         </span>
+                      ))}
+                      {picks.lost.map(p => (
+                        <span key={p.round_num} style={{
+                          background: 'rgba(244, 67, 54, 0.15)',
+                          border: '1px solid rgba(244, 67, 54, 0.4)',
+                          color: '#f44336',
+                          fontSize: '10px',
+                          padding: '1px 6px',
+                          borderRadius: '4px'
+                        }}>
+                          -Rd {p.round_num} (Offset)
+                        </span>
+                      ))}
+                      {picks.bought.length === 0 && picks.lost.length === 0 && (
+                        <span style={{ fontSize: '10px', color: '#666', fontStyle: 'italic' }}>No comp picks traded</span>
                       )}
                     </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
 
-          {/* Full Tabular Breakdown */}
-          <div style={{
-            background: '#181818',
-            borderRadius: '8px',
-            border: '1px solid #2a2a2a',
-            overflow: 'hidden'
-          }}>
-            <div style={{ padding: '12px 16px', borderBottom: '1px solid #2a2a2a', fontWeight: 'bold', color: '#fff', fontSize: '13px' }}>
-              📊 Complete {seasonYear} Budget & Compensation Pick Ledger
+                    {/* Token Status Badge for 2027 */}
+                    {seasonYear === 2027 && (
+                      <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid #2a2a2a', fontSize: '11px' }}>
+                        {tokenKeeper ? (
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}>
+                              <span>🎫</span>
+                              <span>Token: {tokenKeeper.player_name}</span>
+                            </span>
+                            <span style={{ color: '#03dac6', fontSize: '10px', fontWeight: 'bold' }}>
+                              Midpoint: ${tokenKeeper.cost}
+                            </span>
+                          </div>
+                        ) : (
+                          <span style={{ color: '#888', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <span>🎫</span>
+                            <span>Midpoint Token: Unused (1 Available)</span>
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left' }}>
-                <thead>
-                  <tr style={{ background: '#1f1f1f', color: '#888', borderBottom: '1px solid #333' }}>
-                    <th style={{ padding: '10px 14px' }}>Finish</th>
-                    <th style={{ padding: '10px 14px' }}>Owner</th>
-                    <th style={{ padding: '10px 14px' }}>Base Budget</th>
-                    <th style={{ padding: '10px 14px' }}>Keeper Spend</th>
-                    <th style={{ padding: '10px 14px' }}>Comp Pick Spend</th>
-                    <th style={{ padding: '10px 14px' }}>Comp Pick Income</th>
-                    <th style={{ padding: '10px 14px' }}>Final Remaining</th>
-                    <th style={{ padding: '10px 14px' }}>Purchased Picks</th>
-                    <th style={{ padding: '10px 14px' }}>Offset Picks</th>
-                    <th style={{ padding: '10px 14px' }}>Net Picks</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {teamBudgets.map((b, idx) => {
-                    const picks = compPicksByOwner[b.owner] || { bought: [], lost: [], sold: [] };
-                    return (
-                      <tr
-                        key={b.owner}
-                        style={{
-                          borderBottom: '1px solid #262626',
-                          background: idx % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)'
-                        }}
-                      >
-                        <td style={{ padding: '10px 14px', color: '#888' }}>#{b.finish_rank}</td>
-                        <td style={{ padding: '10px 14px', fontWeight: 'bold', color: '#fff' }}>{b.owner}</td>
-                        <td style={{ padding: '10px 14px', color: '#03dac6' }}>${b.base_budget}</td>
-                        <td style={{ padding: '10px 14px', color: '#ffb74d' }}>${b.keeper_spend}</td>
-                        <td style={{ padding: '10px 14px', color: '#bb86fc' }}>${b.comp_pick_spend}</td>
-                        <td style={{ padding: '10px 14px', color: '#4caf50' }}>${b.comp_pick_income}</td>
-                        <td style={{ padding: '10px 14px', fontWeight: 'bold', color: b.final_budget < 0 ? '#f44336' : '#fff' }}>
-                          ${b.final_budget}
-                        </td>
-                        <td style={{ padding: '10px 14px' }}>
-                          {picks.bought.map(p => `Rd ${p.round_num} ($${p.cost_or_income})`).join(', ') || 'None'}
-                        </td>
-                        <td style={{ padding: '10px 14px', color: '#f44336' }}>
-                          {picks.lost.map(p => `Rd ${p.round_num}`).join(', ') || 'None'}
-                        </td>
-                        <td style={{ padding: '10px 14px', fontWeight: 'bold', color: b.net_picks > 0 ? '#03dac6' : '#fff' }}>
-                          {b.net_picks > 0 ? `+${b.net_picks}` : b.net_picks}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+          )}
+
+          {/* SECTION C: COMPLETE BUDGET & PICK LEDGER TABLE */}
+          {(summaryViewMode === 'ledger' || summaryViewMode === 'both') && (
+            <div style={{
+              background: '#181818',
+              borderRadius: '8px',
+              border: '1px solid #2a2a2a',
+              overflow: 'hidden'
+            }}>
+              <div style={{ padding: '12px 16px', borderBottom: '1px solid #2a2a2a', fontWeight: 'bold', color: '#fff', fontSize: '13px' }}>
+                📊 Complete {seasonYear} Budget & Compensation Pick Ledger
+              </div>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left' }}>
+                  <thead>
+                    <tr style={{ background: '#1f1f1f', color: '#888', borderBottom: '1px solid #333' }}>
+                      <th style={{ padding: '10px 14px' }}>Finish</th>
+                      <th style={{ padding: '10px 14px' }}>Owner</th>
+                      <th style={{ padding: '10px 14px' }}>Base Budget</th>
+                      <th style={{ padding: '10px 14px' }}>Keeper Spend</th>
+                      <th style={{ padding: '10px 14px' }}>Comp Pick Spend</th>
+                      <th style={{ padding: '10px 14px' }}>Comp Pick Income</th>
+                      <th style={{ padding: '10px 14px' }}>Final Remaining</th>
+                      <th style={{ padding: '10px 14px' }}>Purchased Picks</th>
+                      <th style={{ padding: '10px 14px' }}>Offset Picks</th>
+                      <th style={{ padding: '10px 14px' }}>Net Picks</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sortedTeamBudgets.map((b, idx) => {
+                      const picks = compPicksByOwner[b.owner] || { bought: [], lost: [], sold: [] };
+                      const actualFinish = getActualFinish(seasonYear, b.owner, b.finish_rank);
+
+                      return (
+                        <tr
+                          key={b.owner}
+                          style={{
+                            borderBottom: '1px solid #262626',
+                            background: idx % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)'
+                          }}
+                        >
+                          <td style={{ padding: '10px 14px', color: '#fff', fontWeight: 'bold' }}>#{actualFinish}</td>
+                          <td style={{ padding: '10px 14px', fontWeight: 'bold', color: '#fff' }}>{b.owner}</td>
+                          <td style={{ padding: '10px 14px', color: '#03dac6' }}>${b.base_budget}</td>
+                          <td style={{ padding: '10px 14px', color: '#ffb74d' }}>${b.keeper_spend}</td>
+                          <td style={{ padding: '10px 14px', color: '#bb86fc' }}>${b.comp_pick_spend}</td>
+                          <td style={{ padding: '10px 14px', color: '#4caf50' }}>${b.comp_pick_income}</td>
+                          <td style={{ padding: '10px 14px', fontWeight: 'bold', color: b.final_budget < 0 ? '#f44336' : '#fff' }}>
+                            ${b.final_budget}
+                          </td>
+                          <td style={{ padding: '10px 14px' }}>
+                            {picks.bought.map(p => `Rd ${p.round_num} ($${p.cost_or_income})`).join(', ') || 'None'}
+                          </td>
+                          <td style={{ padding: '10px 14px', color: '#f44336' }}>
+                            {picks.lost.map(p => `Rd ${p.round_num}`).join(', ') || 'None'}
+                          </td>
+                          <td style={{ padding: '10px 14px', fontWeight: 'bold', color: b.net_picks > 0 ? '#03dac6' : '#fff' }}>
+                            {b.net_picks > 0 ? `+${b.net_picks}` : b.net_picks}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 
