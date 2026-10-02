@@ -2643,6 +2643,8 @@ export default function KeepersBudgetsPanel({
           onPlayerClick={onPlayerClick}
           seasonYear={seasonYear}
           onSeasonYearChange={onSeasonYearChange}
+          keepers={keepers}
+          players={players}
         />
       )}
     </div>

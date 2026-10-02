@@ -1,7 +1,13 @@
 // src/views/KeeperCalculationsView.jsx
 import React, { useState, useMemo, useEffect } from 'react';
 import defaultCalculations from '../data/keeperCalculations.json';
+import defaultKeepers2026 from '../data/keeperInput2026.json';
+import defaultKeepers2027 from '../data/keeperInput2027.json';
+import { supabase } from '../supabaseClient';
 import { getPlayerHeadshotUrl, handleHeadshotError, updateGlobalPlayerLookup } from '../utils/headshotUtils';
+
+const defaultKeepers2026List = defaultKeepers2026?.keepers || defaultKeepers2026 || [];
+const defaultKeepers2027List = defaultKeepers2027?.keepers || defaultKeepers2027 || [];
 
 const POSITIONS = ['ALL', 'C', '1B', '2B', '3B', 'SS', 'OF', 'SP', 'RP', 'DH'];
 const LEAGUE_MANAGERS = ['Adrian', 'Alex', 'Anil', 'Daniel', 'Garrett', 'Mark', 'Preston', 'Tim', 'Will'];
@@ -16,7 +22,9 @@ const PRICE_TIERS = [
 export default function KeeperCalculationsView({
   onPlayerClick,
   seasonYear = 2027,
-  onSeasonYearChange
+  onSeasonYearChange,
+  keepers: propKeepers,
+  players: propPlayers
 }) {
   const [data] = useState(defaultCalculations);
   const [selectedBenchmarkYear, setSelectedBenchmarkYear] = useState('2026');
@@ -32,6 +40,99 @@ export default function KeeperCalculationsView({
 
   const benchmarks = data?.benchmarks?.[selectedBenchmarkYear] || data?.benchmarks?.['2026'] || {};
   const playersList = useMemo(() => data?.players || [], [data]);
+
+  // Live keepers state for synchronization with Supabase
+  const [liveKeepers, setLiveKeepers] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchLiveKeepers() {
+      try {
+        const { data: dbKeepers, error } = await supabase
+          .from('draft_keepers')
+          .select('*')
+          .eq('season_year', seasonYear);
+        if (!error && dbKeepers && dbKeepers.length > 0 && isMounted) {
+          setLiveKeepers(dbKeepers);
+        }
+      } catch {
+        // fallback gracefully
+      }
+    }
+    fetchLiveKeepers();
+    return () => { isMounted = false; };
+  }, [seasonYear]);
+
+  // Determine effective keepers list
+  const effectiveKeepers = useMemo(() => {
+    if (propKeepers && propKeepers.length > 0) return propKeepers;
+    if (liveKeepers && liveKeepers.length > 0) return liveKeepers;
+    return seasonYear >= 2027 ? defaultKeepers2027List : defaultKeepers2026List;
+  }, [propKeepers, liveKeepers, seasonYear]);
+
+  // Pre-count names to prevent duplicate collision
+  const nameCounts = useMemo(() => {
+    const counts = new Map();
+    (playersList || []).forEach(p => {
+      const nc = (p.player_name || '').toLowerCase().replace(/\./g, '').replace(/'/g, '').trim();
+      if (nc) counts.set(nc, (counts.get(nc) || 0) + 1);
+    });
+    return counts;
+  }, [playersList]);
+
+  // Set of kept player IDs and map of unique names
+  const { keptIds, keptNames } = useMemo(() => {
+    const ids = new Set();
+    const names = new Map();
+
+    (effectiveKeepers || []).forEach(k => {
+      const pid = String(k.espn_player_id || k.player_id || '').trim();
+      if (pid) ids.add(pid);
+
+      const kName = (k.player_name || '').toLowerCase().replace(/\./g, '').replace(/'/g, '').trim();
+      if (kName && (nameCounts.get(kName) || 0) <= 1) {
+        names.set(kName, k.owner);
+      }
+    });
+
+    return { keptIds: ids, keptNames: names };
+  }, [effectiveKeepers, nameCounts]);
+
+  // Roster owner lookup from propPlayers (if provided)
+  const rosterOwnerMap = useMemo(() => {
+    const map = new Map();
+    if (propPlayers && propPlayers.length > 0) {
+      propPlayers.forEach(p => {
+        const pid = String(p['ESPN PlayerID'] || p.player_id || p.id || '').trim();
+        const owner = p.Availability || p.fantasy_owner || null;
+        if (pid && owner && owner !== 'Available') {
+          map.set(pid, owner);
+        }
+      });
+    }
+    return map;
+  }, [propPlayers]);
+
+  // Helper function to resolve roster ownership and keeper status
+  const getPlayerOwnerInfo = React.useCallback((p) => {
+    if (!p) return { owner: 'Available', isRostered: false, isKept: false };
+    const pid = String(p.player_id || p.espn_player_id || p['ESPN PlayerID'] || '').trim();
+    const nc = (p.player_name || '').toLowerCase().replace(/\./g, '').replace(/'/g, '').trim();
+
+    const owner = rosterOwnerMap.get(pid) || p.fantasy_owner || 'Available';
+    const isRostered = Boolean(owner && owner !== 'Available');
+
+    let isKept = false;
+    if (isRostered) {
+      if (pid && keptIds.has(pid)) {
+        isKept = true;
+      } else if (nc && (nameCounts.get(nc) || 0) <= 1 && keptNames.has(nc)) {
+        isKept = true;
+      }
+    }
+
+    return { owner, isRostered, isKept };
+  }, [rosterOwnerMap, keptIds, keptNames, nameCounts]);
 
   useEffect(() => {
     if (playersList.length > 0) {
@@ -64,10 +165,12 @@ export default function KeeperCalculationsView({
       }
 
       if (ownerFilter !== 'ALL') {
-        const o = p.fantasy_owner || 'Available';
-        if (ownerFilter === 'ROSTERED' && o === 'Available') return false;
-        if (ownerFilter === 'AVAILABLE' && o !== 'Available') return false;
-        if (ownerFilter !== 'ROSTERED' && ownerFilter !== 'AVAILABLE' && o !== ownerFilter) return false;
+        const { owner, isRostered, isKept } = getPlayerOwnerInfo(p);
+        if (ownerFilter === 'ROSTERED' && !isRostered) return false;
+        if (ownerFilter === 'KEPT' && !isKept) return false;
+        if (ownerFilter === 'UNKEPT' && (!isRostered || isKept)) return false;
+        if (ownerFilter === 'AVAILABLE' && isRostered) return false;
+        if (ownerFilter !== 'ROSTERED' && ownerFilter !== 'KEPT' && ownerFilter !== 'UNKEPT' && ownerFilter !== 'AVAILABLE' && owner !== ownerFilter) return false;
       }
 
       if (priceTier !== 'ALL') {
@@ -80,7 +183,7 @@ export default function KeeperCalculationsView({
 
       return true;
     });
-  }, [playersList, search, posFilter, ownerFilter, priceTier]);
+  }, [playersList, search, posFilter, ownerFilter, priceTier, getPlayerOwnerInfo]);
 
   // Sort players
   const sortedPlayers = useMemo(() => {
@@ -112,8 +215,10 @@ export default function KeeperCalculationsView({
       }
 
       if (sortConfig.key === 'fantasy_owner') {
-        const oA = a.fantasy_owner === 'Available' ? 'ZZZ' : (a.fantasy_owner || 'ZZZ');
-        const oB = b.fantasy_owner === 'Available' ? 'ZZZ' : (b.fantasy_owner || 'ZZZ');
+        const infoA = getPlayerOwnerInfo(a);
+        const infoB = getPlayerOwnerInfo(b);
+        const oA = !infoA.isRostered ? 'ZZZ' : infoA.owner;
+        const oB = !infoB.isRostered ? 'ZZZ' : infoB.owner;
         return sortConfig.direction === 'asc'
           ? oA.localeCompare(oB)
           : oB.localeCompare(oA);
@@ -148,7 +253,7 @@ export default function KeeperCalculationsView({
       return (a.overall_rank || 999) - (b.overall_rank || 999);
     });
     return list;
-  }, [filteredPlayers, sortConfig]);
+  }, [filteredPlayers, sortConfig, getPlayerOwnerInfo]);
 
   const requestSort = (key) => {
     setSortConfig(prev => {
@@ -397,6 +502,8 @@ export default function KeeperCalculationsView({
           >
             <option value="ALL">All Owners</option>
             <option value="ROSTERED">Rostered Only</option>
+            <option value="KEPT">Kept Only (💎)</option>
+            <option value="UNKEPT">Rostered (Not Kept 👤)</option>
             <option value="AVAILABLE">Free Agents (FA)</option>
             <optgroup label="Fantasy Managers">
               {LEAGUE_MANAGERS.map(owner => (
@@ -414,6 +521,25 @@ export default function KeeperCalculationsView({
               <option key={t.id} value={t.id}>{t.label}</option>
             ))}
           </select>
+        </div>
+      </div>
+
+      {/* Legend & Summary Info */}
+      <div className="flex flex-wrap items-center justify-between gap-3 px-1 text-xs text-slate-400">
+        <div>
+          Showing <span className="text-white font-bold">{Math.min(sortedPlayers.length, 200)}</span> of <span className="text-white font-bold">{filteredPlayers.length}</span> players
+        </div>
+        <div className="flex items-center gap-2.5">
+          <span className="text-[11px] font-semibold text-slate-400">Owner Tags:</span>
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40" title="Player is on active roster and kept">
+            <span className="text-[9px]">💎</span> Kept
+          </span>
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-sky-500/15 text-sky-300 border border-sky-500/30" title="Player is on active roster but not kept">
+            <span className="text-[9px]">👤</span> Rostered (Not Kept)
+          </span>
+          <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-950 text-slate-500 border border-slate-800" title="Free Agent / Unrostered">
+            FA
+          </span>
         </div>
       </div>
 
@@ -575,15 +701,34 @@ export default function KeeperCalculationsView({
 
                     {/* Fantasy Team Owner */}
                     <td className="py-3 px-3 text-center">
-                      {player.fantasy_owner && player.fantasy_owner !== 'Available' ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-sky-500/15 text-sky-300 border border-sky-500/30">
-                          <span className="text-[9px]">👤</span> {player.fantasy_owner}
-                        </span>
-                      ) : (
-                        <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-950 text-slate-500 border border-slate-800">
-                          FA
-                        </span>
-                      )}
+                      {(() => {
+                        const { owner, isRostered, isKept } = getPlayerOwnerInfo(player);
+                        if (!isRostered) {
+                          return (
+                            <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-950 text-slate-500 border border-slate-800">
+                              FA
+                            </span>
+                          );
+                        }
+                        if (isKept) {
+                          return (
+                            <span
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-xs"
+                              title={`Kept by ${owner} for ${seasonYear}`}
+                            >
+                              <span className="text-[9px]">💎</span> {owner}
+                            </span>
+                          );
+                        }
+                        return (
+                          <span
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-sky-500/15 text-sky-300 border border-sky-500/30"
+                            title={`On ${owner}'s Roster (Not Kept)`}
+                          >
+                            <span className="text-[9px]">👤</span> {owner}
+                          </span>
+                        );
+                      })()}
                     </td>
 
                     {/* Overall Price */}
@@ -677,15 +822,28 @@ export default function KeeperCalculationsView({
                       {selectedPlayer.position}
                     </span>
                     <span className="text-xs text-slate-400 font-bold">{selectedPlayer.team}</span>
-                    {selectedPlayer.fantasy_owner && selectedPlayer.fantasy_owner !== 'Available' ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold bg-sky-500/20 text-sky-300 border border-sky-500/40">
-                        👤 {selectedPlayer.fantasy_owner}
-                      </span>
-                    ) : (
-                      <span className="px-2 py-0.5 rounded text-xs font-medium bg-slate-800 text-slate-400 border border-slate-700">
-                        Free Agent
-                      </span>
-                    )}
+                    {(() => {
+                      const { owner, isRostered, isKept } = getPlayerOwnerInfo(selectedPlayer);
+                      if (!isRostered) {
+                        return (
+                          <span className="px-2 py-0.5 rounded text-xs font-medium bg-slate-800 text-slate-400 border border-slate-700">
+                            Free Agent
+                          </span>
+                        );
+                      }
+                      if (isKept) {
+                        return (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                            💎 {owner} (Kept)
+                          </span>
+                        );
+                      }
+                      return (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold bg-sky-500/20 text-sky-300 border border-sky-500/40">
+                          👤 {owner} (Rostered)
+                        </span>
+                      );
+                    })()}
                   </div>
                   <div className="flex flex-wrap items-center gap-3 mt-1 text-xs">
                     <span className="text-amber-400 font-black">
