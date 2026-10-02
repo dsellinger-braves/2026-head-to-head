@@ -749,6 +749,12 @@ def run_pipeline():
         except Exception:
             return 999
 
+    # Pre-count names to identify potential duplicate names in pool
+    pool_name_counts = {}
+    for p in pool_players:
+        k = (p.get("Player") or "").lower().replace(".", "").replace("'", "").strip()
+        pool_name_counts[k] = pool_name_counts.get(k, 0) + 1
+
     for player in pool_players:
         espn_id = player.get("ESPN PlayerID")
         full_name = player.get("Player", "")
@@ -756,19 +762,108 @@ def run_pipeline():
         mlbam_id = player.get("MLBAMID")
         team = player.get("Team", "")
         pos = player.get("Position", "")
+        bp_val = str(player.get("Batter/Pitcher") or "").strip().lower()
 
         name_clean = full_name.lower().replace(".", "").replace("'", "").strip()
+
+        # Role intent & duplication check
+        pos_upper = (pos or "").upper()
+        tokens = [t.strip() for t in pos_upper.replace("/", ",").split(",") if t.strip()]
+        pitching_slots = {"SP", "RP", "P"}
+        batting_slots = {"C", "1B", "2B", "3B", "SS", "OF", "DH", "UTIL", "LF", "CF", "RF", "IF"}
+        has_pitch = any(t in pitching_slots for t in tokens)
+        has_bat = any(t in batting_slots for t in tokens)
+
+        is_two_way = ("shohei ohtani" in name_clean) or (has_pitch and has_bat and "P" in tokens)
+        if is_two_way:
+            allow_pitch = True
+            allow_bat = True
+        elif bp_val == "pitcher":
+            allow_pitch = True
+            allow_bat = False
+        elif bp_val == "batter":
+            allow_pitch = False
+            allow_bat = True
+        elif has_pitch and not has_bat:
+            allow_pitch = True
+            allow_bat = False
+        elif has_bat and not has_pitch:
+            allow_pitch = False
+            allow_bat = True
+        else:
+            allow_pitch = has_pitch
+            allow_bat = has_bat
+
+        # Match batting projections only if player is allowed batting
+        kb26, kb27, kb28, syb = {}, {}, {}, {}
+        if allow_bat:
+            if fg_id and (fg_id in batters_keeper_2026 or fg_id in batters_single_year):
+                kb26 = batters_keeper_2026.get(fg_id, {})
+                kb27 = batters_2027.get(fg_id, {})
+                kb28 = batters_2028.get(fg_id, {})
+                syb = batters_single_year.get(fg_id, {})
+            elif pool_name_counts.get(name_clean, 0) > 1:
+                cand_b = batters_keeper_2026.get(name_clean, {})
+                cand_team = cand_b.get("team", "")
+                if cand_team and team and cand_team.lower() == team.lower():
+                    kb26 = cand_b
+                    kb27 = batters_2027.get(name_clean, {})
+                    kb28 = batters_2028.get(name_clean, {})
+                    syb = batters_single_year.get(name_clean, {})
+                elif not cand_team:
+                    kb26 = cand_b
+                    kb27 = batters_2027.get(name_clean, {})
+                    kb28 = batters_2028.get(name_clean, {})
+                    syb = batters_single_year.get(name_clean, {})
+            else:
+                kb26 = batters_keeper_2026.get(name_clean, {})
+                kb27 = batters_2027.get(name_clean, {})
+                kb28 = batters_2028.get(name_clean, {})
+                syb = batters_single_year.get(name_clean, {})
+
+        # Match pitching projections only if player is allowed pitching
+        kp26, kp27, kp28, syp = {}, {}, {}, {}
+        if allow_pitch:
+            if fg_id and (fg_id in pitchers_keeper_2026 or fg_id in pitchers_single_year):
+                kp26 = pitchers_keeper_2026.get(fg_id, {})
+                kp27 = pitchers_2027.get(fg_id, {})
+                kp28 = pitchers_2028.get(fg_id, {})
+                syp = pitchers_single_year.get(fg_id, {})
+            elif pool_name_counts.get(name_clean, 0) > 1:
+                cand_p = pitchers_keeper_2026.get(name_clean, {})
+                cand_team = cand_p.get("team", "")
+                if cand_team and team and cand_team.lower() == team.lower():
+                    kp26 = cand_p
+                    kp27 = pitchers_2027.get(name_clean, {})
+                    kp28 = pitchers_2028.get(name_clean, {})
+                    syp = pitchers_single_year.get(name_clean, {})
+                elif not cand_team:
+                    kp26 = cand_p
+                    kp27 = pitchers_2027.get(name_clean, {})
+                    kp28 = pitchers_2028.get(name_clean, {})
+                    syp = pitchers_single_year.get(name_clean, {})
+            else:
+                kp26 = pitchers_keeper_2026.get(name_clean, {})
+                kp27 = pitchers_2027.get(name_clean, {})
+                kp28 = pitchers_2028.get(name_clean, {})
+                syp = pitchers_single_year.get(name_clean, {})
+
+        # Duplication check: if name is duplicated in the pool, enforce team alignment
+        if pool_name_counts.get(name_clean, 0) > 1:
+            if allow_bat and kb26:
+                proj_team = str(kb26.get("team") or "").strip().lower()
+                player_team = (team or "").strip().lower()
+                if proj_team and player_team and proj_team != player_team and proj_team != "fa" and player_team != "fa":
+                    kb26, kb27, kb28, syb = {}, {}, {}, {}
+            if allow_pitch and kp26:
+                proj_team = str(kp26.get("team") or "").strip().lower()
+                player_team = (team or "").strip().lower()
+                if proj_team and player_team and proj_team != player_team and proj_team != "fa" and player_team != "fa":
+                    kp26, kp27, kp28, syp = {}, {}, {}, {}
 
         # ---------------------------
         # MODEL 1: 3-Year Keeper Model
         # ---------------------------
-        kb26 = batters_keeper_2026.get(fg_id) or batters_keeper_2026.get(name_clean, {})
-        kp26 = pitchers_keeper_2026.get(fg_id) or pitchers_keeper_2026.get(name_clean, {})
-        kb27 = batters_2027.get(fg_id) or batters_2027.get(name_clean, {})
-        kp27 = pitchers_2027.get(fg_id) or pitchers_2027.get(name_clean, {})
-        kb28 = batters_2028.get(fg_id) or batters_2028.get(name_clean, {})
-        kp28 = pitchers_2028.get(fg_id) or pitchers_2028.get(name_clean, {})
-
         kpr_2026, kcats_2026 = compute_player_season_pr(kb26, kp26, benchmarks_k26, 400.0, 130.0, 45.0)
         kpr_2027, _ = compute_player_season_pr(kb27, kp27, benchmarks_k27, 500.0, 130.0, 45.0)
         kpr_2028, _ = compute_player_season_pr(kb28, kp28, benchmarks_k28, 500.0, 130.0, 45.0)
@@ -780,9 +875,6 @@ def run_pipeline():
         # -----------------------------------------------
         # MODEL 2: Single-Year Model (Workbook Methodology)
         # -----------------------------------------------
-        syb = batters_single_year.get(fg_id) or batters_single_year.get(name_clean, {})
-        syp = pitchers_single_year.get(fg_id) or pitchers_single_year.get(name_clean, {})
-
         sy_pr_y1, sy_cats_2026 = compute_player_season_pr(syb, syp, benchmarks_sy_y1, 400.0, 130.0, 45.0)
         sy_pr_y2, _ = compute_player_season_pr(syb, syp, benchmarks_sy_y2, 500.0, 130.0, 45.0)
         sy_pr_y3, _ = compute_player_season_pr(syb, syp, benchmarks_sy_y3, 500.0, 130.0, 45.0)

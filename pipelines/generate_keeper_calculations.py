@@ -556,6 +556,12 @@ def main():
         "2028": serialize_benchmarks(benchmarks_k28, 500.0, 130.0, 45.0),
     }
 
+    # Pre-count names to identify potential duplicate names in pool
+    pool_name_counts = {}
+    for p in pool_players:
+        k = (p.get("Player") or "").lower().replace(".", "").replace("'", "").strip()
+        pool_name_counts[k] = pool_name_counts.get(k, 0) + 1
+
     # Evaluate all players
     evaluated = []
     for player in pool_players:
@@ -565,14 +571,95 @@ def main():
         mlbam_id = player.get("MLBAMID")
         team = str(player.get("Team") or "")
         pos = str(player.get("Position") or "")
+        bp_val = str(player.get("Batter/Pitcher") or "").strip().lower()
         name_clean = full_name.lower().replace(".", "").replace("'", "").strip()
 
-        kb26 = batters_keeper_2026.get(fg_id) or batters_keeper_2026.get(name_clean, {})
-        kp26 = pitchers_keeper_2026.get(fg_id) or pitchers_keeper_2026.get(name_clean, {})
-        kb27 = batters_2027.get(fg_id) or batters_2027.get(name_clean, {})
-        kp27 = pitchers_2027.get(fg_id) or pitchers_2027.get(name_clean, {})
-        kb28 = batters_2028.get(fg_id) or batters_2028.get(name_clean, {})
-        kp28 = pitchers_2028.get(fg_id) or pitchers_2028.get(name_clean, {})
+        # Determine player role intent
+        pos_upper = (pos or "").upper()
+        tokens = [t.strip() for t in pos_upper.replace("/", ",").split(",") if t.strip()]
+        pitching_slots = {"SP", "RP", "P"}
+        batting_slots = {"C", "1B", "2B", "3B", "SS", "OF", "DH", "UTIL", "LF", "CF", "RF", "IF"}
+        has_pitch = any(t in pitching_slots for t in tokens)
+        has_bat = any(t in batting_slots for t in tokens)
+
+        is_two_way = ("shohei ohtani" in name_clean) or (has_pitch and has_bat and "P" in tokens)
+        if is_two_way:
+            allow_pitch = True
+            allow_bat = True
+        elif bp_val == "pitcher":
+            allow_pitch = True
+            allow_bat = False
+        elif bp_val == "batter":
+            allow_pitch = False
+            allow_bat = True
+        elif has_pitch and not has_bat:
+            allow_pitch = True
+            allow_bat = False
+        elif has_bat and not has_pitch:
+            allow_pitch = False
+            allow_bat = True
+        else:
+            allow_pitch = has_pitch
+            allow_bat = has_bat
+
+        # Match batting projections only if player is allowed batting
+        kb26, kb27, kb28 = {}, {}, {}
+        if allow_bat:
+            if fg_id and (fg_id in batters_keeper_2026 or fg_id in batters_2027 or fg_id in batters_2028):
+                kb26 = batters_keeper_2026.get(fg_id, {})
+                kb27 = batters_2027.get(fg_id, {})
+                kb28 = batters_2028.get(fg_id, {})
+            elif pool_name_counts.get(name_clean, 0) > 1:
+                cand_b = batters_keeper_2026.get(name_clean, {})
+                cand_team = cand_b.get("team", "")
+                if cand_team and team and cand_team.lower() == team.lower():
+                    kb26 = cand_b
+                    kb27 = batters_2027.get(name_clean, {})
+                    kb28 = batters_2028.get(name_clean, {})
+                elif not cand_team:
+                    kb26 = cand_b
+                    kb27 = batters_2027.get(name_clean, {})
+                    kb28 = batters_2028.get(name_clean, {})
+            else:
+                kb26 = batters_keeper_2026.get(name_clean, {})
+                kb27 = batters_2027.get(name_clean, {})
+                kb28 = batters_2028.get(name_clean, {})
+
+        # Match pitching projections only if player is allowed pitching
+        kp26, kp27, kp28 = {}, {}, {}
+        if allow_pitch:
+            if fg_id and (fg_id in pitchers_keeper_2026 or fg_id in pitchers_2027 or fg_id in pitchers_2028):
+                kp26 = pitchers_keeper_2026.get(fg_id, {})
+                kp27 = pitchers_2027.get(fg_id, {})
+                kp28 = pitchers_2028.get(fg_id, {})
+            elif pool_name_counts.get(name_clean, 0) > 1:
+                cand_p = pitchers_keeper_2026.get(name_clean, {})
+                cand_team = cand_p.get("team", "")
+                if cand_team and team and cand_team.lower() == team.lower():
+                    kp26 = cand_p
+                    kp27 = pitchers_2027.get(name_clean, {})
+                    kp28 = pitchers_2028.get(name_clean, {})
+                elif not cand_team:
+                    kp26 = cand_p
+                    kp27 = pitchers_2027.get(name_clean, {})
+                    kp28 = pitchers_2028.get(name_clean, {})
+            else:
+                kp26 = pitchers_keeper_2026.get(name_clean, {})
+                kp27 = pitchers_2027.get(name_clean, {})
+                kp28 = pitchers_2028.get(name_clean, {})
+
+        # Duplication check: if name is duplicated in the pool, enforce team alignment
+        if pool_name_counts.get(name_clean, 0) > 1:
+            if allow_bat and kb26:
+                proj_team = str(kb26.get("team") or "").strip().lower()
+                player_team = (team or "").strip().lower()
+                if proj_team and player_team and proj_team != player_team and proj_team != "fa" and player_team != "fa":
+                    kb26, kb27, kb28 = {}, {}, {}
+            if allow_pitch and kp26:
+                proj_team = str(kp26.get("team") or "").strip().lower()
+                player_team = (team or "").strip().lower()
+                if proj_team and player_team and proj_team != player_team and proj_team != "fa" and player_team != "fa":
+                    kp26, kp27, kp28 = {}, {}, {}
 
         pr_y1, cats_y1, calcs_y1 = compute_detailed_player_pr(kb26, kp26, benchmarks_k26, 400.0, 130.0, 45.0)
         pr_y2, cats_y2, calcs_y2 = compute_detailed_player_pr(kb27, kp27, benchmarks_k27, 500.0, 130.0, 45.0)
@@ -588,14 +675,14 @@ def main():
 
         is_sp = False
         is_pitcher = False
-        if kp26:
+        if allow_pitch and kp26:
             is_pitcher = True
             is_sp = (float(kp26.get("GS", 0) or 0) / float(kp26.get("G", 1) or 1)) >= 0.5
-        elif "SP" in pos:
+        elif allow_pitch:
             is_pitcher = True
-            is_sp = True
-        elif "RP" in pos:
-            is_pitcher = True
+            is_sp = "SP" in pos
+        else:
+            is_pitcher = False
             is_sp = False
 
         avail = player.get("Availability")
