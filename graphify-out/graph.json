@@ -531,7 +531,7 @@
       "file_type": "code",
       "norm_label": "analysishistorypanel()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L3942"
+      "source_location": "L4047"
     },
     {
       "id": "src_views_draftroomview_callespnproxy",
@@ -567,7 +567,7 @@
       "file_type": "code",
       "norm_label": "compute2027draftpicks()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2896"
+      "source_location": "L3001"
     },
     {
       "id": "src_views_draftroomview_countdowntimer",
@@ -579,7 +579,7 @@
       "file_type": "code",
       "norm_label": "countdowntimer()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2196"
+      "source_location": "L2301"
     },
     {
       "id": "src_views_draftroomview_determinepickangle",
@@ -603,7 +603,7 @@
       "file_type": "code",
       "norm_label": "draftcapitalpanel()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L3271"
+      "source_location": "L3376"
     },
     {
       "id": "src_views_draftroomview_draftdbget",
@@ -639,7 +639,7 @@
       "file_type": "code",
       "norm_label": "draftlogpanel()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L4045"
+      "source_location": "L4172"
     },
     {
       "id": "src_views_draftroomview_draftroomview",
@@ -651,7 +651,7 @@
       "file_type": "code",
       "norm_label": "draftroomview()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L4261"
+      "source_location": "L4388"
     },
     {
       "id": "src_views_draftroomview_fetchallespnplayers",
@@ -699,7 +699,7 @@
       "file_type": "code",
       "norm_label": "fetchplayernews()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L866"
+      "source_location": "L971"
     },
     {
       "id": "src_views_draftroomview_formatplayerstats",
@@ -723,7 +723,7 @@
       "file_type": "code",
       "norm_label": "generate2027draftorder()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2937"
+      "source_location": "L3042"
     },
     {
       "id": "src_views_draftroomview_generatedefaultdraftorder",
@@ -819,7 +819,7 @@
       "file_type": "code",
       "norm_label": "getinjuryindicator()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L840"
+      "source_location": "L945"
     },
     {
       "id": "src_views_draftroomview_loginmodal",
@@ -831,7 +831,7 @@
       "file_type": "code",
       "norm_label": "loginmodal()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2163"
+      "source_location": "L2268"
     },
     {
       "id": "src_views_draftroomview_mergeespndata",
@@ -867,7 +867,7 @@
       "file_type": "code",
       "norm_label": "modeselectionmodal()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2015"
+      "source_location": "L2120"
     },
     {
       "id": "src_views_draftroomview_mypickspanel",
@@ -879,7 +879,7 @@
       "file_type": "code",
       "norm_label": "mypickspanel()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L3032"
+      "source_location": "L3137"
     },
     {
       "id": "src_views_draftroomview_normalizename",
@@ -903,7 +903,7 @@
       "file_type": "code",
       "norm_label": "ondecksidebar()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2242"
+      "source_location": "L2347"
     },
     {
       "id": "src_views_draftroomview_playermodal",
@@ -915,7 +915,7 @@
       "file_type": "code",
       "norm_label": "playermodal()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L942"
+      "source_location": "L1047"
     },
     {
       "id": "src_views_draftroomview_playermodal_fetchplayerdata",
@@ -927,7 +927,7 @@
       "file_type": "code",
       "norm_label": "fetchplayerdata()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1000"
+      "source_location": "L1105"
     },
     {
       "id": "src_views_draftroomview_playernamebutton",
@@ -939,7 +939,7 @@
       "file_type": "code",
       "norm_label": "playernamebutton()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1960"
+      "source_location": "L2065"
     },
     {
       "id": "src_views_draftroomview_playerpoolpanel",
@@ -951,7 +951,7 @@
       "file_type": "code",
       "norm_label": "playerpoolpanel()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2416"
+      "source_location": "L2521"
     },
     {
       "id": "src_views_draftroomview_playownersound",
@@ -963,7 +963,31 @@
       "file_type": "code",
       "norm_label": "playownersound()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L824"
+      "source_location": "L929"
+    },
+    {
+      "id": "src_views_draftroomview_playpodcasttts",
+      "label": "playPodcastTTS()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "DraftRoomView.jsx",
+      "file_type": "code",
+      "norm_label": "playpodcasttts()",
+      "source_file": "src/views/DraftRoomView.jsx",
+      "source_location": "L853"
+    },
+    {
+      "id": "src_views_draftroomview_preparespokenscript",
+      "label": "prepareSpokenScript()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "DraftRoomView.jsx",
+      "file_type": "code",
+      "norm_label": "preparespokenscript()",
+      "source_file": "src/views/DraftRoomView.jsx",
+      "source_location": "L826"
     },
     {
       "id": "src_views_draftroomview_queuepreviewwidget",
@@ -975,7 +999,7 @@
       "file_type": "code",
       "norm_label": "queuepreviewwidget()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2376"
+      "source_location": "L2481"
     },
     {
       "id": "src_views_draftroomview_recentactivitywidget",
@@ -987,7 +1011,7 @@
       "file_type": "code",
       "norm_label": "recentactivitywidget()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2325"
+      "source_location": "L2430"
     },
     {
       "id": "src_views_draftroomview_rostermanagerpanel",
@@ -999,7 +1023,7 @@
       "file_type": "code",
       "norm_label": "rostermanagerpanel()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2708"
+      "source_location": "L2813"
     },
     {
       "id": "src_views_draftroomview_roundnumber",
@@ -1023,7 +1047,7 @@
       "file_type": "code",
       "norm_label": "standingspanel()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L4184"
+      "source_location": "L4311"
     },
     {
       "id": "src_views_draftroomview_teamneedssummary",
@@ -1035,7 +1059,7 @@
       "file_type": "code",
       "norm_label": "teamneedssummary()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2283"
+      "source_location": "L2388"
     },
     {
       "id": "src_views_draftroomview_ticker",
@@ -1047,7 +1071,7 @@
       "file_type": "code",
       "norm_label": "ticker()",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2222"
+      "source_location": "L2327"
     },
     {
       "id": "src_views_historicaldraftview_historicaldraftview",
@@ -1091,7 +1115,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 10,
-      "community_name": "transaction-scraper.py",
+      "community_name": "json",
       "file_type": "code",
       "norm_label": "enrich_player_names()",
       "source_file": "transaction-scraper.py",
@@ -1103,7 +1127,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 10,
-      "community_name": "transaction-scraper.py",
+      "community_name": "json",
       "file_type": "code",
       "norm_label": "fetch_activity_trades()",
       "source_file": "transaction-scraper.py",
@@ -1115,7 +1139,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 10,
-      "community_name": "transaction-scraper.py",
+      "community_name": "json",
       "file_type": "code",
       "norm_label": "fetch_all_player_names()",
       "source_file": "transaction-scraper.py",
@@ -1127,7 +1151,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 10,
-      "community_name": "transaction-scraper.py",
+      "community_name": "json",
       "file_type": "code",
       "norm_label": "fetch_historical_transactions()",
       "source_file": "transaction-scraper.py",
@@ -1139,7 +1163,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 10,
-      "community_name": "transaction-scraper.py",
+      "community_name": "json",
       "file_type": "code",
       "norm_label": "fetch_period()",
       "source_file": "transaction-scraper.py",
@@ -1151,7 +1175,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 10,
-      "community_name": "transaction-scraper.py",
+      "community_name": "json",
       "file_type": "code",
       "norm_label": "fetch_transactions()",
       "source_file": "transaction-scraper.py",
@@ -1163,7 +1187,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 10,
-      "community_name": "transaction-scraper.py",
+      "community_name": "json",
       "file_type": "code",
       "norm_label": "parse_activity_trades()",
       "source_file": "transaction-scraper.py",
@@ -1175,7 +1199,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 10,
-      "community_name": "transaction-scraper.py",
+      "community_name": "json",
       "file_type": "code",
       "norm_label": "parse_standard_transactions()",
       "source_file": "transaction-scraper.py",
@@ -1187,7 +1211,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 10,
-      "community_name": "transaction-scraper.py",
+      "community_name": "json",
       "file_type": "code",
       "norm_label": "upsert_transactions()",
       "source_file": "transaction-scraper.py",
@@ -1518,30 +1542,6 @@
       "source_location": "L932"
     },
     {
-      "id": "src_utils_acquisition_getplayeracquisition",
-      "label": "getPlayerAcquisition()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 14,
-      "community_name": "FullRosterView.jsx",
-      "file_type": "code",
-      "norm_label": "getplayeracquisition()",
-      "source_file": "src/utils/acquisition.js",
-      "source_location": "L33"
-    },
-    {
-      "id": "src_utils_acquisition_getteamdisplayname",
-      "label": "getTeamDisplayName()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 14,
-      "community_name": "FullRosterView.jsx",
-      "file_type": "code",
-      "norm_label": "getteamdisplayname()",
-      "source_file": "src/utils/acquisition.js",
-      "source_location": "L8"
-    },
-    {
       "id": "src_views_fullrosterview_acquisitionchip",
       "label": "AcquisitionChip()",
       "_callable": true,
@@ -1746,6 +1746,90 @@
       "source_location": "L773"
     },
     {
+      "id": "mlb_schedule_check_check_game_status",
+      "label": "check_game_status()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "update_live_pickem_standings.py",
+      "file_type": "code",
+      "norm_label": "check_game_status()",
+      "source_file": "mlb_schedule_check.py",
+      "source_location": "L29"
+    },
+    {
+      "id": "mlb_schedule_check_get_periods_to_focus",
+      "label": "get_periods_to_focus()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "update_live_pickem_standings.py",
+      "file_type": "code",
+      "norm_label": "get_periods_to_focus()",
+      "source_file": "mlb_schedule_check.py",
+      "source_location": "L159"
+    },
+    {
+      "id": "mlb_schedule_check_log_status",
+      "label": "log_status()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "update_live_pickem_standings.py",
+      "file_type": "code",
+      "norm_label": "log_status()",
+      "source_file": "mlb_schedule_check.py",
+      "source_location": "L99"
+    },
+    {
+      "id": "mlb_schedule_check_should_scrape",
+      "label": "should_scrape()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "update_live_pickem_standings.py",
+      "file_type": "code",
+      "norm_label": "should_scrape()",
+      "source_file": "mlb_schedule_check.py",
+      "source_location": "L130"
+    },
+    {
+      "id": "pipelines_sync_player_news_fetch_player_news",
+      "label": "fetch_player_news()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "update_live_pickem_standings.py",
+      "file_type": "code",
+      "norm_label": "fetch_player_news()",
+      "source_file": "pipelines/sync_player_news.py",
+      "source_location": "L50"
+    },
+    {
+      "id": "pipelines_sync_player_news_load_player_pool",
+      "label": "load_player_pool()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "update_live_pickem_standings.py",
+      "file_type": "code",
+      "norm_label": "load_player_pool()",
+      "source_file": "pipelines/sync_player_news.py",
+      "source_location": "L30"
+    },
+    {
+      "id": "pipelines_sync_player_news_main",
+      "label": "main()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "update_live_pickem_standings.py",
+      "file_type": "code",
+      "norm_label": "main()",
+      "source_file": "pipelines/sync_player_news.py",
+      "source_location": "L82"
+    },
+    {
       "id": "pipelines_update_live_pickem_standings_build_live_in_progress_snapshot",
       "label": "build_live_in_progress_snapshot()",
       "_callable": true,
@@ -1840,6 +1924,78 @@
       "norm_label": "run()",
       "source_file": "pipelines/update_live_pickem_standings.py",
       "source_location": "L485"
+    },
+    {
+      "id": "scripts_inspect_db_cmd_budgets",
+      "label": "cmd_budgets()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "update_live_pickem_standings.py",
+      "file_type": "code",
+      "norm_label": "cmd_budgets()",
+      "source_file": "scripts/inspect_db.py",
+      "source_location": "L89"
+    },
+    {
+      "id": "scripts_inspect_db_cmd_keepers",
+      "label": "cmd_keepers()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "update_live_pickem_standings.py",
+      "file_type": "code",
+      "norm_label": "cmd_keepers()",
+      "source_file": "scripts/inspect_db.py",
+      "source_location": "L44"
+    },
+    {
+      "id": "scripts_inspect_db_cmd_pool",
+      "label": "cmd_pool()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "update_live_pickem_standings.py",
+      "file_type": "code",
+      "norm_label": "cmd_pool()",
+      "source_file": "scripts/inspect_db.py",
+      "source_location": "L156"
+    },
+    {
+      "id": "scripts_inspect_db_cmd_roster",
+      "label": "cmd_roster()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "update_live_pickem_standings.py",
+      "file_type": "code",
+      "norm_label": "cmd_roster()",
+      "source_file": "scripts/inspect_db.py",
+      "source_location": "L117"
+    },
+    {
+      "id": "scripts_inspect_db_get_headers",
+      "label": "get_headers()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "update_live_pickem_standings.py",
+      "file_type": "code",
+      "norm_label": "get_headers()",
+      "source_file": "scripts/inspect_db.py",
+      "source_location": "L36"
+    },
+    {
+      "id": "scripts_inspect_db_main",
+      "label": "main()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "update_live_pickem_standings.py",
+      "file_type": "code",
+      "norm_label": "main()",
+      "source_file": "scripts/inspect_db.py",
+      "source_location": "L180"
     },
     {
       "id": "pipelines_generate_player_owner_stats_aggregate_season",
@@ -2034,6 +2190,126 @@
       "source_location": "L50"
     },
     {
+      "id": "pipelines_update_league_context_calculate_roto_points",
+      "label": "calculate_roto_points()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 18,
+      "community_name": "build_recap_context.py",
+      "file_type": "code",
+      "norm_label": "calculate_roto_points()",
+      "source_file": "pipelines/update_league_context.py",
+      "source_location": "L129"
+    },
+    {
+      "id": "pipelines_update_league_context_compute_playoff_matchups",
+      "label": "compute_playoff_matchups()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 18,
+      "community_name": "build_recap_context.py",
+      "file_type": "code",
+      "norm_label": "compute_playoff_matchups()",
+      "source_file": "pipelines/update_league_context.py",
+      "source_location": "L147"
+    },
+    {
+      "id": "pipelines_update_league_context_compute_playoff_matchups_compare_teams",
+      "label": "compare_teams()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 18,
+      "community_name": "build_recap_context.py",
+      "file_type": "code",
+      "norm_label": "compare_teams()",
+      "source_file": "pipelines/update_league_context.py",
+      "source_location": "L152"
+    },
+    {
+      "id": "pipelines_update_league_context_compute_rates",
+      "label": "compute_rates()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 18,
+      "community_name": "build_recap_context.py",
+      "file_type": "code",
+      "norm_label": "compute_rates()",
+      "source_file": "pipelines/update_league_context.py",
+      "source_location": "L116"
+    },
+    {
+      "id": "pipelines_update_league_context_fetch_supabase_table",
+      "label": "fetch_supabase_table()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 18,
+      "community_name": "build_recap_context.py",
+      "file_type": "code",
+      "norm_label": "fetch_supabase_table()",
+      "source_file": "pipelines/update_league_context.py",
+      "source_location": "L79"
+    },
+    {
+      "id": "pipelines_update_league_context_get_period_map",
+      "label": "get_period_map()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 18,
+      "community_name": "build_recap_context.py",
+      "file_type": "code",
+      "norm_label": "get_period_map()",
+      "source_file": "pipelines/update_league_context.py",
+      "source_location": "L98"
+    },
+    {
+      "id": "pipelines_update_league_context_get_stat",
+      "label": "get_stat()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 18,
+      "community_name": "build_recap_context.py",
+      "file_type": "code",
+      "norm_label": "get_stat()",
+      "source_file": "pipelines/update_league_context.py",
+      "source_location": "L111"
+    },
+    {
+      "id": "pipelines_update_league_context_is_season_active",
+      "label": "is_season_active()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 18,
+      "community_name": "build_recap_context.py",
+      "file_type": "code",
+      "norm_label": "is_season_active()",
+      "source_file": "pipelines/update_league_context.py",
+      "source_location": "L486"
+    },
+    {
+      "id": "pipelines_update_league_context_refresh_context_files",
+      "label": "refresh_context_files()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 18,
+      "community_name": "build_recap_context.py",
+      "file_type": "code",
+      "norm_label": "refresh_context_files()",
+      "source_file": "pipelines/update_league_context.py",
+      "source_location": "L202"
+    },
+    {
+      "id": "pipelines_update_league_context_update_storylines_playoff_section",
+      "label": "update_storylines_playoff_section()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 18,
+      "community_name": "build_recap_context.py",
+      "file_type": "code",
+      "norm_label": "update_storylines_playoff_section()",
+      "source_file": "pipelines/update_league_context.py",
+      "source_location": "L449"
+    },
+    {
       "id": "src_views_draftcapitalview_canonicalownername",
       "label": "canonicalOwnerName()",
       "_callable": true,
@@ -2116,18 +2392,6 @@
       "norm_label": "isplayerinassets()",
       "source_file": "src/views/DraftCapitalView.jsx",
       "source_location": "L105"
-    },
-    {
-      "id": "src_utils_replacementrecommender_evaluateplayercapital",
-      "label": "evaluatePlayerCapital()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "test_trade_and_recommender.mjs",
-      "file_type": "code",
-      "norm_label": "evaluateplayercapital()",
-      "source_file": "src/utils/replacementRecommender.js",
-      "source_location": "L36"
     },
     {
       "id": "src_utils_replacementrecommender_findwaiverreplacements",
@@ -2236,30 +2500,6 @@
       "norm_label": "gradetrade()",
       "source_file": "src/utils/tradeGrading.js",
       "source_location": "L345"
-    },
-    {
-      "id": "src_views_ownerlandingview_getplayerpositions",
-      "label": "getPlayerPositions()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "test_trade_and_recommender.mjs",
-      "file_type": "code",
-      "norm_label": "getplayerpositions()",
-      "source_file": "src/views/OwnerLandingView.jsx",
-      "source_location": "L70"
-    },
-    {
-      "id": "src_views_ownerlandingview_ownerlandingview",
-      "label": "OwnerLandingView()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "test_trade_and_recommender.mjs",
-      "file_type": "code",
-      "norm_label": "ownerlandingview()",
-      "source_file": "src/views/OwnerLandingView.jsx",
-      "source_location": "L96"
     },
     {
       "id": "src_views_traderepositoryview_assetrow",
@@ -2526,124 +2766,88 @@
       "source_location": "L189"
     },
     {
-      "id": "pipelines_update_league_context_calculate_roto_points",
-      "label": "calculate_roto_points()",
+      "id": "src_components_teamavatar_teamavatar",
+      "label": "TeamAvatar()",
       "_callable": true,
       "_origin": "ast",
       "community": 25,
-      "community_name": "update_league_context.py",
+      "community_name": "schedule.js",
       "file_type": "code",
-      "norm_label": "calculate_roto_points()",
-      "source_file": "pipelines/update_league_context.py",
-      "source_location": "L129"
+      "norm_label": "teamavatar()",
+      "source_file": "src/components/TeamAvatar.jsx",
+      "source_location": "L4"
     },
     {
-      "id": "pipelines_update_league_context_compute_playoff_matchups",
-      "label": "compute_playoff_matchups()",
+      "id": "src_views_playerownerstatsview_playerownerstatsview",
+      "label": "PlayerOwnerStatsView()",
       "_callable": true,
       "_origin": "ast",
       "community": 25,
-      "community_name": "update_league_context.py",
+      "community_name": "schedule.js",
       "file_type": "code",
-      "norm_label": "compute_playoff_matchups()",
-      "source_file": "pipelines/update_league_context.py",
-      "source_location": "L147"
+      "norm_label": "playerownerstatsview()",
+      "source_file": "src/views/PlayerOwnerStatsView.jsx",
+      "source_location": "L17"
     },
     {
-      "id": "pipelines_update_league_context_compute_playoff_matchups_compare_teams",
-      "label": "compare_teams()",
+      "id": "src_views_playerownerstatsview_round",
+      "label": "round()",
       "_callable": true,
       "_origin": "ast",
       "community": 25,
-      "community_name": "update_league_context.py",
+      "community_name": "schedule.js",
       "file_type": "code",
-      "norm_label": "compare_teams()",
-      "source_file": "pipelines/update_league_context.py",
-      "source_location": "L152"
+      "norm_label": "round()",
+      "source_file": "src/views/PlayerOwnerStatsView.jsx",
+      "source_location": "L11"
     },
     {
-      "id": "pipelines_update_league_context_compute_rates",
-      "label": "compute_rates()",
+      "id": "src_views_rotogapview_computedefendingbehindcushion",
+      "label": "computeDefendingBehindCushion()",
       "_callable": true,
       "_origin": "ast",
       "community": 25,
-      "community_name": "update_league_context.py",
+      "community_name": "schedule.js",
       "file_type": "code",
-      "norm_label": "compute_rates()",
-      "source_file": "pipelines/update_league_context.py",
-      "source_location": "L116"
+      "norm_label": "computedefendingbehindcushion()",
+      "source_file": "src/views/RotoGapView.jsx",
+      "source_location": "L105"
     },
     {
-      "id": "pipelines_update_league_context_fetch_supabase_table",
-      "label": "fetch_supabase_table()",
+      "id": "src_views_rotogapview_computetargetaheadgap",
+      "label": "computeTargetAheadGap()",
       "_callable": true,
       "_origin": "ast",
       "community": 25,
-      "community_name": "update_league_context.py",
+      "community_name": "schedule.js",
       "file_type": "code",
-      "norm_label": "fetch_supabase_table()",
-      "source_file": "pipelines/update_league_context.py",
-      "source_location": "L79"
+      "norm_label": "computetargetaheadgap()",
+      "source_file": "src/views/RotoGapView.jsx",
+      "source_location": "L28"
     },
     {
-      "id": "pipelines_update_league_context_get_period_map",
-      "label": "get_period_map()",
+      "id": "src_views_rotogapview_formatstatvalue",
+      "label": "formatStatValue()",
       "_callable": true,
       "_origin": "ast",
       "community": 25,
-      "community_name": "update_league_context.py",
+      "community_name": "schedule.js",
       "file_type": "code",
-      "norm_label": "get_period_map()",
-      "source_file": "pipelines/update_league_context.py",
-      "source_location": "L98"
+      "norm_label": "formatstatvalue()",
+      "source_file": "src/views/RotoGapView.jsx",
+      "source_location": "L21"
     },
     {
-      "id": "pipelines_update_league_context_get_stat",
-      "label": "get_stat()",
+      "id": "src_views_rotogapview_rotogapview",
+      "label": "RotoGapView()",
       "_callable": true,
       "_origin": "ast",
       "community": 25,
-      "community_name": "update_league_context.py",
+      "community_name": "schedule.js",
       "file_type": "code",
-      "norm_label": "get_stat()",
-      "source_file": "pipelines/update_league_context.py",
-      "source_location": "L111"
-    },
-    {
-      "id": "pipelines_update_league_context_is_season_active",
-      "label": "is_season_active()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 25,
-      "community_name": "update_league_context.py",
-      "file_type": "code",
-      "norm_label": "is_season_active()",
-      "source_file": "pipelines/update_league_context.py",
-      "source_location": "L486"
-    },
-    {
-      "id": "pipelines_update_league_context_refresh_context_files",
-      "label": "refresh_context_files()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 25,
-      "community_name": "update_league_context.py",
-      "file_type": "code",
-      "norm_label": "refresh_context_files()",
-      "source_file": "pipelines/update_league_context.py",
-      "source_location": "L202"
-    },
-    {
-      "id": "pipelines_update_league_context_update_storylines_playoff_section",
-      "label": "update_storylines_playoff_section()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 25,
-      "community_name": "update_league_context.py",
-      "file_type": "code",
-      "norm_label": "update_storylines_playoff_section()",
-      "source_file": "pipelines/update_league_context.py",
-      "source_location": "L449"
+      "norm_label": "rotogapview()",
+      "source_file": "src/views/RotoGapView.jsx",
+      "source_location": "L182"
     },
     {
       "id": "discord_bot_ask_command",
@@ -2783,7 +2987,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 28,
-      "community_name": "TEAMS",
+      "community_name": "ProgressionView.jsx",
       "file_type": "code",
       "norm_label": "getfranchiseleaderboard()",
       "source_file": "src/data/historicalFranchiseData.js",
@@ -2795,7 +2999,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 28,
-      "community_name": "TEAMS",
+      "community_name": "ProgressionView.jsx",
       "file_type": "code",
       "norm_label": "gethistoricalseasons()",
       "source_file": "src/data/historicalFranchiseData.js",
@@ -2807,7 +3011,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 28,
-      "community_name": "TEAMS",
+      "community_name": "ProgressionView.jsx",
       "file_type": "code",
       "norm_label": "normalizeowner()",
       "source_file": "src/data/historicalFranchiseData.js",
@@ -2819,7 +3023,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 28,
-      "community_name": "TEAMS",
+      "community_name": "ProgressionView.jsx",
       "file_type": "code",
       "norm_label": "formatval()",
       "source_file": "src/views/ProgressionView.jsx",
@@ -2831,7 +3035,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 28,
-      "community_name": "TEAMS",
+      "community_name": "ProgressionView.jsx",
       "file_type": "code",
       "norm_label": "progressionview()",
       "source_file": "src/views/ProgressionView.jsx",
@@ -3234,52 +3438,76 @@
       "source_location": "L1779"
     },
     {
-      "id": "mlb_schedule_check_check_game_status",
-      "label": "check_game_status()",
+      "id": "src_components_playerhistorymodal_fetchplayeroverallstats",
+      "label": "fetchPlayerOverallStats()",
       "_callable": true,
       "_origin": "ast",
       "community": 31,
-      "community_name": "sys",
+      "community_name": "PlayerHistoryModal.jsx",
       "file_type": "code",
-      "norm_label": "check_game_status()",
-      "source_file": "mlb_schedule_check.py",
+      "norm_label": "fetchplayeroverallstats()",
+      "source_file": "src/components/PlayerHistoryModal.jsx",
       "source_location": "L29"
     },
     {
-      "id": "mlb_schedule_check_get_periods_to_focus",
-      "label": "get_periods_to_focus()",
+      "id": "src_components_playerhistorymodal_getteamdisplayname",
+      "label": "getTeamDisplayName()",
       "_callable": true,
       "_origin": "ast",
       "community": 31,
-      "community_name": "sys",
+      "community_name": "PlayerHistoryModal.jsx",
       "file_type": "code",
-      "norm_label": "get_periods_to_focus()",
-      "source_file": "mlb_schedule_check.py",
-      "source_location": "L159"
+      "norm_label": "getteamdisplayname()",
+      "source_file": "src/components/PlayerHistoryModal.jsx",
+      "source_location": "L8"
     },
     {
-      "id": "mlb_schedule_check_log_status",
-      "label": "log_status()",
+      "id": "src_components_playerhistorymodal_playerhistorymodal",
+      "label": "PlayerHistoryModal()",
       "_callable": true,
       "_origin": "ast",
       "community": 31,
-      "community_name": "sys",
+      "community_name": "PlayerHistoryModal.jsx",
       "file_type": "code",
-      "norm_label": "log_status()",
-      "source_file": "mlb_schedule_check.py",
-      "source_location": "L99"
+      "norm_label": "playerhistorymodal()",
+      "source_file": "src/components/PlayerHistoryModal.jsx",
+      "source_location": "L152"
     },
     {
-      "id": "mlb_schedule_check_should_scrape",
-      "label": "should_scrape()",
+      "id": "src_components_playerhistorymodal_playerhistorymodal_loadoverall",
+      "label": "loadOverall()",
       "_callable": true,
       "_origin": "ast",
       "community": 31,
-      "community_name": "sys",
+      "community_name": "PlayerHistoryModal.jsx",
       "file_type": "code",
-      "norm_label": "should_scrape()",
-      "source_file": "mlb_schedule_check.py",
-      "source_location": "L130"
+      "norm_label": "loadoverall()",
+      "source_file": "src/components/PlayerHistoryModal.jsx",
+      "source_location": "L277"
+    },
+    {
+      "id": "src_utils_acquisition_getplayeracquisition",
+      "label": "getPlayerAcquisition()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 31,
+      "community_name": "PlayerHistoryModal.jsx",
+      "file_type": "code",
+      "norm_label": "getplayeracquisition()",
+      "source_file": "src/utils/acquisition.js",
+      "source_location": "L33"
+    },
+    {
+      "id": "src_utils_acquisition_getteamdisplayname",
+      "label": "getTeamDisplayName()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 31,
+      "community_name": "PlayerHistoryModal.jsx",
+      "file_type": "code",
+      "norm_label": "getteamdisplayname()",
+      "source_file": "src/utils/acquisition.js",
+      "source_location": "L8"
     },
     {
       "id": "migrate_historical_data_migrate_historical_data",
@@ -3378,6 +3606,42 @@
       "source_location": "L70"
     },
     {
+      "id": "active_stats_pull_get_espn_data",
+      "label": "get_espn_data()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 34,
+      "community_name": "ingest_draft_trades.py",
+      "file_type": "code",
+      "norm_label": "get_espn_data()",
+      "source_file": "active-stats-pull.py",
+      "source_location": "L53"
+    },
+    {
+      "id": "active_stats_pull_upload_to_gcs",
+      "label": "upload_to_gcs()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 34,
+      "community_name": "ingest_draft_trades.py",
+      "file_type": "code",
+      "norm_label": "upload_to_gcs()",
+      "source_file": "active-stats-pull.py",
+      "source_location": "L147"
+    },
+    {
+      "id": "active_stats_pull_upload_to_supabase",
+      "label": "upload_to_supabase()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 34,
+      "community_name": "ingest_draft_trades.py",
+      "file_type": "code",
+      "norm_label": "upload_to_supabase()",
+      "source_file": "active-stats-pull.py",
+      "source_location": "L121"
+    },
+    {
       "id": "pipelines_ingest_draft_trades_fetch_sheet_csv",
       "label": "fetch_sheet_csv()",
       "_callable": true,
@@ -3450,42 +3714,6 @@
       "source_location": "L196"
     },
     {
-      "id": "src_components_commishactivebanner_commishactivebanner",
-      "label": "CommishActiveBanner()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 35,
-      "community_name": "react",
-      "file_type": "code",
-      "norm_label": "commishactivebanner()",
-      "source_file": "src/components/CommishActiveBanner.jsx",
-      "source_location": "L5"
-    },
-    {
-      "id": "src_components_commishcheckoutmodal_commishcheckoutmodal",
-      "label": "CommishCheckoutModal()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 35,
-      "community_name": "react",
-      "file_type": "code",
-      "norm_label": "commishcheckoutmodal()",
-      "source_file": "src/components/CommishCheckoutModal.jsx",
-      "source_location": "L5"
-    },
-    {
-      "id": "src_components_usernavwidget_usernavwidget",
-      "label": "UserNavWidget()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 35,
-      "community_name": "react",
-      "file_type": "code",
-      "norm_label": "usernavwidget()",
-      "source_file": "src/components/UserNavWidget.jsx",
-      "source_location": "L7"
-    },
-    {
       "id": "src_context_authcontext_authprovider",
       "label": "AuthProvider()",
       "_callable": true,
@@ -3520,18 +3748,6 @@
       "norm_label": "cleanupoauthhash()",
       "source_file": "src/context/AuthContext.jsx",
       "source_location": "L8"
-    },
-    {
-      "id": "src_context_useauth_useauth",
-      "label": "useAuth()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 35,
-      "community_name": "react",
-      "file_type": "code",
-      "norm_label": "useauth()",
-      "source_file": "src/context/useAuth.js",
-      "source_location": "L5"
     },
     {
       "id": "src_app_app",
@@ -3688,6 +3904,18 @@
       "norm_label": "summaryview()",
       "source_file": "src/views/SummaryView.jsx",
       "source_location": "L166"
+    },
+    {
+      "id": "src_views_weeklyview_weeklyview",
+      "label": "WeeklyView()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 36,
+      "community_name": "App.jsx",
+      "file_type": "code",
+      "norm_label": "weeklyview()",
+      "source_file": "src/views/WeeklyView.jsx",
+      "source_location": "L7"
     },
     {
       "id": "discord_bot_build_live_roster_map",
@@ -4038,40 +4266,52 @@
       "source_location": "L596"
     },
     {
-      "id": "pipelines_sync_player_news_fetch_player_news",
-      "label": "fetch_player_news()",
+      "id": "src_utils_replacementrecommender_evaluateplayercapital",
+      "label": "evaluatePlayerCapital()",
       "_callable": true,
       "_origin": "ast",
       "community": 40,
-      "community_name": "sync_player_news.py",
+      "community_name": "OwnerLandingView.jsx",
       "file_type": "code",
-      "norm_label": "fetch_player_news()",
-      "source_file": "pipelines/sync_player_news.py",
-      "source_location": "L50"
+      "norm_label": "evaluateplayercapital()",
+      "source_file": "src/utils/replacementRecommender.js",
+      "source_location": "L36"
     },
     {
-      "id": "pipelines_sync_player_news_load_player_pool",
-      "label": "load_player_pool()",
+      "id": "src_utils_scoring_calculaterotopoints",
+      "label": "calculateRotoPoints()",
       "_callable": true,
       "_origin": "ast",
       "community": 40,
-      "community_name": "sync_player_news.py",
+      "community_name": "OwnerLandingView.jsx",
       "file_type": "code",
-      "norm_label": "load_player_pool()",
-      "source_file": "pipelines/sync_player_news.py",
-      "source_location": "L30"
+      "norm_label": "calculaterotopoints()",
+      "source_file": "src/utils/scoring.js",
+      "source_location": "L357"
     },
     {
-      "id": "pipelines_sync_player_news_main",
-      "label": "main()",
+      "id": "src_views_ownerlandingview_getplayerpositions",
+      "label": "getPlayerPositions()",
       "_callable": true,
       "_origin": "ast",
       "community": 40,
-      "community_name": "sync_player_news.py",
+      "community_name": "OwnerLandingView.jsx",
       "file_type": "code",
-      "norm_label": "main()",
-      "source_file": "pipelines/sync_player_news.py",
-      "source_location": "L82"
+      "norm_label": "getplayerpositions()",
+      "source_file": "src/views/OwnerLandingView.jsx",
+      "source_location": "L70"
+    },
+    {
+      "id": "src_views_ownerlandingview_ownerlandingview",
+      "label": "OwnerLandingView()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 40,
+      "community_name": "OwnerLandingView.jsx",
+      "file_type": "code",
+      "norm_label": "ownerlandingview()",
+      "source_file": "src/views/OwnerLandingView.jsx",
+      "source_location": "L96"
     },
     {
       "id": "supabase_functions_fetch_espn_stats_index_fetchteamperiod",
@@ -4511,7 +4751,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 52,
-      "community_name": "TeamAvatar.jsx",
+      "community_name": "scoring.js",
       "file_type": "code",
       "norm_label": "boxscoremodal()",
       "source_file": "src/components/BoxScoreModal.jsx",
@@ -4523,7 +4763,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 52,
-      "community_name": "TeamAvatar.jsx",
+      "community_name": "scoring.js",
       "file_type": "code",
       "norm_label": "formatdisplayval()",
       "source_file": "src/components/BoxScoreModal.jsx",
@@ -4535,59 +4775,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 52,
-      "community_name": "TeamAvatar.jsx",
+      "community_name": "scoring.js",
       "file_type": "code",
       "norm_label": "matchupcard()",
       "source_file": "src/components/MatchupCard.jsx",
       "source_location": "L5"
-    },
-    {
-      "id": "src_components_teamavatar_teamavatar",
-      "label": "TeamAvatar()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 52,
-      "community_name": "TeamAvatar.jsx",
-      "file_type": "code",
-      "norm_label": "teamavatar()",
-      "source_file": "src/components/TeamAvatar.jsx",
-      "source_location": "L4"
-    },
-    {
-      "id": "src_views_playerownerstatsview_playerownerstatsview",
-      "label": "PlayerOwnerStatsView()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 52,
-      "community_name": "TeamAvatar.jsx",
-      "file_type": "code",
-      "norm_label": "playerownerstatsview()",
-      "source_file": "src/views/PlayerOwnerStatsView.jsx",
-      "source_location": "L17"
-    },
-    {
-      "id": "src_views_playerownerstatsview_round",
-      "label": "round()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 52,
-      "community_name": "TeamAvatar.jsx",
-      "file_type": "code",
-      "norm_label": "round()",
-      "source_file": "src/views/PlayerOwnerStatsView.jsx",
-      "source_location": "L11"
-    },
-    {
-      "id": "src_views_weeklyview_weeklyview",
-      "label": "WeeklyView()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 52,
-      "community_name": "TeamAvatar.jsx",
-      "file_type": "code",
-      "norm_label": "weeklyview()",
-      "source_file": "src/views/WeeklyView.jsx",
-      "source_location": "L7"
     },
     {
       "id": "src_utils_mlbteams_findmlbteam",
@@ -4734,76 +4926,52 @@
       "source_location": "L8"
     },
     {
-      "id": "scripts_inspect_db_cmd_budgets",
-      "label": "cmd_budgets()",
+      "id": "src_components_commishactivebanner_commishactivebanner",
+      "label": "CommishActiveBanner()",
       "_callable": true,
       "_origin": "ast",
       "community": 63,
-      "community_name": "inspect_db.py",
+      "community_name": "useAuth",
       "file_type": "code",
-      "norm_label": "cmd_budgets()",
-      "source_file": "scripts/inspect_db.py",
-      "source_location": "L89"
+      "norm_label": "commishactivebanner()",
+      "source_file": "src/components/CommishActiveBanner.jsx",
+      "source_location": "L5"
     },
     {
-      "id": "scripts_inspect_db_cmd_keepers",
-      "label": "cmd_keepers()",
+      "id": "src_components_commishcheckoutmodal_commishcheckoutmodal",
+      "label": "CommishCheckoutModal()",
       "_callable": true,
       "_origin": "ast",
       "community": 63,
-      "community_name": "inspect_db.py",
+      "community_name": "useAuth",
       "file_type": "code",
-      "norm_label": "cmd_keepers()",
-      "source_file": "scripts/inspect_db.py",
-      "source_location": "L44"
+      "norm_label": "commishcheckoutmodal()",
+      "source_file": "src/components/CommishCheckoutModal.jsx",
+      "source_location": "L5"
     },
     {
-      "id": "scripts_inspect_db_cmd_pool",
-      "label": "cmd_pool()",
+      "id": "src_components_usernavwidget_usernavwidget",
+      "label": "UserNavWidget()",
       "_callable": true,
       "_origin": "ast",
       "community": 63,
-      "community_name": "inspect_db.py",
+      "community_name": "useAuth",
       "file_type": "code",
-      "norm_label": "cmd_pool()",
-      "source_file": "scripts/inspect_db.py",
-      "source_location": "L156"
+      "norm_label": "usernavwidget()",
+      "source_file": "src/components/UserNavWidget.jsx",
+      "source_location": "L7"
     },
     {
-      "id": "scripts_inspect_db_cmd_roster",
-      "label": "cmd_roster()",
+      "id": "src_context_useauth_useauth",
+      "label": "useAuth()",
       "_callable": true,
       "_origin": "ast",
       "community": 63,
-      "community_name": "inspect_db.py",
+      "community_name": "useAuth",
       "file_type": "code",
-      "norm_label": "cmd_roster()",
-      "source_file": "scripts/inspect_db.py",
-      "source_location": "L117"
-    },
-    {
-      "id": "scripts_inspect_db_get_headers",
-      "label": "get_headers()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 63,
-      "community_name": "inspect_db.py",
-      "file_type": "code",
-      "norm_label": "get_headers()",
-      "source_file": "scripts/inspect_db.py",
-      "source_location": "L36"
-    },
-    {
-      "id": "scripts_inspect_db_main",
-      "label": "main()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 63,
-      "community_name": "inspect_db.py",
-      "file_type": "code",
-      "norm_label": "main()",
-      "source_file": "scripts/inspect_db.py",
-      "source_location": "L180"
+      "norm_label": "useauth()",
+      "source_file": "src/context/useAuth.js",
+      "source_location": "L5"
     },
     {
       "id": "src_views_transactionsview_grouptransactions",
@@ -4847,7 +5015,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 66,
-      "community_name": "KeeperCalculationsView.jsx",
+      "community_name": "KeepersBudgetsView.jsx",
       "file_type": "code",
       "norm_label": "calculatekeepercostfromrank()",
       "source_file": "src/views/KeepersBudgetsView.jsx",
@@ -4859,59 +5027,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 66,
-      "community_name": "KeeperCalculationsView.jsx",
+      "community_name": "KeepersBudgetsView.jsx",
       "file_type": "code",
       "norm_label": "keepersbudgetsview()",
       "source_file": "src/views/KeepersBudgetsView.jsx",
       "source_location": "L67"
-    },
-    {
-      "id": "src_components_playerhistorymodal_fetchplayeroverallstats",
-      "label": "fetchPlayerOverallStats()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 67,
-      "community_name": "aggregateStats",
-      "file_type": "code",
-      "norm_label": "fetchplayeroverallstats()",
-      "source_file": "src/components/PlayerHistoryModal.jsx",
-      "source_location": "L29"
-    },
-    {
-      "id": "src_components_playerhistorymodal_getteamdisplayname",
-      "label": "getTeamDisplayName()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 67,
-      "community_name": "aggregateStats",
-      "file_type": "code",
-      "norm_label": "getteamdisplayname()",
-      "source_file": "src/components/PlayerHistoryModal.jsx",
-      "source_location": "L8"
-    },
-    {
-      "id": "src_components_playerhistorymodal_playerhistorymodal",
-      "label": "PlayerHistoryModal()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 67,
-      "community_name": "aggregateStats",
-      "file_type": "code",
-      "norm_label": "playerhistorymodal()",
-      "source_file": "src/components/PlayerHistoryModal.jsx",
-      "source_location": "L152"
-    },
-    {
-      "id": "src_components_playerhistorymodal_playerhistorymodal_loadoverall",
-      "label": "loadOverall()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 67,
-      "community_name": "aggregateStats",
-      "file_type": "code",
-      "norm_label": "loadoverall()",
-      "source_file": "src/components/PlayerHistoryModal.jsx",
-      "source_location": "L277"
     },
     {
       "id": "src_schedule_getdatefromperiodid",
@@ -4919,7 +5039,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 67,
-      "community_name": "aggregateStats",
+      "community_name": "getDateFromPeriodId",
       "file_type": "code",
       "norm_label": "getdatefromperiodid()",
       "source_file": "src/schedule.js",
@@ -4931,23 +5051,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 67,
-      "community_name": "aggregateStats",
+      "community_name": "getDateFromPeriodId",
       "file_type": "code",
       "norm_label": "aggregatebenchstats()",
       "source_file": "src/utils/scoring.js",
       "source_location": "L328"
-    },
-    {
-      "id": "src_utils_scoring_aggregatestats",
-      "label": "aggregateStats()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 67,
-      "community_name": "aggregateStats",
-      "file_type": "code",
-      "norm_label": "aggregatestats()",
-      "source_file": "src/utils/scoring.js",
-      "source_location": "L159"
     },
     {
       "id": "src_utils_scoring_calculatebattervalue",
@@ -4955,7 +5063,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 67,
-      "community_name": "aggregateStats",
+      "community_name": "getDateFromPeriodId",
       "file_type": "code",
       "norm_label": "calculatebattervalue()",
       "source_file": "src/utils/scoring.js",
@@ -4967,7 +5075,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 67,
-      "community_name": "aggregateStats",
+      "community_name": "getDateFromPeriodId",
       "file_type": "code",
       "norm_label": "calculatepitchervalue()",
       "source_file": "src/utils/scoring.js",
@@ -4979,7 +5087,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 67,
-      "community_name": "aggregateStats",
+      "community_name": "getDateFromPeriodId",
       "file_type": "code",
       "norm_label": "benchstatsview()",
       "source_file": "src/views/BenchStatsView.jsx",
@@ -4991,7 +5099,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 67,
-      "community_name": "aggregateStats",
+      "community_name": "getDateFromPeriodId",
       "file_type": "code",
       "norm_label": "parserecordstats()",
       "source_file": "src/views/BenchStatsView.jsx",
@@ -5003,7 +5111,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 67,
-      "community_name": "aggregateStats",
+      "community_name": "getDateFromPeriodId",
       "file_type": "code",
       "norm_label": "cleanplayername()",
       "source_file": "src/views/OwnerDisparitiesView.jsx",
@@ -5015,7 +5123,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 67,
-      "community_name": "aggregateStats",
+      "community_name": "getDateFromPeriodId",
       "file_type": "code",
       "norm_label": "ownerdisparitiesview()",
       "source_file": "src/views/OwnerDisparitiesView.jsx",
@@ -5027,7 +5135,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 67,
-      "community_name": "aggregateStats",
+      "community_name": "getDateFromPeriodId",
       "file_type": "code",
       "norm_label": "loadmlbseason()",
       "source_file": "src/views/OwnerDisparitiesView.jsx",
@@ -5118,64 +5226,28 @@
       "source_location": "L27"
     },
     {
-      "id": "active_stats_pull_get_espn_data",
-      "label": "get_espn_data()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 69,
-      "community_name": "json",
-      "file_type": "code",
-      "norm_label": "get_espn_data()",
-      "source_file": "active-stats-pull.py",
-      "source_location": "L53"
-    },
-    {
-      "id": "active_stats_pull_upload_to_gcs",
-      "label": "upload_to_gcs()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 69,
-      "community_name": "json",
-      "file_type": "code",
-      "norm_label": "upload_to_gcs()",
-      "source_file": "active-stats-pull.py",
-      "source_location": "L147"
-    },
-    {
-      "id": "active_stats_pull_upload_to_supabase",
-      "label": "upload_to_supabase()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 69,
-      "community_name": "json",
-      "file_type": "code",
-      "norm_label": "upload_to_supabase()",
-      "source_file": "active-stats-pull.py",
-      "source_location": "L121"
-    },
-    {
       "id": "src_components_ownerdetailmodal_ownerdetailmodal",
       "label": "OwnerDetailModal()",
       "_callable": true,
       "_origin": "ast",
       "community": 7,
-      "community_name": "TeamsView.jsx",
+      "community_name": "aggregateStats",
       "file_type": "code",
       "norm_label": "ownerdetailmodal()",
       "source_file": "src/components/OwnerDetailModal.jsx",
       "source_location": "L5"
     },
     {
-      "id": "src_utils_scoring_calculaterotopoints",
-      "label": "calculateRotoPoints()",
+      "id": "src_utils_scoring_aggregatestats",
+      "label": "aggregateStats()",
       "_callable": true,
       "_origin": "ast",
       "community": 7,
-      "community_name": "TeamsView.jsx",
+      "community_name": "aggregateStats",
       "file_type": "code",
-      "norm_label": "calculaterotopoints()",
+      "norm_label": "aggregatestats()",
       "source_file": "src/utils/scoring.js",
-      "source_location": "L357"
+      "source_location": "L159"
     },
     {
       "id": "src_utils_scoring_getstatmeta",
@@ -5183,7 +5255,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 7,
-      "community_name": "TeamsView.jsx",
+      "community_name": "aggregateStats",
       "file_type": "code",
       "norm_label": "getstatmeta()",
       "source_file": "src/utils/scoring.js",
@@ -5195,7 +5267,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 7,
-      "community_name": "TeamsView.jsx",
+      "community_name": "aggregateStats",
       "file_type": "code",
       "norm_label": "parserecord()",
       "source_file": "src/views/PlayerImpactSimulatorView.jsx",
@@ -5207,59 +5279,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 7,
-      "community_name": "TeamsView.jsx",
+      "community_name": "aggregateStats",
       "file_type": "code",
       "norm_label": "playerimpactsimulatorview()",
       "source_file": "src/views/PlayerImpactSimulatorView.jsx",
       "source_location": "L69"
-    },
-    {
-      "id": "src_views_rotogapview_computedefendingbehindcushion",
-      "label": "computeDefendingBehindCushion()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 7,
-      "community_name": "TeamsView.jsx",
-      "file_type": "code",
-      "norm_label": "computedefendingbehindcushion()",
-      "source_file": "src/views/RotoGapView.jsx",
-      "source_location": "L105"
-    },
-    {
-      "id": "src_views_rotogapview_computetargetaheadgap",
-      "label": "computeTargetAheadGap()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 7,
-      "community_name": "TeamsView.jsx",
-      "file_type": "code",
-      "norm_label": "computetargetaheadgap()",
-      "source_file": "src/views/RotoGapView.jsx",
-      "source_location": "L28"
-    },
-    {
-      "id": "src_views_rotogapview_formatstatvalue",
-      "label": "formatStatValue()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 7,
-      "community_name": "TeamsView.jsx",
-      "file_type": "code",
-      "norm_label": "formatstatvalue()",
-      "source_file": "src/views/RotoGapView.jsx",
-      "source_location": "L21"
-    },
-    {
-      "id": "src_views_rotogapview_rotogapview",
-      "label": "RotoGapView()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 7,
-      "community_name": "TeamsView.jsx",
-      "file_type": "code",
-      "norm_label": "rotogapview()",
-      "source_file": "src/views/RotoGapView.jsx",
-      "source_location": "L182"
     },
     {
       "id": "src_views_teamsview_formatcelltooltip",
@@ -5267,7 +5291,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 7,
-      "community_name": "TeamsView.jsx",
+      "community_name": "aggregateStats",
       "file_type": "code",
       "norm_label": "formatcelltooltip()",
       "source_file": "src/views/TeamsView.jsx",
@@ -5279,7 +5303,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 7,
-      "community_name": "TeamsView.jsx",
+      "community_name": "aggregateStats",
       "file_type": "code",
       "norm_label": "formatstat()",
       "source_file": "src/views/TeamsView.jsx",
@@ -5291,7 +5315,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 7,
-      "community_name": "TeamsView.jsx",
+      "community_name": "aggregateStats",
       "file_type": "code",
       "norm_label": "sorticon()",
       "source_file": "src/views/TeamsView.jsx",
@@ -5303,7 +5327,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 7,
-      "community_name": "TeamsView.jsx",
+      "community_name": "aggregateStats",
       "file_type": "code",
       "norm_label": "teamsview()",
       "source_file": "src/views/TeamsView.jsx",
@@ -5609,6 +5633,28 @@
       "source_location": "L263"
     },
     {
+      "id": "src_supabaseclient_default_supabase_anon_key",
+      "label": "DEFAULT_SUPABASE_ANON_KEY",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "DraftRoomView.jsx",
+      "file_type": "code",
+      "norm_label": "default_supabase_anon_key",
+      "source_file": "src/supabaseClient.js",
+      "source_location": "L6"
+    },
+    {
+      "id": "src_supabaseclient_default_supabase_url",
+      "label": "DEFAULT_SUPABASE_URL",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "DraftRoomView.jsx",
+      "file_type": "code",
+      "norm_label": "default_supabase_url",
+      "source_file": "src/supabaseClient.js",
+      "source_location": "L5"
+    },
+    {
       "id": "src_utils_headshotutils",
       "label": "headshotUtils.js",
       "_origin": "ast",
@@ -5650,7 +5696,7 @@
       "file_type": "code",
       "norm_label": "default_owner_profiles",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2001"
+      "source_location": "L2106"
     },
     {
       "id": "src_views_draftroomview_draft_owners",
@@ -5694,7 +5740,7 @@
       "file_type": "code",
       "norm_label": "owner_avatars",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1987"
+      "source_location": "L2092"
     },
     {
       "id": "src_views_draftroomview_roster_slots",
@@ -5716,7 +5762,7 @@
       "file_type": "code",
       "norm_label": "styles",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L6268"
+      "source_location": "L6453"
     },
     {
       "id": "src_views_historicaldraftview",
@@ -5752,11 +5798,55 @@
       "source_location": "L6"
     },
     {
+      "id": "src_views_keepercalculationsview",
+      "label": "KeeperCalculationsView.jsx",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "DraftRoomView.jsx",
+      "file_type": "code",
+      "norm_label": "keepercalculationsview.jsx",
+      "source_file": "src/views/KeeperCalculationsView.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_views_keepercalculationsview_league_managers",
+      "label": "LEAGUE_MANAGERS",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "DraftRoomView.jsx",
+      "file_type": "code",
+      "norm_label": "league_managers",
+      "source_file": "src/views/KeeperCalculationsView.jsx",
+      "source_location": "L13"
+    },
+    {
+      "id": "src_views_keepercalculationsview_positions",
+      "label": "POSITIONS",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "DraftRoomView.jsx",
+      "file_type": "code",
+      "norm_label": "positions",
+      "source_file": "src/views/KeeperCalculationsView.jsx",
+      "source_location": "L12"
+    },
+    {
+      "id": "src_views_keepercalculationsview_price_tiers",
+      "label": "PRICE_TIERS",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "DraftRoomView.jsx",
+      "file_type": "code",
+      "norm_label": "price_tiers",
+      "source_file": "src/views/KeeperCalculationsView.jsx",
+      "source_location": "L14"
+    },
+    {
       "id": "transaction_scraper",
       "label": "transaction-scraper.py",
       "_origin": "ast",
       "community": 10,
-      "community_name": "transaction-scraper.py",
+      "community_name": "json",
       "file_type": "code",
       "norm_label": "transaction-scraper.py",
       "source_file": "transaction-scraper.py",
@@ -5767,7 +5857,7 @@
       "label": "transaction-scraper.py Scrapes add/drop/trade transactions from the ESPN\u2026",
       "_origin": "ast",
       "community": 10,
-      "community_name": "transaction-scraper.py",
+      "community_name": "json",
       "file_type": "rationale",
       "norm_label": "transaction-scraper.py scrapes add/drop/trade transactions from the espn...",
       "source_file": "transaction-scraper.py",
@@ -5778,7 +5868,7 @@
       "label": "Fetch executed trades by safely paging through the Recent Activity feed.",
       "_origin": "ast",
       "community": 10,
-      "community_name": "transaction-scraper.py",
+      "community_name": "json",
       "file_type": "rationale",
       "norm_label": "fetch executed trades by safely paging through the recent activity feed.",
       "source_file": "transaction-scraper.py",
@@ -5789,7 +5879,7 @@
       "label": "Parse only the fully executed system trades from the activity feed.",
       "_origin": "ast",
       "community": 10,
-      "community_name": "transaction-scraper.py",
+      "community_name": "json",
       "file_type": "rationale",
       "norm_label": "parse only the fully executed system trades from the activity feed.",
       "source_file": "transaction-scraper.py",
@@ -5800,7 +5890,7 @@
       "label": "Fetch all historical transactions (adds, drops, waivers, trades) across seasons\u2026",
       "_origin": "ast",
       "community": 10,
-      "community_name": "transaction-scraper.py",
+      "community_name": "json",
       "file_type": "rationale",
       "norm_label": "fetch all historical transactions (adds, drops, waivers, trades) across seasons...",
       "source_file": "transaction-scraper.py",
@@ -5811,7 +5901,7 @@
       "label": "Fetch MLB player names from ESPN and database fallback.",
       "_origin": "ast",
       "community": 10,
-      "community_name": "transaction-scraper.py",
+      "community_name": "json",
       "file_type": "rationale",
       "norm_label": "fetch mlb player names from espn and database fallback.",
       "source_file": "transaction-scraper.py",
@@ -5822,7 +5912,7 @@
       "label": "Fetch regular transactions (Adds/Drops) dynamically for the year.",
       "_origin": "ast",
       "community": 10,
-      "community_name": "transaction-scraper.py",
+      "community_name": "json",
       "file_type": "rationale",
       "norm_label": "fetch regular transactions (adds/drops) dynamically for the year.",
       "source_file": "transaction-scraper.py",
@@ -5833,7 +5923,7 @@
       "label": "Parse standard add, drop, waiver claim, and trade transactions from\u2026",
       "_origin": "ast",
       "community": 10,
-      "community_name": "transaction-scraper.py",
+      "community_name": "json",
       "file_type": "rationale",
       "norm_label": "parse standard add, drop, waiver claim, and trade transactions from...",
       "source_file": "transaction-scraper.py",
@@ -6571,17 +6661,6 @@
       "source_location": "L751"
     },
     {
-      "id": "src_utils_acquisition",
-      "label": "acquisition.js",
-      "_origin": "ast",
-      "community": 14,
-      "community_name": "FullRosterView.jsx",
-      "file_type": "code",
-      "norm_label": "acquisition.js",
-      "source_file": "src/utils/acquisition.js",
-      "source_location": "L1"
-    },
-    {
       "id": "src_views_fullrosterview",
       "label": "FullRosterView.jsx",
       "_origin": "ast",
@@ -6624,28 +6703,6 @@
       "norm_label": "supabaseclient.js",
       "source_file": "src/supabaseClient.js",
       "source_location": "L1"
-    },
-    {
-      "id": "src_supabaseclient_default_supabase_anon_key",
-      "label": "DEFAULT_SUPABASE_ANON_KEY",
-      "_origin": "ast",
-      "community": 15,
-      "community_name": "supabaseClient.js",
-      "file_type": "code",
-      "norm_label": "default_supabase_anon_key",
-      "source_file": "src/supabaseClient.js",
-      "source_location": "L6"
-    },
-    {
-      "id": "src_supabaseclient_default_supabase_url",
-      "label": "DEFAULT_SUPABASE_URL",
-      "_origin": "ast",
-      "community": 15,
-      "community_name": "supabaseClient.js",
-      "file_type": "code",
-      "norm_label": "default_supabase_url",
-      "source_file": "src/supabaseClient.js",
-      "source_location": "L5"
     },
     {
       "id": "src_supabaseclient_supabase",
@@ -6714,15 +6771,59 @@
       "source_location": "L7"
     },
     {
-      "id": "ref_supabase_supabase_js",
-      "label": "@supabase/supabase-js",
+      "id": "mlb_schedule_check",
+      "label": "mlb_schedule_check.py",
       "_origin": "ast",
-      "community": 15,
-      "community_name": "supabaseClient.js",
-      "file_type": "concept",
-      "norm_label": "@supabase/supabase-js",
-      "source_file": "package.json",
-      "source_location": "L17"
+      "community": 16,
+      "community_name": "update_live_pickem_standings.py",
+      "file_type": "code",
+      "norm_label": "mlb_schedule_check.py",
+      "source_file": "mlb_schedule_check.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "mlb_schedule_check_py_date",
+      "label": "date",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "update_live_pickem_standings.py",
+      "file_type": "code",
+      "norm_label": "date",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "namespace",
+      "label": "Namespace",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "update_live_pickem_standings.py",
+      "file_type": "code",
+      "norm_label": "namespace",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "pipelines_sync_player_news",
+      "label": "sync_player_news.py",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "update_live_pickem_standings.py",
+      "file_type": "code",
+      "norm_label": "sync_player_news.py",
+      "source_file": "pipelines/sync_player_news.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "pipelines_sync_player_news_py_any",
+      "label": "Any",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "update_live_pickem_standings.py",
+      "file_type": "code",
+      "norm_label": "any",
+      "source_file": "",
+      "source_location": ""
     },
     {
       "id": "pipelines_update_live_pickem_standings",
@@ -6745,6 +6846,105 @@
       "norm_label": "any",
       "source_file": "",
       "source_location": ""
+    },
+    {
+      "id": "scripts_inspect_db",
+      "label": "inspect_db.py",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "update_live_pickem_standings.py",
+      "file_type": "code",
+      "norm_label": "inspect_db.py",
+      "source_file": "scripts/inspect_db.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "mlb_schedule_check_rationale_1",
+      "label": "mlb_schedule_check.py \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 Drop-in module for active-stats-\u2026",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "update_live_pickem_standings.py",
+      "file_type": "rationale",
+      "norm_label": "mlb_schedule_check.py \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 drop-in module for active-stats-...",
+      "source_file": "mlb_schedule_check.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "mlb_schedule_check_rationale_100",
+      "label": "Print a human-readable summary of today's game status.",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "update_live_pickem_standings.py",
+      "file_type": "rationale",
+      "norm_label": "print a human-readable summary of today's game status.",
+      "source_file": "mlb_schedule_check.py",
+      "source_location": "L100"
+    },
+    {
+      "id": "mlb_schedule_check_rationale_131",
+      "label": "Decide whether the scraper should proceed. mode=\"force\" \u2014 always run regardless\u2026",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "update_live_pickem_standings.py",
+      "file_type": "rationale",
+      "norm_label": "decide whether the scraper should proceed. mode=\"force\" \u2014 always run regardless...",
+      "source_file": "mlb_schedule_check.py",
+      "source_location": "L131"
+    },
+    {
+      "id": "mlb_schedule_check_rationale_160",
+      "label": "Return the list of scoring periods worth re-scraping on this run. Focus on\u2026",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "update_live_pickem_standings.py",
+      "file_type": "rationale",
+      "norm_label": "return the list of scoring periods worth re-scraping on this run. focus on...",
+      "source_file": "mlb_schedule_check.py",
+      "source_location": "L160"
+    },
+    {
+      "id": "mlb_schedule_check_rationale_30",
+      "label": "Query the MLB schedule for today (or a specific date) and return a summary of\u2026",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "update_live_pickem_standings.py",
+      "file_type": "rationale",
+      "norm_label": "query the mlb schedule for today (or a specific date) and return a summary of...",
+      "source_file": "mlb_schedule_check.py",
+      "source_location": "L30"
+    },
+    {
+      "id": "pipelines_sync_player_news_rationale_2",
+      "label": "pipelines/sync_player_news.py Syncs live player news directly from the ESPN\u2026",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "update_live_pickem_standings.py",
+      "file_type": "rationale",
+      "norm_label": "pipelines/sync_player_news.py syncs live player news directly from the espn...",
+      "source_file": "pipelines/sync_player_news.py",
+      "source_location": "L2"
+    },
+    {
+      "id": "pipelines_sync_player_news_rationale_31",
+      "label": "Loads player pool from local file, Supabase, or GCS.",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "update_live_pickem_standings.py",
+      "file_type": "rationale",
+      "norm_label": "loads player pool from local file, supabase, or gcs.",
+      "source_file": "pipelines/sync_player_news.py",
+      "source_location": "L31"
+    },
+    {
+      "id": "pipelines_sync_player_news_rationale_51",
+      "label": "Fetches news feed for an individual ESPN player ID.",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "update_live_pickem_standings.py",
+      "file_type": "rationale",
+      "norm_label": "fetches news feed for an individual espn player id.",
+      "source_file": "pipelines/sync_player_news.py",
+      "source_location": "L51"
     },
     {
       "id": "pipelines_update_live_pickem_standings_rationale_1",
@@ -6800,6 +7000,17 @@
       "norm_label": "evaluate current 2026 picks against the live in-progress snapshot.",
       "source_file": "pipelines/update_live_pickem_standings.py",
       "source_location": "L394"
+    },
+    {
+      "id": "scripts_inspect_db_rationale_2",
+      "label": "scripts/inspect_db.py Safe, structured CLI inspector for Supabase database\u2026",
+      "_origin": "ast",
+      "community": 16,
+      "community_name": "update_live_pickem_standings.py",
+      "file_type": "rationale",
+      "norm_label": "scripts/inspect_db.py safe, structured cli inspector for supabase database...",
+      "source_file": "scripts/inspect_db.py",
+      "source_location": "L2"
     },
     {
       "id": "pipelines_generate_player_owner_stats",
@@ -6912,6 +7123,17 @@
       "source_location": "L1"
     },
     {
+      "id": "pipelines_update_league_context",
+      "label": "update_league_context.py",
+      "_origin": "ast",
+      "community": 18,
+      "community_name": "build_recap_context.py",
+      "file_type": "code",
+      "norm_label": "update_league_context.py",
+      "source_file": "pipelines/update_league_context.py",
+      "source_location": "L1"
+    },
+    {
       "id": "pipelines_build_recap_context_rationale_103",
       "label": "Build a mapping of clean player name -> { team_id, owner_name, full_name } from\u2026",
       "_origin": "ast",
@@ -7000,6 +7222,61 @@
       "source_location": "L73"
     },
     {
+      "id": "pipelines_update_league_context_rationale_148",
+      "label": "Computes live head-to-head category scores for Playoff Semi-Finals (Week 24)\u2026",
+      "_origin": "ast",
+      "community": 18,
+      "community_name": "build_recap_context.py",
+      "file_type": "rationale",
+      "norm_label": "computes live head-to-head category scores for playoff semi-finals (week 24)...",
+      "source_file": "pipelines/update_league_context.py",
+      "source_location": "L148"
+    },
+    {
+      "id": "pipelines_update_league_context_rationale_2",
+      "label": "pipelines/update_league_context.py Automatically refreshes\u2026",
+      "_origin": "ast",
+      "community": 18,
+      "community_name": "build_recap_context.py",
+      "file_type": "rationale",
+      "norm_label": "pipelines/update_league_context.py automatically refreshes...",
+      "source_file": "pipelines/update_league_context.py",
+      "source_location": "L2"
+    },
+    {
+      "id": "pipelines_update_league_context_rationale_203",
+      "label": "Pull current stats from Supabase and rebuild league_context.json and\u2026",
+      "_origin": "ast",
+      "community": 18,
+      "community_name": "build_recap_context.py",
+      "file_type": "rationale",
+      "norm_label": "pull current stats from supabase and rebuild league_context.json and...",
+      "source_file": "pipelines/update_league_context.py",
+      "source_location": "L203"
+    },
+    {
+      "id": "pipelines_update_league_context_rationale_450",
+      "label": "Dynamically appends or updates the live playoff section in LEAGUE_STORYLINES.md.",
+      "_origin": "ast",
+      "community": 18,
+      "community_name": "build_recap_context.py",
+      "file_type": "rationale",
+      "norm_label": "dynamically appends or updates the live playoff section in league_storylines.md.",
+      "source_file": "pipelines/update_league_context.py",
+      "source_location": "L450"
+    },
+    {
+      "id": "pipelines_update_league_context_rationale_487",
+      "label": "Returns True if current date falls within active regular season. Bypassed by\u2026",
+      "_origin": "ast",
+      "community": 18,
+      "community_name": "build_recap_context.py",
+      "file_type": "rationale",
+      "norm_label": "returns true if current date falls within active regular season. bypassed by...",
+      "source_file": "pipelines/update_league_context.py",
+      "source_location": "L487"
+    },
+    {
       "id": "src_views_draftcapitalview",
       "label": "DraftCapitalView.jsx",
       "_origin": "ast",
@@ -7075,61 +7352,6 @@
       "norm_label": "historical_keepers_by_year",
       "source_file": "src/utils/tradeGrading.js",
       "source_location": "L30"
-    },
-    {
-      "id": "src_views_ownerlandingview",
-      "label": "OwnerLandingView.jsx",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "test_trade_and_recommender.mjs",
-      "file_type": "code",
-      "norm_label": "ownerlandingview.jsx",
-      "source_file": "src/views/OwnerLandingView.jsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_views_ownerlandingview_default_pos_map",
-      "label": "DEFAULT_POS_MAP",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "test_trade_and_recommender.mjs",
-      "file_type": "code",
-      "norm_label": "default_pos_map",
-      "source_file": "src/views/OwnerLandingView.jsx",
-      "source_location": "L56"
-    },
-    {
-      "id": "src_views_ownerlandingview_league_managers",
-      "label": "LEAGUE_MANAGERS",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "test_trade_and_recommender.mjs",
-      "file_type": "code",
-      "norm_label": "league_managers",
-      "source_file": "src/views/OwnerLandingView.jsx",
-      "source_location": "L84"
-    },
-    {
-      "id": "src_views_ownerlandingview_mlb_teams",
-      "label": "MLB_TEAMS",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "test_trade_and_recommender.mjs",
-      "file_type": "code",
-      "norm_label": "mlb_teams",
-      "source_file": "src/views/OwnerLandingView.jsx",
-      "source_location": "L10"
-    },
-    {
-      "id": "src_views_ownerlandingview_slot_map",
-      "label": "SLOT_MAP",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "test_trade_and_recommender.mjs",
-      "file_type": "code",
-      "norm_label": "slot_map",
-      "source_file": "src/views/OwnerLandingView.jsx",
-      "source_location": "L44"
     },
     {
       "id": "src_views_traderepositoryview",
@@ -8183,70 +8405,114 @@
       "source_location": "L52"
     },
     {
-      "id": "pipelines_update_league_context",
-      "label": "update_league_context.py",
+      "id": "src_components_teamavatar",
+      "label": "TeamAvatar.jsx",
       "_origin": "ast",
       "community": 25,
-      "community_name": "update_league_context.py",
+      "community_name": "schedule.js",
       "file_type": "code",
-      "norm_label": "update_league_context.py",
-      "source_file": "pipelines/update_league_context.py",
+      "norm_label": "teamavatar.jsx",
+      "source_file": "src/components/TeamAvatar.jsx",
       "source_location": "L1"
     },
     {
-      "id": "pipelines_update_league_context_rationale_148",
-      "label": "Computes live head-to-head category scores for Playoff Semi-Finals (Week 24)\u2026",
+      "id": "src_schedule",
+      "label": "schedule.js",
       "_origin": "ast",
       "community": 25,
-      "community_name": "update_league_context.py",
-      "file_type": "rationale",
-      "norm_label": "computes live head-to-head category scores for playoff semi-finals (week 24)...",
-      "source_file": "pipelines/update_league_context.py",
-      "source_location": "L148"
+      "community_name": "schedule.js",
+      "file_type": "code",
+      "norm_label": "schedule.js",
+      "source_file": "src/schedule.js",
+      "source_location": "L1"
     },
     {
-      "id": "pipelines_update_league_context_rationale_2",
-      "label": "pipelines/update_league_context.py Automatically refreshes\u2026",
+      "id": "src_schedule_season_dates",
+      "label": "SEASON_DATES",
       "_origin": "ast",
       "community": 25,
-      "community_name": "update_league_context.py",
-      "file_type": "rationale",
-      "norm_label": "pipelines/update_league_context.py automatically refreshes...",
-      "source_file": "pipelines/update_league_context.py",
-      "source_location": "L2"
+      "community_name": "schedule.js",
+      "file_type": "code",
+      "norm_label": "season_dates",
+      "source_file": "src/schedule.js",
+      "source_location": "L17"
     },
     {
-      "id": "pipelines_update_league_context_rationale_203",
-      "label": "Pull current stats from Supabase and rebuild league_context.json and\u2026",
+      "id": "src_schedule_season_start_dates",
+      "label": "SEASON_START_DATES",
       "_origin": "ast",
       "community": 25,
-      "community_name": "update_league_context.py",
-      "file_type": "rationale",
-      "norm_label": "pull current stats from supabase and rebuild league_context.json and...",
-      "source_file": "pipelines/update_league_context.py",
-      "source_location": "L203"
+      "community_name": "schedule.js",
+      "file_type": "code",
+      "norm_label": "season_start_dates",
+      "source_file": "src/schedule.js",
+      "source_location": "L208"
     },
     {
-      "id": "pipelines_update_league_context_rationale_450",
-      "label": "Dynamically appends or updates the live playoff section in LEAGUE_STORYLINES.md.",
+      "id": "src_schedule_teams",
+      "label": "TEAMS",
       "_origin": "ast",
       "community": 25,
-      "community_name": "update_league_context.py",
-      "file_type": "rationale",
-      "norm_label": "dynamically appends or updates the live playoff section in league_storylines.md.",
-      "source_file": "pipelines/update_league_context.py",
-      "source_location": "L450"
+      "community_name": "schedule.js",
+      "file_type": "code",
+      "norm_label": "teams",
+      "source_file": "src/schedule.js",
+      "source_location": "L3"
     },
     {
-      "id": "pipelines_update_league_context_rationale_487",
-      "label": "Returns True if current date falls within active regular season. Bypassed by\u2026",
+      "id": "src_views_playerownerstatsview",
+      "label": "PlayerOwnerStatsView.jsx",
       "_origin": "ast",
       "community": 25,
-      "community_name": "update_league_context.py",
-      "file_type": "rationale",
-      "norm_label": "returns true if current date falls within active regular season. bypassed by...",
-      "source_file": "pipelines/update_league_context.py",
-      "source_location": "L487"
+      "community_name": "schedule.js",
+      "file_type": "code",
+      "norm_label": "playerownerstatsview.jsx",
+      "source_file": "src/views/PlayerOwnerStatsView.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_views_playerownerstatsview_positions",
+      "label": "POSITIONS",
+      "_origin": "ast",
+      "community": 25,
+      "community_name": "schedule.js",
+      "file_type": "code",
+      "norm_label": "positions",
+      "source_file": "src/views/PlayerOwnerStatsView.jsx",
+      "source_location": "L8"
+    },
+    {
+      "id": "src_views_playerownerstatsview_seasons",
+      "label": "SEASONS",
+      "_origin": "ast",
+      "community": 25,
+      "community_name": "schedule.js",
+      "file_type": "code",
+      "norm_label": "seasons",
+      "source_file": "src/views/PlayerOwnerStatsView.jsx",
+      "source_location": "L7"
+    },
+    {
+      "id": "src_views_rotogapview",
+      "label": "RotoGapView.jsx",
+      "_origin": "ast",
+      "community": 25,
+      "community_name": "schedule.js",
+      "file_type": "code",
+      "norm_label": "rotogapview.jsx",
+      "source_file": "src/views/RotoGapView.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_views_rotogapview_roto_categories",
+      "label": "ROTO_CATEGORIES",
+      "_origin": "ast",
+      "community": 25,
+      "community_name": "schedule.js",
+      "file_type": "code",
+      "norm_label": "roto_categories",
+      "source_file": "src/views/RotoGapView.jsx",
+      "source_location": "L7"
     },
     {
       "id": "command",
@@ -8352,7 +8618,7 @@
       "label": "historicalFranchiseData.js",
       "_origin": "ast",
       "community": 28,
-      "community_name": "TEAMS",
+      "community_name": "ProgressionView.jsx",
       "file_type": "code",
       "norm_label": "historicalfranchisedata.js",
       "source_file": "src/data/historicalFranchiseData.js",
@@ -8363,29 +8629,18 @@
       "label": "CANONICAL_OWNERS",
       "_origin": "ast",
       "community": 28,
-      "community_name": "TEAMS",
+      "community_name": "ProgressionView.jsx",
       "file_type": "code",
       "norm_label": "canonical_owners",
       "source_file": "src/data/historicalFranchiseData.js",
       "source_location": "L5"
     },
     {
-      "id": "src_schedule_teams",
-      "label": "TEAMS",
-      "_origin": "ast",
-      "community": 28,
-      "community_name": "TEAMS",
-      "file_type": "code",
-      "norm_label": "teams",
-      "source_file": "src/schedule.js",
-      "source_location": "L3"
-    },
-    {
       "id": "src_views_progressionview",
       "label": "ProgressionView.jsx",
       "_origin": "ast",
       "community": 28,
-      "community_name": "TEAMS",
+      "community_name": "ProgressionView.jsx",
       "file_type": "code",
       "norm_label": "progressionview.jsx",
       "source_file": "src/views/ProgressionView.jsx",
@@ -8396,7 +8651,7 @@
       "label": "ALL_TIME_METRICS",
       "_origin": "ast",
       "community": 28,
-      "community_name": "TEAMS",
+      "community_name": "ProgressionView.jsx",
       "file_type": "code",
       "norm_label": "all_time_metrics",
       "source_file": "src/views/ProgressionView.jsx",
@@ -8407,7 +8662,7 @@
       "label": "STAT_OPTIONS",
       "_origin": "ast",
       "community": 28,
-      "community_name": "TEAMS",
+      "community_name": "ProgressionView.jsx",
       "file_type": "code",
       "norm_label": "stat_options",
       "source_file": "src/views/ProgressionView.jsx",
@@ -8418,7 +8673,7 @@
       "label": "TEAM_COLORS",
       "_origin": "ast",
       "community": 28,
-      "community_name": "TEAMS",
+      "community_name": "ProgressionView.jsx",
       "file_type": "code",
       "norm_label": "team_colors",
       "source_file": "src/views/ProgressionView.jsx",
@@ -8623,17 +8878,6 @@
       "source_location": "L8"
     },
     {
-      "id": "src_utils_scoring_lineup_slots",
-      "label": "LINEUP_SLOTS",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "LeagueHistoryView.jsx",
-      "file_type": "code",
-      "norm_label": "lineup_slots",
-      "source_file": "src/utils/scoring.js",
-      "source_location": "L3"
-    },
-    {
       "id": "src_views_highlightsview",
       "label": "HighlightsView.jsx",
       "_origin": "ast",
@@ -8788,81 +9032,37 @@
       "source_location": "L1771"
     },
     {
-      "id": "mlb_schedule_check",
-      "label": "mlb_schedule_check.py",
+      "id": "src_components_playerhistorymodal",
+      "label": "PlayerHistoryModal.jsx",
       "_origin": "ast",
       "community": 31,
-      "community_name": "sys",
+      "community_name": "PlayerHistoryModal.jsx",
       "file_type": "code",
-      "norm_label": "mlb_schedule_check.py",
-      "source_file": "mlb_schedule_check.py",
+      "norm_label": "playerhistorymodal.jsx",
+      "source_file": "src/components/PlayerHistoryModal.jsx",
       "source_location": "L1"
     },
     {
-      "id": "mlb_schedule_check_py_date",
-      "label": "date",
+      "id": "src_components_playerhistorymodal_overallstatscache",
+      "label": "overallStatsCache",
       "_origin": "ast",
       "community": 31,
-      "community_name": "sys",
+      "community_name": "PlayerHistoryModal.jsx",
       "file_type": "code",
-      "norm_label": "date",
-      "source_file": "",
-      "source_location": ""
+      "norm_label": "overallstatscache",
+      "source_file": "src/components/PlayerHistoryModal.jsx",
+      "source_location": "L27"
     },
     {
-      "id": "mlb_schedule_check_rationale_1",
-      "label": "mlb_schedule_check.py \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 Drop-in module for active-stats-\u2026",
+      "id": "src_utils_acquisition",
+      "label": "acquisition.js",
       "_origin": "ast",
       "community": 31,
-      "community_name": "sys",
-      "file_type": "rationale",
-      "norm_label": "mlb_schedule_check.py \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 drop-in module for active-stats-...",
-      "source_file": "mlb_schedule_check.py",
+      "community_name": "PlayerHistoryModal.jsx",
+      "file_type": "code",
+      "norm_label": "acquisition.js",
+      "source_file": "src/utils/acquisition.js",
       "source_location": "L1"
-    },
-    {
-      "id": "mlb_schedule_check_rationale_100",
-      "label": "Print a human-readable summary of today's game status.",
-      "_origin": "ast",
-      "community": 31,
-      "community_name": "sys",
-      "file_type": "rationale",
-      "norm_label": "print a human-readable summary of today's game status.",
-      "source_file": "mlb_schedule_check.py",
-      "source_location": "L100"
-    },
-    {
-      "id": "mlb_schedule_check_rationale_131",
-      "label": "Decide whether the scraper should proceed. mode=\"force\" \u2014 always run regardless\u2026",
-      "_origin": "ast",
-      "community": 31,
-      "community_name": "sys",
-      "file_type": "rationale",
-      "norm_label": "decide whether the scraper should proceed. mode=\"force\" \u2014 always run regardless...",
-      "source_file": "mlb_schedule_check.py",
-      "source_location": "L131"
-    },
-    {
-      "id": "mlb_schedule_check_rationale_160",
-      "label": "Return the list of scoring periods worth re-scraping on this run. Focus on\u2026",
-      "_origin": "ast",
-      "community": 31,
-      "community_name": "sys",
-      "file_type": "rationale",
-      "norm_label": "return the list of scoring periods worth re-scraping on this run. focus on...",
-      "source_file": "mlb_schedule_check.py",
-      "source_location": "L160"
-    },
-    {
-      "id": "mlb_schedule_check_rationale_30",
-      "label": "Query the MLB schedule for today (or a specific date) and return a summary of\u2026",
-      "_origin": "ast",
-      "community": 31,
-      "community_name": "sys",
-      "file_type": "rationale",
-      "norm_label": "query the mlb schedule for today (or a specific date) and return a summary of...",
-      "source_file": "mlb_schedule_check.py",
-      "source_location": "L30"
     },
     {
       "id": "check_schema",
@@ -8942,6 +9142,17 @@
       "source_location": "L2"
     },
     {
+      "id": "active_stats_pull",
+      "label": "active-stats-pull.py",
+      "_origin": "ast",
+      "community": 34,
+      "community_name": "ingest_draft_trades.py",
+      "file_type": "code",
+      "norm_label": "active-stats-pull.py",
+      "source_file": "active-stats-pull.py",
+      "source_location": "L1"
+    },
+    {
       "id": "pipelines_ingest_draft_trades",
       "label": "ingest_draft_trades.py",
       "_origin": "ast",
@@ -8986,39 +9197,6 @@
       "source_location": "L79"
     },
     {
-      "id": "src_components_commishactivebanner",
-      "label": "CommishActiveBanner.jsx",
-      "_origin": "ast",
-      "community": 35,
-      "community_name": "react",
-      "file_type": "code",
-      "norm_label": "commishactivebanner.jsx",
-      "source_file": "src/components/CommishActiveBanner.jsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_components_commishcheckoutmodal",
-      "label": "CommishCheckoutModal.jsx",
-      "_origin": "ast",
-      "community": 35,
-      "community_name": "react",
-      "file_type": "code",
-      "norm_label": "commishcheckoutmodal.jsx",
-      "source_file": "src/components/CommishCheckoutModal.jsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_components_usernavwidget",
-      "label": "UserNavWidget.jsx",
-      "_origin": "ast",
-      "community": 35,
-      "community_name": "react",
-      "file_type": "code",
-      "norm_label": "usernavwidget.jsx",
-      "source_file": "src/components/UserNavWidget.jsx",
-      "source_location": "L1"
-    },
-    {
       "id": "src_context_authcontext",
       "label": "AuthContext.jsx",
       "_origin": "ast",
@@ -9061,17 +9239,6 @@
       "norm_label": "authcontext",
       "source_file": "src/context/authContextDef.js",
       "source_location": "L4"
-    },
-    {
-      "id": "src_context_useauth",
-      "label": "useAuth.js",
-      "_origin": "ast",
-      "community": 35,
-      "community_name": "react",
-      "file_type": "code",
-      "norm_label": "useauth.js",
-      "source_file": "src/context/useAuth.js",
-      "source_location": "L1"
     },
     {
       "id": "src_main",
@@ -9149,39 +9316,6 @@
       "norm_label": "view_to_hash",
       "source_file": "src/App.jsx",
       "source_location": "L38"
-    },
-    {
-      "id": "src_schedule",
-      "label": "schedule.js",
-      "_origin": "ast",
-      "community": 36,
-      "community_name": "App.jsx",
-      "file_type": "code",
-      "norm_label": "schedule.js",
-      "source_file": "src/schedule.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_schedule_season_dates",
-      "label": "SEASON_DATES",
-      "_origin": "ast",
-      "community": 36,
-      "community_name": "App.jsx",
-      "file_type": "code",
-      "norm_label": "season_dates",
-      "source_file": "src/schedule.js",
-      "source_location": "L17"
-    },
-    {
-      "id": "src_schedule_season_start_dates",
-      "label": "SEASON_START_DATES",
-      "_origin": "ast",
-      "community": 36,
-      "community_name": "App.jsx",
-      "file_type": "code",
-      "norm_label": "season_start_dates",
-      "source_file": "src/schedule.js",
-      "source_location": "L208"
     },
     {
       "id": "src_utils_standings",
@@ -9807,59 +9941,59 @@
       "source_location": "L42"
     },
     {
-      "id": "pipelines_sync_player_news",
-      "label": "sync_player_news.py",
+      "id": "src_views_ownerlandingview",
+      "label": "OwnerLandingView.jsx",
       "_origin": "ast",
       "community": 40,
-      "community_name": "sync_player_news.py",
+      "community_name": "OwnerLandingView.jsx",
       "file_type": "code",
-      "norm_label": "sync_player_news.py",
-      "source_file": "pipelines/sync_player_news.py",
+      "norm_label": "ownerlandingview.jsx",
+      "source_file": "src/views/OwnerLandingView.jsx",
       "source_location": "L1"
     },
     {
-      "id": "pipelines_sync_player_news_py_any",
-      "label": "Any",
+      "id": "src_views_ownerlandingview_default_pos_map",
+      "label": "DEFAULT_POS_MAP",
       "_origin": "ast",
       "community": 40,
-      "community_name": "sync_player_news.py",
+      "community_name": "OwnerLandingView.jsx",
       "file_type": "code",
-      "norm_label": "any",
-      "source_file": "",
-      "source_location": ""
+      "norm_label": "default_pos_map",
+      "source_file": "src/views/OwnerLandingView.jsx",
+      "source_location": "L56"
     },
     {
-      "id": "pipelines_sync_player_news_rationale_2",
-      "label": "pipelines/sync_player_news.py Syncs live player news directly from the ESPN\u2026",
+      "id": "src_views_ownerlandingview_league_managers",
+      "label": "LEAGUE_MANAGERS",
       "_origin": "ast",
       "community": 40,
-      "community_name": "sync_player_news.py",
-      "file_type": "rationale",
-      "norm_label": "pipelines/sync_player_news.py syncs live player news directly from the espn...",
-      "source_file": "pipelines/sync_player_news.py",
-      "source_location": "L2"
+      "community_name": "OwnerLandingView.jsx",
+      "file_type": "code",
+      "norm_label": "league_managers",
+      "source_file": "src/views/OwnerLandingView.jsx",
+      "source_location": "L84"
     },
     {
-      "id": "pipelines_sync_player_news_rationale_31",
-      "label": "Loads player pool from local file, Supabase, or GCS.",
+      "id": "src_views_ownerlandingview_mlb_teams",
+      "label": "MLB_TEAMS",
       "_origin": "ast",
       "community": 40,
-      "community_name": "sync_player_news.py",
-      "file_type": "rationale",
-      "norm_label": "loads player pool from local file, supabase, or gcs.",
-      "source_file": "pipelines/sync_player_news.py",
-      "source_location": "L31"
+      "community_name": "OwnerLandingView.jsx",
+      "file_type": "code",
+      "norm_label": "mlb_teams",
+      "source_file": "src/views/OwnerLandingView.jsx",
+      "source_location": "L10"
     },
     {
-      "id": "pipelines_sync_player_news_rationale_51",
-      "label": "Fetches news feed for an individual ESPN player ID.",
+      "id": "src_views_ownerlandingview_slot_map",
+      "label": "SLOT_MAP",
       "_origin": "ast",
       "community": 40,
-      "community_name": "sync_player_news.py",
-      "file_type": "rationale",
-      "norm_label": "fetches news feed for an individual espn player id.",
-      "source_file": "pipelines/sync_player_news.py",
-      "source_location": "L51"
+      "community_name": "OwnerLandingView.jsx",
+      "file_type": "code",
+      "norm_label": "slot_map",
+      "source_file": "src/views/OwnerLandingView.jsx",
+      "source_location": "L44"
     },
     {
       "id": "railway",
@@ -10513,7 +10647,7 @@
       "label": "BoxScoreModal.jsx",
       "_origin": "ast",
       "community": 52,
-      "community_name": "TeamAvatar.jsx",
+      "community_name": "scoring.js",
       "file_type": "code",
       "norm_label": "boxscoremodal.jsx",
       "source_file": "src/components/BoxScoreModal.jsx",
@@ -10524,7 +10658,7 @@
       "label": "BATTER_CATS",
       "_origin": "ast",
       "community": 52,
-      "community_name": "TeamAvatar.jsx",
+      "community_name": "scoring.js",
       "file_type": "code",
       "norm_label": "batter_cats",
       "source_file": "src/components/BoxScoreModal.jsx",
@@ -10535,7 +10669,7 @@
       "label": "PITCHER_CATS",
       "_origin": "ast",
       "community": 52,
-      "community_name": "TeamAvatar.jsx",
+      "community_name": "scoring.js",
       "file_type": "code",
       "norm_label": "pitcher_cats",
       "source_file": "src/components/BoxScoreModal.jsx",
@@ -10546,21 +10680,21 @@
       "label": "MatchupCard.jsx",
       "_origin": "ast",
       "community": 52,
-      "community_name": "TeamAvatar.jsx",
+      "community_name": "scoring.js",
       "file_type": "code",
       "norm_label": "matchupcard.jsx",
       "source_file": "src/components/MatchupCard.jsx",
       "source_location": "L1"
     },
     {
-      "id": "src_components_teamavatar",
-      "label": "TeamAvatar.jsx",
+      "id": "src_utils_scoring",
+      "label": "scoring.js",
       "_origin": "ast",
       "community": 52,
-      "community_name": "TeamAvatar.jsx",
+      "community_name": "scoring.js",
       "file_type": "code",
-      "norm_label": "teamavatar.jsx",
-      "source_file": "src/components/TeamAvatar.jsx",
+      "norm_label": "scoring.js",
+      "source_file": "src/utils/scoring.js",
       "source_location": "L1"
     },
     {
@@ -10568,51 +10702,62 @@
       "label": "CATEGORIES",
       "_origin": "ast",
       "community": 52,
-      "community_name": "TeamAvatar.jsx",
+      "community_name": "scoring.js",
       "file_type": "code",
       "norm_label": "categories",
       "source_file": "src/utils/scoring.js",
       "source_location": "L27"
     },
     {
-      "id": "src_views_playerownerstatsview",
-      "label": "PlayerOwnerStatsView.jsx",
+      "id": "src_utils_scoring_espn_stat_ids",
+      "label": "ESPN_STAT_IDS",
       "_origin": "ast",
       "community": 52,
-      "community_name": "TeamAvatar.jsx",
+      "community_name": "scoring.js",
       "file_type": "code",
-      "norm_label": "playerownerstatsview.jsx",
-      "source_file": "src/views/PlayerOwnerStatsView.jsx",
-      "source_location": "L1"
+      "norm_label": "espn_stat_ids",
+      "source_file": "src/utils/scoring.js",
+      "source_location": "L76"
     },
     {
-      "id": "src_views_playerownerstatsview_positions",
-      "label": "POSITIONS",
+      "id": "src_utils_scoring_lineup_slots",
+      "label": "LINEUP_SLOTS",
       "_origin": "ast",
       "community": 52,
-      "community_name": "TeamAvatar.jsx",
+      "community_name": "scoring.js",
       "file_type": "code",
-      "norm_label": "positions",
-      "source_file": "src/views/PlayerOwnerStatsView.jsx",
-      "source_location": "L8"
+      "norm_label": "lineup_slots",
+      "source_file": "src/utils/scoring.js",
+      "source_location": "L3"
     },
     {
-      "id": "src_views_playerownerstatsview_seasons",
-      "label": "SEASONS",
+      "id": "src_utils_scoring_minutiae_stats",
+      "label": "MINUTIAE_STATS",
       "_origin": "ast",
       "community": 52,
-      "community_name": "TeamAvatar.jsx",
+      "community_name": "scoring.js",
       "file_type": "code",
-      "norm_label": "seasons",
-      "source_file": "src/views/PlayerOwnerStatsView.jsx",
-      "source_location": "L7"
+      "norm_label": "minutiae_stats",
+      "source_file": "src/utils/scoring.js",
+      "source_location": "L34"
+    },
+    {
+      "id": "src_utils_scoring_scoring_cats",
+      "label": "SCORING_CATS",
+      "_origin": "ast",
+      "community": 52,
+      "community_name": "scoring.js",
+      "file_type": "code",
+      "norm_label": "scoring_cats",
+      "source_file": "src/utils/scoring.js",
+      "source_location": "L11"
     },
     {
       "id": "src_views_weeklyview",
       "label": "WeeklyView.jsx",
       "_origin": "ast",
       "community": 52,
-      "community_name": "TeamAvatar.jsx",
+      "community_name": "scoring.js",
       "file_type": "code",
       "norm_label": "weeklyview.jsx",
       "source_file": "src/views/WeeklyView.jsx",
@@ -11097,37 +11242,48 @@
       "source_location": "L6"
     },
     {
-      "id": "namespace",
-      "label": "Namespace",
+      "id": "src_components_commishactivebanner",
+      "label": "CommishActiveBanner.jsx",
       "_origin": "ast",
       "community": 63,
-      "community_name": "inspect_db.py",
+      "community_name": "useAuth",
       "file_type": "code",
-      "norm_label": "namespace",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "scripts_inspect_db",
-      "label": "inspect_db.py",
-      "_origin": "ast",
-      "community": 63,
-      "community_name": "inspect_db.py",
-      "file_type": "code",
-      "norm_label": "inspect_db.py",
-      "source_file": "scripts/inspect_db.py",
+      "norm_label": "commishactivebanner.jsx",
+      "source_file": "src/components/CommishActiveBanner.jsx",
       "source_location": "L1"
     },
     {
-      "id": "scripts_inspect_db_rationale_2",
-      "label": "scripts/inspect_db.py Safe, structured CLI inspector for Supabase database\u2026",
+      "id": "src_components_commishcheckoutmodal",
+      "label": "CommishCheckoutModal.jsx",
       "_origin": "ast",
       "community": 63,
-      "community_name": "inspect_db.py",
-      "file_type": "rationale",
-      "norm_label": "scripts/inspect_db.py safe, structured cli inspector for supabase database...",
-      "source_file": "scripts/inspect_db.py",
-      "source_location": "L2"
+      "community_name": "useAuth",
+      "file_type": "code",
+      "norm_label": "commishcheckoutmodal.jsx",
+      "source_file": "src/components/CommishCheckoutModal.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_components_usernavwidget",
+      "label": "UserNavWidget.jsx",
+      "_origin": "ast",
+      "community": 63,
+      "community_name": "useAuth",
+      "file_type": "code",
+      "norm_label": "usernavwidget.jsx",
+      "source_file": "src/components/UserNavWidget.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_context_useauth",
+      "label": "useAuth.js",
+      "_origin": "ast",
+      "community": 63,
+      "community_name": "useAuth",
+      "file_type": "code",
+      "norm_label": "useauth.js",
+      "source_file": "src/context/useAuth.js",
+      "source_location": "L1"
     },
     {
       "id": "src_views_transactionsview",
@@ -11296,55 +11452,11 @@
       "source_location": "L9"
     },
     {
-      "id": "src_views_keepercalculationsview",
-      "label": "KeeperCalculationsView.jsx",
-      "_origin": "ast",
-      "community": 66,
-      "community_name": "KeeperCalculationsView.jsx",
-      "file_type": "code",
-      "norm_label": "keepercalculationsview.jsx",
-      "source_file": "src/views/KeeperCalculationsView.jsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_views_keepercalculationsview_league_managers",
-      "label": "LEAGUE_MANAGERS",
-      "_origin": "ast",
-      "community": 66,
-      "community_name": "KeeperCalculationsView.jsx",
-      "file_type": "code",
-      "norm_label": "league_managers",
-      "source_file": "src/views/KeeperCalculationsView.jsx",
-      "source_location": "L13"
-    },
-    {
-      "id": "src_views_keepercalculationsview_positions",
-      "label": "POSITIONS",
-      "_origin": "ast",
-      "community": 66,
-      "community_name": "KeeperCalculationsView.jsx",
-      "file_type": "code",
-      "norm_label": "positions",
-      "source_file": "src/views/KeeperCalculationsView.jsx",
-      "source_location": "L12"
-    },
-    {
-      "id": "src_views_keepercalculationsview_price_tiers",
-      "label": "PRICE_TIERS",
-      "_origin": "ast",
-      "community": 66,
-      "community_name": "KeeperCalculationsView.jsx",
-      "file_type": "code",
-      "norm_label": "price_tiers",
-      "source_file": "src/views/KeeperCalculationsView.jsx",
-      "source_location": "L14"
-    },
-    {
       "id": "src_views_keepersbudgetsview",
       "label": "KeepersBudgetsView.jsx",
       "_origin": "ast",
       "community": 66,
-      "community_name": "KeeperCalculationsView.jsx",
+      "community_name": "KeepersBudgetsView.jsx",
       "file_type": "code",
       "norm_label": "keepersbudgetsview.jsx",
       "source_file": "src/views/KeepersBudgetsView.jsx",
@@ -11355,73 +11467,18 @@
       "label": "TEAM_OWNERS",
       "_origin": "ast",
       "community": 66,
-      "community_name": "KeeperCalculationsView.jsx",
+      "community_name": "KeepersBudgetsView.jsx",
       "file_type": "code",
       "norm_label": "team_owners",
       "source_file": "src/views/KeepersBudgetsView.jsx",
       "source_location": "L13"
     },
     {
-      "id": "src_components_playerhistorymodal",
-      "label": "PlayerHistoryModal.jsx",
-      "_origin": "ast",
-      "community": 67,
-      "community_name": "aggregateStats",
-      "file_type": "code",
-      "norm_label": "playerhistorymodal.jsx",
-      "source_file": "src/components/PlayerHistoryModal.jsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_components_playerhistorymodal_overallstatscache",
-      "label": "overallStatsCache",
-      "_origin": "ast",
-      "community": 67,
-      "community_name": "aggregateStats",
-      "file_type": "code",
-      "norm_label": "overallstatscache",
-      "source_file": "src/components/PlayerHistoryModal.jsx",
-      "source_location": "L27"
-    },
-    {
-      "id": "src_utils_scoring",
-      "label": "scoring.js",
-      "_origin": "ast",
-      "community": 67,
-      "community_name": "aggregateStats",
-      "file_type": "code",
-      "norm_label": "scoring.js",
-      "source_file": "src/utils/scoring.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_utils_scoring_espn_stat_ids",
-      "label": "ESPN_STAT_IDS",
-      "_origin": "ast",
-      "community": 67,
-      "community_name": "aggregateStats",
-      "file_type": "code",
-      "norm_label": "espn_stat_ids",
-      "source_file": "src/utils/scoring.js",
-      "source_location": "L76"
-    },
-    {
-      "id": "src_utils_scoring_minutiae_stats",
-      "label": "MINUTIAE_STATS",
-      "_origin": "ast",
-      "community": 67,
-      "community_name": "aggregateStats",
-      "file_type": "code",
-      "norm_label": "minutiae_stats",
-      "source_file": "src/utils/scoring.js",
-      "source_location": "L34"
-    },
-    {
       "id": "src_views_benchstatsview",
       "label": "BenchStatsView.jsx",
       "_origin": "ast",
       "community": 67,
-      "community_name": "aggregateStats",
+      "community_name": "getDateFromPeriodId",
       "file_type": "code",
       "norm_label": "benchstatsview.jsx",
       "source_file": "src/views/BenchStatsView.jsx",
@@ -11432,7 +11489,7 @@
       "label": "ESPN_STAT_NAMES",
       "_origin": "ast",
       "community": 67,
-      "community_name": "aggregateStats",
+      "community_name": "getDateFromPeriodId",
       "file_type": "code",
       "norm_label": "espn_stat_names",
       "source_file": "src/views/BenchStatsView.jsx",
@@ -11443,7 +11500,7 @@
       "label": "OwnerDisparitiesView.jsx",
       "_origin": "ast",
       "community": 67,
-      "community_name": "aggregateStats",
+      "community_name": "getDateFromPeriodId",
       "file_type": "code",
       "norm_label": "ownerdisparitiesview.jsx",
       "source_file": "src/views/OwnerDisparitiesView.jsx",
@@ -11454,7 +11511,7 @@
       "label": "mlbSeasonDataCache",
       "_origin": "ast",
       "community": 67,
-      "community_name": "aggregateStats",
+      "community_name": "getDateFromPeriodId",
       "file_type": "code",
       "norm_label": "mlbseasondatacache",
       "source_file": "src/views/OwnerDisparitiesView.jsx",
@@ -11549,44 +11606,88 @@
       "source_location": "L56"
     },
     {
-      "id": "active_stats_pull",
-      "label": "active-stats-pull.py",
+      "id": "eslint_config",
+      "label": "eslint.config.js",
       "_origin": "ast",
       "community": 69,
-      "community_name": "json",
+      "community_name": "eslint.config.js",
       "file_type": "code",
-      "norm_label": "active-stats-pull.py",
-      "source_file": "active-stats-pull.py",
+      "norm_label": "eslint.config.js",
+      "source_file": "eslint.config.js",
       "source_location": "L1"
+    },
+    {
+      "id": "ref_eslint",
+      "label": "eslint",
+      "_origin": "ast",
+      "community": 69,
+      "community_name": "eslint.config.js",
+      "file_type": "concept",
+      "norm_label": "eslint",
+      "source_file": "package.json",
+      "source_location": "L30"
+    },
+    {
+      "id": "ref_eslint_js",
+      "label": "@eslint/js",
+      "_origin": "ast",
+      "community": 69,
+      "community_name": "eslint.config.js",
+      "file_type": "concept",
+      "norm_label": "@eslint/js",
+      "source_file": "package.json",
+      "source_location": "L25"
+    },
+    {
+      "id": "ref_eslint_plugin_react_hooks",
+      "label": "eslint-plugin-react-hooks",
+      "_origin": "ast",
+      "community": 69,
+      "community_name": "eslint.config.js",
+      "file_type": "concept",
+      "norm_label": "eslint-plugin-react-hooks",
+      "source_file": "package.json",
+      "source_location": "L31"
+    },
+    {
+      "id": "ref_eslint_plugin_react_refresh",
+      "label": "eslint-plugin-react-refresh",
+      "_origin": "ast",
+      "community": 69,
+      "community_name": "eslint.config.js",
+      "file_type": "concept",
+      "norm_label": "eslint-plugin-react-refresh",
+      "source_file": "package.json",
+      "source_location": "L32"
+    },
+    {
+      "id": "ref_globals",
+      "label": "globals",
+      "_origin": "ast",
+      "community": 69,
+      "community_name": "eslint.config.js",
+      "file_type": "concept",
+      "norm_label": "globals",
+      "source_file": "package.json",
+      "source_location": "L34"
     },
     {
       "id": "src_components_ownerdetailmodal",
       "label": "OwnerDetailModal.jsx",
       "_origin": "ast",
       "community": 7,
-      "community_name": "TeamsView.jsx",
+      "community_name": "aggregateStats",
       "file_type": "code",
       "norm_label": "ownerdetailmodal.jsx",
       "source_file": "src/components/OwnerDetailModal.jsx",
       "source_location": "L1"
     },
     {
-      "id": "src_utils_scoring_scoring_cats",
-      "label": "SCORING_CATS",
-      "_origin": "ast",
-      "community": 7,
-      "community_name": "TeamsView.jsx",
-      "file_type": "code",
-      "norm_label": "scoring_cats",
-      "source_file": "src/utils/scoring.js",
-      "source_location": "L11"
-    },
-    {
       "id": "src_views_playerimpactsimulatorview",
       "label": "PlayerImpactSimulatorView.jsx",
       "_origin": "ast",
       "community": 7,
-      "community_name": "TeamsView.jsx",
+      "community_name": "aggregateStats",
       "file_type": "code",
       "norm_label": "playerimpactsimulatorview.jsx",
       "source_file": "src/views/PlayerImpactSimulatorView.jsx",
@@ -11597,7 +11698,7 @@
       "label": "BATTING_CATS",
       "_origin": "ast",
       "community": 7,
-      "community_name": "TeamsView.jsx",
+      "community_name": "aggregateStats",
       "file_type": "code",
       "norm_label": "batting_cats",
       "source_file": "src/views/PlayerImpactSimulatorView.jsx",
@@ -11608,7 +11709,7 @@
       "label": "ESPN_STAT_NAMES",
       "_origin": "ast",
       "community": 7,
-      "community_name": "TeamsView.jsx",
+      "community_name": "aggregateStats",
       "file_type": "code",
       "norm_label": "espn_stat_names",
       "source_file": "src/views/PlayerImpactSimulatorView.jsx",
@@ -11619,40 +11720,18 @@
       "label": "PITCHING_CATS",
       "_origin": "ast",
       "community": 7,
-      "community_name": "TeamsView.jsx",
+      "community_name": "aggregateStats",
       "file_type": "code",
       "norm_label": "pitching_cats",
       "source_file": "src/views/PlayerImpactSimulatorView.jsx",
       "source_location": "L17"
     },
     {
-      "id": "src_views_rotogapview",
-      "label": "RotoGapView.jsx",
-      "_origin": "ast",
-      "community": 7,
-      "community_name": "TeamsView.jsx",
-      "file_type": "code",
-      "norm_label": "rotogapview.jsx",
-      "source_file": "src/views/RotoGapView.jsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_views_rotogapview_roto_categories",
-      "label": "ROTO_CATEGORIES",
-      "_origin": "ast",
-      "community": 7,
-      "community_name": "TeamsView.jsx",
-      "file_type": "code",
-      "norm_label": "roto_categories",
-      "source_file": "src/views/RotoGapView.jsx",
-      "source_location": "L7"
-    },
-    {
       "id": "src_views_teamsview",
       "label": "TeamsView.jsx",
       "_origin": "ast",
       "community": 7,
-      "community_name": "TeamsView.jsx",
+      "community_name": "aggregateStats",
       "file_type": "code",
       "norm_label": "teamsview.jsx",
       "source_file": "src/views/TeamsView.jsx",
@@ -11663,7 +11742,7 @@
       "label": "MINUTIAE_COLS",
       "_origin": "ast",
       "community": 7,
-      "community_name": "TeamsView.jsx",
+      "community_name": "aggregateStats",
       "file_type": "code",
       "norm_label": "minutiae_cols",
       "source_file": "src/views/TeamsView.jsx",
@@ -11674,7 +11753,7 @@
       "label": "ROTO_COLS",
       "_origin": "ast",
       "community": 7,
-      "community_name": "TeamsView.jsx",
+      "community_name": "aggregateStats",
       "file_type": "code",
       "norm_label": "roto_cols",
       "source_file": "src/views/TeamsView.jsx",
@@ -11685,7 +11764,7 @@
       "label": "STAT_COLS",
       "_origin": "ast",
       "community": 7,
-      "community_name": "TeamsView.jsx",
+      "community_name": "aggregateStats",
       "file_type": "code",
       "norm_label": "stat_cols",
       "source_file": "src/views/TeamsView.jsx",
@@ -11824,17 +11903,6 @@
       "source_location": "L480"
     },
     {
-      "id": "eslint_config",
-      "label": "eslint.config.js",
-      "_origin": "ast",
-      "community": 9,
-      "community_name": "package.json",
-      "file_type": "code",
-      "norm_label": "eslint.config.js",
-      "source_file": "eslint.config.js",
-      "source_location": "L1"
-    },
-    {
       "id": "package",
       "label": "package.json",
       "_origin": "ast",
@@ -11923,50 +11991,6 @@
       "source_location": "L18"
     },
     {
-      "id": "ref_eslint",
-      "label": "eslint",
-      "_origin": "ast",
-      "community": 9,
-      "community_name": "package.json",
-      "file_type": "concept",
-      "norm_label": "eslint",
-      "source_file": "package.json",
-      "source_location": "L30"
-    },
-    {
-      "id": "ref_eslint_js",
-      "label": "@eslint/js",
-      "_origin": "ast",
-      "community": 9,
-      "community_name": "package.json",
-      "file_type": "concept",
-      "norm_label": "@eslint/js",
-      "source_file": "package.json",
-      "source_location": "L25"
-    },
-    {
-      "id": "ref_eslint_plugin_react_hooks",
-      "label": "eslint-plugin-react-hooks",
-      "_origin": "ast",
-      "community": 9,
-      "community_name": "package.json",
-      "file_type": "concept",
-      "norm_label": "eslint-plugin-react-hooks",
-      "source_file": "package.json",
-      "source_location": "L31"
-    },
-    {
-      "id": "ref_eslint_plugin_react_refresh",
-      "label": "eslint-plugin-react-refresh",
-      "_origin": "ast",
-      "community": 9,
-      "community_name": "package.json",
-      "file_type": "concept",
-      "norm_label": "eslint-plugin-react-refresh",
-      "source_file": "package.json",
-      "source_location": "L32"
-    },
-    {
       "id": "ref_gh_pages",
       "label": "gh-pages",
       "_origin": "ast",
@@ -11976,17 +12000,6 @@
       "norm_label": "gh-pages",
       "source_file": "package.json",
       "source_location": "L33"
-    },
-    {
-      "id": "ref_globals",
-      "label": "globals",
-      "_origin": "ast",
-      "community": 9,
-      "community_name": "package.json",
-      "file_type": "concept",
-      "norm_label": "globals",
-      "source_file": "package.json",
-      "source_location": "L34"
     },
     {
       "id": "ref_postcss",
@@ -12020,6 +12033,17 @@
       "norm_label": "recharts",
       "source_file": "package.json",
       "source_location": "L22"
+    },
+    {
+      "id": "ref_supabase_supabase_js",
+      "label": "@supabase/supabase-js",
+      "_origin": "ast",
+      "community": 9,
+      "community_name": "package.json",
+      "file_type": "concept",
+      "norm_label": "@supabase/supabase-js",
+      "source_file": "package.json",
+      "source_location": "L17"
     },
     {
       "id": "ref_tailwindcss",
@@ -12067,6 +12091,42 @@
       "type": "external"
     },
     {
+      "id": "src_data_keepercalculations",
+      "label": "src_data_keepercalculations",
+      "_origin": "semantic",
+      "community": 1,
+      "community_name": "DraftRoomView.jsx",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "src_data_keepercalculations",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "src_data_keeperinput2027",
+      "label": "src_data_keeperinput2027",
+      "_origin": "semantic",
+      "community": 1,
+      "community_name": "DraftRoomView.jsx",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "src_data_keeperinput2027",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "json",
+      "label": "json",
+      "_origin": "semantic",
+      "community": 10,
+      "community_name": "json",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "json",
+      "source_file": "",
+      "type": "external"
+    },
+    {
       "id": "asyncio",
       "label": "asyncio",
       "_origin": "semantic",
@@ -12103,14 +12163,38 @@
       "type": "external"
     },
     {
-      "id": "src_data_draft2026",
-      "label": "src_data_draft2026",
+      "id": "argparse",
+      "label": "argparse",
       "_origin": "semantic",
-      "community": 14,
-      "community_name": "FullRosterView.jsx",
+      "community": 16,
+      "community_name": "update_live_pickem_standings.py",
       "external": true,
       "file_type": "concept",
-      "norm_label": "src_data_draft2026",
+      "norm_label": "argparse",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "sys",
+      "label": "sys",
+      "_origin": "semantic",
+      "community": 16,
+      "community_name": "update_live_pickem_standings.py",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "sys",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "urllib_error",
+      "label": "urllib_error",
+      "_origin": "semantic",
+      "community": 16,
+      "community_name": "update_live_pickem_standings.py",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "urllib_error",
       "source_file": "",
       "type": "external"
     },
@@ -12163,18 +12247,6 @@
       "type": "external"
     },
     {
-      "id": "src_data_historicaltrades",
-      "label": "src_data_historicaltrades",
-      "_origin": "semantic",
-      "community": 2,
-      "community_name": "test_trade_and_recommender.mjs",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "src_data_historicaltrades",
-      "source_file": "",
-      "type": "external"
-    },
-    {
       "id": "src_data_keeperinput2026",
       "label": "src_data_keeperinput2026",
       "_origin": "semantic",
@@ -12183,6 +12255,18 @@
       "external": true,
       "file_type": "concept",
       "norm_label": "src_data_keeperinput2026",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "csv",
+      "label": "csv",
+      "_origin": "semantic",
+      "community": 20,
+      "community_name": "ingest_pickem.py",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "csv",
       "source_file": "",
       "type": "external"
     },
@@ -12199,11 +12283,35 @@
       "type": "external"
     },
     {
+      "id": "urllib_request",
+      "label": "urllib_request",
+      "_origin": "semantic",
+      "community": 20,
+      "community_name": "ingest_pickem.py",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "urllib_request",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "src_data_playerownerseasonstats",
+      "label": "src_data_playerownerseasonstats",
+      "_origin": "semantic",
+      "community": 25,
+      "community_name": "schedule.js",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "src_data_playerownerseasonstats",
+      "source_file": "",
+      "type": "external"
+    },
+    {
       "id": "re",
       "label": "re",
       "_origin": "semantic",
-      "community": 23,
-      "community_name": "sync_draft_pool.py",
+      "community": 27,
+      "community_name": "migrate_gcs_to_supabase.py",
       "external": true,
       "file_type": "concept",
       "norm_label": "re",
@@ -12214,8 +12322,8 @@
       "id": "unicodedata",
       "label": "unicodedata",
       "_origin": "semantic",
-      "community": 23,
-      "community_name": "sync_draft_pool.py",
+      "community": 27,
+      "community_name": "migrate_gcs_to_supabase.py",
       "external": true,
       "file_type": "concept",
       "norm_label": "unicodedata",
@@ -12227,7 +12335,7 @@
       "label": "src_data_historicalfinishes",
       "_origin": "semantic",
       "community": 28,
-      "community_name": "TEAMS",
+      "community_name": "ProgressionView.jsx",
       "external": true,
       "file_type": "concept",
       "norm_label": "src_data_historicalfinishes",
@@ -12259,26 +12367,38 @@
       "type": "external"
     },
     {
-      "id": "datetime",
-      "label": "datetime",
+      "id": "src_data_draft2026",
+      "label": "src_data_draft2026",
       "_origin": "semantic",
       "community": 31,
-      "community_name": "sys",
+      "community_name": "PlayerHistoryModal.jsx",
       "external": true,
       "file_type": "concept",
-      "norm_label": "datetime",
+      "norm_label": "src_data_draft2026",
       "source_file": "",
       "type": "external"
     },
     {
-      "id": "sys",
-      "label": "sys",
+      "id": "src_data_historicaltrades",
+      "label": "src_data_historicaltrades",
       "_origin": "semantic",
       "community": 31,
-      "community_name": "sys",
+      "community_name": "PlayerHistoryModal.jsx",
       "external": true,
       "file_type": "concept",
-      "norm_label": "sys",
+      "norm_label": "src_data_historicaltrades",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "src_data_transactions2026",
+      "label": "src_data_transactions2026",
+      "_origin": "semantic",
+      "community": 31,
+      "community_name": "PlayerHistoryModal.jsx",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "src_data_transactions2026",
       "source_file": "",
       "type": "external"
     },
@@ -12319,14 +12439,26 @@
       "type": "external"
     },
     {
-      "id": "csv",
-      "label": "csv",
+      "id": "datetime",
+      "label": "datetime",
       "_origin": "semantic",
-      "community": 33,
-      "community_name": "ingest_draft_infrastructure.py",
+      "community": 34,
+      "community_name": "ingest_draft_trades.py",
       "external": true,
       "file_type": "concept",
-      "norm_label": "csv",
+      "norm_label": "datetime",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "google_cloud",
+      "label": "google_cloud",
+      "_origin": "semantic",
+      "community": 34,
+      "community_name": "ingest_draft_trades.py",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "google_cloud",
       "source_file": "",
       "type": "external"
     },
@@ -12334,11 +12466,23 @@
       "id": "io",
       "label": "io",
       "_origin": "semantic",
-      "community": 33,
-      "community_name": "ingest_draft_infrastructure.py",
+      "community": 34,
+      "community_name": "ingest_draft_trades.py",
       "external": true,
       "file_type": "concept",
       "norm_label": "io",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "pandas",
+      "label": "pandas",
+      "_origin": "semantic",
+      "community": 34,
+      "community_name": "ingest_draft_trades.py",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "pandas",
       "source_file": "",
       "type": "external"
     },
@@ -12379,42 +12523,6 @@
       "type": "external"
     },
     {
-      "id": "argparse",
-      "label": "argparse",
-      "_origin": "semantic",
-      "community": 40,
-      "community_name": "sync_player_news.py",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "argparse",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "urllib_error",
-      "label": "urllib_error",
-      "_origin": "semantic",
-      "community": 40,
-      "community_name": "sync_player_news.py",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "urllib_error",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "urllib_request",
-      "label": "urllib_request",
-      "_origin": "semantic",
-      "community": 40,
-      "community_name": "sync_player_news.py",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "urllib_request",
-      "source_file": "",
-      "type": "external"
-    },
-    {
       "id": "ref_https",
       "label": "ref_https",
       "_origin": "semantic",
@@ -12451,18 +12559,6 @@
       "type": "external"
     },
     {
-      "id": "src_data_playerownerseasonstats",
-      "label": "src_data_playerownerseasonstats",
-      "_origin": "semantic",
-      "community": 52,
-      "community_name": "TeamAvatar.jsx",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "src_data_playerownerseasonstats",
-      "source_file": "",
-      "type": "external"
-    },
-    {
       "id": "src_data_draftassettrades2026",
       "label": "src_data_draftassettrades2026",
       "_origin": "semantic",
@@ -12471,18 +12567,6 @@
       "external": true,
       "file_type": "concept",
       "norm_label": "src_data_draftassettrades2026",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "src_data_transactions2026",
-      "label": "src_data_transactions2026",
-      "_origin": "semantic",
-      "community": 64,
-      "community_name": "TransactionsView.jsx",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "src_data_transactions2026",
       "source_file": "",
       "type": "external"
     },
@@ -12503,34 +12587,10 @@
       "label": "src_data_compensationpicks2026",
       "_origin": "semantic",
       "community": 66,
-      "community_name": "KeeperCalculationsView.jsx",
+      "community_name": "KeepersBudgetsView.jsx",
       "external": true,
       "file_type": "concept",
       "norm_label": "src_data_compensationpicks2026",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "src_data_keepercalculations",
-      "label": "src_data_keepercalculations",
-      "_origin": "semantic",
-      "community": 66,
-      "community_name": "KeeperCalculationsView.jsx",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "src_data_keepercalculations",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "src_data_keeperinput2027",
-      "label": "src_data_keeperinput2027",
-      "_origin": "semantic",
-      "community": 66,
-      "community_name": "KeeperCalculationsView.jsx",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "src_data_keeperinput2027",
       "source_file": "",
       "type": "external"
     },
@@ -12539,7 +12599,7 @@
       "label": "src_data_teambudgets2026",
       "_origin": "semantic",
       "community": 66,
-      "community_name": "KeeperCalculationsView.jsx",
+      "community_name": "KeepersBudgetsView.jsx",
       "external": true,
       "file_type": "concept",
       "norm_label": "src_data_teambudgets2026",
@@ -12551,7 +12611,7 @@
       "label": "src_data_teambudgets2027",
       "_origin": "semantic",
       "community": 66,
-      "community_name": "KeeperCalculationsView.jsx",
+      "community_name": "KeepersBudgetsView.jsx",
       "external": true,
       "file_type": "concept",
       "norm_label": "src_data_teambudgets2027",
@@ -12567,42 +12627,6 @@
       "external": true,
       "file_type": "concept",
       "norm_label": "requests",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "google_cloud",
-      "label": "google_cloud",
-      "_origin": "semantic",
-      "community": 69,
-      "community_name": "json",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "google_cloud",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "json",
-      "label": "json",
-      "_origin": "semantic",
-      "community": 69,
-      "community_name": "json",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "json",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "pandas",
-      "label": "pandas",
-      "_origin": "semantic",
-      "community": 69,
-      "community_name": "json",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "pandas",
       "source_file": "",
       "type": "external"
     }
@@ -16557,6 +16581,18 @@
       "weight": 1.0
     },
     {
+      "source": "src_views_draftroomview_analysishistorypanel",
+      "target": "src_views_draftroomview_playpodcasttts",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/views/DraftRoomView.jsx",
+      "source_location": "L4133",
+      "weight": 1.0
+    },
+    {
       "source": "src_views_draftroomview_draftcapitalpanel",
       "target": "src_views_draftroomview_compute2027draftpicks",
       "relation": "calls",
@@ -16565,7 +16601,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L3277",
+      "source_location": "L3382",
       "weight": 1.0
     },
     {
@@ -16601,7 +16637,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L4146",
+      "source_location": "L4273",
       "weight": 1.0
     },
     {
@@ -16613,7 +16649,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L4149",
+      "source_location": "L4276",
       "weight": 1.0
     },
     {
@@ -16625,7 +16661,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L4372",
+      "source_location": "L4503",
       "weight": 1.0
     },
     {
@@ -16637,7 +16673,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L4396",
+      "source_location": "L4527",
       "weight": 1.0
     },
     {
@@ -16649,7 +16685,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L4459",
+      "source_location": "L4590",
+      "weight": 1.0
+    },
+    {
+      "source": "src_views_draftroomview_draftroomview",
+      "target": "src_views_draftroomview_playpodcasttts",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/views/DraftRoomView.jsx",
+      "source_location": "L4604",
       "weight": 1.0
     },
     {
@@ -16661,7 +16709,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L4555",
+      "source_location": "L4693",
       "weight": 1.0
     },
     {
@@ -16673,7 +16721,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L4603",
+      "source_location": "L4741",
       "weight": 1.0
     },
     {
@@ -16685,7 +16733,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L4691",
+      "source_location": "L4829",
       "weight": 1.0
     },
     {
@@ -16697,7 +16745,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L4708",
+      "source_location": "L4846",
       "weight": 1.0
     },
     {
@@ -16709,7 +16757,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L4723",
+      "source_location": "L4861",
       "weight": 1.0
     },
     {
@@ -16721,7 +16769,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L4733",
+      "source_location": "L4871",
       "weight": 1.0
     },
     {
@@ -16733,7 +16781,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L4735",
+      "source_location": "L4873",
       "weight": 1.0
     },
     {
@@ -16745,7 +16793,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L4747",
+      "source_location": "L4885",
       "weight": 1.0
     },
     {
@@ -16757,7 +16805,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L4751",
+      "source_location": "L4889",
       "weight": 1.0
     },
     {
@@ -16769,7 +16817,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L5373",
+      "source_location": "L5511",
       "weight": 1.0
     },
     {
@@ -16781,7 +16829,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L5376",
+      "source_location": "L5514",
       "weight": 1.0
     },
     {
@@ -16793,7 +16841,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L6020",
+      "source_location": "L6180",
       "weight": 1.0
     },
     {
@@ -16834,18 +16882,6 @@
     },
     {
       "source": "src_views_draftroomview_fetchplayernews",
-      "target": "src_views_draftroomview_draftdbget",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L870",
-      "weight": 1.0
-    },
-    {
-      "source": "src_views_draftroomview_fetchplayernews",
       "target": "src_views_draftroomview_draftdbset",
       "relation": "calls",
       "_origin": "ast",
@@ -16853,7 +16889,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L902",
+      "source_location": "L1007",
       "weight": 1.0
     },
     {
@@ -16865,7 +16901,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L922",
+      "source_location": "L1027",
+      "weight": 1.0
+    },
+    {
+      "source": "src_views_draftroomview_fetchplayernews",
+      "target": "src_views_draftroomview_draftdbget",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/views/DraftRoomView.jsx",
+      "source_location": "L975",
       "weight": 1.0
     },
     {
@@ -16877,7 +16925,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2973",
+      "source_location": "L3078",
       "weight": 1.0
     },
     {
@@ -17021,7 +17069,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L3042",
+      "source_location": "L3147",
       "weight": 1.0
     },
     {
@@ -17033,7 +17081,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1132",
+      "source_location": "L1237",
       "weight": 1.0
     },
     {
@@ -17045,7 +17093,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1272",
+      "source_location": "L1377",
       "weight": 1.0
     },
     {
@@ -17057,7 +17105,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1275",
+      "source_location": "L1380",
       "weight": 1.0
     },
     {
@@ -17069,7 +17117,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1007",
+      "source_location": "L1112",
       "weight": 1.0
     },
     {
@@ -17081,7 +17129,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1025",
+      "source_location": "L1130",
       "weight": 1.0
     },
     {
@@ -17093,7 +17141,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2576",
+      "source_location": "L2681",
       "weight": 1.0
     },
     {
@@ -17105,7 +17153,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2608",
+      "source_location": "L2713",
       "weight": 1.0
     },
     {
@@ -17117,7 +17165,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2611",
+      "source_location": "L2716",
+      "weight": 1.0
+    },
+    {
+      "source": "src_views_draftroomview_playpodcasttts",
+      "target": "src_views_draftroomview_preparespokenscript",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/views/DraftRoomView.jsx",
+      "source_location": "L854",
       "weight": 1.0
     },
     {
@@ -17129,7 +17189,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2385",
+      "source_location": "L2490",
       "weight": 1.0
     },
     {
@@ -17141,7 +17201,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2391",
+      "source_location": "L2496",
       "weight": 1.0
     },
     {
@@ -17153,7 +17213,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2394",
+      "source_location": "L2499",
       "weight": 1.0
     },
     {
@@ -17165,7 +17225,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2337",
+      "source_location": "L2442",
       "weight": 1.0
     },
     {
@@ -17177,7 +17237,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2348",
+      "source_location": "L2453",
       "weight": 1.0
     },
     {
@@ -17189,7 +17249,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2351",
+      "source_location": "L2456",
       "weight": 1.0
     },
     {
@@ -18473,7 +18533,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1000",
+      "source_location": "L1105",
       "weight": 1.0
     },
     {
@@ -33125,6 +33185,17 @@
     },
     {
       "source": "src_views_draftroomview",
+      "target": "src_views_draftroomview_playermodal",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/views/DraftRoomView.jsx",
+      "source_location": "L1047",
+      "weight": 1.0
+    },
+    {
+      "source": "src_views_draftroomview",
       "target": "src_views_draftroomview_draftdbset",
       "relation": "contains",
       "_origin": "ast",
@@ -33180,17 +33251,6 @@
     },
     {
       "source": "src_views_draftroomview",
-      "target": "src_views_draftroomview_playernamebutton",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1960",
-      "weight": 1.0
-    },
-    {
-      "source": "src_views_draftroomview",
       "target": "src_views_draftroomview_fetchallespnplayers",
       "relation": "contains",
       "_origin": "ast",
@@ -33202,13 +33262,24 @@
     },
     {
       "source": "src_views_draftroomview",
+      "target": "src_views_draftroomview_playernamebutton",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/views/DraftRoomView.jsx",
+      "source_location": "L2065",
+      "weight": 1.0
+    },
+    {
+      "source": "src_views_draftroomview",
       "target": "src_views_draftroomview_owner_avatars",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L1987",
+      "source_location": "L2092",
       "weight": 1.0
     },
     {
@@ -33219,7 +33290,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2001",
+      "source_location": "L2106",
       "weight": 1.0
     },
     {
@@ -33230,40 +33301,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2015",
-      "weight": 1.0
-    },
-    {
-      "source": "src_views_draftroomview",
-      "target": "src_views_draftroomview_loginmodal",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2163",
-      "weight": 1.0
-    },
-    {
-      "source": "src_views_draftroomview",
-      "target": "src_views_draftroomview_countdowntimer",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2196",
-      "weight": 1.0
-    },
-    {
-      "source": "src_views_draftroomview",
-      "target": "src_views_draftroomview_ticker",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2222",
+      "source_location": "L2120",
       "weight": 1.0
     },
     {
@@ -33279,35 +33317,46 @@
     },
     {
       "source": "src_views_draftroomview",
+      "target": "src_views_draftroomview_loginmodal",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/views/DraftRoomView.jsx",
+      "source_location": "L2268",
+      "weight": 1.0
+    },
+    {
+      "source": "src_views_draftroomview",
+      "target": "src_views_draftroomview_countdowntimer",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/views/DraftRoomView.jsx",
+      "source_location": "L2301",
+      "weight": 1.0
+    },
+    {
+      "source": "src_views_draftroomview",
+      "target": "src_views_draftroomview_ticker",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/views/DraftRoomView.jsx",
+      "source_location": "L2327",
+      "weight": 1.0
+    },
+    {
+      "source": "src_views_draftroomview",
       "target": "src_views_draftroomview_ondecksidebar",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2242",
-      "weight": 1.0
-    },
-    {
-      "source": "src_views_draftroomview",
-      "target": "src_views_draftroomview_teamneedssummary",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2283",
-      "weight": 1.0
-    },
-    {
-      "source": "src_views_draftroomview",
-      "target": "src_views_draftroomview_recentactivitywidget",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2325",
+      "source_location": "L2347",
       "weight": 1.0
     },
     {
@@ -33323,24 +33372,13 @@
     },
     {
       "source": "src_views_draftroomview",
-      "target": "src_views_draftroomview_queuepreviewwidget",
+      "target": "src_views_draftroomview_teamneedssummary",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2376",
-      "weight": 1.0
-    },
-    {
-      "source": "src_views_draftroomview",
-      "target": "src_views_draftroomview_playerpoolpanel",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2416",
+      "source_location": "L2388",
       "weight": 1.0
     },
     {
@@ -33356,35 +33394,46 @@
     },
     {
       "source": "src_views_draftroomview",
+      "target": "src_views_draftroomview_recentactivitywidget",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/views/DraftRoomView.jsx",
+      "source_location": "L2430",
+      "weight": 1.0
+    },
+    {
+      "source": "src_views_draftroomview",
+      "target": "src_views_draftroomview_queuepreviewwidget",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/views/DraftRoomView.jsx",
+      "source_location": "L2481",
+      "weight": 1.0
+    },
+    {
+      "source": "src_views_draftroomview",
+      "target": "src_views_draftroomview_playerpoolpanel",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/views/DraftRoomView.jsx",
+      "source_location": "L2521",
+      "weight": 1.0
+    },
+    {
+      "source": "src_views_draftroomview",
       "target": "src_views_draftroomview_rostermanagerpanel",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2708",
-      "weight": 1.0
-    },
-    {
-      "source": "src_views_draftroomview",
-      "target": "src_views_draftroomview_compute2027draftpicks",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2896",
-      "weight": 1.0
-    },
-    {
-      "source": "src_views_draftroomview",
-      "target": "src_views_draftroomview_generate2027draftorder",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L2937",
+      "source_location": "L2813",
       "weight": 1.0
     },
     {
@@ -33400,13 +33449,35 @@
     },
     {
       "source": "src_views_draftroomview",
+      "target": "src_views_draftroomview_compute2027draftpicks",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/views/DraftRoomView.jsx",
+      "source_location": "L3001",
+      "weight": 1.0
+    },
+    {
+      "source": "src_views_draftroomview",
+      "target": "src_views_draftroomview_generate2027draftorder",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/views/DraftRoomView.jsx",
+      "source_location": "L3042",
+      "weight": 1.0
+    },
+    {
+      "source": "src_views_draftroomview",
       "target": "src_views_draftroomview_mypickspanel",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L3032",
+      "source_location": "L3137",
       "weight": 1.0
     },
     {
@@ -33417,7 +33488,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L3271",
+      "source_location": "L3376",
       "weight": 1.0
     },
     {
@@ -33439,7 +33510,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L3942",
+      "source_location": "L4047",
       "weight": 1.0
     },
     {
@@ -33450,7 +33521,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L4045",
+      "source_location": "L4172",
       "weight": 1.0
     },
     {
@@ -33461,7 +33532,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L4184",
+      "source_location": "L4311",
       "weight": 1.0
     },
     {
@@ -33472,7 +33543,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L4261",
+      "source_location": "L4388",
       "weight": 1.0
     },
     {
@@ -33593,7 +33664,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L6268",
+      "source_location": "L6453",
       "weight": 1.0
     },
     {
@@ -33620,35 +33691,24 @@
     },
     {
       "source": "src_views_draftroomview",
-      "target": "src_views_draftroomview_playownersound",
+      "target": "src_views_draftroomview_preparespokenscript",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L824",
+      "source_location": "L826",
       "weight": 1.0
     },
     {
       "source": "src_views_draftroomview",
-      "target": "src_views_draftroomview_getinjuryindicator",
+      "target": "src_views_draftroomview_playpodcasttts",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L840",
-      "weight": 1.0
-    },
-    {
-      "source": "src_views_draftroomview",
-      "target": "src_views_draftroomview_fetchplayernews",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L866",
+      "source_location": "L853",
       "weight": 1.0
     },
     {
@@ -33664,13 +33724,35 @@
     },
     {
       "source": "src_views_draftroomview",
-      "target": "src_views_draftroomview_playermodal",
+      "target": "src_views_draftroomview_playownersound",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/views/DraftRoomView.jsx",
-      "source_location": "L942",
+      "source_location": "L929",
+      "weight": 1.0
+    },
+    {
+      "source": "src_views_draftroomview",
+      "target": "src_views_draftroomview_getinjuryindicator",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/views/DraftRoomView.jsx",
+      "source_location": "L945",
+      "weight": 1.0
+    },
+    {
+      "source": "src_views_draftroomview",
+      "target": "src_views_draftroomview_fetchplayernews",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/views/DraftRoomView.jsx",
+      "source_location": "L971",
       "weight": 1.0
     },
     {
@@ -36803,5 +36885,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "6f65af3b5849d751404a3ccbb0d7dddd685ead7a"
+  "built_at_commit": "400860320ee0d88dfdac2a9cf2433d3f8b5024d4"
 }

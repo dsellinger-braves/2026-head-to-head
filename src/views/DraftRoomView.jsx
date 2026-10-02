@@ -821,6 +821,111 @@ INSTRUCTIONS:
 }
 
 // --- AUDIO SYSTEM ---
+let currentTtsAudio = null;
+
+function prepareSpokenScript(htmlText) {
+  if (!htmlText) return '';
+  // Strip HTML tags
+  let text = htmlText.replace(/<[^>]*>/g, ' ');
+  // Remove metadata footers (Rank, Proj Value, Pos, Team, etc.)
+  text = text.replace(/Rank:\s*#?\d*.*?Team:\s*[\w\s]*/gi, ' ');
+  text = text.replace(/Board:\s*#?\d*.*?MLB:\s*[\w\s]*/gi, ' ');
+  // Remove emojis
+  text = text.replace(/[\u{1F300}-\u{1FAFF}]|[\u{2600}-\u{27BF}]/gu, ' ');
+  // Expand fantasy abbreviations so pronunciation sounds like an athletic sports broadcaster
+  text = text
+    .replace(/\bHRs?\b/g, 'home runs')
+    .replace(/\bRBIs?\b/g, 'RBIs')
+    .replace(/\bSB\b/g, 'stolen bases')
+    .replace(/\bOBP\b/g, 'on-base percentage')
+    .replace(/\bERA\b/g, 'E-R-A')
+    .replace(/\bWHIP\b/g, 'whip')
+    .replace(/\bKs\b/g, 'strikeouts')
+    .replace(/\bQS\b/g, 'quality starts')
+    .replace(/\bSV\+HDs?\b/g, 'saves plus holds')
+    .replace(/#(\d+)/g, 'number $1')
+    .replace(/\$(\d+)/g, '$1 dollars')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return text;
+}
+
+async function playPodcastTTS(htmlText, voiceName = 'en-US-Journey-D') {
+  const spokenText = prepareSpokenScript(htmlText);
+  if (!spokenText || spokenText.length < 5) return;
+
+  // Stop any currently playing TTS audio or speech synthesis
+  if (currentTtsAudio) {
+    try {
+      currentTtsAudio.pause();
+      currentTtsAudio.currentTime = 0;
+    } catch {
+      // ignore
+    }
+    currentTtsAudio = null;
+  }
+  if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+  }
+
+  // 1. Google Cloud Text-to-Speech API with Google's premier Journey Podcast voice
+  const apiKey = import.meta.env.VITE_GOOGLE_TTS_API_KEY || import.meta.env.VITE_GEMINI_API_KEY || '';
+  if (apiKey && !apiKey.startsWith('AIzaSyDQ0eRBz6jSsORZrnG19jR5mzmd0QE0DWg')) {
+    try {
+      const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          input: { text: spokenText },
+          voice: {
+            languageCode: 'en-US',
+            name: voiceName
+          },
+          audioConfig: {
+            audioEncoding: 'MP3',
+            speakingRate: 1.05,
+            pitch: 0.0
+          }
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.audioContent) {
+          const audio = new Audio(`data:audio/mp3;base64,${data.audioContent}`);
+          currentTtsAudio = audio;
+          await audio.play();
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn('Google Cloud TTS API error, falling back to Web Speech:', err);
+    }
+  }
+
+  // 2. High-fidelity Web Speech fallback (utilizing Google US English or best available browser voice)
+  if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+    try {
+      const utterance = new SpeechSynthesisUtterance(spokenText);
+      utterance.rate = 1.05;
+      utterance.pitch = 1.0;
+      
+      const voices = window.speechSynthesis.getVoices();
+      const preferredVoice = voices.find(v => 
+        v.lang.startsWith('en') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Samantha') || v.name.includes('Daniel'))
+      ) || voices.find(v => v.lang.startsWith('en'));
+
+      if (preferredVoice) {
+        utterance.voice = preferredVoice;
+      }
+      window.speechSynthesis.speak(utterance);
+    } catch (speechErr) {
+      console.warn('Web speech synthesis failed:', speechErr);
+    }
+  }
+}
+
 function playOwnerSound(ownerName) {
   if (!ownerName) return;
   try {
@@ -4019,8 +4124,30 @@ function AnalysisHistoryPanel({ analysisHistory }) {
                       </span>
                     </div>
                   </div>
-                  <div style={{ color: '#666', fontSize: '11px', textAlign: 'right' }}>
-                    {item.timestamp}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
+                    <div style={{ color: '#666', fontSize: '11px', textAlign: 'right' }}>
+                      {item.timestamp}
+                    </div>
+                    {item.commentary && (
+                      <button
+                        onClick={() => playPodcastTTS(item.commentary)}
+                        style={{
+                          background: 'rgba(187, 134, 252, 0.15)',
+                          border: '1px solid #bb86fc',
+                          color: '#bb86fc',
+                          borderRadius: '4px',
+                          padding: '2px 8px',
+                          fontSize: '11px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}
+                        title="Play podcast-style spoken analysis"
+                      >
+                        🔊 Listen
+                      </button>
+                    )}
                   </div>
                 </div>
                 <div 
@@ -4310,6 +4437,10 @@ export default function DraftRoomView({
 
   // Audio state
   const [audioEnabled, setAudioEnabled] = useState(false);
+  const audioEnabledRef = useRef(audioEnabled);
+  useEffect(() => {
+    audioEnabledRef.current = audioEnabled;
+  }, [audioEnabled]);
   const lastAnnouncedPickRef = useRef(null);
 
   const [isRunningMock, setIsRunningMock] = useState(false);
@@ -4466,6 +4597,13 @@ export default function DraftRoomView({
     
     setLastPickCommentary(commentary);
     setGeneratingCommentary(false);
+
+    // Podcast-style TTS voice analysis plays after the pick if audio is enabled
+    if (audioEnabledRef.current) {
+      setTimeout(() => {
+        playPodcastTTS(commentary);
+      }, 700);
+    }
     
     const historyEntry = {
       pickNumber: pick['Overall Pick'],
@@ -5463,8 +5601,30 @@ export default function DraftRoomView({
               flexDirection: 'column',
               overflow: 'hidden'
             }}>
-              <div style={{ fontSize: '12px', color: '#bb86fc', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '6px' }}>
-                🎙️ HeftyMatic 3000 Instant Reaction
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <span style={{ fontSize: '12px', color: '#bb86fc', fontWeight: 'bold', textTransform: 'uppercase' }}>
+                  🎙️ HeftyMatic 3000 Instant Reaction
+                </span>
+                {lastPickCommentary && lastPickCommentary !== 'Draft has not started.' && !generatingCommentary && (
+                  <button
+                    onClick={() => playPodcastTTS(lastPickCommentary)}
+                    style={{
+                      background: 'rgba(187, 134, 252, 0.15)',
+                      border: '1px solid #bb86fc',
+                      color: '#bb86fc',
+                      borderRadius: '6px',
+                      padding: '2px 8px',
+                      fontSize: '11px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                    title="Play podcast-style spoken analysis"
+                  >
+                    🔊 Listen
+                  </button>
+                )}
               </div>
               <div style={{ flex: 1, overflowY: 'auto', fontSize: '15px', color: '#ddd', lineHeight: '1.5' }}>
                 {generatingCommentary ? (
@@ -6041,6 +6201,31 @@ export default function DraftRoomView({
               {lastPick ? `Selected by ${lastPick.Owner}` : '--'}
             </div>
             <div style={styles.aiBox}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <span style={{ fontSize: '11px', color: '#bb86fc', fontWeight: 'bold', textTransform: 'uppercase' }}>
+                  🎙️ Instant Reaction
+                </span>
+                {lastPickCommentary && lastPickCommentary !== 'Draft has not started.' && !generatingCommentary && (
+                  <button
+                    onClick={() => playPodcastTTS(lastPickCommentary)}
+                    style={{
+                      background: 'rgba(187, 134, 252, 0.15)',
+                      border: '1px solid #bb86fc',
+                      color: '#bb86fc',
+                      borderRadius: '4px',
+                      padding: '2px 6px',
+                      fontSize: '10px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '3px'
+                    }}
+                    title="Play podcast-style spoken analysis"
+                  >
+                    🔊 Listen
+                  </button>
+                )}
+              </div>
               {generatingCommentary ? (
                 <span>🤔 Gemini is analyzing this selection...</span>
               ) : (
