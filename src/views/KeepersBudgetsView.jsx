@@ -188,16 +188,21 @@ export default function KeepersBudgetsView({
           const calcMatch = (pid ? calcById.get(pid) : null) || (!isDupName ? calcByName.get(cleanNameKey) : null) || null;
 
           // Strictly use the most recent scoring period's active roster
-          const rosterOwner = rosterById.get(pid) || (!isDupName ? rosterByName.get(nameKey) : null) || (calcMatch && calcMatch.fantasy_owner !== 'Available' ? calcMatch.fantasy_owner : null) || null;
+          const rosterOwner = rosterById.get(pid) || (!isDupName ? rosterByName.get(nameKey) : null) || (calcMatch && calcMatch.fantasy_owner !== 'Available' && (!isDupName || pid === String(calcMatch.espn_player_id || calcMatch.player_id)) ? calcMatch.fantasy_owner : null) || null;
           const isRostered = Boolean(rosterOwner);
           const availability = rosterOwner || 'Available';
 
           let rank = 999;
           let cost = 0;
 
-          if (seasonYear >= 2027 && calcMatch) {
-            rank = calcMatch.overall_rank || 999;
-            cost = calcMatch.overall_price !== undefined ? calcMatch.overall_price : calculateKeeperCostFromRank(rank);
+          if (seasonYear >= 2027) {
+            if (calcMatch) {
+              rank = calcMatch.overall_rank || 999;
+              cost = calcMatch.overall_price !== undefined ? calcMatch.overall_price : calculateKeeperCostFromRank(rank);
+            } else {
+              rank = 999;
+              cost = 0;
+            }
           } else {
             rank = parseInt(p['Hefty Keeper Rank'] || p['Hefty Single Season Rank'] || p['ESPN Keeper Rank'] || p.rank || 999);
             const rawCost = p['Hefty Keeper Price'] !== undefined && p['Hefty Keeper Price'] !== null && p['Hefty Keeper Price'] !== ''

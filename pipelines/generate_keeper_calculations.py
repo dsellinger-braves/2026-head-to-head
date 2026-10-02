@@ -15,6 +15,7 @@ import sys
 import math
 import json
 import requests
+from collections import Counter
 from typing import Dict, List, Tuple, Any
 
 # Supabase default credentials
@@ -302,6 +303,18 @@ def main():
     active_owner_by_id = {str(r["player_id"]): TEAM_OWNERS.get(r["team_id"]) for r in active_roster if r.get("player_id")}
     active_owner_by_name = {r["full_name"].lower().strip(): TEAM_OWNERS.get(r["team_id"]) for r in active_roster if r.get("full_name")}
 
+    # Detect duplicate player names in pool and active roster to avoid cross-contaminating namesakes
+    pool_name_counts = Counter()
+    for p in pool_players:
+        pn = (p.get("Player") or "").lower().replace(".", "").replace("'", "").strip()
+        if pn:
+            pool_name_counts[pn] += 1
+
+    active_roster_name_counts = Counter(
+        r["full_name"].lower().replace(".", "").replace("'", "").strip()
+        for r in active_roster if r.get("full_name")
+    )
+
     # 3. Fetch FanGraphs data
     fg_dc_bat = cpv.fetch_live_fangraphs("bat", "fangraphsdc")
     fg_dc_pit = cpv.fetch_live_fangraphs("pit", "fangraphsdc")
@@ -506,6 +519,54 @@ def main():
         if pid: pitchers_2028[pid] = item
         if name_clean: pitchers_2028[name_clean] = item
 
+    # If live FanGraphs was blocked by Cloudflare (403), load projection stats from keeperCalculations.json cache
+    if not batters_keeper_2026 or not pitchers_keeper_2026:
+        calc_cache_path = os.path.join(os.path.dirname(__file__), "..", "src", "data", "keeperCalculations.json")
+        if os.path.exists(calc_cache_path):
+            print("🔄 Live FanGraphs unavailable; loading projection stats from existing keeperCalculations.json cache...")
+            with open(calc_cache_path, "r", encoding="utf-8") as f:
+                cached_data = json.load(f)
+            for cp in cached_data.get("players", []):
+                c_fgid = str(cp.get("fangraphs_id") or "").strip()
+                c_espid = str(cp.get("espn_player_id") or cp.get("player_id") or "").strip()
+                c_name = (cp.get("player_name") or "").lower().replace(".", "").replace("'", "").strip()
+
+                # Y1 stats
+                y1_st = cp.get("y1", {}).get("stats", {})
+                if y1_st:
+                    if "AB" in y1_st and float(y1_st.get("AB", 0) or 0) > 0:
+                        b_item = {"playerid": c_fgid, "name": cp.get("player_name"), "AB": float(y1_st.get("AB", 0)), "R": float(y1_st.get("R", 0)), "HR": float(y1_st.get("HR", 0)), "RBI": float(y1_st.get("RBI", 0)), "SB": float(y1_st.get("SB", 0)), "OBP": float(y1_st.get("OBP", 0))}
+                        for k in [c_fgid, c_espid, c_name]:
+                            if k and k != "None": batters_keeper_2026[k] = b_item
+                    if "IP" in y1_st and float(y1_st.get("IP", 0) or 0) > 0:
+                        p_item = {"playerid": c_fgid, "name": cp.get("player_name"), "IP": float(y1_st.get("IP", 0)), "G": float(y1_st.get("G", 0)), "GS": float(y1_st.get("GS", 0)), "SO": float(y1_st.get("SO", 0)), "QS": float(y1_st.get("QS", 0)), "SVHD": float(y1_st.get("SVHD", 0)), "ERA": float(y1_st.get("ERA", 0)), "WHIP": float(y1_st.get("WHIP", 0))}
+                        for k in [c_fgid, c_espid, c_name]:
+                            if k and k != "None": pitchers_keeper_2026[k] = p_item
+
+                # Y2 stats
+                y2_st = cp.get("y2", {}).get("stats", {})
+                if y2_st:
+                    if "AB" in y2_st and float(y2_st.get("AB", 0) or 0) > 0:
+                        b_item = {"playerid": c_fgid, "name": cp.get("player_name"), "AB": float(y2_st.get("AB", 0)), "R": float(y2_st.get("R", 0)), "HR": float(y2_st.get("HR", 0)), "RBI": float(y2_st.get("RBI", 0)), "SB": float(y2_st.get("SB", 0)), "OBP": float(y2_st.get("OBP", 0))}
+                        for k in [c_fgid, c_espid, c_name]:
+                            if k and k != "None": batters_2027[k] = b_item
+                    if "IP" in y2_st and float(y2_st.get("IP", 0) or 0) > 0:
+                        p_item = {"playerid": c_fgid, "name": cp.get("player_name"), "IP": float(y2_st.get("IP", 0)), "G": float(y2_st.get("G", 0)), "GS": float(y2_st.get("GS", 0)), "SO": float(y2_st.get("SO", 0)), "QS": float(y2_st.get("QS", 0)), "SVHD": float(y2_st.get("SVHD", 0)), "ERA": float(y2_st.get("ERA", 0)), "WHIP": float(y2_st.get("WHIP", 0))}
+                        for k in [c_fgid, c_espid, c_name]:
+                            if k and k != "None": pitchers_2027[k] = p_item
+
+                # Y3 stats
+                y3_st = cp.get("y3", {}).get("stats", {})
+                if y3_st:
+                    if "AB" in y3_st and float(y3_st.get("AB", 0) or 0) > 0:
+                        b_item = {"playerid": c_fgid, "name": cp.get("player_name"), "AB": float(y3_st.get("AB", 0)), "R": float(y3_st.get("R", 0)), "HR": float(y3_st.get("HR", 0)), "RBI": float(y3_st.get("RBI", 0)), "SB": float(y3_st.get("SB", 0)), "OBP": float(y3_st.get("OBP", 0))}
+                        for k in [c_fgid, c_espid, c_name]:
+                            if k and k != "None": batters_2028[k] = b_item
+                    if "IP" in y3_st and float(y3_st.get("IP", 0) or 0) > 0:
+                        p_item = {"playerid": c_fgid, "name": cp.get("player_name"), "IP": float(y3_st.get("IP", 0)), "G": float(y3_st.get("G", 0)), "GS": float(y3_st.get("GS", 0)), "SO": float(y3_st.get("SO", 0)), "QS": float(y3_st.get("QS", 0)), "SVHD": float(y3_st.get("SVHD", 0)), "ERA": float(y3_st.get("ERA", 0)), "WHIP": float(y3_st.get("WHIP", 0))}
+                        for k in [c_fgid, c_espid, c_name]:
+                            if k and k != "None": pitchers_2028[k] = p_item
+
     # Identify relievers qualifying for SVHD benchmark (projected >= 25 SVHD in first projection year)
     rp_svhd_qual_keys = set()
     for p in pitchers_keeper_2026.values():
@@ -695,7 +756,8 @@ def main():
             is_pitcher = False
             is_sp = False
 
-        active_owner = active_owner_by_id.get(str(espn_id)) or active_owner_by_name.get(name_clean)
+        is_dup_name = pool_name_counts.get(name_clean, 0) > 1 or active_roster_name_counts.get(name_clean, 0) > 1
+        active_owner = active_owner_by_id.get(str(espn_id)) or (active_owner_by_name.get(name_clean) if not is_dup_name else None)
         fantasy_owner = active_owner if active_owner else "Available"
         mlbam_id_val = int(mlbam_id) if mlbam_id and str(mlbam_id).isdigit() else None
         espn_id_val = int(espn_id) if espn_id and str(espn_id).isdigit() else espn_id
