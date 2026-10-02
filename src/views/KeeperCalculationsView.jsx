@@ -99,18 +99,23 @@ export default function KeeperCalculationsView({
   }, [effectiveKeepers, nameCounts]);
 
   // Roster owner lookup from propPlayers (if provided)
-  const rosterOwnerMap = useMemo(() => {
-    const map = new Map();
+  const { rosterOwnerMap, rosterOwnerMapByName } = useMemo(() => {
+    const byId = new Map();
+    const byName = new Map();
     if (propPlayers && propPlayers.length > 0) {
       propPlayers.forEach(p => {
         const pid = String(p['ESPN PlayerID'] || p.player_id || p.id || '').trim();
-        const owner = p.Availability || p.fantasy_owner || null;
+        const owner = p.rosterOwner || p.Availability || p.fantasy_owner || null;
         if (pid && owner && owner !== 'Available') {
-          map.set(pid, owner);
+          byId.set(pid, owner);
+        }
+        const name = (p.name || p.Player || p.full_name || '').toLowerCase().replace(/\./g, '').replace(/'/g, '').trim();
+        if (name && owner && owner !== 'Available') {
+          byName.set(name, owner);
         }
       });
     }
-    return map;
+    return { rosterOwnerMap: byId, rosterOwnerMapByName: byName };
   }, [propPlayers]);
 
   // Helper function to resolve roster ownership and keeper status
@@ -119,7 +124,8 @@ export default function KeeperCalculationsView({
     const pid = String(p.player_id || p.espn_player_id || p['ESPN PlayerID'] || '').trim();
     const nc = (p.player_name || '').toLowerCase().replace(/\./g, '').replace(/'/g, '').trim();
 
-    const owner = rosterOwnerMap.get(pid) || p.fantasy_owner || 'Available';
+    const mappedOwner = rosterOwnerMap.get(pid) || (nc && (nameCounts.get(nc) || 0) <= 1 ? rosterOwnerMapByName.get(nc) : null);
+    const owner = mappedOwner || p.fantasy_owner || 'Available';
     const isRostered = Boolean(owner && owner !== 'Available');
 
     let isKept = false;
@@ -132,7 +138,7 @@ export default function KeeperCalculationsView({
     }
 
     return { owner, isRostered, isKept };
-  }, [rosterOwnerMap, keptIds, keptNames, nameCounts]);
+  }, [rosterOwnerMap, rosterOwnerMapByName, keptIds, keptNames, nameCounts]);
 
   useEffect(() => {
     if (playersList.length > 0) {

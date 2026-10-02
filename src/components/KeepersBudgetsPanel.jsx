@@ -371,7 +371,9 @@ export default function KeepersBudgetsPanel({
         const rank = rep.rank || rep['Hefty Keeper Rank'] || rep['Hefty Single Season Rank'] || rep['Dynasty Rank'] || 150;
         const newCost = (rep.new_cost !== undefined && rep.new_cost !== null)
           ? parseFloat(rep.new_cost)
-          : calculateKeeperCostFromRank(rank);
+          : (rep.cost !== undefined && rep.cost !== null)
+            ? parseFloat(rep.cost)
+            : calculateKeeperCostFromRank(rank);
         const pid = rep.id || rep.espn_player_id || rep['ESPN PlayerID'];
         const pName = rep.name || rep.Player || rep.full_name || 'Selected Player';
         const priorCost = (rep.prior_cost !== undefined && rep.prior_cost !== null)
@@ -2222,7 +2224,7 @@ export default function KeepersBudgetsPanel({
                             borderRadius: '4px',
                             fontWeight: 'bold'
                           }} title="If your 1 keeper token is applied to this player">
-                            Midpoint: ${Math.round(((getPriorCost(pid, pName, cost) + cost) / 2) * 10) / 10}
+                            Midpoint: ${Math.floor((getPriorCost(pid, pName, cost) + cost) / 2)}
                           </span>
                         )}
 
