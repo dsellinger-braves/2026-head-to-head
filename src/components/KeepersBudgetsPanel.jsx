@@ -953,7 +953,7 @@ export default function KeepersBudgetsPanel({
               transition: 'all 0.15s ease'
             }}
           >
-            🎮 Comp Pick Simulator
+            🎲 Comp Pick Submission
           </button>
           <button
             onClick={() => setActiveTab('planner')}
