@@ -1,7 +1,7 @@
 # Graph Report - 2026 Head to Head Heftystrong  (2026-10-01)
 
 ## Corpus Check
-- 140 files · ~2,386,226 words
+- 140 files · ~2,301,225 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 10 file(s) not represented in the graph (top: (none) 5, .toml 2, .css 2)
 
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `8f3a40a3`
+- Built from commit: `1da091bf`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -338,7 +338,7 @@ Nodes (7): src_data_compensationpicks2026, src_data_keeperinput2027, src_data_te
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `react` connect `react` to `DraftRoomView.jsx`, `TeamAvatar.jsx`, `LeagueHistoryView.jsx`, `DraftCapitalView.jsx`, `KeepersBudgetsView.jsx`, `LiveScoreboardView.jsx`, `aggregateStats`, `supabaseClient.js`, `package.json`, `getDateFromPeriodId`, `App.jsx`, `FullRosterView.jsx`, `PlayerHistoryModal.jsx`, `KeepersBudgetsPanel.jsx`, `getPlayerHeadshotUrl`, `ProgressionView.jsx`, `OwnerDisparitiesView.jsx`?**
-  _High betweenness centrality (0.074) - this node is a cross-community bridge._
+  _High betweenness centrality (0.072) - this node is a cross-community bridge._
 - **Why does `devDependencies` connect `devDependencies` to `package.json`?**
   _High betweenness centrality (0.018) - this node is a cross-community bridge._
 - **Why does `aggregateStats()` connect `aggregateStats` to `TeamAvatar.jsx`, `LeagueHistoryView.jsx`, `test_trade_and_recommender.mjs`, `getDateFromPeriodId`, `App.jsx`, `FullRosterView.jsx`, `react`, `PlayerHistoryModal.jsx`, `ProgressionView.jsx`, `OwnerDisparitiesView.jsx`?**
