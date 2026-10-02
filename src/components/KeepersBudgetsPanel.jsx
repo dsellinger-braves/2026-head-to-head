@@ -215,9 +215,10 @@ export default function KeepersBudgetsPanel({
   }, [teamBudgets]);
 
   const isDeadlinePassed = useMemo(() => {
-    if (!leagueSettings?.keeper_lock_deadline) return false;
-    return new Date() > new Date(leagueSettings.keeper_lock_deadline);
-  }, [leagueSettings]);
+    const deadlineStr = leagueSettings?.keeper_lock_deadline || (seasonYear >= 2027 ? '2027-03-15T23:59:59Z' : null);
+    if (!deadlineStr) return false;
+    return new Date() > new Date(deadlineStr);
+  }, [leagueSettings, seasonYear]);
 
   // Load active owner's real-world comp picks into simulator when owner changes
   const activeRealBudgets = useMemo(() => {
@@ -366,9 +367,9 @@ export default function KeepersBudgetsPanel({
         const priorCost = (rep.prior_cost !== undefined && rep.prior_cost !== null)
           ? parseFloat(rep.prior_cost)
           : getPriorCost(pid, pName, newCost);
-        const midpoint = Math.round(((priorCost + newCost) / 2) * 10) / 10;
+        const midpoint = Math.floor((priorCost + newCost) / 2);
         const finalCost = isToken ? midpoint : newCost;
-        const savings = isToken ? Math.round((newCost - midpoint) * 10) / 10 : 0;
+        const savings = isToken ? Math.max(0, newCost - midpoint) : 0;
 
         return {
           keeper_slot: slotNum,
@@ -395,9 +396,9 @@ export default function KeepersBudgetsPanel({
         const priorCost = (existing.prior_cost !== null && existing.prior_cost !== undefined)
           ? parseFloat(existing.prior_cost)
           : getPriorCost(existing.espn_player_id, existing.player_name, newCost);
-        const midpoint = Math.round(((priorCost + newCost) / 2) * 10) / 10;
+        const midpoint = Math.floor((priorCost + newCost) / 2);
         const finalCost = isToken ? midpoint : newCost;
-        const savings = isToken ? Math.round((newCost - midpoint) * 10) / 10 : 0;
+        const savings = isToken ? Math.max(0, newCost - midpoint) : 0;
 
         return {
           ...existing,
@@ -408,6 +409,52 @@ export default function KeepersBudgetsPanel({
           new_cost: newCost,
           token_savings: savings,
           isReplaced: false,
+          isEmpty: false
+        };
+      }
+
+      // If slot is empty in originalKeepers and not replaced, find the next highest-cost rostered player
+      const alreadyChosenIds = new Set(
+        [
+          ...originalKeepers.map(k => String(k.espn_player_id || '')),
+          ...Object.values(replacedKeepers).map(k => String(k.id || k.espn_player_id || k['ESPN PlayerID'] || ''))
+        ].filter(Boolean)
+      );
+
+      const ownerRoster = (players || [])
+        .filter(p => normalizeManager(p.rosterOwner) === normalizeManager(plannerOwner))
+        .filter(p => !alreadyChosenIds.has(String(p.id || p.espn_player_id || p['ESPN PlayerID'] || '')))
+        .sort((a, b) => {
+          const costA = a.cost !== undefined ? a.cost : calculateKeeperCostFromRank(a.rank);
+          const costB = b.cost !== undefined ? b.cost : calculateKeeperCostFromRank(b.rank);
+          if (costA !== costB) return costB - costA;
+          return (a.rank || 999) - (b.rank || 999);
+        });
+
+      if (ownerRoster.length > 0) {
+        const rep = ownerRoster[0];
+        const rank = rep.rank || 999;
+        const newCost = rep.cost !== undefined ? rep.cost : calculateKeeperCostFromRank(rank);
+        const pid = rep.id || rep.espn_player_id || rep['ESPN PlayerID'];
+        const pName = rep.name || rep.Player || rep.full_name || 'Selected Player';
+        const priorCost = getPriorCost(pid, pName, newCost);
+        const midpoint = Math.floor((priorCost + newCost) / 2);
+        const finalCost = isToken ? midpoint : newCost;
+        const savings = isToken ? Math.max(0, newCost - midpoint) : 0;
+
+        return {
+          keeper_slot: slotNum,
+          player_name: pName,
+          espn_player_id: pid,
+          position: rep.position || rep.Position || '---',
+          mlb_team: rep.team || rep.Team || '---',
+          rank: rank,
+          cost: finalCost,
+          token_applied: isToken,
+          prior_cost: priorCost,
+          new_cost: newCost,
+          token_savings: savings,
+          isReplaced: true,
           isEmpty: false
         };
       }
@@ -445,7 +492,7 @@ export default function KeepersBudgetsPanel({
       baseBudget,
       remainingBudget
     };
-  }, [keepersByOwner, plannerOwner, replacedKeepers, teamBudgets, tokenSlot, getPriorCost, keeperSlots]);
+  }, [keepersByOwner, plannerOwner, replacedKeepers, teamBudgets, tokenSlot, getPriorCost, keeperSlots, players]);
 
   // Selected owner's total roster count
   const plannerOwnerRosterCount = useMemo(() => {
@@ -910,7 +957,7 @@ export default function KeepersBudgetsPanel({
               transition: 'all 0.15s ease'
             }}
           >
-            📋 Keeper What-If Planner
+            📋 Keeper Submission
           </button>
           <button
             onClick={() => setActiveTab('calculations')}
@@ -1650,7 +1697,7 @@ export default function KeepersBudgetsPanel({
         </div>
       )}
 
-      {/* SUB-TAB 4: KEEPER WHAT-IF PLANNER */}
+      {/* SUB-TAB 4: KEEPER SUBMISSION */}
       {activeTab === 'planner' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* Planner Controls */}
@@ -1666,7 +1713,7 @@ export default function KeepersBudgetsPanel({
             gap: '12px'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#fff' }}>Planning For Manager:</span>
+              <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#fff' }}>Submitting For Manager:</span>
               <select
                 value={plannerOwner}
                 onChange={e => {
@@ -1739,14 +1786,14 @@ export default function KeepersBudgetsPanel({
             </div>
           </div>
 
-          {/* Real-time What-If Keeper Dashboard */}
+          {/* Keeper Submission Overview Dashboard */}
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
             gap: '10px'
           }}>
             <div style={{ background: '#1c1c1c', padding: '12px', borderRadius: '6px', border: '1px solid #333' }}>
-              <div style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase' }}>Simulated Keeper Spend</div>
+              <div style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase' }}>Keeper Spend</div>
               <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#ffb74d', marginTop: '4px' }}>
                 ${plannerData.totalCost}
               </div>
@@ -1780,7 +1827,7 @@ export default function KeepersBudgetsPanel({
                   {plannerData.tokenSlot ? `Slot #${plannerData.tokenSlot}` : '1 Available'}
                 </div>
                 <div style={{ fontSize: '11px', color: '#666', marginTop: '2px' }}>
-                  {plannerData.tokenSlot ? `Saved $${plannerData.totalTokenSavings}` : 'Pays midpoint of 2026 & 2027'}
+                  {plannerData.tokenSlot ? `Saved $${plannerData.totalTokenSavings}` : 'Pays midpoint of 2026 & 2027 (rounded down)'}
                 </div>
               </div>
             )}
@@ -1882,7 +1929,7 @@ export default function KeepersBudgetsPanel({
                           gap: '4px',
                           transition: 'all 0.15s ease'
                         }}
-                        title={k.token_applied ? 'Click to remove token' : 'Apply 1 token to pay midpoint of prior year price and 2027 price'}
+                        title={k.token_applied ? 'Click to remove token' : 'Apply 1 token to pay midpoint of prior year price and 2027 price (rounded down to whole dollar)'}
                       >
                         <span>{k.token_applied ? '✅ Active' : '🎫 Token'}</span>
                       </button>

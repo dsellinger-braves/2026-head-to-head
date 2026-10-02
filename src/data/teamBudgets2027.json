@@ -1,0 +1,123 @@
+{
+  "season_year": 2027,
+  "updated_at": "2026-10-02T01:06:59.840700+00:00",
+  "budgets": [
+    {
+      "season_year": 2027,
+      "owner": "Adrian",
+      "team_id": 2,
+      "base_budget": 100,
+      "keeper_spend": 119.0,
+      "comp_pick_spend": 0,
+      "comp_pick_income": 0,
+      "final_budget": -19.0,
+      "manual_adjustment": 0,
+      "net_picks": 0,
+      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+    },
+    {
+      "season_year": 2027,
+      "owner": "Alex",
+      "team_id": 8,
+      "base_budget": 100,
+      "keeper_spend": 118.0,
+      "comp_pick_spend": 0,
+      "comp_pick_income": 0,
+      "final_budget": -18.0,
+      "manual_adjustment": 0,
+      "net_picks": 0,
+      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+    },
+    {
+      "season_year": 2027,
+      "owner": "Anil",
+      "team_id": 6,
+      "base_budget": 100,
+      "keeper_spend": 96.0,
+      "comp_pick_spend": 0,
+      "comp_pick_income": 0,
+      "final_budget": 4.0,
+      "manual_adjustment": 0,
+      "net_picks": 0,
+      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+    },
+    {
+      "season_year": 2027,
+      "owner": "Daniel",
+      "team_id": 5,
+      "base_budget": 100,
+      "keeper_spend": 119.0,
+      "comp_pick_spend": 0,
+      "comp_pick_income": 0,
+      "final_budget": -19.0,
+      "manual_adjustment": 0,
+      "net_picks": 0,
+      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+    },
+    {
+      "season_year": 2027,
+      "owner": "Garrett",
+      "team_id": 3,
+      "base_budget": 100,
+      "keeper_spend": 100.0,
+      "comp_pick_spend": 0,
+      "comp_pick_income": 0,
+      "final_budget": 0.0,
+      "manual_adjustment": 0,
+      "net_picks": 0,
+      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+    },
+    {
+      "season_year": 2027,
+      "owner": "Mark",
+      "team_id": 13,
+      "base_budget": 100,
+      "keeper_spend": 139.0,
+      "comp_pick_spend": 0,
+      "comp_pick_income": 0,
+      "final_budget": -39.0,
+      "manual_adjustment": 0,
+      "net_picks": 0,
+      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+    },
+    {
+      "season_year": 2027,
+      "owner": "Preston",
+      "team_id": 14,
+      "base_budget": 100,
+      "keeper_spend": 96.0,
+      "comp_pick_spend": 0,
+      "comp_pick_income": 0,
+      "final_budget": 4.0,
+      "manual_adjustment": 0,
+      "net_picks": 0,
+      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+    },
+    {
+      "season_year": 2027,
+      "owner": "Tim",
+      "team_id": 1,
+      "base_budget": 100,
+      "keeper_spend": 118.0,
+      "comp_pick_spend": 0,
+      "comp_pick_income": 0,
+      "final_budget": -18.0,
+      "manual_adjustment": 0,
+      "net_picks": 0,
+      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+    },
+    {
+      "season_year": 2027,
+      "owner": "Will",
+      "team_id": 12,
+      "base_budget": 100,
+      "keeper_spend": 120.0,
+      "comp_pick_spend": 0,
+      "comp_pick_income": 0,
+      "final_budget": -20.0,
+      "manual_adjustment": 0,
+      "net_picks": 0,
+      "updated_at": "2026-10-02T01:06:59.840700+00:00"
+    }
+  ]
+}
