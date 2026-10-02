@@ -54,3 +54,49 @@ print(f"  Slot {slot}: {name} (${cost})")
 - Do **not** attempt to import from `scratch` (e.g. `import scratch.utils`).
 - The workspace root is the only guaranteed directory on `sys.path`.
 - When helper functions are needed, place them in `pipelines/`, `scripts/`, or import standard library modules directly.
+
+---
+
+## 4. Zero Speculative / Blind File Access
+
+### The Anti-Pattern
+Agents often speculate or guess file paths inside Python one-liners, resulting in fatal `FileNotFoundError`:
+```bash
+# ❌ NEVER GUESS PATHS:
+python3 -c "import json; d=json.load(open('src/data/historicalDrafts.json')); ..."
+# -> FileNotFoundError: [Errno 2] No such file or directory: 'src/data/historicalDrafts.json'
+```
+
+### Operational Rules:
+1. **Discover Before Executing**:
+   - Always run `list_dir` on the target directory or use `grep_search` to find actual filenames before executing a script that references a file path.
+   - For inspecting files or JSON structures, use the native `view_file` tool rather than running `python3 -c "open('...')"` in bash.
+2. **Always Guard File Opens**:
+   - Whenever writing Python code that accesses a local file path, explicitly verify file existence or catch `FileNotFoundError`:
+```python
+from pathlib import Path
+import json
+
+file_path = Path('src/data/draft2026.json')
+if not file_path.is_file():
+    print(f"⚠️ Target file not found: {file_path}")
+else:
+    data = json.loads(file_path.read_text())
+    print(f"Loaded {len(data)} items")
+```
+
+---
+
+## 5. Canonical Data Files in `src/data/`
+
+To prevent guessing file names, refer to the verified datasets in `src/data/`:
+- `draft2026.json`: Completed 2026 draft records (288 picks).
+- `draftAssetTrades2026.json`: Offseason traded draft picks.
+- `compensationPicks2026.json`: Compensation picks awarded.
+- `keeperInput2026.json` / `keeperInput2027.json`: Keeper selections per owner.
+- `teamBudgets2026.json` / `teamBudgets2027.json`: FAAB/keeper budgets and draft penalties.
+- `keeperCalculations.json`: Z-score multi-year blended player valuations, PRs, and ranks.
+- `historicalFinishes.json`: Multi-year final standings and roto point totals (2012–2025).
+- `historicalTrades.json`: Historical trades and keeper asset movements.
+- `transactions2026.json`: In-season roster moves (adds, drops, trades).
+

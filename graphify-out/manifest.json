@@ -858,9 +858,9 @@
     "semantic_hash": ""
   },
   "AGENTS.md": {
-    "mtime": 1789002696.5417664,
-    "seen": 1790798888.2087233,
-    "ast_hash": "4168a56acc39785d6d0180a5240393bd",
+    "mtime": 1790965323.708292,
+    "seen": 1790965373.021913,
+    "ast_hash": "44f8bee38429755b3867b553c28f38c1",
     "semantic_hash": ""
   },
   "LEAGUE_STORYLINES.md": {
@@ -936,9 +936,9 @@
     "semantic_hash": ""
   },
   ".agents/rules/python-execution.md": {
-    "mtime": 1790963921.7797525,
-    "seen": 1790965073.402503,
-    "ast_hash": "fbe452bec347f4260e8264e3142f5b8e",
+    "mtime": 1790965312.112219,
+    "seen": 1790965373.01639,
+    "ast_hash": "7ebfcbd928d320c613d77bff4bf610f6",
     "semantic_hash": ""
   }
 }

@@ -169,3 +169,11 @@ All AI agents (Composio, Antigravity, Claude Code) must follow these operational
 4. **Environment Secrets**:
    - Never log or commit raw API keys (`SUPABASE_KEY`, `DISCORD_BOT_TOKEN`, `GEMINI_API_KEY`, `ESPN_S2`, `ESPN_SWID`).
    - Read all credentials from environment variables or `.env`.
+5. **Zero Speculative / Blind File Access**:
+   - Never guess file paths or filenames in execution commands (e.g. `open('src/data/historicalDrafts.json')`).
+   - Always verify directory contents using `list_dir` or `find` before attempting to load local files.
+   - Use native tools (`view_file`, `list_dir`) for inspecting repo data instead of spawning shell subshells (`python3 -c "open(...)"`).
+   - Always guard file I/O in Python scripts with `os.path.exists()` or `pathlib.Path.is_file()` or `try...except FileNotFoundError`.
+6. **Python Execution Standards**:
+   - Follow `.agents/rules/python-execution.md`: Never escape inner quotes inside bash f-strings; use single-quoted heredocs (`python3 - << 'EOF'`) or dedicated CLI scripts in `scripts/`.
+
