@@ -5,6 +5,24 @@ import defaultKeepers2026 from '../data/keeperInput2026.json';
 import defaultHistoricalTrades from '../data/historicalTrades.json';
 import { TEAMS } from '../schedule';
 
+const getTeamDisplayName = (tid) => {
+  if (!tid && tid !== 0) return 'Unknown';
+  if (TEAMS[tid]?.owner) return TEAMS[tid].owner;
+  if (TEAMS[tid]?.name) return TEAMS[tid].name;
+  const num = parseInt(tid, 10);
+  if (num === 1) return 'Tim';
+  if (num === 2) return 'Adrian';
+  if (num === 3) return 'Garrett';
+  if (num === 5) return 'Daniel';
+  if (num === 6 || num === 10) return 'Anil';
+  if (num === 8) return 'Alex';
+  if (num === 11) return 'Owens';
+  if (num === 12) return 'Will';
+  if (num === 13) return 'Mark';
+  if (num === 9 || num === 14) return 'Preston';
+  return `Team ${tid}`;
+};
+
 /**
  * Returns the acquisition story for a given player on a specific team.
  * @param {number|string} playerId
@@ -53,7 +71,7 @@ export function getPlayerAcquisition(playerId, currentTeamId, customTransactions
     if (tType === 'TRADE' || rawType === 'TRADE') {
       acqType = 'TRADE';
       const fromTeamId = latestMoveToTeam.from_team_id;
-      const fromTeamName = TEAMS[fromTeamId]?.name || `Team ${fromTeamId}`;
+      const fromTeamName = getTeamDisplayName(fromTeamId);
       badgeText = `Trade (${date || 'In-Season'})`;
       detailText = `Acquired via trade from ${fromTeamName} on ${date || 'In-Season'}`;
 
@@ -103,7 +121,7 @@ export function getPlayerAcquisition(playerId, currentTeamId, customTransactions
         const fromTeamId = tradeTx.from_team_id;
         date = tradeTx.transaction_date ? tradeTx.transaction_date.split('T')[0] : null;
         badgeText = `Trade (${date || 'In-Season'})`;
-        detailText = `Acquired via trade from ${TEAMS[fromTeamId]?.name || `Team ${fromTeamId}`} (originally drafted by ${draftPick.team_owner})`;
+        detailText = `Acquired via trade from ${getTeamDisplayName(fromTeamId)} (originally drafted by ${draftPick.team_owner})`;
         metadata = { fromTeamId, draft: draftPick };
       } else {
         acqType = 'ORIGINAL_ROSTER';
