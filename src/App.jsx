@@ -1156,7 +1156,7 @@ function App() {
                             currentView === 'keepers' && keepersSubTab === 'calculations' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                           }`}
                         >
-                          <span className="flex items-center gap-2"><span>🧮</span><span>PR Calculations</span></span>
+                          <span className="flex items-center gap-2"><span>🏷️</span><span>Keeper Prices</span></span>
                           {currentView === 'keepers' && keepersSubTab === 'calculations' && <span className="text-[10px] text-emerald-200">●</span>}
                         </a>
                       </div>

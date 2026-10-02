@@ -152,6 +152,13 @@ export default function KeepersBudgetsView({
       });
 
       if (rawPool.length > 0) {
+        // Pre-count names to detect duplicate names
+        const poolNameCounts = new Map();
+        rawPool.forEach(p => {
+          const pName = (p.Player || p.full_name || '').toLowerCase().trim();
+          if (pName) poolNameCounts.set(pName, (poolNameCounts.get(pName) || 0) + 1);
+        });
+
         const poolIds = new Set();
         const poolNames = new Set();
 
@@ -162,14 +169,31 @@ export default function KeepersBudgetsView({
           if (pid) poolIds.add(pid);
           if (nameKey) poolNames.add(nameKey);
 
+          const isDupName = (poolNameCounts.get(nameKey) || 0) > 1;
+
           // Strictly use the most recent scoring period's active roster
-          const rosterOwner = rosterById.get(pid) || rosterByName.get(nameKey) || null;
+          // Duplication check: if name is duplicated in the pool, only match by exact player ID
+          const rosterOwner = rosterById.get(pid) || (!isDupName ? rosterByName.get(nameKey) : null) || null;
           const isRostered = Boolean(rosterOwner);
           const availability = rosterOwner || 'Available';
-          const rank = parseInt(p['Hefty Keeper Rank'] || p['Hefty Single Season Rank'] || p['ESPN Keeper Rank'] || p.rank || 999);
-          const rawCost = p['Hefty Keeper Price'] !== undefined && p['Hefty Keeper Price'] !== null && p['Hefty Keeper Price'] !== ''
+
+          // Role check to prevent cross-contamination for duplicate names
+          const posStr = (p.Position || p.position || '').toUpperCase();
+          const isPitcherPos = posStr.includes('SP') || posStr.includes('RP') || posStr === 'P';
+          const isBatterPos = !isPitcherPos && (posStr.includes('1B') || posStr.includes('2B') || posStr.includes('3B') || posStr.includes('SS') || posStr.includes('OF') || posStr.includes('C') || posStr.includes('DH'));
+          const bpType = String(p['Batter/Pitcher'] || '').toLowerCase();
+
+          let rank = parseInt(p['Hefty Keeper Rank'] || p['Hefty Single Season Rank'] || p['ESPN Keeper Rank'] || p.rank || 999);
+          let rawCost = p['Hefty Keeper Price'] !== undefined && p['Hefty Keeper Price'] !== null && p['Hefty Keeper Price'] !== ''
             ? parseFloat(p['Hefty Keeper Price'])
             : null;
+
+          // Duplication safety check: if player is a pure batter with no keeper rank or very low single season rank but has an elite rank from a namesake pitcher, reset
+          if (isDupName && isBatterPos && bpType === 'batter' && (p['ESPN Keeper Rank'] === 'NR' || parseInt(p['ESPN Single Season Rank'] || '999') > 500)) {
+            rank = 999;
+            rawCost = 0;
+          }
+
           const cost = rawCost !== null && !isNaN(rawCost) ? rawCost : calculateKeeperCostFromRank(rank);
 
           return {

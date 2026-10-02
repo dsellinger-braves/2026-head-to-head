@@ -155,6 +155,13 @@ export default function KeepersBudgetsPanel({
       if (k.espn_player_id) map.set(String(k.espn_player_id), parseFloat(k.cost) || 0);
       if (k.player_name) map.set(k.player_name.toLowerCase().trim(), parseFloat(k.cost) || 0);
     });
+    // Pre-count names to detect duplicates in pool
+    const nameCounts = new Map();
+    (players || []).forEach(p => {
+      const pName = (p.Player || p.name || p.full_name || '').toLowerCase().trim();
+      if (pName) nameCounts.set(pName, (nameCounts.get(pName) || 0) + 1);
+    });
+
     // 2. Load from players array (Hefty Keeper Price)
     (players || []).forEach(p => {
       const pid = String(p['ESPN PlayerID'] || p.id || '');
@@ -164,7 +171,10 @@ export default function KeepersBudgetsPanel({
         const val = parseFloat(rawPrice);
         if (!isNaN(val)) {
           if (pid && !map.has(pid)) map.set(pid, val);
-          if (pName && !map.has(pName)) map.set(pName, val);
+          // Only map by name if name is unique in pool to avoid duplicate cross-contamination
+          if (pName && !map.has(pName) && (nameCounts.get(pName) || 0) <= 1) {
+            map.set(pName, val);
+          }
         }
       }
     });
@@ -973,7 +983,7 @@ export default function KeepersBudgetsPanel({
               transition: 'all 0.15s ease'
             }}
           >
-            🧮 PR Math & Calculations
+            🏷️ Keeper Prices
           </button>
           <button
             onClick={() => setActiveTab('settings')}
@@ -2633,6 +2643,8 @@ export default function KeepersBudgetsPanel({
           onPlayerClick={onPlayerClick}
           seasonYear={seasonYear}
           onSeasonYearChange={onSeasonYearChange}
+          keepers={keepers}
+          players={players}
         />
       )}
     </div>
