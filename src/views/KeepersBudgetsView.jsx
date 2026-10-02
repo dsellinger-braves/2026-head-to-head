@@ -1,9 +1,11 @@
 // src/views/KeepersBudgetsView.jsx
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import defaultTeamBudgets from '../data/teamBudgets2026.json';
+import defaultTeamBudgets2026 from '../data/teamBudgets2026.json';
+import defaultTeamBudgets2027 from '../data/teamBudgets2027.json';
 import defaultCompPicks from '../data/compensationPicks2026.json';
-import defaultKeepers from '../data/keeperInput2026.json';
+import defaultKeepers2026 from '../data/keeperInput2026.json';
+import defaultKeepers2027 from '../data/keeperInput2027.json';
 import KeepersBudgetsPanel from '../components/KeepersBudgetsPanel';
 
 // Team ID mapping matching 2026 Head to Head league structure
@@ -54,9 +56,11 @@ function calculateKeeperCostFromRank(rank) {
   return 0;
 }
 
-const defaultBudgetsList = defaultTeamBudgets?.budgets || defaultTeamBudgets || [];
+const defaultBudgets2026List = defaultTeamBudgets2026?.budgets || defaultTeamBudgets2026 || [];
+const defaultBudgets2027List = defaultTeamBudgets2027?.budgets || defaultTeamBudgets2027 || [];
 const defaultCompPicksList = defaultCompPicks?.comp_picks || defaultCompPicks || [];
-const defaultKeepersList = defaultKeepers?.keepers || defaultKeepers || [];
+const defaultKeepers2026List = defaultKeepers2026?.keepers || defaultKeepers2026 || [];
+const defaultKeepers2027List = defaultKeepers2027?.keepers || defaultKeepers2027 || [];
 
 export default function KeepersBudgetsView({
   currentUser = 'Daniel',
@@ -66,14 +70,25 @@ export default function KeepersBudgetsView({
   onPlayerClick,
   subTab = 'matrix'
 }) {
-  const [teamBudgets, setTeamBudgets] = useState(seasonYear === 2026 ? defaultBudgetsList : []);
+  const defaultBudgets = seasonYear >= 2027 ? defaultBudgets2027List : defaultBudgets2026List;
+  const defaultKeepers = seasonYear >= 2027 ? defaultKeepers2027List : defaultKeepers2026List;
+
+  const [teamBudgets, setTeamBudgets] = useState(defaultBudgets);
   const [compPicks, setCompPicks] = useState(seasonYear === 2026 ? defaultCompPicksList : []);
-  const [keepers, setKeepers] = useState(seasonYear === 2026 ? defaultKeepersList : []);
+  const [keepers, setKeepers] = useState(defaultKeepers);
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const loadData = React.useCallback(async () => {
     try {
+      // 1. Identify the most recent scoring period available in player_daily_stats
+      const { data: latestSpData } = await supabase
+        .from('player_daily_stats')
+        .select('scoring_period_id')
+        .order('scoring_period_id', { ascending: false })
+        .limit(1);
+      const latestSpId = latestSpData?.[0]?.scoring_period_id || 195;
+
       const [budgetsRes, compRes, keepersRes, p1, p2, p3, p4, pdsRes] = await Promise.all([
         supabase
           .from('draft_team_budgets')
@@ -94,15 +109,16 @@ export default function KeepersBudgetsView({
         supabase.from('player-pool').select('*').range(1000, 1999),
         supabase.from('player-pool').select('*').range(2000, 2999),
         supabase.from('player-pool').select('*').range(3000, 3999),
-        supabase.from('player_daily_stats').select('team_id, player_id, full_name, lineup_slot_id').eq('scoring_period_id', 195)
+        supabase
+          .from('player_daily_stats')
+          .select('team_id, player_id, full_name, lineup_slot_id')
+          .eq('scoring_period_id', latestSpId)
       ]);
 
       if (budgetsRes.data?.length > 0) {
         setTeamBudgets(budgetsRes.data);
-      } else if (seasonYear === 2026) {
-        setTeamBudgets(defaultBudgetsList);
       } else {
-        setTeamBudgets([]);
+        setTeamBudgets(seasonYear >= 2027 ? defaultBudgets2027List : defaultBudgets2026List);
       }
 
       if (compRes.data) {
@@ -113,12 +129,10 @@ export default function KeepersBudgetsView({
         setCompPicks([]);
       }
 
-      if (keepersRes.data) {
+      if (keepersRes.data?.length > 0) {
         setKeepers(keepersRes.data);
-      } else if (seasonYear === 2026) {
-        setKeepers(defaultKeepersList);
       } else {
-        setKeepers([]);
+        setKeepers(seasonYear >= 2027 ? defaultKeepers2027List : defaultKeepers2026List);
       }
 
       const rawPool = [
@@ -128,7 +142,7 @@ export default function KeepersBudgetsView({
         ...(p4?.data || [])
       ];
 
-      // Build active roster lookup from player_daily_stats
+      // Build active roster lookup strictly from the most recent scoring period in player_daily_stats
       const rosterById = new Map();
       const rosterByName = new Map();
       (pdsRes?.data || []).forEach(r => {
@@ -138,11 +152,18 @@ export default function KeepersBudgetsView({
       });
 
       if (rawPool.length > 0) {
+        const poolIds = new Set();
+        const poolNames = new Set();
+
         const mapped = rawPool.map(p => {
           const pid = String(p['ESPN PlayerID'] || p.id || '');
           const pName = p.Player || p.full_name || '';
           const nameKey = pName.toLowerCase().trim();
-          const rosterOwner = rosterById.get(pid) || rosterByName.get(nameKey) || (p.Availability && p.Availability !== 'Available' ? p.Availability : null);
+          if (pid) poolIds.add(pid);
+          if (nameKey) poolNames.add(nameKey);
+
+          // Strictly use the most recent scoring period's active roster
+          const rosterOwner = rosterById.get(pid) || rosterByName.get(nameKey) || null;
           const isRostered = Boolean(rosterOwner);
           const availability = rosterOwner || 'Available';
           const rank = parseInt(p['Hefty Keeper Rank'] || p['Hefty Single Season Rank'] || p['ESPN Keeper Rank'] || p.rank || 999);
@@ -171,15 +192,43 @@ export default function KeepersBudgetsView({
             isFreeAgent: !isRostered
           };
         });
-        setPlayers(mapped);
+
+        // Ensure any active roster players in the latest scoring period missing from rawPool are synthesized
+        const extraRosterPlayers = [];
+        (pdsRes?.data || []).forEach(r => {
+          const pid = String(r.player_id || '');
+          const pName = r.full_name || '';
+          const nameKey = pName.toLowerCase().trim();
+          if ((pid && !poolIds.has(pid)) && (nameKey && !poolNames.has(nameKey))) {
+            const owner = TEAM_OWNERS[r.team_id] || `Team ${r.team_id}`;
+            extraRosterPlayers.push({
+              id: parseInt(pid) || pid,
+              espn_player_id: pid,
+              'ESPN PlayerID': pid,
+              name: pName,
+              Player: pName,
+              full_name: pName,
+              position: 'UTIL',
+              Position: 'UTIL',
+              team: 'MLB',
+              Team: 'MLB',
+              rank: 999,
+              cost: 0,
+              rosterOwner: owner,
+              Availability: owner,
+              isRostered: true,
+              isFreeAgent: false
+            });
+          }
+        });
+
+        setPlayers([...mapped, ...extraRosterPlayers]);
       }
     } catch (err) {
       console.warn('Using local fallbacks for Keepers & Budgets:', err);
-      if (seasonYear === 2026) {
-        setTeamBudgets(defaultBudgetsList);
-        setCompPicks(defaultCompPicksList);
-        setKeepers(defaultKeepersList);
-      }
+      setTeamBudgets(seasonYear >= 2027 ? defaultBudgets2027List : defaultBudgets2026List);
+      setCompPicks(seasonYear === 2026 ? defaultCompPicksList : []);
+      setKeepers(seasonYear >= 2027 ? defaultKeepers2027List : defaultKeepers2026List);
     } finally {
       setLoading(false);
     }
@@ -214,7 +263,7 @@ export default function KeepersBudgetsView({
         onSeasonYearChange={onSeasonYearChange}
         onPlayerClick={onPlayerClick}
         onRefresh={loadData}
-        priorKeepers={defaultKeepersList}
+        priorKeepers={defaultKeepers2026List}
         initialTab={subTab}
       />
     </div>
