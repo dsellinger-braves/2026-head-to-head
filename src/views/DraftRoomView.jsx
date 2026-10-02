@@ -534,86 +534,290 @@ function formatPlayerStats(player) {
   return `R: ${player.ZIPSR || 'N/A'}, HR: ${player.ZIPSHR || 'N/A'}, RBI: ${player.ZIPSRBI || 'N/A'}, SB: ${player.ZIPSSB || 'N/A'}, OBP: ${player.ZIPSOBP || 'N/A'}`;
 }
 
-function generateLocalDraftCommentary(player, owner, pickNum, season = 2027) {
-  const adp = parseFloat(player.ADP) || null;
-  const isPitcher = player.Position?.includes('SP') || player.Position?.includes('RP');
-  const ownerProfile = DEFAULT_OWNER_PROFILES[owner] || { archetype: { name: 'Contender', emoji: '🏆' } };
-  
-  let valueVerdict = 'at fair market value';
-  let valueBadge = '🎯 Solid Value';
-  if (adp) {
-    const diff = pickNum - adp;
-    if (diff >= 15) {
-      valueVerdict = `an absolute steal at pick #${pickNum} (consensus ADP was ${adp.toFixed(1)})`;
-      valueBadge = '🔥 Steal of the Draft';
-    } else if (diff >= 5) {
-      valueVerdict = `great value slipping past his ${adp.toFixed(1)} ADP`;
-      valueBadge = '📈 Positive Value';
-    } else if (diff <= -15) {
-      valueVerdict = `an aggressive reach at #${pickNum} (ADP was ${adp.toFixed(1)})`;
-      valueBadge = '⚠️ Reached Early';
-    } else if (diff <= -5) {
-      valueVerdict = `a slight reach ahead of his ${adp.toFixed(1)} ADP`;
-      valueBadge = '⚡ Priority Target';
+function getEffectiveRank(player) {
+  if (!player) return null;
+  const r = player['Hefty Keeper Rank'] ?? 
+            player['Hefty Single Season Rank'] ?? 
+            player['ESPN Keeper Rank'] ?? 
+            player['ESPN Single Season Rank'] ?? 
+            player['ESPN ROTO Rank'] ?? 
+            player.ADP ?? 
+            player.rank;
+  const num = parseFloat(r);
+  return isNaN(num) || num <= 0 ? null : Math.round(num);
+}
+
+function getEffectivePrice(player) {
+  if (!player) return null;
+  const p = player['Hefty Keeper Price'] ?? 
+            player['Hefty Single Season Price'] ?? 
+            player['ESPN Price'] ?? 
+            player.Value ?? 
+            player.price;
+  const num = parseFloat(p);
+  return isNaN(num) || num <= 0 ? null : Math.round(num);
+}
+
+function determinePickAngle(player, pickNum, rank, surplus, teamContext) {
+  const isPitcher = (player.Position || '').includes('SP') || (player.Position || '').includes('RP') || (player.Position || '').includes('P');
+  const isReliever = (player.Position || '').includes('RP') || (player.Position || '').includes('CL');
+  const posCounts = teamContext?.positionCounts || {};
+  const spCount = posCounts['SP'] || 0;
+  const sb = parseFloat(player.ZIPSSB || player.ESPNSB || 0);
+  const hr = parseFloat(player.ZIPSHR || player.ESPNHR || 0);
+  const k = parseFloat(player.ZIPSK || player.ESPNK || 0);
+  const sv = parseFloat(player['ZIPSSV+HDs'] || player['ESPNSV+HDs'] || 0);
+
+  // 1. Extreme board displacement
+  if (surplus !== null && surplus >= 12) return 'SURPLUS_STEAL';
+  if (surplus !== null && surplus <= -14) return 'AGGRESSIVE_REACH';
+
+  // 2. Specialized role or skill profile
+  if (isReliever || sv >= 16) return 'BULLPEN_CLOSER';
+  if (isPitcher && spCount >= 2) return 'ROTATION_HEAVY';
+  if (sb >= 28) return 'SPEED_SPECIALIST';
+  if (hr >= 30) return 'POWER_SLUGGER';
+  if (isPitcher && k >= 190) return 'K_MACHINE';
+
+  // 3. Draft stages
+  if (pickNum <= 18) return 'CORNERSTONE_FOUNDATION';
+  if (pickNum >= 140) return 'LATE_ROUND_FLYER';
+
+  // 4. Moderate surplus/deficit
+  if (surplus !== null && surplus >= 6) return 'VALUE_PICK';
+  if (surplus !== null && surplus <= -6) return 'PRIORITY_TARGET';
+
+  return 'BALANCED_FIT';
+}
+
+function generateLocalDraftCommentary(player, owner, pickNum, teamContext = {}) {
+  const rank = getEffectiveRank(player);
+  const price = getEffectivePrice(player);
+  const surplus = rank ? (pickNum - rank) : null;
+  const isPitcher = (player.Position || '').includes('SP') || (player.Position || '').includes('RP') || (player.Position || '').includes('P');
+  const angle = determinePickAngle(player, pickNum, rank, surplus, teamContext);
+
+  const hr = player.ZIPSHR || player.ESPNHR;
+  const rbi = player.ZIPSRBI || player.ESPNRBI;
+  const sb = player.ZIPSSB || player.ESPNSB;
+  const obp = player.ZIPSOBP || player.ESPNOBP;
+  const obpStr = obp ? `.${String(obp).replace('0.', '').slice(0, 3)}` : null;
+  const k = player.ZIPSK || player.ESPNK;
+  const era = player.ZIPSERA || player.ESPNERA;
+  const whip = player.ZIPSWHIP || player.ESPNWHIP;
+  const qs = player.ZIPSQS || player.ESPNQS;
+  const sv = player['ZIPSSV+HDs'] || player['ESPNSV+HDs'];
+
+  let headline = '';
+  let narrative = '';
+  const v = pickNum % 3;
+
+  switch (angle) {
+    case 'SURPLUS_STEAL': {
+      headline = `🔥 <b>Draft Steal (+${surplus} Surplus)</b>`;
+      const variants = [
+        `Tremendous board patience pays off for <b>${owner}</b>. Securing a consensus #${rank} talent at pick #${pickNum} captures massive value for their roster.`,
+        `The room let <b>${player.Player}</b> slide too far. <b>${owner}</b> scoops up a projected ${isPitcher ? `${k || 170} K / ${era || '3.50'} ERA profile` : `${hr || 25} HR / ${obpStr || '.350'} OBP engine`} at a +${surplus} pick discount.`,
+        `Pure profit for <b>${owner}</b> here at #${pickNum}. Getting a $${price || 20} projected asset this late represents one of the cleanest value plays of the draft so far.`
+      ];
+      narrative = variants[v];
+      break;
+    }
+
+    case 'AGGRESSIVE_REACH': {
+      const reach = Math.abs(surplus);
+      headline = `⚡ <b>Aggressive Target (-${reach} Reach)</b>`;
+      const variants = [
+        `<b>${owner}</b> refuses to wait, leaping ${reach} spots ahead of consensus board rank to secure <b>${player.Player}</b>. Clearly prioritizing ${isPitcher ? `arm talent (${k || 150}+ Ks)` : `offensive punch (${hr || 20}+ HR)`} before this tier evaporates.`,
+        `Flag planted early. <b>${owner}</b> pulls the trigger on <b>${player.Player}</b> well above his #${rank || 'late'} ranking, prioritizing roster fit over market consensus.`,
+        `Bold maneuvering at pick #${pickNum}. <b>${owner}</b> pays a premium to lock down ${player.Position}, betting the projections underestimate his upside.`
+      ];
+      narrative = variants[v];
+      break;
+    }
+
+    case 'BULLPEN_CLOSER': {
+      headline = `🎯 <b>High-Leverage Bullpen</b>`;
+      const variants = [
+        `<b>${owner}</b> tackles high-leverage relief, picking up <b>${player.Player}</b> for late-inning lockdown. Projected for ${sv || '20+'} SV+HDs with swing-and-miss stuff (${k || '70'} Ks).`,
+        `Relief scarcity strikes and <b>${owner}</b> responds. <b>${player.Player}</b> gives this bullpen a proven weapon for the SV+HD and ratio categories (${era || '3.10'} ERA).`,
+        `A targeted bullpen acquisition at #${pickNum}. <b>${owner}</b> secures ${sv ? `${sv} projected SV+HDs` : 'late-inning leverage'} to stay competitive in weekly relief counts.`
+      ];
+      narrative = variants[v];
+      break;
+    }
+
+    case 'ROTATION_HEAVY': {
+      headline = `⚾ <b>Rotation Stacking</b>`;
+      const variants = [
+        `<b>${owner}</b> continues stacking starting pitching. <b>${player.Player}</b> brings ${qs || 14} projected QS and a ${era || '3.60'} ERA to an already formidable mound group.`,
+        `Mound dominance remains the clear blueprint for <b>${owner}</b>. Adding <b>${player.Player}</b> gives them another high-volume starter projected for ${k || 160} Ks.`,
+        `Another starting arm in the fold for <b>${owner}</b>. Betting heavily on starting pitching volume to carry the QS and strikeout categories week in and week out.`
+      ];
+      narrative = variants[v];
+      break;
+    }
+
+    case 'SPEED_SPECIALIST': {
+      headline = `💨 <b>Elite Speed Impact</b>`;
+      const variants = [
+        `Sprint speed comes off the board. <b>${owner}</b> secures a game-breaker on the basepaths in <b>${player.Player}</b>, whose projected ${sb || 30} steals can swing weekly matchups alone.`,
+        `A dedicated category play for <b>${owner}</b>. Adding ${sb || 25}+ stolen base potential gives this roster immense flexibility in weekly matchup planning.`,
+        `Speed is scarce and <b>${owner}</b> wasn't going to get left behind. <b>${player.Player}</b> pairs ${sb || 25} SB upside with a steady ${obpStr || '.340'} OBP.`
+      ];
+      narrative = variants[v];
+      break;
+    }
+
+    case 'POWER_SLUGGER': {
+      headline = `💥 <b>Middle-of-Order Power</b>`;
+      const variants = [
+        `Pure offensive thumping for <b>${owner}</b>. <b>${player.Player}</b> is forecasted for ${hr || 28} homers and ${rbi || 90} RBIs, giving this lineup a formidable run-production base.`,
+        `Run production dialed in. <b>${owner}</b> adds <b>${player.Player}</b> to pace the power columns, projecting for ${hr || 25}+ HRs and heavy extra-base hit damage.`,
+        `<b>${owner}</b> adds serious pop at pick #${pickNum}. <b>${player.Player}</b> projects to deliver ${hr || 26} HR with strong run totals in the middle of a productive lineup.`
+      ];
+      narrative = variants[v];
+      break;
+    }
+
+    case 'K_MACHINE': {
+      headline = `🔥 <b>Strikeout Punch</b>`;
+      const variants = [
+        `Whiff-rate premium for <b>${owner}</b>. <b>${player.Player}</b> generates elite swing-and-miss stuff, projected for ${k || 190} strikeouts across ${qs || 15} quality starts.`,
+        `<b>${owner}</b> dials up the strikeout punch with <b>${player.Player}</b>. High-ceiling stuff on the mound that elevates weekly K totals immediately.`,
+        `Missing bats at a high clip. <b>${owner}</b> nabs <b>${player.Player}</b> to fortify strikeouts (${k || 180}+ K proj) and keep WHIP in check (${whip || '1.15'}).`
+      ];
+      narrative = variants[v];
+      break;
+    }
+
+    case 'CORNERSTONE_FOUNDATION': {
+      headline = `👑 <b>Early Anchor Pick</b>`;
+      const variants = [
+        `<b>${owner}</b> lays a premier cornerstone in round ${Math.ceil(pickNum / 10)}. <b>${player.Player}</b> provides an elite baseline of ${isPitcher ? `${k || 190} Ks and ${era || '3.20'} ERA` : `${hr || 28} HR and .${String(obp || '360').replace('0.', '')} OBP`} to build around.`,
+        `A foundational piece for <b>${owner}</b> at pick #${pickNum}. <b>${player.Player}</b> delivers high-floor excellence and marquee category contribution right out of the gate.`,
+        `Starting strong: <b>${owner}</b> secures <b>${player.Player}</b> to anchor the top of their draft board with elite projected production.`
+      ];
+      narrative = variants[v];
+      break;
+    }
+
+    case 'LATE_ROUND_FLYER': {
+      headline = `🎲 <b>Late-Round Upside</b>`;
+      const variants = [
+        `Calculated risk at pick #${pickNum}. <b>${owner}</b> takes a flyer on <b>${player.Player}</b>, who offers intriguing upside if playing time breaks his way.`,
+        `Late-draft upside hunting for <b>${owner}</b>. At this stage of the draft, <b>${player.Player}</b>'s skill profile (${isPitcher ? `${k || 120} K upside` : `${hr || 18} HR power`}) is well worth the roster spot.`,
+        `High-ceiling play late. <b>${owner}</b> adds <b>${player.Player}</b> at #${pickNum} to round out roster flexibility before the final rounds conclude.`
+      ];
+      narrative = variants[v];
+      break;
+    }
+
+    case 'VALUE_PICK': {
+      headline = `📈 <b>Above-Average Value (+${surplus})</b>`;
+      const variants = [
+        `Smart draft board reading by <b>${owner}</b>. <b>${player.Player}</b> slips past his #${rank} projection to deliver a favorable ${surplus}-pick surplus at #${pickNum}.`,
+        `Consensus value in the bag. <b>${owner}</b> capitalizes on <b>${player.Player}</b> sliding ${surplus} spots past expected board rank for a steady ${player.Position} addition.`,
+        `Efficient acquisition at #${pickNum}. <b>${owner}</b> collects positive equity on <b>${player.Player}</b> without having to force the issue.`
+      ];
+      narrative = variants[v];
+      break;
+    }
+
+    case 'PRIORITY_TARGET': {
+      headline = `⚡ <b>Targeted Priority (-${Math.abs(surplus)})</b>`;
+      const variants = [
+        `<b>${owner}</b> didn't want to risk losing <b>${player.Player}</b>, pulling him ${Math.abs(surplus)} spots early to ensure ${player.Position} coverage.`,
+        `Target locked. <b>${owner}</b> steps ahead of the curve at pick #${pickNum} to bring in <b>${player.Player}</b> ahead of market consensus.`,
+        `Proactive roster construction. <b>${owner}</b> pays a modest reach price to secure <b>${player.Player}</b>'s specific statistical profile.`
+      ];
+      narrative = variants[v];
+      break;
+    }
+
+    case 'BALANCED_FIT':
+    default: {
+      headline = `🎯 <b>On-Market Selection</b>`;
+      const variants = [
+        `Right on script at pick #${pickNum}. <b>${owner}</b> selects <b>${player.Player}</b> directly in line with board valuation, addressing ${player.Position} with projected ${isPitcher ? `${era || '3.70'} ERA / ${k || 140} K` : `${hr || 20} HR / ${rbi || 70} RBI`}.`,
+        `Clean, disciplined pick by <b>${owner}</b>. <b>${player.Player}</b> comes off the board at fair market value to provide steady ${player.Position} production.`,
+        `<b>${owner}</b> stays balanced at #${pickNum}, picking up <b>${player.Player}</b> to keep weekly counting categories and ratios on pace.`
+      ];
+      narrative = variants[v];
+      break;
     }
   }
 
-  let statHighlight = '';
-  if (isPitcher) {
-    const k = player.ZIPSK || player.ESPNK;
-    const era = player.ZIPSERA || player.ESPNERA;
-    const qs = player.ZIPSQS || player.ESPNQS;
-    statHighlight = `Anchors the pitching staff with a projected ${era || '3.50'} ERA and ${k || '170'} strikeouts across ${qs || '15'} quality starts.`;
-  } else {
-    const hr = player.ZIPSHR || player.ESPNHR;
-    const rbi = player.ZIPSRBI || player.ESPNRBI;
-    const sb = player.ZIPSSB || player.ESPNSB;
-    const obp = player.ZIPSOBP || player.ESPNOBP;
-    statHighlight = `Provides immediate category firepower with projected ${hr || '25'} HR, ${rbi || '85'} RBI, ${sb ? `${sb} SB, ` : ''}and an on-base skill profile (.${String(obp || '340').replace('0.', '')} OBP).`;
-  }
+  const footer = `<br><br><span style="color:#888; font-size:11px;">Rank: #${rank || '—'} • Proj Value: $${price || '—'} • Pos: ${player.Position} • Team: ${player.Team || 'MLB'}</span>`;
 
-  return `
-    <b>${ownerProfile.archetype.emoji} ${owner} locks in ${player.Player} at Pick #${pickNum}!</b><br><br>
-    This selection marks <b>${valueVerdict}</b>. Fitting ${owner}'s <i>${ownerProfile.archetype.name}</i> identity, this move solidifies their ${player.Position} depth for the ${season} championship push.<br><br>
-    ${statHighlight}<br><br>
-    <b>Pick Assessment:</b> ${valueBadge} | <b>Position:</b> ${player.Position} | <b>MLB:</b> ${player.Team} | <b>ADP:</b> ${player.ADP || 'N/A'}
-  `;
+  return `${headline}<br><br>${narrative}${footer}`;
 }
 
-async function generateDraftCommentary(player, owner, pickNum, teamStats, season = 2027) {
-  const prompt = `
-Context: Fantasy Baseball Draft (${season} Season).
+async function generateDraftCommentary(player, owner, pickNum, teamContext = {}, season = 2027) {
+  const rank = getEffectiveRank(player);
+  const price = getEffectivePrice(player);
+  const surplus = rank ? (pickNum - rank) : null;
+  const angle = determinePickAngle(player, pickNum, rank, surplus, teamContext);
+  const statLine = formatPlayerStats(player);
 
-Action: ${owner} picked ${player.Player} (Pick #${pickNum}).
+  const posBreakdown = typeof teamContext === 'object' && teamContext?.positionCounts
+    ? Object.entries(teamContext.positionCounts).map(([pos, c]) => `${pos}: ${c}`).join(', ')
+    : (typeof teamContext === 'string' ? teamContext : 'None yet');
 
---- DATA PACKET ---
-1. PLAYER VALUE: 
-   - Position: ${player.Position}
-   - Team: ${player.Team}
-   - ADP: ${player.ADP || 'N/A'}
-   - Stats: ${formatPlayerStats(player)}
+  const recentPicksStr = typeof teamContext === 'object' && teamContext?.recentPicks?.length
+    ? teamContext.recentPicks.join(' ➔ ')
+    : 'None yet';
 
-2. OWNER PROFILE:
-   - Current Team Projections: ${teamStats}
+  const surplusDesc = surplus !== null
+    ? (surplus >= 0 ? `+${surplus} spots past consensus rank (value slide)` : `${surplus} spots ahead of consensus rank (reach)`)
+    : 'In line with consensus';
 
---- TASK ---
-Write a witty, sharp reaction (Max 250 words).
-- Comment on the value (was this a reach or a steal based on ADP?)
-- Does this player fill a need for ${owner}?
-- Keep it entertaining and insightful
+  const prompt = `You are a sharp, analytical fantasy baseball war-room commentator providing instant reaction for the ${season} draft.
+League Format: Head-to-Head Each Category (R, HR, RBI, SB, OBP | K, QS, ERA, WHIP, SV+HD).
 
-Format your response as HTML. You can use <b> tags for emphasis and <br> for line breaks.
-End with:
-<br><br>
-<b>Player Details:</b><br>
-Position: ${player.Position} | Team: ${player.Team} | ADP: ${player.ADP || 'N/A'}
-`;
+SELECTION:
+- Manager: ${owner}
+- Player: ${player.Player} (${player.Position} - ${player.Team || 'MLB'})
+- Pick: #${pickNum}
+- Board Rank: ${rank ? `#${rank}` : 'Unranked'}
+- Projected Value: ${price ? `$${price}` : 'N/A'}
+- Surplus vs Pick: ${surplusDesc}
+- Player Projections: ${statLine}
+
+MANAGER ROSTER CONTEXT:
+- Picks so far: ${teamContext?.rosterCount || 0}
+- Current positions rostered: ${posBreakdown}
+- Recent picks: ${recentPicksStr}
+
+ANALYTICAL ANGLE: [${angle}]
+
+STRICT NEGATIVE CONSTRAINTS - BANNED CLICHÉS (DO NOT USE ANY OF THESE UNDER ANY CIRCUMSTANCES):
+- DO NOT say "solidifies their depth" or "adds depth"
+- DO NOT say "immediate category firepower" or "firepower"
+- DO NOT say "championship push" or "title aspirations" or "championship contention"
+- DO NOT say "anchors the staff" or "anchors the rotation"
+- DO NOT say "locks in [Player] at Pick [X]"
+- DO NOT say "makes a statement" or "puts the league on notice"
+- DO NOT say "only time will tell" or "time will tell"
+- DO NOT say "high-risk, high-reward"
+- DO NOT say "fills a crucial void/need"
+- DO NOT say "fitting their [archetype] identity"
+- DO NOT say "potent bat" or "live arm"
+
+INSTRUCTIONS:
+1. Write 2 to 3 concise, punchy sentences (strictly under 65 words).
+2. Focus on specific numbers (e.g. 30+ HR, sub-3.30 ERA, 25 SB, or +15 pick surplus) and tactical roster construction.
+3. Sound like a knowledgeable, sharp fantasy analyst in an athletic war room.
+4. Format with clean HTML: Use <b> tags for emphasis. Do NOT include markdown code blocks.
+5. End with:
+<br><br><span style="color:#888; font-size:11px;">Rank: #${rank || '—'} • Proj Value: $${price || '—'} • Pos: ${player.Position} • MLB: ${player.Team || 'MLB'}</span>`;
 
   const aiResponse = await callGemini(prompt);
   if (aiResponse && aiResponse !== 'Analysis unavailable') {
-    return aiResponse;
+    const cleaned = aiResponse.replace(/^```html\s*/i, '').replace(/```\s*$/i, '').trim();
+    return cleaned;
   }
-  return generateLocalDraftCommentary(player, owner, pickNum, season);
+  return generateLocalDraftCommentary(player, owner, pickNum, teamContext);
 }
 
 // --- AUDIO SYSTEM ---
@@ -4168,6 +4372,11 @@ export default function DraftRoomView({
     updateGlobalPlayerLookup(displayPlayers);
   }, [displayPlayers]);
 
+  const picksRef = useRef(displayPicks);
+  useEffect(() => {
+    picksRef.current = displayPicks;
+  }, [displayPicks]);
+
   const currentPick = useMemo(() => {
     if (roomSeason === 2027) {
       // In 2027 draft prep, live drafting begins at pick 55 (picks 1-54 are 6 keeper rounds)
@@ -4189,7 +4398,6 @@ export default function DraftRoomView({
     }
   }, [currentPickId, currentPickOwner, audioEnabled]);
 
-  // Commentary callback - stable reference using playersRef
   // Commentary callback - stable reference using playersRef
   const handleNewPick = useCallback(async (pick) => {
     const player = playersRef.current.find(p => String(p['ESPN PlayerID']) === String(pick['ESPN PlayerID']));
@@ -4216,13 +4424,43 @@ export default function DraftRoomView({
     }
     
     setGeneratingCommentary(true);
+
+    const currentPicks = picksRef.current || [];
+    const currentPlayers = playersRef.current || [];
+
+    // Find all previous picks by this owner
+    const ownerPriorPicks = currentPicks.filter(p => 
+      p.Owner === pick.Owner && 
+      p['ESPN PlayerID'] && 
+      p['Overall Pick'] !== pick['Overall Pick'] &&
+      p['Overall Pick'] < (pick['Overall Pick'] || 999)
+    );
+
+    const posCounts = {};
+    const recentPicks = [];
+    ownerPriorPicks.forEach(p => {
+      const pl = currentPlayers.find(x => String(x['ESPN PlayerID']) === String(p['ESPN PlayerID']));
+      const pos = pl?.Position || p.Position || 'UTIL';
+      const mainPos = pos.split(/[/,]/)[0].trim();
+      posCounts[mainPos] = (posCounts[mainPos] || 0) + 1;
+      const name = pl?.Player || p.Player;
+      if (name) {
+        recentPicks.push(`${name} (R${p.Round || '?'})`);
+      }
+    });
+
+    const teamContext = {
+      rosterCount: ownerPriorPicks.length,
+      positionCounts: posCounts,
+      recentPicks: recentPicks.slice(-3),
+      totalTeamPicks: ownerPriorPicks.length + 1
+    };
     
-    const teamStats = "Stats calculation pending";
     const commentary = await generateDraftCommentary(
       player,
       pick.Owner,
       pick['Overall Pick'],
-      teamStats,
+      teamContext,
       roomSeason
     );
     
@@ -5232,7 +5470,7 @@ export default function DraftRoomView({
                 {generatingCommentary ? (
                   <span style={{ color: '#888', fontStyle: 'italic' }}>🤔 HeftyMatic 3000 is analyzing this pick...</span>
                 ) : (
-                  <span>{lastPickCommentary}</span>
+                  <span dangerouslySetInnerHTML={{ __html: lastPickCommentary }} />
                 )}
               </div>
             </div>
