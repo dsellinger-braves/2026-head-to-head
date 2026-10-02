@@ -276,14 +276,24 @@ export default function KeeperCalculationsView({
                 <span className="text-xs font-black text-purple-400 uppercase tracking-wider flex items-center gap-1.5">
                   <span>🔥</span> Relief Pitching (Qual ≥ {benchmarks.min_rp_ip || 45} IP)
                 </span>
-                <span className="text-[10px] bg-purple-500/20 text-purple-300 border border-purple-500/40 px-1.5 py-0.5 rounded font-bold" title="2.5x standard deviation nerfing factor applied to RP stats">
-                  2.5x σ Nerf
-                </span>
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/40 px-1.5 py-0.5 rounded font-bold" title="SV+HD benchmark only includes relievers projected for ≥25 SV+HD in Year 1">
+                    SV+HD ≥25 Y1
+                  </span>
+                  <span className="text-[10px] bg-purple-500/20 text-purple-300 border border-purple-500/40 px-1.5 py-0.5 rounded font-bold" title="2.5x standard deviation nerfing factor applied to RP stats">
+                    2.5x σ Nerf
+                  </span>
+                </div>
               </div>
               <div className="grid grid-cols-4 gap-1.5 text-center">
                 {Object.entries(benchmarks.rp || {}).map(([cat, b]) => (
                   <div key={cat} className="bg-slate-900/90 border border-slate-800/80 rounded p-1.5">
-                    <div className="text-[10px] font-black text-slate-400">{cat}</div>
+                    <div className="text-[10px] font-black text-slate-400 flex items-center justify-center gap-1">
+                      <span>{cat}</span>
+                      {cat === 'SV_HD' && (
+                        <span className="text-[8px] text-amber-400 font-bold" title="Only relievers projected for ≥25 SV+HD in Year 1 are included in μ and σ">≥25</span>
+                      )}
+                    </div>
                     <div className="text-xs font-bold text-white mt-0.5">μ {b.mean}</div>
                     <div className="text-[10px] text-purple-300 font-semibold" title={`Effective nerfed σ = ${b.eff_std || b.std} (raw: ${b.std})`}>
                       σ {b.eff_std || b.std}
@@ -304,6 +314,12 @@ export default function KeeperCalculationsView({
                 <span>📈</span> Proportional IP Scaling:
               </span>
               <span>FanGraphs 2027 &amp; 2028 omit QS and SV+HD; values are scaled proportionally to projected IP changes.</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-amber-400 font-bold flex items-center gap-1">
+                <span>🛡️</span> SV+HD High-Leverage Benchmark:
+              </span>
+              <span>Average and std dev for SV+HD only include relievers projected for ≥25 SV+HD in Year 1.</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-purple-400 font-bold flex items-center gap-1">
@@ -676,11 +692,11 @@ export default function KeeperCalculationsView({
                   <div className="flex items-center gap-2">
                     <span className="text-base">🔥</span>
                     <span className="text-purple-200 font-bold">
-                      Relief Pitcher 2.5x σ Nerf Factor Active
+                      Relief Pitcher Rules Active (2.5x σ Nerf &amp; ≥25 Y1 SV+HD Benchmark)
                     </span>
                   </div>
                   <span className="text-purple-300 text-[11px]">
-                    Std dev multiplied by 2.5x across SO, SV+HD, ERA, and WHIP to balance RP keeper valuations.
+                    Std dev multiplied by 2.5x across all RP stats. SV+HD benchmark specifically isolates high-leverage relievers (≥25 SV+HD in Year 1).
                   </span>
                 </div>
               )}

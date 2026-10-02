@@ -214,14 +214,14 @@ def compute_detailed_player_pr(
                 "pr": 0.0
             }
 
-            # RP SV+HD (std nerfed by 2.5x)
+            # RP SV+HD (std nerfed by 2.5x; benchmark filtered to pitchers with >=25 SVHD in Y1)
             mean_svhd, raw_std_svhd = benchmarks.get("RP_SVHD", (30.0, 9.0))
             std_svhd = raw_std_svhd * RP_NERF
             z_svhd = (svhd - mean_svhd) / std_svhd if std_svhd > 0 else 0.0
             cat_prs["SV_HD"] = z_svhd
             calcs["SV_HD"] = {
                 "stat": "SV_HD",
-                "category_type": "RP Counting (2.5x Nerfed σ)",
+                "category_type": "RP Counting (Qual ≥25 Y1 SVHD, 2.5x Nerfed σ)",
                 "val": round(svhd, 1),
                 "mean": round(mean_svhd, 1),
                 "std": round(raw_std_svhd, 1),
@@ -496,15 +496,30 @@ def main():
         if pid: pitchers_2028[pid] = item
         if name_clean: pitchers_2028[name_clean] = item
 
-    # Benchmarks computed with scaled stats
+    # Identify relievers qualifying for SVHD benchmark (projected >= 25 SVHD in first projection year)
+    rp_svhd_qual_keys = set()
+    for p in pitchers_keeper_2026.values():
+        g = float(p.get("G", 0) or 0)
+        gs = float(p.get("GS", 0) or 0)
+        ip = float(p.get("IP", 0) or 0)
+        is_sp = (gs / g >= 0.5) if g > 0 else (gs > 5)
+        svhd = float(p.get("SVHD", 0) or 0)
+        if not is_sp and ip >= 45.0 and svhd >= 25.0:
+            if p.get("playerid"):
+                rp_svhd_qual_keys.add(str(p["playerid"]).strip())
+            name_clean = p.get("name", "").lower().replace(".", "").replace("'", "").strip()
+            if name_clean:
+                rp_svhd_qual_keys.add(name_clean)
+
+    # Benchmarks computed with scaled stats and RP SVHD filtered to Y1 >= 25 SVHD
     benchmarks_k26 = cpv.calculate_category_benchmarks(
-        list(batters_keeper_2026.values()), list(pitchers_keeper_2026.values()), min_ab=400.0, min_sp_ip=130.0, min_rp_ip=45.0
+        list(batters_keeper_2026.values()), list(pitchers_keeper_2026.values()), min_ab=400.0, min_sp_ip=130.0, min_rp_ip=45.0, svhd_qual_keys=rp_svhd_qual_keys
     )
     benchmarks_k27 = cpv.calculate_category_benchmarks(
-        list(batters_2027.values()), list(pitchers_2027.values()), min_ab=500.0, min_sp_ip=130.0, min_rp_ip=45.0
+        list(batters_2027.values()), list(pitchers_2027.values()), min_ab=500.0, min_sp_ip=130.0, min_rp_ip=45.0, svhd_qual_keys=rp_svhd_qual_keys
     )
     benchmarks_k28 = cpv.calculate_category_benchmarks(
-        list(batters_2028.values()), list(pitchers_2028.values()), min_ab=500.0, min_sp_ip=130.0, min_rp_ip=45.0
+        list(batters_2028.values()), list(pitchers_2028.values()), min_ab=500.0, min_sp_ip=130.0, min_rp_ip=45.0, svhd_qual_keys=rp_svhd_qual_keys
     )
 
     def serialize_benchmarks(b_dict, min_ab, min_sp_ip, min_rp_ip):
@@ -513,6 +528,7 @@ def main():
             "min_sp_ip": min_sp_ip,
             "min_rp_ip": min_rp_ip,
             "rp_nerf_factor": 2.5,
+            "rp_svhd_min_threshold": 25.0,
             "batting": {
                 "R": {"mean": round(b_dict.get("BAT_R", (0, 1))[0], 2), "std": round(b_dict.get("BAT_R", (0, 1))[1], 2)},
                 "HR": {"mean": round(b_dict.get("BAT_HR", (0, 1))[0], 2), "std": round(b_dict.get("BAT_HR", (0, 1))[1], 2)},
