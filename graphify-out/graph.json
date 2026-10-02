@@ -3975,7 +3975,7 @@
       "file_type": "code",
       "norm_label": "mean_std()",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L157"
+      "source_location": "L176"
     },
     {
       "id": "pipelines_compute_player_values_compute_player_season_pr",
@@ -3987,7 +3987,7 @@
       "file_type": "code",
       "norm_label": "compute_player_season_pr()",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L205"
+      "source_location": "L242"
     },
     {
       "id": "pipelines_compute_player_values_fetch_csv_from_gsheet",
@@ -4071,7 +4071,7 @@
       "file_type": "code",
       "norm_label": "run_pipeline()",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L284"
+      "source_location": "L321"
     },
     {
       "id": "pipelines_compute_player_values_run_pipeline_make_lookup",
@@ -4083,7 +4083,7 @@
       "file_type": "code",
       "norm_label": "make_lookup()",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L325"
+      "source_location": "L362"
     },
     {
       "id": "pipelines_compute_player_values_run_pipeline_parse_rank",
@@ -4095,7 +4095,7 @@
       "file_type": "code",
       "norm_label": "parse_rank()",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L689"
+      "source_location": "L741"
     },
     {
       "id": "pipelines_compute_player_values_run_pipeline_parse_zips_api_bat",
@@ -4107,7 +4107,7 @@
       "file_type": "code",
       "norm_label": "parse_zips_api_bat()",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L358"
+      "source_location": "L395"
     },
     {
       "id": "pipelines_compute_player_values_run_pipeline_parse_zips_api_pit",
@@ -4119,7 +4119,7 @@
       "file_type": "code",
       "norm_label": "parse_zips_api_pit()",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L424"
+      "source_location": "L461"
     },
     {
       "id": "pipelines_compute_player_values_run_pipeline_parse_zips_gsheet_bat",
@@ -4131,7 +4131,7 @@
       "file_type": "code",
       "norm_label": "parse_zips_gsheet_bat()",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L462"
+      "source_location": "L499"
     },
     {
       "id": "pipelines_compute_player_values_run_pipeline_parse_zips_gsheet_pit",
@@ -4143,7 +4143,7 @@
       "file_type": "code",
       "norm_label": "parse_zips_gsheet_pit()",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L497"
+      "source_location": "L534"
     },
     {
       "id": "pipelines_generate_keeper_calculations_compute_detailed_player_pr",
@@ -4227,7 +4227,7 @@
       "file_type": "code",
       "norm_label": "serialize_benchmarks()",
       "source_file": "pipelines/generate_keeper_calculations.py",
-      "source_location": "L510"
+      "source_location": "L525"
     },
     {
       "id": "pipelines_sync_player_news_fetch_player_news",
@@ -9748,7 +9748,7 @@
       "source_location": "L134"
     },
     {
-      "id": "pipelines_compute_player_values_rationale_152",
+      "id": "pipelines_compute_player_values_rationale_154",
       "label": "Compute mean and stddev for qualified players.",
       "_origin": "ast",
       "community": 4,
@@ -9756,10 +9756,10 @@
       "file_type": "rationale",
       "norm_label": "compute mean and stddev for qualified players.",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L152"
+      "source_location": "L154"
     },
     {
-      "id": "pipelines_compute_player_values_rationale_213",
+      "id": "pipelines_compute_player_values_rationale_250",
       "label": "Compute total PR and individual category PRs for a player in a given season.",
       "_origin": "ast",
       "community": 4,
@@ -9767,7 +9767,7 @@
       "file_type": "rationale",
       "norm_label": "compute total pr and individual category prs for a player in a given season.",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L213"
+      "source_location": "L250"
     },
     {
       "id": "pipelines_compute_player_values_rationale_68",
@@ -12203,6 +12203,18 @@
       "type": "external"
     },
     {
+      "id": "src_data_keeperinput2027",
+      "label": "src_data_keeperinput2027",
+      "_origin": "semantic",
+      "community": 67,
+      "community_name": "KeepersBudgetsView.jsx",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "src_data_keeperinput2027",
+      "source_file": "",
+      "type": "external"
+    },
+    {
       "id": "src_data_teambudgets2026",
       "label": "src_data_teambudgets2026",
       "_origin": "semantic",
@@ -12215,19 +12227,9 @@
       "type": "external"
     },
     {
-      "id": "src_data_keeperinput2027",
-      "label": "src_data_keeperinput2027",
-      "community": 67,
-      "community_name": "KeepersBudgetsView.jsx",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "src_data_keeperinput2027",
-      "source_file": "",
-      "type": "external"
-    },
-    {
       "id": "src_data_teambudgets2027",
       "label": "src_data_teambudgets2027",
+      "_origin": "semantic",
       "community": 67,
       "community_name": "KeepersBudgetsView.jsx",
       "external": true,
@@ -14179,7 +14181,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L289",
+      "source_location": "L326",
       "weight": 1.0
     },
     {
@@ -14191,7 +14193,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L293",
+      "source_location": "L330",
       "weight": 1.0
     },
     {
@@ -14203,7 +14205,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L313",
+      "source_location": "L350",
       "weight": 1.0
     },
     {
@@ -14215,7 +14217,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L321",
+      "source_location": "L358",
       "weight": 1.0
     },
     {
@@ -14227,7 +14229,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L353",
+      "source_location": "L390",
       "weight": 1.0
     },
     {
@@ -14239,7 +14241,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L664",
+      "source_location": "L716",
       "weight": 1.0
     },
     {
@@ -14251,7 +14253,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L720",
+      "source_location": "L772",
       "weight": 1.0
     },
     {
@@ -14263,7 +14265,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L742",
+      "source_location": "L794",
       "weight": 1.0
     },
     {
@@ -14311,7 +14313,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pipelines/generate_keeper_calculations.py",
-      "source_location": "L500",
+      "source_location": "L515",
       "weight": 1.0
     },
     {
@@ -14323,7 +14325,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pipelines/generate_keeper_calculations.py",
-      "source_location": "L561",
+      "source_location": "L577",
       "weight": 1.0
     },
     {
@@ -14335,7 +14337,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pipelines/generate_keeper_calculations.py",
-      "source_location": "L571",
+      "source_location": "L587",
       "weight": 1.0
     },
     {
@@ -16891,7 +16893,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/KeeperCalculationsView.jsx",
-      "source_location": "L469",
+      "source_location": "L485",
       "weight": 1.0
     },
     {
@@ -16903,7 +16905,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/KeeperCalculationsView.jsx",
-      "source_location": "L501",
+      "source_location": "L517",
       "weight": 1.0
     },
     {
@@ -17731,7 +17733,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L157",
+      "source_location": "L176",
       "weight": 1.0
     },
     {
@@ -17743,7 +17745,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L325",
+      "source_location": "L362",
       "weight": 1.0
     },
     {
@@ -17755,7 +17757,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L358",
+      "source_location": "L395",
       "weight": 1.0
     },
     {
@@ -17767,7 +17769,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L424",
+      "source_location": "L461",
       "weight": 1.0
     },
     {
@@ -17779,7 +17781,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L462",
+      "source_location": "L499",
       "weight": 1.0
     },
     {
@@ -17791,7 +17793,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L497",
+      "source_location": "L534",
       "weight": 1.0
     },
     {
@@ -17803,7 +17805,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L689",
+      "source_location": "L741",
       "weight": 1.0
     },
     {
@@ -17851,7 +17853,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pipelines/generate_keeper_calculations.py",
-      "source_location": "L510",
+      "source_location": "L525",
       "weight": 1.0
     },
     {
@@ -29464,7 +29466,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L205",
+      "source_location": "L242",
       "weight": 1.0
     },
     {
@@ -29475,7 +29477,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L284",
+      "source_location": "L321",
       "weight": 1.0
     },
     {
@@ -34823,25 +34825,25 @@
       "weight": 1.0
     },
     {
-      "source": "pipelines_compute_player_values_rationale_152",
+      "source": "pipelines_compute_player_values_rationale_154",
       "target": "pipelines_compute_player_values_calculate_category_benchmarks",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L152",
+      "source_location": "L154",
       "weight": 1.0
     },
     {
-      "source": "pipelines_compute_player_values_rationale_213",
+      "source": "pipelines_compute_player_values_rationale_250",
       "target": "pipelines_compute_player_values_compute_player_season_pr",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L213",
+      "source_location": "L250",
       "weight": 1.0
     },
     {
@@ -35727,5 +35729,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "8f3a40a3940e76430fb9368c605037575cab70e4"
+  "built_at_commit": "1da091bff3fe2f3124d48426ca66c395406669eb"
 }

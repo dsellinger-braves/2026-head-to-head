@@ -33,7 +33,7 @@ import csv
 import io
 import urllib.request
 import requests
-from typing import Dict, List, Tuple, Any
+from typing import Dict, List, Tuple, Any, Optional, Set
 
 # Supabase default credentials
 DEFAULT_SUPABASE_URL = "https://wczdkcdqgtzlsbssogoz.supabase.co"
@@ -148,11 +148,30 @@ def calculate_category_benchmarks(
     min_ab: float,
     min_sp_ip: float,
     min_rp_ip: float,
+    svhd_qual_keys: Optional[Set[str]] = None,
+    min_rp_svhd: float = 25.0,
 ) -> Dict[str, Tuple[float, float]]:
     """Compute mean and stddev for qualified players."""
-    qual_bat = [b for b in batters if float(b.get("AB", 0) or 0) >= min_ab]
+    # Deduplicate batters and pitchers to avoid multiple key insertions skewing counts
+    unique_bat = []
+    seen_bat = set()
+    for b in batters:
+        k = str(b.get("playerid") or "").strip() or b.get("name_clean") or b.get("name") or str(id(b))
+        if k not in seen_bat:
+            seen_bat.add(k)
+            unique_bat.append(b)
+
+    unique_pit = []
+    seen_pit = set()
+    for p in pitchers:
+        k = str(p.get("playerid") or "").strip() or p.get("name_clean") or p.get("name") or str(id(p))
+        if k not in seen_pit:
+            seen_pit.add(k)
+            unique_pit.append(p)
+
+    qual_bat = [b for b in unique_bat if float(b.get("AB", 0) or 0) >= min_ab]
     if not qual_bat:
-        qual_bat = batters
+        qual_bat = unique_bat
 
     def mean_std(values: List[float]) -> Tuple[float, float]:
         if not values:
@@ -170,7 +189,7 @@ def calculate_category_benchmarks(
 
     starters = []
     relievers = []
-    for p in pitchers:
+    for p in unique_pit:
         g = float(p.get("G", 0) or 0)
         gs = float(p.get("GS", 0) or 0)
         ip = float(p.get("IP", 0) or 0)
@@ -183,9 +202,9 @@ def calculate_category_benchmarks(
                 relievers.append(p)
 
     if not starters:
-        starters = [p for p in pitchers if float(p.get("GS", 0) or 0) > 0]
+        starters = [p for p in unique_pit if float(p.get("GS", 0) or 0) > 0]
     if not relievers:
-        relievers = [p for p in pitchers if float(p.get("GS", 0) or 0) == 0]
+        relievers = [p for p in unique_pit if float(p.get("GS", 0) or 0) == 0]
 
     # SP benchmarks
     benchmarks["SP_SO"] = mean_std([float(p.get("SO", 0) or 0) for p in starters])
@@ -195,9 +214,27 @@ def calculate_category_benchmarks(
 
     # RP benchmarks
     benchmarks["RP_SO"] = mean_std([float(p.get("SO", 0) or 0) for p in relievers])
-    benchmarks["RP_SVHD"] = mean_std([float(p.get("SVHD", 0) or 0) for p in relievers])
     benchmarks["RP_ERA"] = mean_std([float(p.get("ERA", 0) or 0) for p in relievers])
     benchmarks["RP_WHIP"] = mean_std([float(p.get("WHIP", 0) or 0) for p in relievers])
+
+    # RP SVHD benchmark: only include pitchers projected for at least 25 SVHD in the first projection year
+    if svhd_qual_keys:
+        svhd_relievers = [
+            p for p in relievers
+            if (
+                str(p.get("playerid") or "").strip() in svhd_qual_keys
+                or (p.get("name_clean") or "").lower().strip() in svhd_qual_keys
+                or p.get("name", "").lower().replace(".", "").replace("'", "").strip() in svhd_qual_keys
+            )
+            and float(p.get("SVHD", 0) or 0) > 0
+        ]
+    else:
+        svhd_relievers = [p for p in relievers if float(p.get("SVHD", 0) or 0) >= min_rp_svhd]
+
+    if not svhd_relievers:
+        svhd_relievers = relievers
+
+    benchmarks["RP_SVHD"] = mean_std([float(p.get("SVHD", 0) or 0) for p in svhd_relievers])
 
     return benchmarks
 
@@ -660,26 +697,41 @@ def run_pipeline():
     # 6. Calculate Benchmarks per Model
     print("📊 Computing benchmarks for Keeper Model & Single-Year Model...")
 
+    # Identify relievers qualifying for SVHD benchmark (projected >= 25 SVHD in first projection year)
+    rp_svhd_qual_keys = set()
+    for p in pitchers_keeper_2026.values():
+        g = float(p.get("G", 0) or 0)
+        gs = float(p.get("GS", 0) or 0)
+        ip = float(p.get("IP", 0) or 0)
+        is_sp = (gs / g >= 0.5) if g > 0 else (gs > 5)
+        svhd = float(p.get("SVHD", 0) or 0)
+        if not is_sp and ip >= 45.0 and svhd >= 25.0:
+            if p.get("playerid"):
+                rp_svhd_qual_keys.add(str(p["playerid"]).strip())
+            name_clean = p.get("name", "").lower().replace(".", "").replace("'", "").strip()
+            if name_clean:
+                rp_svhd_qual_keys.add(name_clean)
+
     # Keeper Model Benchmarks
     benchmarks_k26 = calculate_category_benchmarks(
-        list(batters_keeper_2026.values()), list(pitchers_keeper_2026.values()), min_ab=400.0, min_sp_ip=130.0, min_rp_ip=45.0
+        list(batters_keeper_2026.values()), list(pitchers_keeper_2026.values()), min_ab=400.0, min_sp_ip=130.0, min_rp_ip=45.0, svhd_qual_keys=rp_svhd_qual_keys
     )
     benchmarks_k27 = calculate_category_benchmarks(
-        list(batters_2027.values()), list(pitchers_2027.values()), min_ab=500.0, min_sp_ip=130.0, min_rp_ip=45.0
+        list(batters_2027.values()), list(pitchers_2027.values()), min_ab=500.0, min_sp_ip=130.0, min_rp_ip=45.0, svhd_qual_keys=rp_svhd_qual_keys
     )
     benchmarks_k28 = calculate_category_benchmarks(
-        list(batters_2028.values()), list(pitchers_2028.values()), min_ab=500.0, min_sp_ip=130.0, min_rp_ip=45.0
+        list(batters_2028.values()), list(pitchers_2028.values()), min_ab=500.0, min_sp_ip=130.0, min_rp_ip=45.0, svhd_qual_keys=rp_svhd_qual_keys
     )
 
     # Single-Year Model Benchmarks (Workbook methodology: full-year stats evaluated at 400 AB in Y1, 500 AB in Y2/Y3)
     benchmarks_sy_y1 = calculate_category_benchmarks(
-        list(batters_single_year.values()), list(pitchers_single_year.values()), min_ab=400.0, min_sp_ip=130.0, min_rp_ip=45.0
+        list(batters_single_year.values()), list(pitchers_single_year.values()), min_ab=400.0, min_sp_ip=130.0, min_rp_ip=45.0, svhd_qual_keys=rp_svhd_qual_keys
     )
     benchmarks_sy_y2 = calculate_category_benchmarks(
-        list(batters_single_year.values()), list(pitchers_single_year.values()), min_ab=500.0, min_sp_ip=130.0, min_rp_ip=45.0
+        list(batters_single_year.values()), list(pitchers_single_year.values()), min_ab=500.0, min_sp_ip=130.0, min_rp_ip=45.0, svhd_qual_keys=rp_svhd_qual_keys
     )
     benchmarks_sy_y3 = calculate_category_benchmarks(
-        list(batters_single_year.values()), list(pitchers_single_year.values()), min_ab=500.0, min_sp_ip=130.0, min_rp_ip=45.0
+        list(batters_single_year.values()), list(pitchers_single_year.values()), min_ab=500.0, min_sp_ip=130.0, min_rp_ip=45.0, svhd_qual_keys=rp_svhd_qual_keys
     )
 
     # 7. Evaluate All Players in Pool
