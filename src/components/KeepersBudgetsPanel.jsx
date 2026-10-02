@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/useAuth';
 import { supabase } from '../supabaseClient';
 import KeeperCalculationsView from '../views/KeeperCalculationsView';
@@ -42,10 +42,32 @@ const DRAFT_MANAGERS = [
 
 function normalizeManager(mgr) {
   if (!mgr) return '';
-  const s = String(mgr).trim();
-  if (s.toLowerCase() === 'dan') return 'Daniel';
-  return s;
+  const s = String(mgr).trim().toLowerCase();
+  if (s === 'dan' || s === 'daniel' || s === 'dsellinger') return 'Daniel';
+  if (s === 'adriaxx' || s === 'adrian') return 'Adrian';
+  if (s === 'aznchuy' || s === 'tim') return 'Tim';
+  if (s === 'ghutch' || s === 'garrett') return 'Garrett';
+  if (s === 'anilbhairo' || s === 'anil') return 'Anil';
+  if (s === 'ay0h' || s === 'alex') return 'Alex';
+  if (s === 'senorspice' || s === 'will') return 'Will';
+  if (s === 'mrussell38' || s === 'mark') return 'Mark';
+  if (s === 'pston3' || s === 'preston') return 'Preston';
+  const found = DRAFT_MANAGERS.find(m => m.toLowerCase() === s);
+  return found || mgr.trim();
 }
+
+const OWNER_TEAM_IDS = {
+  tim: 1,
+  adrian: 2,
+  garrett: 3,
+  daniel: 5,
+  dan: 5,
+  anil: 6,
+  alex: 8,
+  will: 12,
+  mark: 13,
+  preston: 14
+};
 
 // Helper to compute keeper cost from rank based on Keeper Costs tab
 function calculateKeeperCostFromRank(rank) {
@@ -97,8 +119,33 @@ export default function KeepersBudgetsPanel({
   priorKeepers = [],
   initialTab = 'matrix'
 }) {
-  const { user, profile, isCommissioner: authIsCommissioner, effectiveOwner, governanceTitle = 'Commissioner' } = useAuth();
-  const isCommissioner = propIsCommissioner || authIsCommissioner;
+  const {
+    user,
+    profile,
+    isCommissioner: authIsCommissioner,
+    effectiveOwner,
+    governanceTitle = 'Commissioner',
+    isAdmin,
+    isCommishEligible,
+    signInWithDiscord,
+    logCommissionerAction
+  } = useAuth();
+
+  // Admin & Commissioner override rights: Adrian (Team 2) and Dan/Daniel (Team 5)
+  const hasOverrideRights = useMemo(() => {
+    return Boolean(
+      propIsCommissioner ||
+      authIsCommissioner ||
+      isAdmin ||
+      isCommishEligible ||
+      profile?.team_id === 2 ||
+      profile?.team_id === 5 ||
+      profile?.role === 'commissioner' ||
+      profile?.role === 'admin'
+    );
+  }, [propIsCommissioner, authIsCommissioner, isAdmin, isCommishEligible, profile]);
+
+  const isCommissioner = hasOverrideRights;
 
   const [activeTab, setActiveTab] = useState(initialTab || 'matrix'); // 'matrix' | 'rosters' | 'simulator' | 'planner' | 'settings' | 'calculations'
 
@@ -137,14 +184,80 @@ export default function KeepersBudgetsPanel({
   const [savingSettings, setSavingSettings] = useState(false);
   const [savingAdjustments, setSavingAdjustments] = useState(false);
 
-  // Sync owners when effectiveOwner changes (e.g. via Commish Switcher)
-  useEffect(() => {
-    if (effectiveOwner) {
-      setSelectedOwner(effectiveOwner);
-      setSimulatedOwner(effectiveOwner);
-      setPlannerOwner(effectiveOwner);
+  // Check if current authenticated user owns target team
+  const isOwnerOf = useCallback((targetOwner) => {
+    if (!user || !profile) return false;
+    const targetNorm = normalizeManager(targetOwner).toLowerCase();
+    const myOwnerNorm = normalizeManager(profile?.owner_name).toLowerCase();
+    if (targetNorm && myOwnerNorm && targetNorm === myOwnerNorm) {
+      return true;
     }
-  }, [effectiveOwner]);
+    const myTeamId = profile?.team_id;
+    if (myTeamId) {
+      const budget = (Array.isArray(teamBudgets) ? teamBudgets : []).find(
+        b => normalizeManager(b.owner).toLowerCase() === targetNorm
+      );
+      if (budget?.team_id && budget.team_id === myTeamId) {
+        return true;
+      }
+      if (OWNER_TEAM_IDS[targetNorm] === myTeamId) {
+        return true;
+      }
+    }
+    return false;
+  }, [user, profile, teamBudgets]);
+
+  // Determine submission permissions for any given manager
+  const getSubmissionAuth = useCallback((targetOwner) => {
+    if (!user) {
+      return {
+        canSubmit: false,
+        reason: 'not_logged_in',
+        isOverride: false,
+        overrideTitle: ''
+      };
+    }
+
+    const isMine = isOwnerOf(targetOwner);
+
+    if (hasOverrideRights) {
+      const overrideTitle = (profile?.team_id === 5 || isAdmin || profile?.owner_name?.toLowerCase().includes('dan'))
+        ? 'Admin'
+        : 'Commish';
+      return {
+        canSubmit: true,
+        reason: isMine ? 'own_team' : 'override',
+        isOverride: !isMine,
+        overrideTitle
+      };
+    }
+
+    if (isMine) {
+      return {
+        canSubmit: true,
+        reason: 'own_team',
+        isOverride: false,
+        overrideTitle: ''
+      };
+    }
+
+    return {
+      canSubmit: false,
+      reason: 'unauthorized_owner',
+      isOverride: false,
+      overrideTitle: ''
+    };
+  }, [user, profile, hasOverrideRights, isOwnerOf, isAdmin]);
+
+  // Sync owners when logged-in user changes or Commish Switcher changes
+  useEffect(() => {
+    const ownerToSet = effectiveOwner || (profile?.owner_name ? normalizeManager(profile.owner_name) : null);
+    if (ownerToSet) {
+      setSelectedOwner(ownerToSet);
+      setSimulatedOwner(ownerToSet);
+      setPlannerOwner(ownerToSet);
+    }
+  }, [effectiveOwner, profile?.owner_name]);
 
   // Lookup map for prior year (2026) keeper cost
   const priorCostLookup = useMemo(() => {
@@ -239,8 +352,8 @@ export default function KeepersBudgetsPanel({
     return list.filter(p => normalizeManager(p.owner) === normalizeManager(simulatedOwner));
   }, [compPicks, simulatedOwner]);
 
-  // Sync simulator defaults from real world when owner changes
-  const resetSimulatorToReal = () => {
+  // Sync simulator defaults from real world when owner or picks change
+  const resetSimulatorToReal = useCallback(() => {
     const bought = {};
     const sold = {};
     realOwnerCompPicks.forEach(p => {
@@ -249,7 +362,11 @@ export default function KeepersBudgetsPanel({
     });
     setSimBoughtRounds(bought);
     setSimSoldRounds(sold);
-  };
+  }, [realOwnerCompPicks]);
+
+  useEffect(() => {
+    resetSimulatorToReal();
+  }, [resetSimulatorToReal]);
 
   // Group keepers by owner
   const keepersByOwner = useMemo(() => {
@@ -543,22 +660,18 @@ export default function KeepersBudgetsPanel({
 
   // Handle Save Keepers to Supabase
   const handleSaveKeepers = async () => {
-    if (!user) {
-      alert('Please log in with Discord in the top navigation bar to save official keepers.');
+    const auth = getSubmissionAuth(plannerOwner);
+    if (!auth.canSubmit) {
+      if (!user) {
+        alert('Please log in with Discord in the top navigation bar to save official keepers.');
+      } else {
+        alert(`You are logged in as ${profile?.owner_name || 'another manager'}. You can only set official keepers for your own team.`);
+      }
       return;
     }
 
-    const isTargetMe = profile?.owner_name?.toLowerCase() === plannerOwner?.toLowerCase() ||
-      (profile?.owner_name === 'Dan' && plannerOwner === 'Daniel') ||
-      (profile?.owner_name === 'Daniel' && plannerOwner === 'Dan');
-
-    if (isDeadlinePassed && !isCommissioner) {
+    if (isDeadlinePassed && !hasOverrideRights) {
       alert('The keeper selection deadline has passed. Only Commissioner (Adrian) or Admin (Dan) can submit keeper changes now.');
-      return;
-    }
-
-    if (!isCommissioner && !isTargetMe) {
-      alert(`You are logged in as ${profile?.owner_name}. You can only set official keepers for your own team.`);
       return;
     }
 
@@ -570,7 +683,12 @@ export default function KeepersBudgetsPanel({
 
     setSavingKeepers(true);
     try {
-      const targetTeamId = (teamBudgets.find(b => b.owner === plannerOwner)?.team_id) || 0;
+      const existingBudget = (Array.isArray(teamBudgets) ? teamBudgets : []).find(
+        b => normalizeManager(b.owner).toLowerCase() === normalizeManager(plannerOwner).toLowerCase()
+      );
+      const canonicalOwner = existingBudget?.owner || plannerOwner;
+      const targetTeamId = existingBudget?.team_id || OWNER_TEAM_IDS[normalizeManager(plannerOwner).toLowerCase()] || 0;
+
       const validKeepers = plannerData.keepers.filter(k => k.espn_player_id && !k.isEmpty);
       if (validKeepers.length === 0) {
         alert('Please select at least one keeper before saving.');
@@ -580,7 +698,7 @@ export default function KeepersBudgetsPanel({
 
       const keeperRows = validKeepers.map(k => ({
         season_year: seasonYear,
-        owner: plannerOwner,
+        owner: canonicalOwner,
         team_id: targetTeamId,
         keeper_slot: k.keeper_slot,
         player_name: k.player_name,
@@ -596,11 +714,13 @@ export default function KeepersBudgetsPanel({
       }));
 
       // Clean existing keepers for this owner in this season to avoid orphaned slots
-      await supabase
+      const { error: delErr } = await supabase
         .from('draft_keepers')
         .delete()
         .eq('season_year', seasonYear)
-        .eq('owner', plannerOwner);
+        .eq('owner', canonicalOwner);
+
+      if (delErr) throw delErr;
 
       const { error: keepersErr } = await supabase
         .from('draft_keepers')
@@ -609,7 +729,6 @@ export default function KeepersBudgetsPanel({
       if (keepersErr) throw keepersErr;
 
       // Update draft_team_budgets
-      const existingBudget = teamBudgets.find(b => b.owner === plannerOwner);
       const base = existingBudget?.base_budget || 100;
       const compSpend = existingBudget?.comp_pick_spend || 0;
       const compIncome = existingBudget?.comp_pick_income || 0;
@@ -621,7 +740,7 @@ export default function KeepersBudgetsPanel({
         .from('draft_team_budgets')
         .upsert({
           season_year: seasonYear,
-          owner: plannerOwner,
+          owner: canonicalOwner,
           team_id: targetTeamId,
           base_budget: base,
           keeper_spend: newKeeperSpend,
@@ -634,7 +753,21 @@ export default function KeepersBudgetsPanel({
           updated_at: new Date().toISOString()
         }, { onConflict: 'season_year,owner' });
 
-      alert(`Official ${seasonYear} keepers for ${plannerOwner} successfully saved to the league database! 🎉`);
+      if (auth.isOverride && logCommissionerAction) {
+        logCommissionerAction({
+          actionType: 'admin_keeper_submission',
+          actionDescription: `${profile?.owner_name || auth.overrideTitle} submitted official keepers for ${canonicalOwner}`,
+          targetTeamId,
+          targetOwner: canonicalOwner,
+          details: {
+            seasonYear,
+            totalSpend: newKeeperSpend,
+            keeperCount: validKeepers.length
+          }
+        });
+      }
+
+      alert(`Official ${seasonYear} keepers for ${canonicalOwner} successfully saved to the league database! 🎉`);
       setReplacedKeepers({});
       if (onRefresh) onRefresh();
     } catch (err) {
@@ -647,17 +780,13 @@ export default function KeepersBudgetsPanel({
 
   // Handle Save Comp Picks to Supabase
   const handleSaveCompPicks = async () => {
-    if (!user) {
-      alert('Please log in with Discord in the top navigation bar to save consolation pick purchases.');
-      return;
-    }
-
-    const isTargetMe = profile?.owner_name?.toLowerCase() === simulatedOwner?.toLowerCase() ||
-      (profile?.owner_name === 'Dan' && simulatedOwner === 'Daniel') ||
-      (profile?.owner_name === 'Daniel' && simulatedOwner === 'Dan');
-
-    if (!isCommissioner && !isTargetMe) {
-      alert(`You are logged in as ${profile?.owner_name}. You can only submit consolation picks for your own team.`);
+    const auth = getSubmissionAuth(simulatedOwner);
+    if (!auth.canSubmit) {
+      if (!user) {
+        alert('Please log in with Discord in the top navigation bar to save compensation pick purchases.');
+      } else {
+        alert(`You are logged in as ${profile?.owner_name || 'another manager'}. You can only submit compensation picks for your own team.`);
+      }
       return;
     }
 
@@ -668,27 +797,46 @@ export default function KeepersBudgetsPanel({
 
     setSavingCompPicks(true);
     try {
-      const targetTeamId = (teamBudgets.find(b => b.owner === simulatedOwner)?.team_id) || 0;
+      const existingBudget = (Array.isArray(teamBudgets) ? teamBudgets : []).find(
+        b => normalizeManager(b.owner).toLowerCase() === normalizeManager(simulatedOwner).toLowerCase()
+      );
+      const canonicalOwner = existingBudget?.owner || simulatedOwner;
+      const targetTeamId = existingBudget?.team_id || OWNER_TEAM_IDS[normalizeManager(simulatedOwner).toLowerCase()] || 0;
 
-      // 1. Delete existing BOUGHT and OFFSET_LOST picks for this owner in this season
-      await supabase
+      // 1. Delete existing BOUGHT, SOLD, and OFFSET_LOST picks for this owner in this season
+      const { error: delErr } = await supabase
         .from('draft_compensation_picks')
         .delete()
         .eq('season_year', seasonYear)
-        .eq('owner', simulatedOwner)
-        .in('action_type', ['BOUGHT', 'OFFSET_LOST']);
+        .eq('owner', canonicalOwner)
+        .in('action_type', ['BOUGHT', 'SOLD', 'OFFSET_LOST']);
 
-      // 2. Insert new bought & offset picks
+      if (delErr) throw delErr;
+
+      // 2. Insert new bought, sold & offset picks
       const newRows = [];
       simCalculations.boughtList.forEach(b => {
         newRows.push({
           season_year: seasonYear,
-          owner: simulatedOwner,
+          owner: canonicalOwner,
           team_id: targetTeamId,
           action_type: 'BOUGHT',
           round_num: b.round,
           cost_or_income: -b.cost,
-          notes: `Purchased via Consolation Portal (-$${b.cost})`,
+          notes: `Purchased via Comp Pick Portal (-$${b.cost})`,
+          updated_at: new Date().toISOString()
+        });
+      });
+
+      simCalculations.soldList.forEach(s => {
+        newRows.push({
+          season_year: seasonYear,
+          owner: canonicalOwner,
+          team_id: targetTeamId,
+          action_type: 'SOLD',
+          round_num: s.round,
+          cost_or_income: s.income,
+          notes: `Sold via Comp Pick Portal (+$${s.income})`,
           updated_at: new Date().toISOString()
         });
       });
@@ -696,7 +844,7 @@ export default function KeepersBudgetsPanel({
       simCalculations.offsetRounds.forEach(r => {
         newRows.push({
           season_year: seasonYear,
-          owner: simulatedOwner,
+          owner: canonicalOwner,
           team_id: targetTeamId,
           action_type: 'OFFSET_LOST',
           round_num: r,
@@ -714,7 +862,6 @@ export default function KeepersBudgetsPanel({
       }
 
       // 3. Update draft_team_budgets
-      const existingBudget = teamBudgets.find(b => b.owner === simulatedOwner);
       const base = existingBudget?.base_budget || 100;
       const kSpend = existingBudget?.keeper_spend || 0;
       const manualAdj = existingBudget?.manual_adjustment || 0;
@@ -727,7 +874,7 @@ export default function KeepersBudgetsPanel({
         .from('draft_team_budgets')
         .upsert({
           season_year: seasonYear,
-          owner: simulatedOwner,
+          owner: canonicalOwner,
           team_id: targetTeamId,
           base_budget: base,
           keeper_spend: kSpend,
@@ -740,7 +887,23 @@ export default function KeepersBudgetsPanel({
           updated_at: new Date().toISOString()
         }, { onConflict: 'season_year,owner' });
 
-      alert(`Consolation pick purchases for ${simulatedOwner} (${seasonYear}) successfully saved to league records! 🎟️`);
+      if (auth.isOverride && logCommissionerAction) {
+        logCommissionerAction({
+          actionType: 'admin_comp_pick_submission',
+          actionDescription: `${profile?.owner_name || auth.overrideTitle} submitted comp picks for ${canonicalOwner}`,
+          targetTeamId,
+          targetOwner: canonicalOwner,
+          details: {
+            seasonYear,
+            bought: simCalculations.boughtList,
+            sold: simCalculations.soldList,
+            offset: simCalculations.offsetRounds,
+            spend: newCompSpend
+          }
+        });
+      }
+
+      alert(`Compensation pick purchases for ${canonicalOwner} (${seasonYear}) successfully saved to league records! 🎟️`);
       if (onRefresh) onRefresh();
     } catch (err) {
       console.error('Error saving comp picks:', err);
@@ -941,7 +1104,7 @@ export default function KeepersBudgetsPanel({
               transition: 'all 0.15s ease'
             }}
           >
-            🎮 Comp Pick Simulator
+            🎲 Comp Pick Submission
           </button>
           <button
             onClick={() => setActiveTab('planner')}
@@ -1387,10 +1550,10 @@ export default function KeepersBudgetsPanel({
         </div>
       )}
 
-      {/* SUB-TAB 3: INTERACTIVE COMPENSATION PICK SIMULATOR */}
+      {/* SUB-TAB 3: COMP PICK SUBMISSION */}
       {activeTab === 'simulator' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {/* Simulator Controls & Manager Selector */}
+          {/* Submission Controls & Manager Selector */}
           <div style={{
             background: '#1e1e1e',
             padding: '14px 16px',
@@ -1403,15 +1566,15 @@ export default function KeepersBudgetsPanel({
             gap: '12px'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#fff' }}>Simulate For Manager:</span>
+              <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#fff' }}>Submitting For Manager:</span>
               <select
                 value={simulatedOwner}
                 onChange={e => {
-                  setSimulatedOwner(e.target.value);
-                  // Reset simulator to that owner's real picks
+                  const newOwner = e.target.value;
+                  setSimulatedOwner(newOwner);
                   const bought = {};
                   const sold = {};
-                  compPicks.filter(p => p.owner === e.target.value).forEach(p => {
+                  compPicks.filter(p => normalizeManager(p.owner) === normalizeManager(newOwner)).forEach(p => {
                     if (p.action_type === 'BOUGHT') bought[p.round_num] = true;
                     if (p.action_type === 'SOLD') sold[p.round_num] = true;
                   });
@@ -1450,37 +1613,148 @@ export default function KeepersBudgetsPanel({
                 🔄 Reset Picks
               </button>
 
-              <button
-                onClick={handleSaveCompPicks}
-                disabled={savingCompPicks || simCalculations.simulatedRemaining < 0}
-                style={{
-                  background: simCalculations.simulatedRemaining < 0
-                    ? '#444'
-                    : isCommissioner && simulatedOwner !== profile?.owner_name
-                      ? '#d97706'
-                      : '#7c3aed',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '4px',
-                  padding: '6px 14px',
-                  fontSize: '11px',
-                  fontWeight: 'bold',
-                  cursor: (savingCompPicks || simCalculations.simulatedRemaining < 0) ? 'not-allowed' : 'pointer',
-                  opacity: (savingCompPicks || simCalculations.simulatedRemaining < 0) ? 0.6 : 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
-                }}
-              >
-                {savingCompPicks
-                  ? 'Saving...'
-                  : isCommissioner && simulatedOwner !== profile?.owner_name
-                    ? `👑 Commish Save for ${simulatedOwner}`
-                    : '💾 Save & Submit Consolation Picks'}
-              </button>
+              {(() => {
+                const auth = getSubmissionAuth(simulatedOwner);
+                const isOverBudget = simCalculations.simulatedRemaining < 0;
+                const isBtnDisabled = savingCompPicks || !auth.canSubmit || isOverBudget;
+
+                let btnBg = '#7c3aed';
+                let btnText = '💾 Submit Official Comp Picks';
+
+                if (!user) {
+                  btnBg = '#475569';
+                  btnText = '🔑 Log in with Discord to Submit';
+                } else if (!auth.canSubmit) {
+                  btnBg = '#334155';
+                  btnText = `🔒 Viewing ${simulatedOwner}'s Picks`;
+                } else if (isOverBudget) {
+                  btnBg = '#dc2626';
+                  btnText = `⚠️ Over Budget ($${simCalculations.simulatedRemaining})`;
+                } else if (auth.isOverride) {
+                  btnBg = '#d97706';
+                  btnText = `👑 ${auth.overrideTitle} Override: Submit for ${simulatedOwner}`;
+                }
+
+                if (savingCompPicks) {
+                  btnText = 'Saving...';
+                }
+
+                return (
+                  <button
+                    onClick={!user ? signInWithDiscord : handleSaveCompPicks}
+                    disabled={user ? isBtnDisabled : false}
+                    title={
+                      !user
+                        ? 'Log in with Discord to submit compensation picks'
+                        : !auth.canSubmit
+                          ? `Only ${simulatedOwner} or Commissioner/Admin can submit picks for this team`
+                          : isOverBudget
+                            ? 'Picks exceed available budget'
+                            : auth.isOverride
+                              ? `Submit compensation picks on behalf of ${simulatedOwner}`
+                              : `Submit official compensation picks for ${simulatedOwner}`
+                    }
+                    style={{
+                      background: btnBg,
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '4px',
+                      padding: '6px 14px',
+                      fontSize: '11px',
+                      fontWeight: 'bold',
+                      cursor: (user && isBtnDisabled) ? 'not-allowed' : 'pointer',
+                      opacity: (user && isBtnDisabled && !isOverBudget) ? 0.6 : 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    {btnText}
+                  </button>
+                );
+              })()}
             </div>
           </div>
+
+          {/* Submission Authorization Notice */}
+          {(() => {
+            const auth = getSubmissionAuth(simulatedOwner);
+            if (!user) {
+              return (
+                <div style={{
+                  background: 'rgba(51, 65, 85, 0.4)',
+                  border: '1px solid #475569',
+                  borderRadius: '6px',
+                  padding: '8px 12px',
+                  fontSize: '12px',
+                  color: '#cbd5e1',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '8px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span>🔑</span>
+                    <span><strong>Read-Only Preview:</strong> Log in with your Discord account to submit compensation pick purchases for your team.</span>
+                  </div>
+                  <button
+                    onClick={signInWithDiscord}
+                    style={{
+                      background: '#5865F2',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '4px',
+                      padding: '4px 10px',
+                      fontSize: '11px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Log In
+                  </button>
+                </div>
+              );
+            }
+            if (!auth.canSubmit) {
+              return (
+                <div style={{
+                  background: 'rgba(30, 41, 59, 0.6)',
+                  border: '1px solid #334155',
+                  borderRadius: '6px',
+                  padding: '8px 12px',
+                  fontSize: '12px',
+                  color: '#94a3b8',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  <span>🔒</span>
+                  <span>You are viewing <strong>{simulatedOwner}</strong>'s draft plan in view-only mode. Only <strong>{simulatedOwner}</strong> or Commissioner/Admin can submit official selections.</span>
+                </div>
+              );
+            }
+            if (auth.isOverride) {
+              return (
+                <div style={{
+                  background: 'rgba(217, 119, 6, 0.15)',
+                  border: '1px solid #d97706',
+                  borderRadius: '6px',
+                  padding: '8px 12px',
+                  fontSize: '12px',
+                  color: '#fbbf24',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  <span>👑</span>
+                  <span><strong>{auth.overrideTitle} Override Mode:</strong> Submitting will record official compensation picks on behalf of <strong>{simulatedOwner}</strong>.</span>
+                </div>
+              );
+            }
+            return null;
+          })()}
 
           {/* Real-time Calculation Dashboard */}
           <div style={{
@@ -1752,39 +2026,148 @@ export default function KeepersBudgetsPanel({
                 🔄 Reset Keepers
               </button>
 
-              <button
-                onClick={handleSaveKeepers}
-                disabled={savingKeepers || (isDeadlinePassed && !isCommissioner)}
-                style={{
-                  background: (isDeadlinePassed && !isCommissioner)
-                    ? '#444'
-                    : isCommissioner && plannerOwner !== profile?.owner_name
-                      ? '#d97706'
-                      : '#059669',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '4px',
-                  padding: '6px 14px',
-                  fontSize: '11px',
-                  fontWeight: 'bold',
-                  cursor: (isDeadlinePassed && !isCommissioner || savingKeepers) ? 'not-allowed' : 'pointer',
-                  opacity: (isDeadlinePassed && !isCommissioner || savingKeepers) ? 0.6 : 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
-                }}
-              >
-                {savingKeepers
-                  ? 'Saving...'
-                  : isDeadlinePassed && !isCommissioner
-                    ? '🔒 Keepers Locked'
-                    : isCommissioner && plannerOwner !== profile?.owner_name
-                      ? `👑 Commish Save for ${plannerOwner}`
-                      : '💾 Save & Submit Official Keepers'}
-              </button>
+              {(() => {
+                const auth = getSubmissionAuth(plannerOwner);
+                const isLockedByDeadline = isDeadlinePassed && !hasOverrideRights;
+                const isBtnDisabled = savingKeepers || !auth.canSubmit || isLockedByDeadline;
+
+                let btnBg = '#059669';
+                let btnText = '💾 Submit Official Keepers';
+
+                if (!user) {
+                  btnBg = '#475569';
+                  btnText = '🔑 Log in with Discord to Submit';
+                } else if (!auth.canSubmit) {
+                  btnBg = '#334155';
+                  btnText = `🔒 Viewing ${plannerOwner}'s Roster`;
+                } else if (isLockedByDeadline) {
+                  btnBg = '#444';
+                  btnText = '🔒 Keepers Locked (Deadline Passed)';
+                } else if (auth.isOverride) {
+                  btnBg = '#d97706';
+                  btnText = `👑 ${auth.overrideTitle} Override: Submit for ${plannerOwner}`;
+                }
+
+                if (savingKeepers) {
+                  btnText = 'Saving...';
+                }
+
+                return (
+                  <button
+                    onClick={!user ? signInWithDiscord : handleSaveKeepers}
+                    disabled={user ? isBtnDisabled : false}
+                    title={
+                      !user
+                        ? 'Log in with Discord to submit official keepers'
+                        : !auth.canSubmit
+                          ? `Only ${plannerOwner} or Commissioner/Admin can submit keepers for this team`
+                          : isLockedByDeadline
+                            ? 'Keeper submission deadline has passed'
+                            : auth.isOverride
+                              ? `Submit official keepers on behalf of ${plannerOwner}`
+                              : `Submit official keepers for ${plannerOwner}`
+                    }
+                    style={{
+                      background: btnBg,
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '4px',
+                      padding: '6px 14px',
+                      fontSize: '11px',
+                      fontWeight: 'bold',
+                      cursor: (user && isBtnDisabled) ? 'not-allowed' : 'pointer',
+                      opacity: (user && isBtnDisabled) ? 0.6 : 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    {btnText}
+                  </button>
+                );
+              })()}
             </div>
           </div>
+
+          {/* Submission Authorization Notice */}
+          {(() => {
+            const auth = getSubmissionAuth(plannerOwner);
+            if (!user) {
+              return (
+                <div style={{
+                  background: 'rgba(51, 65, 85, 0.4)',
+                  border: '1px solid #475569',
+                  borderRadius: '6px',
+                  padding: '8px 12px',
+                  fontSize: '12px',
+                  color: '#cbd5e1',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '8px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span>🔑</span>
+                    <span><strong>Read-Only Preview:</strong> Log in with your Discord account to submit official keepers for your team.</span>
+                  </div>
+                  <button
+                    onClick={signInWithDiscord}
+                    style={{
+                      background: '#5865F2',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '4px',
+                      padding: '4px 10px',
+                      fontSize: '11px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Log In
+                  </button>
+                </div>
+              );
+            }
+            if (!auth.canSubmit) {
+              return (
+                <div style={{
+                  background: 'rgba(30, 41, 59, 0.6)',
+                  border: '1px solid #334155',
+                  borderRadius: '6px',
+                  padding: '8px 12px',
+                  fontSize: '12px',
+                  color: '#94a3b8',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  <span>🔒</span>
+                  <span>You are viewing <strong>{plannerOwner}</strong>'s keepers in view-only mode. Only <strong>{plannerOwner}</strong> or Commissioner/Admin can submit official selections.</span>
+                </div>
+              );
+            }
+            if (auth.isOverride) {
+              return (
+                <div style={{
+                  background: 'rgba(217, 119, 6, 0.15)',
+                  border: '1px solid #d97706',
+                  borderRadius: '6px',
+                  padding: '8px 12px',
+                  fontSize: '12px',
+                  color: '#fbbf24',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  <span>👑</span>
+                  <span><strong>{auth.overrideTitle} Override Mode:</strong> Submitting will record official keepers on behalf of <strong>{plannerOwner}</strong>.</span>
+                </div>
+              );
+            }
+            return null;
+          })()}
 
           {/* Keeper Submission Overview Dashboard */}
           <div style={{
