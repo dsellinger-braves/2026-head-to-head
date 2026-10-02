@@ -4,7 +4,9 @@ import defaultDraftAssetTrades from '../data/draftAssetTrades2026.json';
 import defaultTeamBudgets from '../data/teamBudgets2026.json';
 import defaultCompPicks from '../data/compensationPicks2026.json';
 import defaultKeepers from '../data/keeperInput2026.json';
+import defaultKeepers2027 from '../data/keeperInput2027.json';
 import defaultDraft2026 from '../data/draft2026.json';
+import defaultCalculations from '../data/keeperCalculations.json';
 import KeepersBudgetsPanel from '../components/KeepersBudgetsPanel';
 import HistoricalDraftView from './HistoricalDraftView';
 import { getPlayerHeadshotUrl, handleHeadshotError, updateGlobalPlayerLookup } from '../utils/headshotUtils';
@@ -249,6 +251,59 @@ function roundNumber(val, decimals = 3) {
   if (val == null) return null;
   const n = parseFloat(val);
   return isNaN(n) ? null : parseFloat(n.toFixed(decimals));
+}
+
+// Global calculation index from keeperCalculations.json (authoritative source of prices and ranks)
+const calcIndexById = new Map();
+const calcIndexByName = new Map();
+(defaultCalculations?.players || []).forEach(p => {
+  const pid = String(p.espn_player_id || p.player_id || p['ESPN PlayerID'] || '').trim();
+  const name = normalizeName(p.player_name || p.Player || p.name || '');
+  if (pid) calcIndexById.set(pid, p);
+  if (name && !calcIndexByName.has(name)) calcIndexByName.set(name, p);
+});
+
+function enrichPlayerWithCalculations(p, roomSeason = 2027) {
+  if (!p) return p;
+  const pid = String(p['ESPN PlayerID'] || p.espn_player_id || p.id || p.player_id || '').trim();
+  const cleanName = normalizeName(p.Player || p.Name || p.player_name || p.name || '');
+  const calc = (pid ? calcIndexById.get(pid) : null) || (cleanName ? calcIndexByName.get(cleanName) : null);
+
+  if (!calc) return p;
+
+  const overallPrice = calc.overall_price !== undefined ? calc.overall_price : (p['Hefty Keeper Price'] ?? p.price);
+  const overallRank = calc.overall_rank !== undefined ? calc.overall_rank : (p['Hefty Keeper Rank'] ?? p.rank);
+  const ssRank = calc.y1?.rank || calc.overall_rank || p['Hefty Single Season Rank'];
+  const ssPrice = calc.espn_price ?? calc.overall_price ?? p['Hefty Single Season Price'];
+
+  const effectiveRank = roomSeason === 2027 ? overallRank : (ssRank || overallRank);
+  const effectivePrice = overallPrice;
+
+  return {
+    ...p,
+    'Hefty Keeper Price': overallPrice,
+    'Hefty Keeper Rank': effectiveRank,
+    'Hefty Single Season Rank': ssRank,
+    'Hefty Single Season Price': ssPrice,
+    overall_price: overallPrice,
+    overall_rank: overallRank,
+    price: effectivePrice,
+    rank: effectiveRank,
+    overall_pr: calc.overall_pr ?? p.overall_pr,
+    'Projected PR': calc.overall_pr ?? p['Projected PR'],
+    ZIPSR: p.ZIPSR ?? calc.y1?.stats?.R,
+    ZIPSHR: p.ZIPSHR ?? calc.y1?.stats?.HR,
+    ZIPSRBI: p.ZIPSRBI ?? calc.y1?.stats?.RBI,
+    ZIPSSB: p.ZIPSSB ?? calc.y1?.stats?.SB,
+    ZIPSOBP: p.ZIPSOBP ?? calc.y1?.stats?.OBP,
+    ZIPSK: p.ZIPSK ?? calc.y1?.stats?.SO,
+    ZIPSQS: p.ZIPSQS ?? calc.y1?.stats?.QS,
+    'ZIPSSV+HDs': p['ZIPSSV+HDs'] ?? calc.y1?.stats?.SVHD,
+    ZIPSERA: p.ZIPSERA ?? calc.y1?.stats?.ERA,
+    ZIPSWHIP: p.ZIPSWHIP ?? calc.y1?.stats?.WHIP,
+    Position: p.Position || calc.position || (calc.is_pitcher ? (calc.pitcher_role || 'SP') : 'DH'),
+    Team: p.Team || calc.team || 'MLB'
+  };
 }
 
 function mergeEspnData(playerPool, espnData) {
@@ -549,6 +604,7 @@ function formatPlayerStats(player) {
 function getEffectiveRank(player) {
   if (!player) return null;
   const r = player['Hefty Keeper Rank'] ?? 
+            player.overall_rank ??
             player['Hefty Single Season Rank'] ?? 
             player['ESPN Keeper Rank'] ?? 
             player['ESPN Single Season Rank'] ?? 
@@ -562,12 +618,13 @@ function getEffectiveRank(player) {
 function getEffectivePrice(player) {
   if (!player) return null;
   const p = player['Hefty Keeper Price'] ?? 
+            player.overall_price ??
             player['Hefty Single Season Price'] ?? 
             player['ESPN Price'] ?? 
             player.Value ?? 
             player.price;
   const num = parseFloat(p);
-  return isNaN(num) || num <= 0 ? null : Math.round(num);
+  return isNaN(num) || num < 0 ? null : Math.round(num);
 }
 
 function determinePickAngle(player, pickNum, rank, surplus, teamContext) {
@@ -1810,12 +1867,14 @@ function PlayerModal({
             }}>
               {/* Rankings Section */}
               {(() => {
-                const heftySS = player['Hefty Single Season Rank'];
-                const heftyKeeper = player['Hefty Keeper Rank'];
-                const espnSS = player['ESPN Single Season Rank'] || player['ESPN ROTO Rank'];
-                const espnKeeper = player['ESPN Keeper Rank'];
+                const heftySS = player['Hefty Single Season Rank'] || player.overall_rank;
+                const heftyKeeper = player['Hefty Keeper Rank'] || player.overall_rank;
+                const espnSS = player['ESPN Single Season Rank'] || player['ESPN ROTO Rank'] || player.espn_rank;
+                const espnKeeper = player['ESPN Keeper Rank'] || player.espn_rank;
+                const heftyPrice = player['Hefty Keeper Price'] ?? player.overall_price ?? player['Hefty Single Season Price'] ?? player.price;
+                const espnPrice = player['ESPN Price'] ?? player.espn_price;
 
-                if (![heftySS, heftyKeeper, espnSS, espnKeeper].some(v => v != null && v !== '')) {
+                if (![heftySS, heftyKeeper, espnSS, espnKeeper, heftyPrice, espnPrice].some(v => v != null && v !== '')) {
                   return null;
                 }
 
@@ -1828,9 +1887,11 @@ function PlayerModal({
                 };
 
                 const RankBadge = ({ label, rank, accent }) => {
-                  const val = parseInt(rank);
-                  const displayRank = isNaN(val) ? '—' : `#${val}`;
-                  const rankColor = isNaN(val) ? '#444' : getRankColor(val);
+                  const str = String(rank ?? '').trim();
+                  const isPrice = str.startsWith('$');
+                  const val = parseInt(str.replace(/[^0-9]/g, ''));
+                  const displayRank = isNaN(val) ? '—' : (isPrice ? `$${val}` : `#${val}`);
+                  const rankColor = isNaN(val) ? '#444' : (isPrice ? '#ffc107' : getRankColor(val));
                   return (
                     <div style={{
                       flex: 1,
@@ -1868,8 +1929,20 @@ function PlayerModal({
                       letterSpacing: '1px',
                       marginBottom: '8px'
                     }}>
-                      Rankings
+                      Rankings & Valuations
                     </div>
+
+                    {(heftyPrice !== undefined || espnPrice !== undefined) && (
+                      <>
+                        <div style={{ fontSize: '10px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '5px' }}>
+                          Auction Valuation
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+                          <RankBadge label="Hefty $" rank={heftyPrice !== undefined && heftyPrice !== null && heftyPrice !== '' ? `$${heftyPrice}` : '—'} accent="#ffc107" />
+                          <RankBadge label="ESPN $" rank={espnPrice !== undefined && espnPrice !== null && espnPrice !== '' ? `$${espnPrice}` : '—'} accent="#f4891f" />
+                        </div>
+                      </>
+                    )}
 
                     <div style={{ fontSize: '10px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '5px' }}>
                       Single Season
@@ -2780,7 +2853,7 @@ function DraftAssistantWidget({
                     {rec.badge}
                   </span>
                   <span style={{ color: '#ffc107', fontSize: '11px', fontWeight: 'bold' }}>
-                    Rank #{p['Hefty Keeper Rank'] || p.rank || '--'}
+                    Rank #{p['Hefty Keeper Rank'] || p.overall_rank || p.rank || '--'}{p['Hefty Keeper Price'] !== undefined || p.overall_price !== undefined ? ` • $${p['Hefty Keeper Price'] ?? p.overall_price}` : ''}
                   </span>
                 </div>
 
@@ -2925,22 +2998,22 @@ function PlayerPoolPanel({
     }
 
     const getPlayerRank = (p) => {
-      const r = p['Hefty Keeper Rank'] ?? p['Hefty Single Season Rank'] ?? p['ESPN Keeper Rank'] ?? p.rank;
+      const r = p['Hefty Keeper Rank'] ?? p.overall_rank ?? p['Hefty Single Season Rank'] ?? p['ESPN Keeper Rank'] ?? p.rank;
       const num = parseFloat(r);
       return isNaN(num) || num <= 0 ? 9999 : num;
     };
 
     const getPlayerPrice = (p) => {
-      const pr = p['Hefty Keeper Price'] ?? p['Hefty Single Season Price'] ?? p['ESPN Price'] ?? p.price;
+      const pr = p['Hefty Keeper Price'] ?? p.overall_price ?? p['Hefty Single Season Price'] ?? p['ESPN Price'] ?? p.price;
       const num = parseFloat(pr);
       return isNaN(num) ? -999 : num;
     };
     
     filtered.sort((a, b) => {
       let comparison = 0;
-      if (sortConfig.key === 'Hefty Keeper Rank' || sortConfig.key === 'rank') {
+      if (sortConfig.key === 'Hefty Keeper Rank' || sortConfig.key === 'rank' || sortConfig.key === 'overall_rank') {
         comparison = getPlayerRank(a) - getPlayerRank(b);
-      } else if (sortConfig.key === 'Hefty Keeper Price' || sortConfig.key === 'price') {
+      } else if (sortConfig.key === 'Hefty Keeper Price' || sortConfig.key === 'price' || sortConfig.key === 'overall_price') {
         comparison = getPlayerPrice(a) - getPlayerPrice(b);
       } else if (sortConfig.key === 'ZIPSERA' || sortConfig.key === 'ZIPSWHIP') {
         const aVal = parseFloat(a[sortConfig.key]);
@@ -2968,6 +3041,8 @@ function PlayerPoolPanel({
 
   const DESC_FIRST_KEYS = useMemo(() => new Set([
     'Hefty Keeper Price',
+    'overall_price',
+    'price',
     'ZIPSR',
     'ZIPSHR',
     'ZIPSRBI',
@@ -3211,8 +3286,8 @@ function PlayerPoolPanel({
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '8px' }}>
                       {tier.players.map(p => {
                         const queued = isQueued(p['ESPN PlayerID']);
-                        const heftyPrice = p['Hefty Keeper Price'] ?? p['Hefty Single Season Price'];
-                        const heftyRank = p['Hefty Keeper Rank'] ?? p['Hefty Single Season Rank'];
+                        const heftyPrice = p['Hefty Keeper Price'] ?? p.overall_price ?? p['Hefty Single Season Price'] ?? p.price;
+                        const heftyRank = p['Hefty Keeper Rank'] ?? p.overall_rank ?? p['Hefty Single Season Rank'] ?? p.rank;
                         return (
                           <div
                             key={p['ESPN PlayerID']}
@@ -3315,8 +3390,8 @@ function PlayerPoolPanel({
                   const queued = isQueued(p['ESPN PlayerID']);
                   const isPitcher = p.Position?.includes('SP') || p.Position?.includes('RP');
                   const injury = getInjuryIndicator(p['ESPN PlayerID'], playerInfo);
-                  const heftyPrice = p['Hefty Keeper Price'] ?? p['Hefty Single Season Price'];
-                  const heftyRank = p['Hefty Keeper Rank'] ?? p['Hefty Single Season Rank'];
+                  const heftyPrice = p['Hefty Keeper Price'] ?? p.overall_price ?? p['Hefty Single Season Price'] ?? p.price;
+                  const heftyRank = p['Hefty Keeper Rank'] ?? p.overall_rank ?? p['Hefty Single Season Rank'] ?? p.rank;
                   
                   return (
                     <tr key={p['ESPN PlayerID']} style={styles.tableRow}>
@@ -3376,7 +3451,7 @@ function PlayerPoolPanel({
                       </td>
                       <td style={styles.td}>{p.Position}</td>
                       <td style={styles.td}>{p.Team}</td>
-                      <td style={{ ...styles.td, textAlign: 'right', fontWeight: 'bold', color: heftyPrice ? '#ffc107' : '#666' }}>
+                      <td style={{ ...styles.td, textAlign: 'right', fontWeight: 'bold', color: (heftyPrice !== undefined && heftyPrice !== null && heftyPrice !== '') ? '#ffc107' : '#666' }}>
                         {heftyPrice !== undefined && heftyPrice !== null && heftyPrice !== '' ? `$${heftyPrice}` : '-'}
                       </td>
                       <td style={{ ...styles.td, textAlign: 'center', color: '#90caf9', fontSize: '11px', fontWeight: '600' }}>
@@ -5166,7 +5241,7 @@ export default function DraftRoomView({
   const [draftTrades, setDraftTrades] = useState(defaultDraftAssetTrades || []);
   const [_teamBudgets, setTeamBudgets] = useState(defaultTeamBudgets?.budgets || []);
   const [_compPicks, setCompPicks] = useState(defaultCompPicks?.comp_picks || []);
-  const [_keepers, setKeepers] = useState(defaultKeepers?.keepers || []);
+  const [_keepers, setKeepers] = useState(seasonYear === 2027 ? (defaultKeepers2027?.keepers || defaultKeepers2027 || []) : (defaultKeepers?.keepers || []));
   const [showDashboard, setShowDashboard] = useState(false);
   
   // Test mode state
@@ -5228,31 +5303,44 @@ export default function DraftRoomView({
   }, [draftMode, testModePicks, picks]);
 
   const displayPlayers = useMemo(() => {
-    if (!players || players.length === 0) return [];
+    if (!players || players.length === 0) {
+      return (defaultCalculations?.players || []).map(cp => enrichPlayerWithCalculations({
+        'ESPN PlayerID': String(cp.espn_player_id || cp.player_id || ''),
+        id: cp.player_id,
+        Player: cp.player_name,
+        Position: cp.position || (cp.is_pitcher ? (cp.pitcher_role || 'SP') : 'DH'),
+        Team: cp.team || 'MLB',
+        Availability: 'Available'
+      }, roomSeason));
+    }
+
+    const keeperMap = new Map();
     if (roomSeason === 2027) {
       // For 2027 draft, the ONLY players that should show as currently rostered
       // are the presumed 2027 keeper picks. All other players must show as Available.
-      const keeperMap = new Map();
       (_keepers || []).forEach(k => {
         const rawOwner = k.owner || k.owner_name || k.team_owner || '';
         const owner = (rawOwner === 'Dan' || rawOwner === 'dsellinger') ? 'Daniel' : rawOwner;
         const pid = String(k.espn_player_id || k.player_id || '');
         if (pid) keeperMap.set(pid, { owner, slot: k.keeper_slot });
       });
+    }
 
-      return players.map(p => {
-        const pid = String(p['ESPN PlayerID'] || p.espn_player_id || p.id || '');
+    return players.map(p => {
+      const enriched = enrichPlayerWithCalculations(p, roomSeason);
+      if (roomSeason === 2027) {
+        const pid = String(enriched['ESPN PlayerID'] || enriched.espn_player_id || enriched.id || '');
         const kInfo = keeperMap.get(pid);
         return {
-          ...p,
+          ...enriched,
           Availability: kInfo ? kInfo.owner : 'Available',
           isKeeper: !!kInfo,
           keeperOwner: kInfo ? kInfo.owner : null,
           keeperSlot: kInfo ? kInfo.slot : null
         };
-      });
-    }
-    return players;
+      }
+      return enriched;
+    });
   }, [players, roomSeason, _keepers]);
 
   const playersRef = useRef(displayPlayers);
@@ -5411,9 +5499,13 @@ export default function DraftRoomView({
             trades = tradesRes.data;
             setDraftTrades(tradesRes.data);
           }
-          if (keepersRes?.data) {
+          if (keepersRes?.data && keepersRes.data.length > 0) {
             keepers2027 = keepersRes.data;
             setKeepers(keepersRes.data);
+          } else {
+            const fallbackKeepers = defaultKeepers2027?.keepers || defaultKeepers2027 || [];
+            keepers2027 = fallbackKeepers;
+            setKeepers(fallbackKeepers);
           }
           if (cpRes?.data) {
             compPicks2027 = cpRes.data;
@@ -5647,6 +5739,28 @@ export default function DraftRoomView({
         mergedPlayers = mergeZipsData(mergedPlayers, battingZipsData, pitchingZipsData);
       }
 
+      // Enrich all pool players with official keeper calculations
+      mergedPlayers = mergedPlayers.map(p => enrichPlayerWithCalculations(p, roomSeason));
+
+      // Append any players from keeperCalculations.json that were missing from pool
+      const existingIds = new Set(mergedPlayers.map(p => String(p['ESPN PlayerID'] || p.espn_player_id || p.id || '')));
+      const existingNames = new Set(mergedPlayers.map(p => normalizeName(p.Player || p.Name || p.player_name || '')));
+
+      (defaultCalculations?.players || []).forEach(cp => {
+        const cPid = String(cp.espn_player_id || cp.player_id || '');
+        const cName = normalizeName(cp.player_name || '');
+        if ((!cPid || !existingIds.has(cPid)) && (!cName || !existingNames.has(cName))) {
+          mergedPlayers.push(enrichPlayerWithCalculations({
+            'ESPN PlayerID': cPid,
+            id: cp.player_id || parseInt(cPid, 10),
+            Player: cp.player_name,
+            Position: cp.position || (cp.is_pitcher ? (cp.pitcher_role || 'SP') : 'DH'),
+            Team: cp.team || 'MLB',
+            Availability: 'Available'
+          }, roomSeason));
+        }
+      });
+
       const mapWithMlbam = list => Array.isArray(list) ? list.map(item => ({
         ...item,
         MLBAMID: item.mlbamid || item.MLBAMID || item.playerid
@@ -5668,7 +5782,7 @@ export default function DraftRoomView({
     } catch (err) {
       console.error(`❌ Error fetching static data:`, err);
     }
-  }, []);
+  }, [roomSeason]);
 
   useEffect(() => {
     if (!draftMode) return;
