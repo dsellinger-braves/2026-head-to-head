@@ -121,16 +121,44 @@ export default function KeeperCalculationsView({
 
       const numA = parseFloat(aVal) || 0;
       const numB = parseFloat(bVal) || 0;
-      return sortConfig.direction === 'asc' ? numA - numB : numB - numA;
+
+      // Primary numerical sort
+      if (numA !== numB) {
+        return sortConfig.direction === 'asc' ? numA - numB : numB - numA;
+      }
+
+      // Tie-breaker: For all players tied (and specifically when both are $0):
+      // continue to sort by projected PR descending across all 3 years!
+      const oprA = parseFloat(a.overall_pr) || 0;
+      const oprB = parseFloat(b.overall_pr) || 0;
+      if (Math.abs(oprB - oprA) > 0.0001) return oprB - oprA;
+
+      const y1A = parseFloat(a.y1?.pr) || 0;
+      const y1B = parseFloat(b.y1?.pr) || 0;
+      if (Math.abs(y1B - y1A) > 0.0001) return y1B - y1A;
+
+      const y2A = parseFloat(a.y2?.pr) || 0;
+      const y2B = parseFloat(b.y2?.pr) || 0;
+      if (Math.abs(y2B - y2A) > 0.0001) return y2B - y2A;
+
+      const y3A = parseFloat(a.y3?.pr) || 0;
+      const y3B = parseFloat(b.y3?.pr) || 0;
+      if (Math.abs(y3B - y3A) > 0.0001) return y3B - y3A;
+
+      return (a.overall_rank || 999) - (b.overall_rank || 999);
     });
     return list;
   }, [filteredPlayers, sortConfig]);
 
   const requestSort = (key) => {
-    setSortConfig(prev => ({
-      key,
-      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
-    }));
+    setSortConfig(prev => {
+      if (prev.key === key) {
+        return { key, direction: prev.direction === 'asc' ? 'desc' : 'asc' };
+      }
+      // Numerical metrics, prices, and PRs default to descending on first click; ranks and names default to ascending
+      const defaultDir = (key === 'overall_rank' || key === 'player_name' || key === 'y1_rank' || key === 'y2_rank' || key === 'y3_rank') ? 'asc' : 'desc';
+      return { key, direction: defaultDir };
+    });
   };
 
   const getSortIcon = (key) => {
@@ -147,9 +175,9 @@ export default function KeeperCalculationsView({
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 relative z-10">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-2xl">🧮</span>
+              <span className="text-2xl">🏷️</span>
               <h1 className="text-2xl font-black tracking-tight text-white">
-                Keeper Valuation Math & PR Calculations
+                Keeper Prices & Valuation Math
               </h1>
             </div>
             <p className="text-slate-400 text-sm mt-1 max-w-3xl leading-relaxed">

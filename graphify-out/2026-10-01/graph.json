@@ -2487,7 +2487,7 @@
       "file_type": "code",
       "norm_label": "loadsettings()",
       "source_file": "src/components/KeepersBudgetsPanel.jsx",
-      "source_location": "L182"
+      "source_location": "L192"
     },
     {
       "id": "src_components_keepersbudgetspanel_normalizemanager",
@@ -14253,7 +14253,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L772",
+      "source_location": "L867",
       "weight": 1.0
     },
     {
@@ -14265,7 +14265,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pipelines/compute_player_values.py",
-      "source_location": "L794",
+      "source_location": "L886",
       "weight": 1.0
     },
     {
@@ -14325,7 +14325,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pipelines/generate_keeper_calculations.py",
-      "source_location": "L577",
+      "source_location": "L664",
       "weight": 1.0
     },
     {
@@ -14337,7 +14337,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pipelines/generate_keeper_calculations.py",
-      "source_location": "L587",
+      "source_location": "L674",
       "weight": 1.0
     },
     {
@@ -15573,7 +15573,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/components/KeepersBudgetsPanel.jsx",
-      "source_location": "L226",
+      "source_location": "L236",
       "weight": 1.0
     },
     {
@@ -15585,7 +15585,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/components/KeepersBudgetsPanel.jsx",
-      "source_location": "L364",
+      "source_location": "L374",
       "weight": 1.0
     },
     {
@@ -16917,7 +16917,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/views/KeepersBudgetsView.jsx",
-      "source_location": "L173",
+      "source_location": "L197",
       "weight": 1.0
     },
     {
@@ -17889,7 +17889,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/components/KeepersBudgetsPanel.jsx",
-      "source_location": "L182",
+      "source_location": "L192",
       "weight": 1.0
     },
     {
@@ -35729,5 +35729,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "1da091bff3fe2f3124d48426ca66c395406669eb"
+  "built_at_commit": "c001c4d5f4826876272f84ab4f88710fbfbda183"
 }

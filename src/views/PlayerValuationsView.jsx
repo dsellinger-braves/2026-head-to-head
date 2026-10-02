@@ -352,8 +352,8 @@ export default function PlayerValuationsView({
             href="#/keeper-calculations"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 hover:text-emerald-200 hover:bg-emerald-900/60 font-bold transition whitespace-nowrap text-xs ml-4"
           >
-            <span>🧮</span>
-            <span>PR Math & Calculations</span>
+            <span>🏷️</span>
+            <span>Keeper Prices</span>
           </a>
         </div>
 

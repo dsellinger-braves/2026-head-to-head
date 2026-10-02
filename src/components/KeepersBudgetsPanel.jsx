@@ -983,7 +983,7 @@ export default function KeepersBudgetsPanel({
               transition: 'all 0.15s ease'
             }}
           >
-            🧮 PR Math & Calculations
+            🏷️ Keeper Prices
           </button>
           <button
             onClick={() => setActiveTab('settings')}

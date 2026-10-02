@@ -755,8 +755,16 @@ def main():
     for idx, p in enumerate(evaluated):
         p["y3"]["rank"] = idx + 1
 
-    # 4. Overall Rank
-    evaluated.sort(key=lambda x: x["overall_pr"], reverse=True)
+    # 4. Overall Rank (sort by projected PR descending across all 3 years)
+    def overall_sort_key(p):
+        return (
+            p.get("overall_pr", 0.0),
+            p.get("y1", {}).get("pr", 0.0),
+            p.get("y2", {}).get("pr", 0.0),
+            p.get("y3", {}).get("pr", 0.0),
+            -float(p.get("espn_rank", 999) or 999)
+        )
+    evaluated.sort(key=overall_sort_key, reverse=True)
     for idx, p in enumerate(evaluated):
         rank = idx + 1
         price = cpv.get_price_for_rank(curve, rank)
