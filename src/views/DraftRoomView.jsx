@@ -8,6 +8,18 @@ import defaultDraft2026 from '../data/draft2026.json';
 import KeepersBudgetsPanel from '../components/KeepersBudgetsPanel';
 import HistoricalDraftView from './HistoricalDraftView';
 import { getPlayerHeadshotUrl, handleHeadshotError, updateGlobalPlayerLookup } from '../utils/headshotUtils';
+import {
+  CATEGORIES,
+  OWNER_ARCHETYPES,
+  normalizeManager,
+  getRotoBadgeStyle,
+  formatRotoStat,
+  computeLiveDraftRoto,
+  detectPositionalRun,
+  getSmartDraftRecommendations,
+  getPositionalTiers,
+  getPlayerProjectionStats
+} from '../utils/draftRotoEngine';
 
 function getFriendlyOwnerName(raw) {
   if (!raw && raw !== 0) return 'Unknown';
@@ -2103,18 +2115,7 @@ const OWNER_AVATARS = {
   default: 'https://raw.githubusercontent.com/dsellinger-braves/fantasy-draft/gh-pages/images/owners/default.png'
 };
 
-const DEFAULT_OWNER_PROFILES = {
-  Adrian: { archetype: { name: 'Value Hunter', emoji: '🎯' }, tendencies: { positionPreferences: { early: { pitcherRate: 0.25 }, mid: { pitcherRate: 0.35 }, late: { pitcherRate: 0.3 } } } },
-  Alex: { archetype: { name: 'Pitching Hoarder', emoji: '⚾' }, tendencies: { positionPreferences: { early: { pitcherRate: 0.5 }, mid: { pitcherRate: 0.4 }, late: { pitcherRate: 0.35 } } } },
-  Anil: { archetype: { name: 'Hitting Focused', emoji: '🏏' }, tendencies: { positionPreferences: { early: { pitcherRate: 0.15 }, mid: { pitcherRate: 0.25 }, late: { pitcherRate: 0.35 } } } },
-  Daniel: { archetype: { name: 'Ace Hunter', emoji: '👑' }, tendencies: { positionPreferences: { early: { pitcherRate: 0.4 }, mid: { pitcherRate: 0.3 }, late: { pitcherRate: 0.3 } } } },
-  Dan: { archetype: { name: 'Ace Hunter', emoji: '👑' }, tendencies: { positionPreferences: { early: { pitcherRate: 0.4 }, mid: { pitcherRate: 0.3 }, late: { pitcherRate: 0.3 } } } },
-  Garrett: { archetype: { name: 'Bold Gambler', emoji: '🎲' }, tendencies: { positionPreferences: { early: { pitcherRate: 0.3 }, mid: { pitcherRate: 0.35 }, late: { pitcherRate: 0.35 } } } },
-  Mark: { archetype: { name: 'Value Hunter', emoji: '🎯' }, tendencies: { positionPreferences: { early: { pitcherRate: 0.3 }, mid: { pitcherRate: 0.3 }, late: { pitcherRate: 0.3 } } } },
-  Preston: { archetype: { name: 'Pitching Hoarder', emoji: '⚾' }, tendencies: { positionPreferences: { early: { pitcherRate: 0.45 }, mid: { pitcherRate: 0.4 }, late: { pitcherRate: 0.3 } } } },
-  Tim: { archetype: { name: 'Hitting Focused', emoji: '🏏' }, tendencies: { positionPreferences: { early: { pitcherRate: 0.2 }, mid: { pitcherRate: 0.25 }, late: { pitcherRate: 0.35 } } } },
-  Will: { archetype: { name: 'Ace Hunter', emoji: '👑' }, tendencies: { positionPreferences: { early: { pitcherRate: 0.35 }, mid: { pitcherRate: 0.3 }, late: { pitcherRate: 0.3 } } } }
-};
+const DEFAULT_OWNER_PROFILES = OWNER_ARCHETYPES;
 
 // --- MODE SELECTION MODAL ---
 function ModeSelectionModal({ onSelectMode, roomSeason = 2027, onSeasonChange }) {
@@ -2517,8 +2518,385 @@ function QueuePreviewWidget({ queue, onPlayerClick, playerInfo }) {
   );
 }
 
+// --- POSITIONAL RUN RADAR ---
+function PositionalRunRadar({ run }) {
+  if (!run) return null;
+  return (
+    <div style={{
+      width: '88%',
+      maxWidth: '850px',
+      margin: '0 auto 14px auto',
+      background: 'linear-gradient(90deg, rgba(239, 68, 68, 0.25) 0%, rgba(249, 115, 22, 0.2) 100%)',
+      border: '1.5px solid #ef4444',
+      borderRadius: '8px',
+      padding: '10px 16px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: '12px',
+      boxShadow: '0 0 18px rgba(239, 68, 68, 0.35)',
+      boxSizing: 'border-box'
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <span style={{ fontSize: '22px' }}>🔥</span>
+        <div>
+          <span style={{ color: '#fca5a5', fontWeight: 'bold', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            Positional Run Alert: {run.group} Run ({run.count} of last {run.window} picks)
+          </span>
+          <div style={{ color: '#e2e8f0', fontSize: '12px', marginTop: '2px' }}>
+            Recent picks: <span style={{ color: '#fef08a' }}>{run.players.join(', ')}</span> — positional tier depth dropping rapidly!
+          </div>
+        </div>
+      </div>
+      <span style={{
+        background: '#ef4444',
+        color: '#fff',
+        fontSize: '11px',
+        fontWeight: 'bold',
+        padding: '3px 8px',
+        borderRadius: '4px',
+        whiteSpace: 'nowrap'
+      }}>
+        {run.urgency} SCARCITY
+      </span>
+    </div>
+  );
+}
+
+// --- ON-THE-CLOCK CATEGORY DEFICIT HUD ---
+function CategoryDeficitHUD({ currentPick, ownerRoto, isMyTurn, onSelectTab }) {
+  if (!currentPick?.Owner || !ownerRoto) return null;
+  const owner = currentPick.Owner;
+  const archetype = OWNER_ARCHETYPES[owner] || OWNER_ARCHETYPES[normalizeManager(owner)];
+
+  return (
+    <div style={{
+      width: '88%',
+      maxWidth: '850px',
+      margin: '0 auto 16px auto',
+      background: isMyTurn 
+        ? 'linear-gradient(90deg, rgba(3, 218, 198, 0.16) 0%, rgba(187, 134, 252, 0.16) 100%)' 
+        : 'rgba(28, 28, 38, 0.92)',
+      border: isMyTurn ? '1.5px solid #03dac6' : '1px solid #333',
+      borderRadius: '10px',
+      padding: '12px 18px',
+      boxShadow: isMyTurn ? '0 0 20px rgba(3, 218, 198, 0.25)' : '0 8px 24px rgba(0,0,0,0.4)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      flexWrap: 'wrap',
+      gap: '12px',
+      boxSizing: 'border-box'
+    }}>
+      {/* Left: Manager & Archetype */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{
+          width: '38px',
+          height: '38px',
+          borderRadius: '50%',
+          background: '#222',
+          border: '2px solid var(--highlight)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '18px'
+        }}>
+          {archetype?.archetype?.emoji || '⚾'}
+        </div>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <span style={{ color: '#fff', fontWeight: 'bold', fontSize: '15px' }}>{owner}</span>
+            {archetype?.archetype?.name && (
+              <span style={{
+                background: 'rgba(187, 134, 252, 0.2)',
+                color: '#bb86fc',
+                border: '1px solid rgba(187, 134, 252, 0.4)',
+                fontSize: '11px',
+                fontWeight: '600',
+                padding: '2px 8px',
+                borderRadius: '12px'
+              }}>
+                {archetype.archetype.emoji} {archetype.archetype.name}
+              </span>
+            )}
+            <span style={{ color: '#94a3b8', fontSize: '12px' }}>
+              Proj: <strong style={{ color: '#38bdf8' }}>#{ownerRoto.rank}</strong> ({ownerRoto.totalPoints.toFixed(1)} pts)
+            </span>
+          </div>
+          <div style={{ color: '#888', fontSize: '11px', marginTop: '2px' }}>
+            {archetype?.archetype?.tagline || 'Live roto standings & active deficit tracker'}
+          </div>
+        </div>
+      </div>
+
+      {/* Middle/Right: Deficits & Surpluses */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+        {ownerRoto.deficits && ownerRoto.deficits.length > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <span style={{ fontSize: '11px', color: '#f43f5e', fontWeight: 'bold', letterSpacing: '0.5px' }}>
+              🔻 DEFICIT:
+            </span>
+            {ownerRoto.deficits.map(d => (
+              <span
+                key={d.key}
+                style={{
+                  background: 'rgba(244, 63, 94, 0.18)',
+                  color: '#fca5a5',
+                  border: '1px solid rgba(244, 63, 94, 0.4)',
+                  borderRadius: '6px',
+                  padding: '2px 7px',
+                  fontSize: '11px',
+                  fontWeight: '600'
+                }}
+                title={`${d.label}: ${formatRotoStat(d.key, d.val)} (${d.pts.toFixed(1)} pts)`}
+              >
+                {d.label} ({d.pts.toFixed(1)} pts)
+              </span>
+            ))}
+          </div>
+        )}
+
+        {ownerRoto.surpluses && ownerRoto.surpluses.length > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 'bold', letterSpacing: '0.5px' }}>
+              🟢 SURPLUS:
+            </span>
+            {ownerRoto.surpluses.slice(0, 2).map(s => (
+              <span
+                key={s.key}
+                style={{
+                  background: 'rgba(16, 185, 129, 0.18)',
+                  color: '#6ee7b7',
+                  border: '1px solid rgba(16, 185, 129, 0.4)',
+                  borderRadius: '6px',
+                  padding: '2px 7px',
+                  fontSize: '11px',
+                  fontWeight: '600'
+                }}
+                title={`${s.label}: ${formatRotoStat(s.key, s.val)} (${s.pts.toFixed(1)} pts)`}
+              >
+                {s.label} ({s.pts.toFixed(1)} pts)
+              </span>
+            ))}
+          </div>
+        )}
+
+        {onSelectTab && (
+          <button
+            onClick={() => onSelectTab('Standings')}
+            style={{
+              background: 'transparent',
+              border: '1px solid #475569',
+              color: '#cbd5e1',
+              padding: '4px 10px',
+              borderRadius: '6px',
+              fontSize: '11px',
+              cursor: 'pointer'
+            }}
+          >
+            📊 Standings →
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// --- DRAFT ASSISTANT WIDGET ---
+function DraftAssistantWidget({
+  recommendations = [],
+  onDraft,
+  isMyTurn,
+  queue = [],
+  onAddToQueue,
+  onRemoveFromQueue,
+  onPlayerClick
+}) {
+  if (!recommendations || recommendations.length === 0) return null;
+
+  return (
+    <div style={{
+      background: 'linear-gradient(180deg, #181c24 0%, #11141a 100%)',
+      border: '1px solid #2d3748',
+      borderRadius: '10px',
+      padding: '12px 14px',
+      marginBottom: '14px',
+      boxShadow: '0 4px 14px rgba(0, 0, 0, 0.35)'
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '16px' }}>🤖</span>
+          <span style={{ color: '#fff', fontWeight: 'bold', fontSize: '13px', letterSpacing: '0.5px' }}>
+            LIVE DRAFT ASSISTANT: TOP STRATEGIC TARGETS
+          </span>
+          <span style={{
+            background: 'rgba(3, 218, 198, 0.15)',
+            color: '#03dac6',
+            fontSize: '10px',
+            padding: '2px 6px',
+            borderRadius: '4px',
+            fontWeight: '600'
+          }}>
+            AI OPTIMIZED
+          </span>
+        </div>
+        <span style={{ color: '#64748b', fontSize: '11px' }}>
+          Deficit synergy, open roster needs & ADP surplus
+        </span>
+      </div>
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+        gap: '10px'
+      }}>
+        {recommendations.map((rec, i) => {
+          const p = rec.player;
+          const isQueued = queue.some(qp => String(qp['ESPN PlayerID']) === String(p['ESPN PlayerID']));
+          return (
+            <div
+              key={p['ESPN PlayerID'] || i}
+              style={{
+                background: '#1a1f29',
+                border: `1px solid ${rec.color}44`,
+                borderLeft: `3px solid ${rec.color}`,
+                borderRadius: '8px',
+                padding: '10px 12px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                gap: '8px'
+              }}
+            >
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+                  <span style={{
+                    fontSize: '10px',
+                    fontWeight: 'bold',
+                    color: rec.color,
+                    letterSpacing: '0.5px',
+                    textTransform: 'uppercase'
+                  }}>
+                    {rec.badge}
+                  </span>
+                  <span style={{ color: '#ffc107', fontSize: '11px', fontWeight: 'bold' }}>
+                    Rank #{p['Hefty Keeper Rank'] || p.rank || '--'}
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                  <div
+                    onClick={() => onPlayerClick && onPlayerClick(p)}
+                    style={{
+                      color: '#fff',
+                      fontWeight: 'bold',
+                      fontSize: '14px',
+                      cursor: 'pointer',
+                      textDecoration: 'underline',
+                      textUnderlineOffset: '2px'
+                    }}
+                    title="Click for full scouting card"
+                  >
+                    {p.Player}
+                  </div>
+                  <span style={{
+                    background: '#2d3748',
+                    color: '#94a3b8',
+                    fontSize: '11px',
+                    padding: '1px 6px',
+                    borderRadius: '4px'
+                  }}>
+                    {p.Position} • {p.Team}
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', marginBottom: '6px' }}>
+                  {rec.tags.map((t, idx) => (
+                    <span
+                      key={idx}
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.06)',
+                        color: '#cbd5e1',
+                        fontSize: '10px',
+                        padding: '1px 6px',
+                        borderRadius: '4px',
+                        fontWeight: '500'
+                      }}
+                    >
+                      {t}
+                    </span>
+                  ))}
+                </div>
+
+                <div style={{ color: '#94a3b8', fontSize: '11px', fontStyle: 'italic', lineHeight: '1.3' }}>
+                  "{rec.rationale}"
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
+                {isMyTurn && (
+                  <button
+                    onClick={() => onDraft(p)}
+                    style={{
+                      flex: '1',
+                      background: '#10b981',
+                      color: '#fff',
+                      border: 'none',
+                      padding: '5px 10px',
+                      borderRadius: '5px',
+                      fontSize: '12px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    ⚡ DRAFT NOW
+                  </button>
+                )}
+                <button
+                  onClick={() => isQueued ? onRemoveFromQueue(p['ESPN PlayerID']) : onAddToQueue(p)}
+                  style={{
+                    flex: isMyTurn ? '0 0 auto' : '1',
+                    background: isQueued ? '#334155' : 'transparent',
+                    color: isQueued ? '#94a3b8' : '#03dac6',
+                    border: `1px solid ${isQueued ? '#475569' : '#03dac6'}`,
+                    padding: '5px 10px',
+                    borderRadius: '5px',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {isQueued ? '✓ Queued' : '+ Queue'}
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // --- PLAYER POOL PANEL ---
-function PlayerPoolPanel({ players, onDraft, isMyTurn, queue, onAddToQueue, onRemoveFromQueue, draftMode, testModePicks, allPicks, onPlayerClick, playerInfo, isMobile = false }) {
+function PlayerPoolPanel({
+  players,
+  onDraft,
+  isMyTurn,
+  queue,
+  onAddToQueue,
+  onRemoveFromQueue,
+  draftMode,
+  testModePicks,
+  allPicks,
+  onPlayerClick,
+  playerInfo,
+  isMobile = false,
+  recommendations = []
+}) {
+  const [viewMode, setViewMode] = useState('list'); // 'list' | 'tiers'
+  const [tierPos, setTierPos] = useState('SP');
+  const [showAssistant, setShowAssistant] = useState(true);
   const [sortConfig, setSortConfig] = useState({ key: 'Hefty Keeper Rank', direction: 'asc' });
   const [filterPos, setFilterPos] = useState('');
   const [searchText, setSearchText] = useState('');
@@ -2620,148 +2998,407 @@ function PlayerPoolPanel({ players, onDraft, isMyTurn, queue, onAddToQueue, onRe
 
   const isQueued = (playerId) => queue.some(p => String(p['ESPN PlayerID']) === String(playerId));
 
+  // Compute Positional Tiers for Tiers View
+  const positionalTiers = useMemo(() => {
+    return getPositionalTiers({
+      availablePlayers: sortedPlayers,
+      position: tierPos
+    });
+  }, [sortedPlayers, tierPos]);
+
   return (
     <div style={{ display: 'flex', gridColumn: '1 / -1', gap: '20px', height: '100%' }}>
       {/* Main Pool */}
       <div style={{ ...styles.wrColumn, flex: '3' }}>
         <div style={styles.wrHeader}>
-          <span>Available Players {draftMode === 'test' && <span style={{ color: '#ffc107', fontSize: '14px' }}>(TEST MODE)</span>}{draftMode === 'mockdraft' && <span style={{ color: '#bb86fc', fontSize: '14px' }}>(MOCK DRAFT)</span>}</span>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <select 
-              value={filterPos} 
-              onChange={e => setFilterPos(e.target.value)}
-              style={styles.filterControl}
-            >
-              <option value="">All Pos</option>
-              <option value="C">C</option>
-              <option value="1B">1B</option>
-              <option value="2B">2B</option>
-              <option value="3B">3B</option>
-              <option value="SS">SS</option>
-              <option value="OF">OF</option>
-              <option value="SP">SP</option>
-              <option value="RP">RP</option>
-            </select>
-            <input 
-              type="text"
-              placeholder="Search player or team..."
-              value={searchText}
-              onChange={e => setSearchText(e.target.value)}
-              style={styles.filterControl}
-            />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            <span>Available Players {draftMode === 'test' && <span style={{ color: '#ffc107', fontSize: '14px' }}>(TEST MODE)</span>}{draftMode === 'mockdraft' && <span style={{ color: '#bb86fc', fontSize: '14px' }}>(MOCK DRAFT)</span>}</span>
+            {recommendations.length > 0 && (
+              <button
+                onClick={() => setShowAssistant(!showAssistant)}
+                style={{
+                  background: showAssistant ? 'rgba(3, 218, 198, 0.15)' : 'transparent',
+                  color: showAssistant ? '#03dac6' : '#888',
+                  border: '1px solid #444',
+                  borderRadius: '4px',
+                  padding: '2px 8px',
+                  fontSize: '11px',
+                  cursor: 'pointer'
+                }}
+              >
+                🤖 Assistant ({recommendations.length})
+              </button>
+            )}
+          </div>
+
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+            {/* View Switcher: List vs Tiers */}
+            <div style={{ display: 'flex', background: '#1e293b', padding: '2px', borderRadius: '5px' }}>
+              <button
+                onClick={() => setViewMode('list')}
+                style={{
+                  background: viewMode === 'list' ? '#03dac6' : 'transparent',
+                  color: viewMode === 'list' ? '#000' : '#94a3b8',
+                  border: 'none',
+                  borderRadius: '3px',
+                  padding: '3px 8px',
+                  fontSize: '11px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer'
+                }}
+              >
+                📋 List
+              </button>
+              <button
+                onClick={() => setViewMode('tiers')}
+                style={{
+                  background: viewMode === 'tiers' ? '#bb86fc' : 'transparent',
+                  color: viewMode === 'tiers' ? '#000' : '#94a3b8',
+                  border: 'none',
+                  borderRadius: '3px',
+                  padding: '3px 8px',
+                  fontSize: '11px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer'
+                }}
+              >
+                🧱 Positional Tiers
+              </button>
+            </div>
+
+            {viewMode === 'list' && (
+              <>
+                <select 
+                  value={filterPos} 
+                  onChange={e => setFilterPos(e.target.value)}
+                  style={styles.filterControl}
+                >
+                  <option value="">All Pos</option>
+                  <option value="C">C</option>
+                  <option value="1B">1B</option>
+                  <option value="2B">2B</option>
+                  <option value="3B">3B</option>
+                  <option value="SS">SS</option>
+                  <option value="OF">OF</option>
+                  <option value="SP">SP</option>
+                  <option value="RP">RP</option>
+                </select>
+                <input 
+                  type="text"
+                  placeholder="Search player or team..."
+                  value={searchText}
+                  onChange={e => setSearchText(e.target.value)}
+                  style={styles.filterControl}
+                />
+              </>
+            )}
           </div>
         </div>
-        
-        <div style={styles.poolTableContainer}>
-          <table style={styles.table}>
-            <thead style={styles.tableHead}>
-              <tr>
-                <th style={styles.th} width="75">Action</th>
-                <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('Player')}>Player{getSortIcon('Player')}</th>
-                <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('Position')}>Pos{getSortIcon('Position')}</th>
-                <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('Team')}>Team{getSortIcon('Team')}</th>
-                <th style={{ ...styles.th, color: '#ffc107', cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('Hefty Keeper Price')}>Hefty ${getSortIcon('Hefty Keeper Price')}</th>
-                <th style={{ ...styles.th, color: '#90caf9', cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('Hefty Keeper Rank')}>Rank{getSortIcon('Hefty Keeper Rank')}</th>
-                <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('ZIPSR')}>R{getSortIcon('ZIPSR')}</th>
-                <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('ZIPSHR')}>HR{getSortIcon('ZIPSHR')}</th>
-                <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('ZIPSRBI')}>RBI{getSortIcon('ZIPSRBI')}</th>
-                <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('ZIPSSB')}>SB{getSortIcon('ZIPSSB')}</th>
-                <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('ZIPSOBP')}>OBP{getSortIcon('ZIPSOBP')}</th>
-                <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('ZIPSK')}>K{getSortIcon('ZIPSK')}</th>
-                <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('ZIPSQS')}>QS{getSortIcon('ZIPSQS')}</th>
-                <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('ZIPSERA')}>ERA{getSortIcon('ZIPSERA')}</th>
-                <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('ZIPSWHIP')}>WHIP{getSortIcon('ZIPSWHIP')}</th>
-                <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('ZIPSSV+HDs')}>SV+H{getSortIcon('ZIPSSV+HDs')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedPlayers.slice(0, 200).map(p => {
-                const queued = isQueued(p['ESPN PlayerID']);
-                const isPitcher = p.Position?.includes('SP') || p.Position?.includes('RP');
-                const injury = getInjuryIndicator(p['ESPN PlayerID'], playerInfo);
-                const heftyPrice = p['Hefty Keeper Price'] ?? p['Hefty Single Season Price'];
-                const heftyRank = p['Hefty Keeper Rank'] ?? p['Hefty Single Season Rank'];
-                
-                return (
-                  <tr key={p['ESPN PlayerID']} style={styles.tableRow}>
-                    <td style={styles.td}>
-                      {isMyTurn && (
-                        <button onClick={() => onDraft(p)} style={styles.btnDraft}>
-                          DRAFT
-                        </button>
-                      )}
-                      <button 
-                        onClick={() => queued ? onRemoveFromQueue(p['ESPN PlayerID']) : onAddToQueue(p)}
-                        style={queued ? styles.btnStarActive : styles.btnStar}
-                        title={queued ? "Remove from queue" : "Add to queue"}
-                      >
-                        {queued ? '★' : '☆'}
-                      </button>
-                    </td>
-                    <td style={styles.td}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{
-                          width: '26px',
-                          height: '26px',
-                          borderRadius: '50%',
-                          overflow: 'hidden',
-                          background: '#222',
-                          flexShrink: 0,
-                          border: '1px solid #444'
-                        }}>
-                          <img
-                            src={getPlayerHeadshotUrl(p)}
-                            alt=""
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                            onError={(e) => handleHeadshotError(e, p)}
-                            referrerPolicy="no-referrer"
-                            loading="lazy"
-                          />
-                        </div>
-                        <PlayerNameButton 
-                          player={p} 
-                          onClick={onPlayerClick}
-                          style={{ color: injury ? injury.color : '#fff', fontWeight: 'bold' }}
-                        />
-                        {injury && (
-                          <span style={{
-                            marginLeft: '4px',
-                            padding: '2px 6px',
-                            borderRadius: '3px',
-                            background: injury.color,
-                            color: '#000',
-                            fontSize: '10px',
-                            fontWeight: 'bold'
-                          }}>
-                            {injury.status}
-                          </span>
+
+        {/* Live Draft Assistant Widget */}
+        {showAssistant && recommendations.length > 0 && (
+          <DraftAssistantWidget
+            recommendations={recommendations}
+            onDraft={onDraft}
+            isMyTurn={isMyTurn}
+            queue={queue}
+            onAddToQueue={onAddToQueue}
+            onRemoveFromQueue={onRemoveFromQueue}
+            onPlayerClick={onPlayerClick}
+          />
+        )}
+
+        {viewMode === 'tiers' ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', overflowY: 'auto', flexGrow: 1, padding: '4px' }}>
+            {/* Position Picker Tabs for Tiers */}
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center', background: '#181b22', padding: '8px 12px', borderRadius: '8px' }}>
+              <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 'bold', marginRight: '6px' }}>
+                Position Tiers:
+              </span>
+              {['SP', 'RP', 'C', '1B', '2B', '3B', 'SS', 'OF'].map(pos => (
+                <button
+                  key={pos}
+                  onClick={() => setTierPos(pos)}
+                  style={{
+                    background: tierPos === pos ? '#bb86fc' : '#222836',
+                    color: tierPos === pos ? '#000' : '#cbd5e1',
+                    border: '1px solid ' + (tierPos === pos ? '#bb86fc' : '#334155'),
+                    borderRadius: '6px',
+                    padding: '4px 10px',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {pos}
+                </button>
+              ))}
+            </div>
+
+            {/* Render Tiers 1 through 4 */}
+            {Object.entries(positionalTiers).map(([tierKey, tier]) => {
+              const count = tier.players.length;
+              const isCliff = (tierKey === '1' || tierKey === '2') && count <= 2 && count > 0;
+              return (
+                <div
+                  key={tierKey}
+                  style={{
+                    background: '#1a1f29',
+                    border: `1.5px solid ${isCliff ? '#ef4444' : tier.color + '55'}`,
+                    borderRadius: '8px',
+                    padding: '12px 14px',
+                    boxShadow: isCliff ? '0 0 16px rgba(239, 68, 68, 0.25)' : 'none'
+                  }}
+                >
+                  {/* Tier Header */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{
+                        background: tier.color,
+                        color: '#000',
+                        fontSize: '11px',
+                        fontWeight: 'bold',
+                        padding: '2px 8px',
+                        borderRadius: '4px'
+                      }}>
+                        {tier.name}
+                      </span>
+                      <span style={{ color: '#94a3b8', fontSize: '12px' }}>
+                        ({count} Available)
+                      </span>
+                    </div>
+
+                    {isCliff && (
+                      <span style={{
+                        background: 'rgba(239, 68, 68, 0.2)',
+                        color: '#fca5a5',
+                        border: '1px solid #ef4444',
+                        borderRadius: '4px',
+                        padding: '2px 8px',
+                        fontSize: '11px',
+                        fontWeight: 'bold',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}>
+                        ⚠️ CLIFF ALERT: Only {count} Left!
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Cliff Alert Banner */}
+                  {isCliff && (
+                    <div style={{
+                      background: 'rgba(239, 68, 68, 0.12)',
+                      border: '1px solid rgba(239, 68, 68, 0.3)',
+                      color: '#fecdd3',
+                      fontSize: '11px',
+                      borderRadius: '6px',
+                      padding: '6px 10px',
+                      marginBottom: '10px',
+                      lineHeight: '1.4'
+                    }}>
+                      ⚡ Positional drop-off cliff imminent! Only <strong>{count}</strong> {tierPos} remaining before dropping to Tier {parseInt(tierKey, 10) + 1}. Secure talent now.
+                    </div>
+                  )}
+
+                  {/* Player Cards */}
+                  {count === 0 ? (
+                    <div style={{ color: '#64748b', fontSize: '12px', fontStyle: 'italic', padding: '6px 0' }}>
+                      Tier is completely drafted.
+                    </div>
+                  ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '8px' }}>
+                      {tier.players.map(p => {
+                        const queued = isQueued(p['ESPN PlayerID']);
+                        const heftyPrice = p['Hefty Keeper Price'] ?? p['Hefty Single Season Price'];
+                        const heftyRank = p['Hefty Keeper Rank'] ?? p['Hefty Single Season Rank'];
+                        return (
+                          <div
+                            key={p['ESPN PlayerID']}
+                            style={{
+                              background: '#242b38',
+                              border: '1px solid #334155',
+                              borderRadius: '6px',
+                              padding: '8px 10px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              gap: '8px'
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                              <div style={{ width: '28px', height: '28px', borderRadius: '50%', overflow: 'hidden', background: '#222', flexShrink: 0, border: '1px solid #475569' }}>
+                                <img
+                                  src={getPlayerHeadshotUrl(p)}
+                                  alt=""
+                                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                  onError={(e) => handleHeadshotError(e, p)}
+                                  referrerPolicy="no-referrer"
+                                  loading="lazy"
+                                />
+                              </div>
+                              <div style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                <div
+                                  onClick={() => onPlayerClick(p)}
+                                  style={{ color: '#fff', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}
+                                  title="Click for scouting card"
+                                >
+                                  {p.Player}
+                                </div>
+                                <div style={{ fontSize: '11px', color: '#94a3b8' }}>
+                                  {p.Team} • {heftyRank ? `#${heftyRank}` : '--'} {heftyPrice ? `• $${heftyPrice}` : ''}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+                              {isMyTurn && (
+                                <button
+                                  onClick={() => onDraft(p)}
+                                  style={{
+                                    background: '#10b981',
+                                    color: '#fff',
+                                    border: 'none',
+                                    padding: '3px 8px',
+                                    borderRadius: '4px',
+                                    fontSize: '11px',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  Pick
+                                </button>
+                              )}
+                              <button
+                                onClick={() => queued ? onRemoveFromQueue(p['ESPN PlayerID']) : onAddToQueue(p)}
+                                style={queued ? styles.btnStarActive : styles.btnStar}
+                                title={queued ? "Remove from queue" : "Add to queue"}
+                              >
+                                {queued ? '★' : '☆'}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div style={styles.poolTableContainer}>
+            <table style={styles.table}>
+              <thead style={styles.tableHead}>
+                <tr>
+                  <th style={styles.th} width="75">Action</th>
+                  <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('Player')}>Player{getSortIcon('Player')}</th>
+                  <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('Position')}>Pos{getSortIcon('Position')}</th>
+                  <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('Team')}>Team{getSortIcon('Team')}</th>
+                  <th style={{ ...styles.th, color: '#ffc107', cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('Hefty Keeper Price')}>Hefty ${getSortIcon('Hefty Keeper Price')}</th>
+                  <th style={{ ...styles.th, color: '#90caf9', cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('Hefty Keeper Rank')}>Rank{getSortIcon('Hefty Keeper Rank')}</th>
+                  <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('ZIPSR')}>R{getSortIcon('ZIPSR')}</th>
+                  <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('ZIPSHR')}>HR{getSortIcon('ZIPSHR')}</th>
+                  <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('ZIPSRBI')}>RBI{getSortIcon('ZIPSRBI')}</th>
+                  <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('ZIPSSB')}>SB{getSortIcon('ZIPSSB')}</th>
+                  <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('ZIPSOBP')}>OBP{getSortIcon('ZIPSOBP')}</th>
+                  <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('ZIPSK')}>K{getSortIcon('ZIPSK')}</th>
+                  <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('ZIPSQS')}>QS{getSortIcon('ZIPSQS')}</th>
+                  <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('ZIPSERA')}>ERA{getSortIcon('ZIPSERA')}</th>
+                  <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('ZIPSWHIP')}>WHIP{getSortIcon('ZIPSWHIP')}</th>
+                  <th style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('ZIPSSV+HDs')}>SV+H{getSortIcon('ZIPSSV+HDs')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedPlayers.slice(0, 200).map(p => {
+                  const queued = isQueued(p['ESPN PlayerID']);
+                  const isPitcher = p.Position?.includes('SP') || p.Position?.includes('RP');
+                  const injury = getInjuryIndicator(p['ESPN PlayerID'], playerInfo);
+                  const heftyPrice = p['Hefty Keeper Price'] ?? p['Hefty Single Season Price'];
+                  const heftyRank = p['Hefty Keeper Rank'] ?? p['Hefty Single Season Rank'];
+                  
+                  return (
+                    <tr key={p['ESPN PlayerID']} style={styles.tableRow}>
+                      <td style={styles.td}>
+                        {isMyTurn && (
+                          <button onClick={() => onDraft(p)} style={styles.btnDraft}>
+                            DRAFT
+                          </button>
                         )}
-                      </div>
-                    </td>
-                    <td style={styles.td}>{p.Position}</td>
-                    <td style={styles.td}>{p.Team}</td>
-                    <td style={{ ...styles.td, textAlign: 'right', fontWeight: 'bold', color: heftyPrice ? '#ffc107' : '#666' }}>
-                      {heftyPrice !== undefined && heftyPrice !== null && heftyPrice !== '' ? `$${heftyPrice}` : '-'}
-                    </td>
-                    <td style={{ ...styles.td, textAlign: 'center', color: '#90caf9', fontSize: '11px', fontWeight: '600' }}>
-                      {heftyRank ? `#${heftyRank}` : '-'}
-                    </td>
-                    <td style={styles.td}>{isPitcher ? '-' : (p.ZIPSR || '-')}</td>
-                    <td style={styles.td}>{isPitcher ? '-' : (p.ZIPSHR || '-')}</td>
-                    <td style={styles.td}>{isPitcher ? '-' : (p.ZIPSRBI || '-')}</td>
-                    <td style={styles.td}>{isPitcher ? '-' : (p.ZIPSSB || '-')}</td>
-                    <td style={styles.td}>{isPitcher ? '-' : (p.ZIPSOBP || '-')}</td>
-                    <td style={styles.td}>{!isPitcher ? '-' : (p.ZIPSK || '-')}</td>
-                    <td style={styles.td}>{!isPitcher ? '-' : (p.ZIPSQS || '-')}</td>
-                    <td style={styles.td}>{!isPitcher ? '-' : (p.ZIPSERA || '-')}</td>
-                    <td style={styles.td}>{!isPitcher ? '-' : (p.ZIPSWHIP || '-')}</td>
-                    <td style={styles.td}>{!isPitcher ? '-' : (p['ZIPSSV+HDs'] || '-')}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                        <button 
+                          onClick={() => queued ? onRemoveFromQueue(p['ESPN PlayerID']) : onAddToQueue(p)}
+                          style={queued ? styles.btnStarActive : styles.btnStar}
+                          title={queued ? "Remove from queue" : "Add to queue"}
+                        >
+                          {queued ? '★' : '☆'}
+                        </button>
+                      </td>
+                      <td style={styles.td}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div style={{
+                            width: '26px',
+                            height: '26px',
+                            borderRadius: '50%',
+                            overflow: 'hidden',
+                            background: '#222',
+                            flexShrink: 0,
+                            border: '1px solid #444'
+                          }}>
+                            <img
+                              src={getPlayerHeadshotUrl(p)}
+                              alt=""
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              onError={(e) => handleHeadshotError(e, p)}
+                              referrerPolicy="no-referrer"
+                              loading="lazy"
+                            />
+                          </div>
+                          <PlayerNameButton 
+                            player={p} 
+                            onClick={onPlayerClick}
+                            style={{ color: injury ? injury.color : '#fff', fontWeight: 'bold' }}
+                          />
+                          {injury && (
+                            <span style={{
+                              marginLeft: '4px',
+                              padding: '2px 6px',
+                              borderRadius: '3px',
+                              background: injury.color,
+                              color: '#000',
+                              fontSize: '10px',
+                              fontWeight: 'bold'
+                            }}>
+                              {injury.status}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td style={styles.td}>{p.Position}</td>
+                      <td style={styles.td}>{p.Team}</td>
+                      <td style={{ ...styles.td, textAlign: 'right', fontWeight: 'bold', color: heftyPrice ? '#ffc107' : '#666' }}>
+                        {heftyPrice !== undefined && heftyPrice !== null && heftyPrice !== '' ? `$${heftyPrice}` : '-'}
+                      </td>
+                      <td style={{ ...styles.td, textAlign: 'center', color: '#90caf9', fontSize: '11px', fontWeight: '600' }}>
+                        {heftyRank ? `#${heftyRank}` : '-'}
+                      </td>
+                      <td style={styles.td}>{isPitcher ? '-' : (p.ZIPSR || '-')}</td>
+                      <td style={styles.td}>{isPitcher ? '-' : (p.ZIPSHR || '-')}</td>
+                      <td style={styles.td}>{isPitcher ? '-' : (p.ZIPSRBI || '-')}</td>
+                      <td style={styles.td}>{isPitcher ? '-' : (p.ZIPSSB || '-')}</td>
+                      <td style={styles.td}>{isPitcher ? '-' : (p.ZIPSOBP || '-')}</td>
+                      <td style={styles.td}>{!isPitcher ? '-' : (p.ZIPSK || '-')}</td>
+                      <td style={styles.td}>{!isPitcher ? '-' : (p.ZIPSQS || '-')}</td>
+                      <td style={styles.td}>{!isPitcher ? '-' : (p.ZIPSERA || '-')}</td>
+                      <td style={styles.td}>{!isPitcher ? '-' : (p.ZIPSWHIP || '-')}</td>
+                      <td style={styles.td}>{!isPitcher ? '-' : (p['ZIPSSV+HDs'] || '-')}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Queue */}
@@ -2808,6 +3445,7 @@ function PlayerPoolPanel({ players, onDraft, isMyTurn, queue, onAddToQueue, onRe
     </div>
   );
 }
+
 
 // --- ROSTER MANAGER PANEL ---
 function RosterManagerPanel({ allPicks, players, currentUser }) {
@@ -4307,82 +4945,202 @@ function DraftLogPanel({ allPicks, players, onPlayerClick }) {
   );
 }
 
-// --- STANDINGS PANEL ---
-function StandingsPanel({ allPicks, players }) {
-  const standings = useMemo(() => {
-    return DRAFT_OWNERS.map(owner => {
-      const ownerPicks = allPicks.filter(p => p.Owner === owner && p['ESPN PlayerID']);
-      const ownerPlayers = ownerPicks.map(pick => 
-        players.find(p => String(p['ESPN PlayerID']) === String(pick['ESPN PlayerID']))
-      ).filter(Boolean);
+// --- UPGRADED STANDINGS PANEL: LIVE 10-CATEGORY ROTO STANDINGS ---
+function StandingsPanel({ allPicks = [], keepers = [], roomSeason = 2027 }) {
+  const [viewMode, setViewMode] = useState('points'); // 'points' | 'stats'
 
-      const batters = ownerPlayers.filter(p => !p.Position?.includes('SP') && !p.Position?.includes('RP'));
-      const pitchers = ownerPlayers.filter(p => p.Position?.includes('SP') || p.Position?.includes('RP'));
-
-      return {
-        owner,
-        picksCount: ownerPicks.length,
-        r: batters.reduce((sum, p) => sum + (parseFloat(p.ZIPSR) || 0), 0),
-        hr: batters.reduce((sum, p) => sum + (parseFloat(p.ZIPSHR) || 0), 0),
-        rbi: batters.reduce((sum, p) => sum + (parseFloat(p.ZIPSRBI) || 0), 0),
-        sb: batters.reduce((sum, p) => sum + (parseFloat(p.ZIPSSB) || 0), 0),
-        obp: batters.length > 0 ? 
-          batters.reduce((sum, p) => sum + (parseFloat(p.ZIPSOBP) || 0), 0) / batters.length : 0,
-        k: pitchers.reduce((sum, p) => sum + (parseFloat(p.ZIPSK) || 0), 0),
-        qs: pitchers.reduce((sum, p) => sum + (parseFloat(p.ZIPSQS) || 0), 0),
-        era: pitchers.length > 0 ?
-          pitchers.reduce((sum, p) => sum + (parseFloat(p.ZIPSERA) || 0), 0) / pitchers.length : 0,
-        whip: pitchers.length > 0 ?
-          pitchers.reduce((sum, p) => sum + (parseFloat(p.ZIPSWHIP) || 0), 0) / pitchers.length : 0,
-        sv: pitchers.reduce((sum, p) => sum + (parseFloat(p['ZIPSSV+HDs']) || 0), 0)
-      };
+  const roto = useMemo(() => {
+    return computeLiveDraftRoto({
+      allPicks,
+      keepers,
+      seasonYear: roomSeason
     });
-  }, [allPicks, players]);
+  }, [allPicks, keepers, roomSeason]);
+
+  const teams = roto.teams || [];
 
   return (
     <div style={{ ...styles.wrColumn, width: '100%', gridColumn: '1 / -1' }}>
-      <div style={styles.wrHeader}>Projected Standings from Drafted Rosters</div>
+      <div style={{ ...styles.wrHeader, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ fontSize: '18px' }}>🏆</span>
+          <div>
+            <div style={{ fontSize: '15px', fontWeight: 'bold', color: '#fff' }}>
+              Live 10-Category Projected Rotisserie Standings
+            </div>
+            <div style={{ fontSize: '11px', color: '#94a3b8' }}>
+              Full Roto Scoring (Keepers + Live Draft Picks) • Max 90.0 Total Points
+            </div>
+          </div>
+        </div>
+
+        {/* View Toggle */}
+        <div style={{ display: 'flex', gap: '6px', background: '#1e293b', padding: '3px', borderRadius: '6px' }}>
+          <button
+            onClick={() => setViewMode('points')}
+            style={{
+              background: viewMode === 'points' ? '#03dac6' : 'transparent',
+              color: viewMode === 'points' ? '#000' : '#94a3b8',
+              border: 'none',
+              borderRadius: '4px',
+              padding: '4px 10px',
+              fontSize: '11px',
+              fontWeight: 'bold',
+              cursor: 'pointer'
+            }}
+          >
+            📊 Roto Points (1–9)
+          </button>
+          <button
+            onClick={() => setViewMode('stats')}
+            style={{
+              background: viewMode === 'stats' ? '#03dac6' : 'transparent',
+              color: viewMode === 'stats' ? '#000' : '#94a3b8',
+              border: 'none',
+              borderRadius: '4px',
+              padding: '4px 10px',
+              fontSize: '11px',
+              fontWeight: 'bold',
+              cursor: 'pointer'
+            }}
+          >
+            📈 Raw Projected Stats
+          </button>
+        </div>
+      </div>
+
       <div style={styles.poolTableContainer}>
         <table style={styles.table}>
           <thead style={styles.tableHead}>
             <tr>
-              <th style={styles.th}>Owner</th>
-              <th style={styles.th}>Picks</th>
-              <th style={styles.th}>Proj R</th>
-              <th style={styles.th}>Proj HR</th>
-              <th style={styles.th}>Proj RBI</th>
-              <th style={styles.th}>Proj SB</th>
-              <th style={styles.th}>Proj OBP</th>
-              <th style={styles.th}>Proj K</th>
-              <th style={styles.th}>Proj QS</th>
-              <th style={styles.th}>Proj ERA</th>
-              <th style={styles.th}>Proj WHIP</th>
-              <th style={styles.th}>Proj SV+H</th>
+              <th style={styles.th} width="40">#</th>
+              <th style={styles.th} width="160">Owner & Archetype</th>
+              <th style={{ ...styles.th, textAlign: 'center' }} width="75">Players</th>
+              <th style={{ ...styles.th, color: '#ffc107', textAlign: 'center', fontWeight: 'bold' }} width="80">Total Pts</th>
+              <th style={{ ...styles.th, color: '#38bdf8', textAlign: 'center' }} width="65">Bat Pts</th>
+              <th style={{ ...styles.th, color: '#a855f7', textAlign: 'center' }} width="65">Pit Pts</th>
+              {CATEGORIES.map(c => (
+                <th key={c.key} style={{ ...styles.th, textAlign: 'center' }}>
+                  {c.label}
+                </th>
+              ))}
+              <th style={styles.th} width="160">Primary Deficit</th>
             </tr>
           </thead>
           <tbody>
-            {standings.map(s => (
-              <tr key={s.owner} style={styles.tableRow}>
-                <td style={{ ...styles.td, fontWeight: 'bold', color: 'var(--highlight)' }}>{s.owner}</td>
-                <td style={styles.td}>{s.picksCount}</td>
-                <td style={styles.td}>{Math.round(s.r)}</td>
-                <td style={styles.td}>{Math.round(s.hr)}</td>
-                <td style={styles.td}>{Math.round(s.rbi)}</td>
-                <td style={styles.td}>{Math.round(s.sb)}</td>
-                <td style={styles.td}>{s.obp.toFixed(3)}</td>
-                <td style={styles.td}>{Math.round(s.k)}</td>
-                <td style={styles.td}>{Math.round(s.qs)}</td>
-                <td style={styles.td}>{s.era > 0 ? s.era.toFixed(2) : '-'}</td>
-                <td style={styles.td}>{s.whip > 0 ? s.whip.toFixed(3) : '-'}</td>
-                <td style={styles.td}>{Math.round(s.sv)}</td>
-              </tr>
-            ))}
+            {teams.map((t, idx) => {
+              const arch = OWNER_ARCHETYPES[t.owner] || OWNER_ARCHETYPES[normalizeManager(t.owner)];
+              const rankColor = idx === 0 ? '#ffd700' : idx === 1 ? '#c0c0c0' : idx === 2 ? '#cd7f32' : '#fff';
+              return (
+                <tr key={t.owner} style={styles.tableRow}>
+                  <td style={{ ...styles.td, textAlign: 'center', fontWeight: 'bold', color: rankColor, fontSize: '13px' }}>
+                    {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : idx + 1}
+                  </td>
+                  <td style={styles.td}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '15px' }}>{arch?.archetype?.emoji || '⚾'}</span>
+                      <div>
+                        <div style={{ fontWeight: 'bold', color: '#fff', fontSize: '13px' }}>
+                          {t.owner}
+                        </div>
+                        {arch?.archetype?.name && (
+                          <div style={{ fontSize: '10px', color: '#94a3b8' }}>
+                            {arch.archetype.name}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </td>
+                  <td style={{ ...styles.td, textAlign: 'center', fontSize: '11px', color: '#cbd5e1' }}>
+                    <span title={`${t.keeperCount} Keepers + ${t.pickCount} Draft Picks`}>
+                      {t.totalPlayers} <span style={{ color: '#64748b' }}>({t.keeperCount}k/{t.pickCount}p)</span>
+                    </span>
+                  </td>
+                  <td style={{ ...styles.td, textAlign: 'center', fontWeight: 'bold', fontSize: '14px', color: '#ffc107', background: 'rgba(255, 193, 7, 0.08)' }}>
+                    {t.totalPoints.toFixed(1)}
+                  </td>
+                  <td style={{ ...styles.td, textAlign: 'center', color: '#38bdf8', fontWeight: '600' }}>
+                    {t.battingPoints.toFixed(1)}
+                  </td>
+                  <td style={{ ...styles.td, textAlign: 'center', color: '#a855f7', fontWeight: '600' }}>
+                    {t.pitchingPoints.toFixed(1)}
+                  </td>
+
+                  {/* 10 Category Columns */}
+                  {CATEGORIES.map(c => {
+                    const pts = t.points[c.key];
+                    const raw = t.rawStats[c.key];
+                    const badge = getRotoBadgeStyle(pts);
+
+                    return (
+                      <td key={c.key} style={{ ...styles.td, textAlign: 'center', verticalAlign: 'middle', padding: '6px 4px' }}>
+                        {viewMode === 'points' ? (
+                          <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <span style={{
+                              background: badge.bg,
+                              color: badge.text,
+                              border: `1px solid ${badge.border}`,
+                              borderRadius: '4px',
+                              padding: '2px 6px',
+                              fontSize: '11px',
+                              fontWeight: 'bold',
+                              minWidth: '32px'
+                            }}>
+                              {pts.toFixed(1)}
+                            </span>
+                            <span style={{ fontSize: '9px', color: '#64748b', marginTop: '2px' }}>
+                              {formatRotoStat(c.key, raw)}
+                            </span>
+                          </div>
+                        ) : (
+                          <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <span style={{ fontWeight: 'bold', color: '#fff', fontSize: '12px' }}>
+                              {formatRotoStat(c.key, raw)}
+                            </span>
+                            <span style={{ fontSize: '9px', color: badge.text }}>
+                              ({pts.toFixed(1)} pts)
+                            </span>
+                          </div>
+                        )}
+                      </td>
+                    );
+                  })}
+
+                  {/* Primary Deficit pill */}
+                  <td style={styles.td}>
+                    {t.deficits && t.deficits.length > 0 ? (
+                      <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                        {t.deficits.map(d => (
+                          <span
+                            key={d.key}
+                            style={{
+                              background: 'rgba(244, 63, 94, 0.15)',
+                              color: '#f87171',
+                              border: '1px solid rgba(244, 63, 94, 0.3)',
+                              borderRadius: '4px',
+                              padding: '1px 5px',
+                              fontSize: '10px',
+                              fontWeight: '600'
+                            }}
+                          >
+                            {d.label} ({d.pts.toFixed(1)})
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span style={{ color: '#64748b', fontSize: '11px' }}>Balanced</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
     </div>
   );
 }
+
 
 // --- MAIN DRAFT ROOM VIEW ---
 export default function DraftRoomView({ 
@@ -5085,23 +5843,43 @@ export default function DraftRoomView({
         needScore = Math.max(needScore, s);
       });
 
-      const profile = DEFAULT_OWNER_PROFILES[current.Owner];
+      const profile = OWNER_ARCHETYPES[current.Owner] || OWNER_ARCHETYPES[normalizeManager(current.Owner)] || DEFAULT_OWNER_PROFILES[current.Owner];
       let ownerScore = 50;
-      if (profile?.tendencies) {
-        const stage = pickNum <= 60 ? 'early' : pickNum <= 120 ? 'mid' : 'late';
-        const pitcherRate = profile.tendencies.positionPreferences?.[stage]?.pitcherRate ?? 0.3;
+      if (profile) {
+        const pitcherBias = profile.pitcherBias ?? 0.35;
         if (isP) {
-          ownerScore = pitcherRate > 0.45 ? 75 : pitcherRate > 0.35 ? 62 : pitcherRate < 0.15 ? 30 : 38;
+          ownerScore = pitcherBias > 0.45 ? 76 : pitcherBias > 0.35 ? 64 : pitcherBias < 0.25 ? 30 : 44;
         } else {
-          const hitRate = 1 - pitcherRate;
-          ownerScore = hitRate > 0.8 ? 75 : hitRate > 0.65 ? 62 : hitRate < 0.5 ? 38 : 50;
+          const hitBias = 1 - pitcherBias;
+          ownerScore = hitBias > 0.75 ? 76 : hitBias > 0.6 ? 64 : hitBias < 0.5 ? 40 : 50;
         }
 
-        const arch = profile.archetype?.name || '';
-        if (arch === 'Ace Hunter' && isSP && pickNum <= 60) ownerScore = Math.min(95, ownerScore + 15);
-        if (arch === 'Pitching Hoarder' && isP) ownerScore = Math.min(85, ownerScore + 10);
-        if (arch === 'Value Hunter' && valScore > 70) ownerScore = Math.min(80, ownerScore + 10);
-        if (arch === 'Bold Gambler' && (parseFloat(player.ADP) || 300) < pickNum - 15) ownerScore = Math.min(80, ownerScore + 12);
+        // Positional bias
+        if (profile.boostPositions && profile.boostPositions.some(bp => pos.includes(bp))) {
+          ownerScore += 16;
+        }
+        if (profile.fadePositions && profile.fadePositions.some(fp => pos.includes(fp))) {
+          ownerScore -= 18;
+        }
+
+        // Target stats bias
+        const st = getPlayerProjectionStats(player, roomSeason);
+        if (profile.targetStats) {
+          if (profile.targetStats.includes('HR') && (parseFloat(st.HR) || 0) >= 28) ownerScore += 12;
+          if (profile.targetStats.includes('SB') && (parseFloat(st.SB) || 0) >= 18) ownerScore += 14;
+          if (profile.targetStats.includes('K') && (parseFloat(st.SO || st.K) || 0) >= 150) ownerScore += 14;
+          if (profile.targetStats.includes('QS') && (parseFloat(st.QS) || 0) >= 12) ownerScore += 12;
+          if (profile.targetStats.includes('SVHD') && (isRP || (parseFloat(st.SVHD || st.SV_HD) || 0) >= 15)) ownerScore += 16;
+          if (profile.targetStats.includes('OBP') && (parseFloat(st.OBP) || 0) >= 0.360) ownerScore += 12;
+          if (profile.targetStats.includes('ERA') && (parseFloat(st.ERA) || 9) <= 3.35 && (parseFloat(st.IP) || 0) >= 60) ownerScore += 12;
+          if (profile.targetStats.includes('WHIP') && (parseFloat(st.WHIP) || 9) <= 1.12 && (parseFloat(st.IP) || 0) >= 60) ownerScore += 12;
+        }
+
+        // ADP Value hunter (Garrett / Adrian / etc.)
+        const adp = parseFloat(player.ADP) || 999;
+        if (adp < pickNum - 10) {
+          ownerScore += 14;
+        }
       }
 
       const totalScore = (valScore * 0.4 + needScore * 0.35 + ownerScore * 0.25) * (0.92 + Math.random() * 0.16);
@@ -5126,7 +5904,7 @@ export default function DraftRoomView({
       'ESPN PlayerID': chosen['ESPN PlayerID'],
       Round: current.Round
     });
-  }, [currentPick, displayPicks, currentUser, handleNewPick]);
+  }, [currentPick, displayPicks, currentUser, handleNewPick, roomSeason]);
 
   useEffect(() => {
     if (draftMode !== 'mockdraft' || !isRunningMock) return;
@@ -5179,6 +5957,54 @@ export default function DraftRoomView({
   const lastPickPlayer = lastPick ? displayPlayers.find(p => String(p['ESPN PlayerID']) === String(lastPick['ESPN PlayerID'])) : null;
   
   const isMyTurn = (currentPick && currentUser && currentPick.Owner === currentUser) || draftMode === 'test' || draftMode === 'multitest';
+
+  // 1. Live Draft Roto Standings (Keepers + Draft Picks)
+  const liveDraftRoto = useMemo(() => {
+    return computeLiveDraftRoto({
+      allPicks: displayPicks,
+      keepers: _keepers,
+      seasonYear: roomSeason
+    });
+  }, [displayPicks, _keepers, roomSeason]);
+
+  // 2. Positional Run Radar
+  const activePositionalRun = useMemo(() => {
+    const drafted = displayPicks.filter(p => p['ESPN PlayerID']);
+    return detectPositionalRun(drafted, 4);
+  }, [displayPicks]);
+
+  // 3. Current On-the-clock Owner Roto Profile
+  const currentOwnerRoto = useMemo(() => {
+    if (!currentPick?.Owner) return null;
+    return liveDraftRoto.byOwner[currentPick.Owner] || liveDraftRoto.byOwner[normalizeManager(currentPick.Owner)] || null;
+  }, [liveDraftRoto, currentPick]);
+
+  // 4. Smart Draft Assistant Recommendations
+  const smartRecommendations = useMemo(() => {
+    const activePicks = (draftMode === 'test' || draftMode === 'mockdraft') && testModePicks?.length > 0
+      ? testModePicks
+      : (displayPicks || []);
+    const takenIds = new Set(activePicks.map(p => String(p['ESPN PlayerID'])).filter(id => id && id !== 'null' && id !== 'undefined'));
+    const available = (displayPlayers || []).filter(p => !takenIds.has(String(p['ESPN PlayerID'])));
+
+    const targetOwner = (isMyTurn && currentUser) ? currentUser : (currentPick?.Owner || currentUser);
+    const targetOwnerNormalized = normalizeManager(targetOwner);
+
+    const ownerRoster = activePicks
+      .filter(p => (p.Owner === targetOwner || normalizeManager(p.Owner) === targetOwnerNormalized) && p['ESPN PlayerID'])
+      .map(p => displayPlayers.find(pl => String(pl['ESPN PlayerID']) === String(p['ESPN PlayerID'])))
+      .filter(Boolean);
+
+    const ownerDeficits = liveDraftRoto.byOwner[targetOwner]?.deficits ||
+      liveDraftRoto.byOwner[targetOwnerNormalized]?.deficits || [];
+
+    return getSmartDraftRecommendations({
+      availablePlayers: available,
+      myRoster: ownerRoster,
+      userDeficits: ownerDeficits,
+      currentPickNumber: currentPick?.['Overall Pick'] || 1
+    });
+  }, [displayPlayers, displayPicks, testModePicks, draftMode, isMyTurn, currentUser, currentPick, liveDraftRoto]);
 
   const upcomingPicks = useMemo(() => {
     const liveCutoff = roomSeason === 2027 ? 55 : 46;
@@ -5733,6 +6559,11 @@ export default function DraftRoomView({
 
         {/* Mobile Content Area */}
         <div style={{ gridColumn: '1 / -1', overflow: 'hidden', background: '#121212', padding: '10px' }}>
+          {activePositionalRun && (
+            <div style={{ marginBottom: '10px' }}>
+              <PositionalRunRadar run={activePositionalRun} />
+            </div>
+          )}
           {activeTab === 'Pool' && (
             <PlayerPoolPanel
               players={displayPlayers}
@@ -5747,6 +6578,8 @@ export default function DraftRoomView({
               onPlayerClick={setSelectedPlayer}
               playerInfo={playerInfo}
               isMobile={true}
+              currentUser={currentUser}
+              recommendations={smartRecommendations}
             />
           )}
           {activeTab === 'Queue' && (
@@ -6147,6 +6980,20 @@ export default function DraftRoomView({
 
         {/* Main Stage */}
         <div style={styles.mainStage}>
+          {/* Positional Run Radar Alert */}
+          <PositionalRunRadar run={activePositionalRun} />
+
+          {/* On-The-Clock Category Deficit HUD */}
+          <CategoryDeficitHUD
+            currentPick={currentPick}
+            ownerRoto={currentOwnerRoto}
+            isMyTurn={isMyTurn}
+            onSelectTab={(tab) => {
+              setShowDashboard(true);
+              setActiveTab(tab);
+            }}
+          />
+
           <div style={styles.pickCard}>
             <div style={styles.pickMeta}>
               {lastPick ? `Round ${lastPick.Round} • Pick #${lastPick['Overall Pick']}` : 'Waiting for first pick...'}
@@ -6272,7 +7119,7 @@ export default function DraftRoomView({
                    tab === 'MyPicks' ? 'My Picks' :
                    tab === 'DraftLog' ? 'Draft Log' :
                    tab === 'Analysis' ? 'Analysis History' :
-                   'Projected Standings'}
+                   '🏆 Projected Roto'}
                 </button>
               ))}
               <div style={{ marginLeft: 'auto', color: '#888', fontSize: '13px', display: 'flex', alignItems: 'center' }}>
@@ -6293,6 +7140,8 @@ export default function DraftRoomView({
                 allPicks={displayPicks}
                 onPlayerClick={setSelectedPlayer}
                 playerInfo={playerInfo}
+                currentUser={currentUser}
+                recommendations={smartRecommendations}
               />
             </div>
 
@@ -6331,7 +7180,8 @@ export default function DraftRoomView({
             <div style={{ ...styles.panelContent, display: activeTab === 'Standings' ? 'grid' : 'none' }}>
               <StandingsPanel 
                 allPicks={displayPicks}
-                players={displayPlayers}
+                keepers={_keepers}
+                roomSeason={roomSeason}
               />
             </div>
           </div>

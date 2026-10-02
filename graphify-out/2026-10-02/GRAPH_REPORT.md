@@ -1,17 +1,17 @@
 # Graph Report - 2026 Head to Head Heftystrong  (2026-10-02)
 
 ## Corpus Check
-- 142 files · ~2,420,106 words
+- 142 files · ~2,423,635 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 10 file(s) not represented in the graph (top: (none) 5, .toml 2, .css 2)
 
 ## Summary
-- 1085 nodes · 2093 edges · 71 communities (61 shown, 10 thin omitted)
+- 1089 nodes · 2102 edges · 67 communities (57 shown, 10 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 17 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `40086032`
+- Built from commit: `dbf62cac`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -20,21 +20,21 @@
 - DraftRoomView.jsx
 - test_trade_and_recommender.mjs
 - LeagueHistoryView.jsx
-- compute_player_values.py
+- run_pipeline
 - projections.py
 - LiveScoreboardView.jsx
 - aggregateStats
 - build_mlb_live_data
 - package.json
-- json
+- compute_player_values.py
 - discord-bot.py
 - AGENTS.md: Architecture & Developer Guidelines
 - fetch_current_roster_records
 - FullRosterView.jsx
 - supabaseClient.js
 - update_live_pickem_standings.py
+- getPlayerHeadshotUrl
 - generate_player_owner_stats.py
-- build_recap_context.py
 - DraftCapitalView.jsx
 - ingest_pickem.py
 - devDependencies
@@ -44,29 +44,29 @@
 - schedule.js
 - live_command
 - migrate_gcs_to_supabase.py
-- ProgressionView.jsx
+- DraftRoomView
 - is_season_active
 - HEFTYBot
 - PlayerHistoryModal.jsx
 - os
-- ingest_draft_infrastructure.py
+- datetime
 - ingest_draft_trades.py
-- react
+- sync_player_news.py
 - App.jsx
 - build_live_roster_map
 - What You Must Do When Invoked
 - scripts
-- OwnerLandingView.jsx
+- inspect_db.py
 - deploy
 - index.ts
 - ref_fs
-- rosterOptimizer.js
+- KeeperCalculationsView.jsx
 - graphify reference: extra exports and benchmark
 - dependencies
 - ingest_historical_trades.py
 - vite
 - overrides
-- scoring.js
+- BoxScoreModal.jsx
 - graphify reference: query, path, explain
 - PickemView.jsx
 - graphify reference: add a URL and watch a folder
@@ -77,14 +77,10 @@
 - rules/graphify.md
 - extraction-spec.md
 - workflows/graphify.md
-- useAuth
-- TransactionsView.jsx
+- build_recap_context.py
 - Python Execution & Scripting Rules
-- KeepersBudgetsView.jsx
-- getDateFromPeriodId
-- requests
-- eslint.config.js
-- PlayersView.jsx
+- historical.py
+- SCORING_CATS
 
 ## God Nodes (most connected - your core abstractions)
 1. `react` - 41 edges
@@ -113,51 +109,51 @@
 ## Import Cycles
 - None detected.
 
-## Communities (71 total, 10 thin omitted)
+## Communities (67 total, 10 thin omitted)
 
 ### Community 0 - "discord-daily-recap.py"
-Cohesion: 0.09
-Nodes (49): aggregate_by_team(), build_daily_prompt(), build_weekly_prompt(), compute_averages(), compute_roto_standings(), compute_standings_delta(), compute_weekly_team_rates(), espn_ip_to_innings() (+41 more)
+Cohesion: 0.08
+Nodes (55): aggregate_by_team(), build_daily_prompt(), build_weekly_prompt(), compute_averages(), compute_roto_standings(), compute_standings_delta(), compute_weekly_team_rates(), espn_ip_to_innings() (+47 more)
 
 ### Community 1 - "DraftRoomView.jsx"
-Cohesion: 0.05
-Nodes (59): src_data_keepercalculations, src_data_keeperinput2027, DEFAULT_SUPABASE_ANON_KEY, DEFAULT_SUPABASE_URL, getPlayerHeadshotUrl(), globalPlayerLookup, handleHeadshotError(), updateGlobalPlayerLookup() (+51 more)
+Cohesion: 0.08
+Nodes (27): src_data_teambudgets2026, DEFAULT_SUPABASE_ANON_KEY, DEFAULT_SUPABASE_URL, AnalysisHistoryPanel(), callGemini(), compute2027DraftPicks(), DEFAULT_OWNER_PROFILES, determinePickAngle() (+19 more)
 
 ### Community 2 - "test_trade_and_recommender.mjs"
-Cohesion: 0.07
-Nodes (37): ref_node_assert, src_data_keeperinput2026, findWaiverReplacements(), isPositionMatch(), SLOT_TO_POS, calculateBudgetValue(), calculatePickValue(), calculatePlayerStatValue() (+29 more)
+Cohesion: 0.06
+Nodes (42): ref_node_assert, evaluatePlayerCapital(), findWaiverReplacements(), isPositionMatch(), SLOT_TO_POS, calculateBudgetValue(), calculatePickValue(), calculatePlayerStatValue() (+34 more)
 
 ### Community 3 - "LeagueHistoryView.jsx"
 Cohesion: 0.08
-Nodes (38): idb-keyval, BAT_CATS, BATTER_SLOT_ORDER, DayRosterModal(), formatVal(), PITCH_CATS, PITCHER_SLOT_ORDER, StatCell() (+30 more)
+Nodes (37): BAT_CATS, BATTER_SLOT_ORDER, DayRosterModal(), formatVal(), PITCH_CATS, PITCHER_SLOT_ORDER, StatCell(), src_data_historicalrawstats (+29 more)
 
-### Community 4 - "compute_player_values.py"
+### Community 4 - "run_pipeline"
 Cohesion: 0.07
-Nodes (24): collections, math, calculate_category_benchmarks(), compute_player_season_pr(), fetch_csv_from_gsheet(), fetch_live_actuals(), fetch_live_fangraphs(), get_price_for_rank() (+16 more)
+Nodes (20): calculate_category_benchmarks(), compute_player_season_pr(), fetch_csv_from_gsheet(), fetch_live_actuals(), fetch_live_fangraphs(), get_price_for_rank(), get_supabase_headers(), load_pricing_curve() (+12 more)
 
 ### Community 5 - "projections.py"
-Cohesion: 0.12
-Nodes (25): build_projection_map(), _compute_roto_points(), _espn_ip_to_innings(), _estimate_qs(), fetch_projections(), _fg_get(), forecast_final_standings(), forecast_ros_only_standings() (+17 more)
+Cohesion: 0.11
+Nodes (26): build_projection_map(), _compute_roto_points(), _espn_ip_to_innings(), _estimate_qs(), fetch_projections(), _fg_get(), forecast_final_standings(), forecast_ros_only_standings() (+18 more)
 
 ### Community 6 - "LiveScoreboardView.jsx"
 Cohesion: 0.49
 Nodes (6): GameDetailModal(), buildRosterDictionary(), fetchGameBoxscore(), fetchLiveScoreboard(), normalizeName(), LiveScoreboardView()
 
 ### Community 7 - "aggregateStats"
-Cohesion: 0.21
-Nodes (14): OwnerDetailModal(), aggregateStats(), getStatMeta(), BATTING_CATS, ESPN_STAT_NAMES, parseRecord(), PITCHING_CATS, PlayerImpactSimulatorView() (+6 more)
+Cohesion: 0.07
+Nodes (53): recharts, OwnerDetailModal(), src_data_historicalfinishes, CANONICAL_OWNERS, getFranchiseLeaderboard(), getHistoricalSeasons(), normalizeOwner(), getDateFromPeriodId() (+45 more)
 
 ### Community 8 - "build_mlb_live_data"
 Cohesion: 0.11
 Nodes (19): build_mlb_live_context(), build_mlb_live_data(), fetch_mlb_boxscore(), fetch_mlb_schedule_today(), _game_status_label(), _game_time_et(), _mlb_get(), _mlb_ip_to_decimal() (+11 more)
 
 ### Community 9 - "package.json"
-Cohesion: 0.12
-Nodes (15): homepage, name, private, type, version, autoprefixer, date-fns, gh-pages (+7 more)
+Cohesion: 0.11
+Nodes (19): homepage, name, private, type, version, autoprefixer, date-fns, eslint (+11 more)
 
-### Community 10 - "json"
-Cohesion: 0.12
-Nodes (15): json, enrich_player_names(), fetch_activity_trades(), fetch_all_player_names(), fetch_historical_transactions(), fetch_transactions(), parse_activity_trades(), parse_standard_transactions() (+7 more)
+### Community 10 - "compute_player_values.py"
+Cohesion: 0.11
+Nodes (21): json, math, pipelines/compute_player_values.py Automated Player Valuation & Pricing Engine…, pipelines/generate_keeper_calculations.py Generates detailed multi-year keeper…, requests, sys, enrich_player_names(), fetch_activity_trades() (+13 more)
 
 ### Community 11 - "discord-bot.py"
 Cohesion: 0.12
@@ -180,32 +176,32 @@ Cohesion: 0.15
 Nodes (6): supabase, supabaseUrl, AVAILABLE_YEARS, DraftHistoryView(), FANTASY_MANAGERS, PlayerValuationsView()
 
 ### Community 16 - "update_live_pickem_standings.py"
+Cohesion: 0.26
+Nodes (14): build_live_in_progress_snapshot(), evaluate_owner_projected_scores(), fetch_mlb_standings(), fetch_projected_war_leaders(), get_team_code(), matches_team_or_val(), normalize_text(), Any (+6 more)
+
+### Community 17 - "getPlayerHeadshotUrl"
+Cohesion: 0.24
+Nodes (13): getPlayerHeadshotUrl(), globalPlayerLookup, handleHeadshotError(), DraftLogPanel(), getFriendlyOwnerName(), getInjuryIndicator(), PlayerModal(), PlayerPoolPanel() (+5 more)
+
+### Community 18 - "generate_player_owner_stats.py"
 Cohesion: 0.07
-Nodes (42): argparse, check_game_status(), get_periods_to_focus(), log_status(), date, mlb_schedule_check.py ───────────────────── Drop-in module for active-stats-…, Print a human-readable summary of today's game status., Decide whether the scraper should proceed. mode="force" — always run regardless… (+34 more)
-
-### Community 17 - "generate_player_owner_stats.py"
-Cohesion: 0.15
-Nodes (17): concurrent_futures, aggregate_season(), calculate_fantasy_points(), fetch_2020_season(), fetch_2026_supabase(), fetch_espn_sp(), fetch_season_from_espn(), get_owner_name() (+9 more)
-
-### Community 18 - "build_recap_context.py"
-Cohesion: 0.08
-Nodes (31): build_roster_player_map(), detect_active_roto_battles(), ensure_context_is_fresh(), fetch_mlb_news(), find_news_roster_overlap(), fmt_cat_val(), load_league_context(), Build a mapping of clean player name -> { team_id, owner_name, full_name } from… (+23 more)
+Nodes (36): collections, concurrent_futures, ensure_context_is_fresh(), load_league_context(), Ensure data/league_context.json is updated from Supabase if needed., Load the persistent league context document, optionally refreshing first., aggregate_season(), calculate_fantasy_points() (+28 more)
 
 ### Community 19 - "DraftCapitalView.jsx"
-Cohesion: 0.36
-Nodes (9): canonicalOwnerName(), compute2027DraftPicks(), DRAFT_OWNERS, DraftCapitalView(), enqueueTradeNotification(), getTeamId(), isPickInAssets(), isPlayerInAssets() (+1 more)
+Cohesion: 0.18
+Nodes (15): src_data_compensationpicks2026, src_data_keeperinput2026, src_data_teambudgets2027, canonicalOwnerName(), compute2027DraftPicks(), DRAFT_OWNERS, DraftCapitalView(), enqueueTradeNotification() (+7 more)
 
 ### Community 20 - "ingest_pickem.py"
-Cohesion: 0.21
-Nodes (13): csv, bootstrap_future_season(), fetch_tab_rows(), get_supabase_headers(), get_team_id(), ingest_season(), normalize_owner(), pipelines/ingest_pickem.py Annual MLB Pick'em Ingestion & Management Pipeline… (+5 more)
+Cohesion: 0.26
+Nodes (11): bootstrap_future_season(), fetch_tab_rows(), get_supabase_headers(), get_team_id(), ingest_season(), normalize_owner(), pipelines/ingest_pickem.py Annual MLB Pick'em Ingestion & Management Pipeline…, Fetch raw CSV rows for a tab from Google Sheets. (+3 more)
 
 ### Community 21 - "devDependencies"
 Cohesion: 0.14
 Nodes (14): devDependencies, autoprefixer, eslint, @eslint/js, eslint-plugin-react-hooks, eslint-plugin-react-refresh, gh-pages, globals (+6 more)
 
 ### Community 22 - "KeepersBudgetsPanel.jsx"
-Cohesion: 0.22
-Nodes (11): calculateKeeperCostFromRank(), COMP_BUY_PRICES_2026, COMP_BUY_PRICES_2027, COMP_SELL_PRICES_2026, COMP_SELL_PRICES_2027, DRAFT_MANAGERS, getCompBuyPrices(), getCompSellPrices() (+3 more)
+Cohesion: 0.18
+Nodes (15): calculateKeeperCostFromRank(), CANONICAL_FINISHES, COMP_BUY_PRICES_2026, COMP_BUY_PRICES_2027, COMP_SELL_PRICES_2026, COMP_SELL_PRICES_2027, DRAFT_MANAGERS, formatRotoStat() (+7 more)
 
 ### Community 23 - "sync_draft_pool.py"
 Cohesion: 0.36
@@ -216,20 +212,20 @@ Cohesion: 0.05
 Nodes (38): 1. Dan — The Silver Bullets (`Team 5`), 1. Executive Summary & The 2026 Storyline, 1. The Six-Way Fractional OBP Dogfight (.003 Margin), 2026 Category Champions, 2026 League Storylines & Season Context Guide, 2. Final 2026 Regular Season Standings (Week 23), 2. The Heavyweight Home Run Jam (21-Homer Window), 2. Tim — Anti-lock Brake Systems (`Team 1`) (+30 more)
 
 ### Community 25 - "schedule.js"
-Cohesion: 0.18
-Nodes (13): TeamAvatar(), src_data_playerownerseasonstats, SEASON_DATES, SEASON_START_DATES, TEAMS, PlayerOwnerStatsView(), POSITIONS, SEASONS (+5 more)
+Cohesion: 0.10
+Nodes (20): TeamAvatar(), src_data_draftassettrades2026, src_data_historicaltrades, src_data_playerownerseasonstats, src_data_transactions_historical, generateSchedule(), getTriosMatchups(), SEASON_DATES (+12 more)
 
 ### Community 26 - "live_command"
 Cohesion: 0.21
 Nodes (12): command, describe, ask_command(), build_mlb_live_embed_fields(), check_trades_command(), _game_field_value(), live_command(), ping_command() (+4 more)
 
 ### Community 27 - "migrate_gcs_to_supabase.py"
-Cohesion: 0.33
-Nodes (9): fetch_json(), main(), migrate_draft_history(), migrate_historical_finishes(), normalize_name(), Client, pipelines/migrate_gcs_to_supabase.py Migrates historical draft picks (draft-…, re (+1 more)
+Cohesion: 0.39
+Nodes (8): fetch_json(), main(), migrate_draft_history(), migrate_historical_finishes(), normalize_name(), Client, pipelines/migrate_gcs_to_supabase.py Migrates historical draft picks (draft-…, unicodedata
 
-### Community 28 - "ProgressionView.jsx"
-Cohesion: 0.29
-Nodes (10): src_data_historicalfinishes, CANONICAL_OWNERS, getFranchiseLeaderboard(), getHistoricalSeasons(), normalizeOwner(), ALL_TIME_METRICS, formatVal(), ProgressionView() (+2 more)
+### Community 28 - "DraftRoomView"
+Cohesion: 0.23
+Nodes (13): callESPNProxy(), draftDbGet(), draftDbSet(), DraftRoomView(), fetchAllEspnPlayers(), fetchFanGraphs(), fetchFromGCS(), fetchPlayerNews() (+5 more)
 
 ### Community 29 - "is_season_active"
 Cohesion: 0.17
@@ -240,28 +236,28 @@ Cohesion: 0.18
 Nodes (6): generate_answer(), HEFTYBot, handle_ping(), offseason_sleep_service(), Keeps process alive (and HTTP healthcheck responsive for Railway) while…, Message
 
 ### Community 31 - "PlayerHistoryModal.jsx"
-Cohesion: 0.24
-Nodes (10): fetchPlayerOverallStats(), getTeamDisplayName(), overallStatsCache, PlayerHistoryModal(), loadOverall(), src_data_draft2026, src_data_historicaltrades, src_data_transactions2026 (+2 more)
+Cohesion: 0.27
+Nodes (9): fetchPlayerOverallStats(), getTeamDisplayName(), overallStatsCache, PlayerHistoryModal(), loadOverall(), src_data_draft2026, src_data_transactions2026, getPlayerAcquisition() (+1 more)
 
 ### Community 32 - "os"
-Cohesion: 0.29
-Nodes (5): dotenv, migrate_table(), Client, os, supabase
+Cohesion: 0.15
+Nodes (8): dotenv, google_cloud, io, migrate_table(), Client, os, pandas, supabase
 
-### Community 33 - "ingest_draft_infrastructure.py"
-Cohesion: 0.50
-Nodes (7): clean_currency(), fetch_csv(), ingest_compensation_picks_and_budgets(), ingest_keepers(), main(), postgrest_upsert(), pipelines/ingest_draft_infrastructure.py Ingests: 1. Compensation Picks & Team…
+### Community 33 - "datetime"
+Cohesion: 0.17
+Nodes (11): datetime, check_game_status(), get_periods_to_focus(), log_status(), date, mlb_schedule_check.py ───────────────────── Drop-in module for active-stats-…, Print a human-readable summary of today's game status., Decide whether the scraper should proceed. mode="force" — always run regardless… (+3 more)
 
 ### Community 34 - "ingest_draft_trades.py"
-Cohesion: 0.15
-Nodes (13): datetime, google_cloud, io, pandas, fetch_sheet_csv(), main(), parse_round_number(), parse_trade_log() (+5 more)
+Cohesion: 0.31
+Nodes (9): fetch_sheet_csv(), main(), parse_round_number(), parse_trade_log(), Finds the trade table starting at the header row containing 'Trade ID'., pipelines/ingest_draft_trades.py Ingests traded draft assets from the Google…, Parses round number from asset name (e.g., '14th round' -> 14, 'Worst…, save_local_json() (+1 more)
 
-### Community 35 - "react"
-Cohesion: 0.33
-Nodes (7): react, AuthProvider(), initAuth(), cleanupOAuthHash(), STATIC_LEAGUE_PROFILES, AuthContext, src_index
+### Community 35 - "sync_player_news.py"
+Cohesion: 0.24
+Nodes (10): argparse, fetch_player_news(), load_player_pool(), main(), Any, pipelines/sync_player_news.py Syncs live player news directly from the ESPN…, Loads player pool from local file, Supabase, or GCS., Fetches news feed for an individual ESPN player ID. (+2 more)
 
 ### Community 36 - "App.jsx"
-Cohesion: 0.15
-Nodes (17): App(), AVAILABLE_SEASONS, getSubTabsFromHash(), getViewFromHash(), HASH_TO_VIEW, OFFSEASON_VIEWS, NOTE: Make sure to export calculateTrioMatchupResult from scoring.js!, VIEW_TO_HASH (+9 more)
+Cohesion: 0.17
+Nodes (18): react, react-dom, App(), AVAILABLE_SEASONS, getSubTabsFromHash(), getViewFromHash(), HASH_TO_VIEW, OFFSEASON_VIEWS (+10 more)
 
 ### Community 37 - "build_live_roster_map"
 Cohesion: 0.22
@@ -275,9 +271,9 @@ Nodes (24): For /graphify add and --watch, For /graphify query, For the commit h
 Cohesion: 0.25
 Nodes (8): scripts, build, deploy, dev, lint, predeploy, preview, start
 
-### Community 40 - "OwnerLandingView.jsx"
-Cohesion: 0.31
-Nodes (8): evaluatePlayerCapital(), calculateRotoPoints(), DEFAULT_POS_MAP, getPlayerPositions(), LEAGUE_MANAGERS, MLB_TEAMS, OwnerLandingView(), SLOT_MAP
+### Community 40 - "inspect_db.py"
+Cohesion: 0.53
+Nodes (8): Namespace, cmd_budgets(), cmd_keepers(), cmd_pool(), cmd_roster(), get_headers(), main(), scripts/inspect_db.py Safe, structured CLI inspector for Supabase database…
 
 ### Community 41 - "deploy"
 Cohesion: 0.25
@@ -287,9 +283,9 @@ Nodes (7): build, builder, deploy, restartPolicyMaxRetries, restartPolicyType, s
 Cohesion: 0.25
 Nodes (4): ref_https, PlayerRecord, SEASON_START, TEAM_IDS
 
-### Community 44 - "rosterOptimizer.js"
-Cohesion: 0.33
-Nodes (10): BATTER_SLOT_DEFS, buildPlayerPositionRegistry(), getDailyBatterScore(), getDailyPitcherScore(), optimizeDailyTeamLineup(), PITCHER_SLOT_DEFS, simulateSeasonBestLineups(), solveOptimalAssignment() (+2 more)
+### Community 44 - "KeeperCalculationsView.jsx"
+Cohesion: 0.25
+Nodes (7): src_data_keepercalculations, src_data_keeperinput2027, updateGlobalPlayerLookup(), KeeperCalculationsView(), LEAGUE_MANAGERS, POSITIONS, PRICE_TIERS
 
 ### Community 45 - "graphify reference: extra exports and benchmark"
 Cohesion: 0.22
@@ -300,20 +296,20 @@ Cohesion: 0.29
 Nodes (7): dependencies, date-fns, idb-keyval, react, react-dom, recharts, @supabase/supabase-js
 
 ### Community 47 - "ingest_historical_trades.py"
-Cohesion: 0.19
-Nodes (18): compute_historical_post_trade_stats(), compute_post_trade_stats(), extract_stats_from_draft_record(), fetch_sheet_rows(), load_2026_daily_records(), load_draft_history(), main(), normalize_name() (+10 more)
+Cohesion: 0.13
+Nodes (26): csv, clean_currency(), fetch_csv(), ingest_compensation_picks_and_budgets(), ingest_keepers(), main(), postgrest_upsert(), pipelines/ingest_draft_infrastructure.py Ingests: 1. Compensation Picks & Team… (+18 more)
 
-### Community 52 - "scoring.js"
-Cohesion: 0.23
-Nodes (10): BATTER_CATS, BoxScoreModal(), formatDisplayVal(), PITCHER_CATS, MatchupCard(), CATEGORIES, ESPN_STAT_IDS, LINEUP_SLOTS (+2 more)
+### Community 52 - "BoxScoreModal.jsx"
+Cohesion: 0.25
+Nodes (8): BATTER_CATS, BoxScoreModal(), formatDisplayVal(), PITCHER_CATS, MatchupCard(), CATEGORIES, LINEUP_SLOTS, WeeklyView()
 
 ### Community 53 - "graphify reference: query, path, explain"
 Cohesion: 0.33
 Nodes (5): For /graphify explain, For /graphify path, graphify reference: query, path, explain, Step 0 — Constrained query expansion (REQUIRED before traversal), Step 1 — Traversal
 
 ### Community 54 - "PickemView.jsx"
-Cohesion: 0.27
-Nodes (8): findMlbTeam(), LEAGUE_OWNERS, MLB_DIVISIONS, MLB_TEAMS, PICKEM_RULES, PROMINENT_AWARD_CANDIDATES, teamsMatch(), PickemView()
+Cohesion: 0.17
+Nodes (13): AuthProvider(), initAuth(), cleanupOAuthHash(), STATIC_LEAGUE_PROFILES, AuthContext, findMlbTeam(), LEAGUE_OWNERS, MLB_DIVISIONS (+5 more)
 
 ### Community 55 - "graphify reference: add a URL and watch a folder"
 Cohesion: 0.50
@@ -327,57 +323,41 @@ Nodes (3): For git commit hook, For native CLAUDE.md integration, graphify refer
 Cohesion: 0.50
 Nodes (3): For --cluster-only, For --update (incremental re-extraction), graphify reference: incremental update and cluster-only
 
-### Community 63 - "useAuth"
-Cohesion: 0.54
-Nodes (4): CommishActiveBanner(), CommishCheckoutModal(), UserNavWidget(), useAuth()
-
-### Community 64 - "TransactionsView.jsx"
+### Community 63 - "build_recap_context.py"
 Cohesion: 0.33
-Nodes (5): src_data_draftassettrades2026, src_data_transactions_historical, groupTransactions(), TransactionsView(), TYPE_CONFIG
+Nodes (6): detect_active_roto_battles(), fmt_cat_val(), Format a category stat value cleanly., Dynamically identify active category volatility and standings deadlocks where…, pipelines/build_recap_context.py Fetches real-time MLB news from ESPN and…, xml_etree_elementtree
 
 ### Community 65 - "Python Execution & Scripting Rules"
 Cohesion: 0.17
 Nodes (11): 1. Avoid Inline `python3 -c '...'` for Complex or Interpolated Code, 2. Best Practices for Dictionary Indexing in F-Strings, 3. Python Module Path Constraints, 4. Zero Speculative / Blind File Access, 5. Canonical Data Files in `src/data/`, Operational Rules:, Python Execution & Scripting Rules, Required Pattern A: Quoted Heredoc (`python3 - << 'EOF'`) (+3 more)
 
-### Community 66 - "KeepersBudgetsView.jsx"
-Cohesion: 0.33
-Nodes (6): src_data_compensationpicks2026, src_data_teambudgets2026, src_data_teambudgets2027, calculateKeeperCostFromRank(), KeepersBudgetsView(), TEAM_OWNERS
+### Community 68 - "historical.py"
+Cohesion: 0.20
+Nodes (13): _canonical(), format_all_active_owner_summaries(), format_league_champions(), format_owner_history(), get_owner_seasons(), load_historical_data(), historical.py — shared historical context module Import this in discord-bot.py…, Championship counts for all active owners. (+5 more)
 
-### Community 67 - "getDateFromPeriodId"
-Cohesion: 0.24
-Nodes (10): getDateFromPeriodId(), aggregateBenchStats(), calculateBatterValue(), calculatePitcherValue(), BenchStatsView(), ESPN_STAT_NAMES, parseRecordStats(), cleanPlayerName() (+2 more)
-
-### Community 68 - "requests"
-Cohesion: 0.18
-Nodes (14): _canonical(), format_all_active_owner_summaries(), format_league_champions(), format_owner_history(), get_owner_seasons(), load_historical_data(), historical.py — shared historical context module Import this in discord-bot.py…, Championship counts for all active owners. (+6 more)
-
-### Community 69 - "eslint.config.js"
-Cohesion: 0.33
-Nodes (5): eslint, @eslint/js, eslint-plugin-react-hooks, eslint-plugin-react-refresh, globals
-
-### Community 70 - "PlayersView.jsx"
-Cohesion: 0.47
-Nodes (5): BAT_COLS, formatStat(), getLabel(), PITCH_COLS, PlayersView()
+### Community 70 - "SCORING_CATS"
+Cohesion: 0.38
+Nodes (6): SCORING_CATS, BAT_COLS, formatStat(), getLabel(), PITCH_COLS, PlayersView()
 
 ## Knowledge Gaps
-- **262 isolated node(s):** `name`, `private`, `version`, `homepage`, `type` (+257 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 490 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **263 isolated node(s):** `name`, `private`, `version`, `homepage`, `type` (+258 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 491 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **10 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `react` connect `react` to `DraftRoomView.jsx`, `test_trade_and_recommender.mjs`, `LeagueHistoryView.jsx`, `LiveScoreboardView.jsx`, `aggregateStats`, `package.json`, `FullRosterView.jsx`, `supabaseClient.js`, `DraftCapitalView.jsx`, `KeepersBudgetsPanel.jsx`, `schedule.js`, `ProgressionView.jsx`, `PlayerHistoryModal.jsx`, `App.jsx`, `OwnerLandingView.jsx`, `rosterOptimizer.js`, `scoring.js`, `PickemView.jsx`, `useAuth`, `TransactionsView.jsx`, `KeepersBudgetsView.jsx`, `getDateFromPeriodId`, `PlayersView.jsx`?**
-  _High betweenness centrality (0.067) - this node is a cross-community bridge._
+- **Why does `react` connect `App.jsx` to `DraftRoomView.jsx`, `test_trade_and_recommender.mjs`, `LeagueHistoryView.jsx`, `LiveScoreboardView.jsx`, `aggregateStats`, `SCORING_CATS`, `package.json`, `KeeperCalculationsView.jsx`, `FullRosterView.jsx`, `supabaseClient.js`, `getPlayerHeadshotUrl`, `DraftCapitalView.jsx`, `BoxScoreModal.jsx`, `KeepersBudgetsPanel.jsx`, `PickemView.jsx`, `schedule.js`, `PlayerHistoryModal.jsx`?**
+  _High betweenness centrality (0.070) - this node is a cross-community bridge._
 - **Why does `devDependencies` connect `devDependencies` to `package.json`?**
   _High betweenness centrality (0.018) - this node is a cross-community bridge._
-- **Why does `aggregateStats()` connect `aggregateStats` to `LeagueHistoryView.jsx`, `App.jsx`, `getDateFromPeriodId`, `PlayersView.jsx`, `OwnerLandingView.jsx`, `rosterOptimizer.js`, `FullRosterView.jsx`, `scoring.js`, `schedule.js`, `ProgressionView.jsx`, `PlayerHistoryModal.jsx`?**
-  _High betweenness centrality (0.010) - this node is a cross-community bridge._
+- **Why does `scripts` connect `scripts` to `package.json`?**
+  _High betweenness centrality (0.007) - this node is a cross-community bridge._
 - **Are the 2 inferred relationships involving `build_context()` (e.g. with `ask_command()` and `.on_message()`) actually correct?**
   _`build_context()` has 2 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `name`, `private`, `version` to the rest of the system?**
-  _262 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _263 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `discord-daily-recap.py` be split into smaller, more focused modules?**
-  _Cohesion score 0.09049773755656108 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.07622504537205081 - nodes in this community are weakly interconnected._
 - **Should `DraftRoomView.jsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.05441400304414003 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.07807807807807808 - nodes in this community are weakly interconnected._
