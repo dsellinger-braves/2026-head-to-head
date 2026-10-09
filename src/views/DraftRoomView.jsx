@@ -269,12 +269,26 @@ function enrichPlayerWithCalculations(p, roomSeason = 2027) {
   const cleanName = normalizeName(p.Player || p.Name || p.player_name || p.name || '');
   const calc = (pid ? calcIndexById.get(pid) : null) || (cleanName ? calcIndexByName.get(cleanName) : null);
 
-  if (!calc) return p;
+  if (!calc) {
+    const rawRank = parseFloat(p['Hefty Keeper Rank'] ?? p.rank);
+    const fallbackRank = (!isNaN(rawRank) && rawRank > 1155) ? rawRank : 9999;
+    return {
+      ...p,
+      'Hefty Keeper Price': 0,
+      'Hefty Keeper Rank': fallbackRank,
+      'Hefty Single Season Rank': fallbackRank,
+      'Hefty Single Season Price': 0,
+      overall_price: 0,
+      overall_rank: fallbackRank,
+      price: 0,
+      rank: fallbackRank
+    };
+  }
 
-  const overallPrice = calc.overall_price !== undefined ? calc.overall_price : (p['Hefty Keeper Price'] ?? p.price);
-  const overallRank = calc.overall_rank !== undefined ? calc.overall_rank : (p['Hefty Keeper Rank'] ?? p.rank);
-  const ssRank = calc.y1?.rank || calc.overall_rank || p['Hefty Single Season Rank'];
-  const ssPrice = calc.espn_price ?? calc.overall_price ?? p['Hefty Single Season Price'];
+  const overallPrice = calc.overall_price !== undefined ? calc.overall_price : (p['Hefty Keeper Price'] ?? p.price ?? 0);
+  const overallRank = calc.overall_rank !== undefined ? calc.overall_rank : (p['Hefty Keeper Rank'] ?? p.rank ?? 9999);
+  const ssRank = calc.y1?.rank || calc.overall_rank || p['Hefty Single Season Rank'] || overallRank;
+  const ssPrice = calc.espn_price ?? calc.overall_price ?? p['Hefty Single Season Price'] ?? overallPrice;
 
   const effectiveRank = roomSeason === 2027 ? overallRank : (ssRank || overallRank);
   const effectivePrice = overallPrice;
@@ -2983,6 +2997,7 @@ function PlayerPoolPanel({
     let filtered = [...players].filter(p => {
       const pid = String(p['ESPN PlayerID']);
       if (draftedSet.has(pid)) return false;
+      if (p.isKeeper) return false;
       return p.Availability === 'Available' || !p.Availability;
     });
     
@@ -5239,6 +5254,10 @@ export default function DraftRoomView({
   const [pickStartTime, setPickStartTime] = useState(() => Date.now());
   const [activeTab, setActiveTab] = useState('Pool');
   const [draftTrades, setDraftTrades] = useState(defaultDraftAssetTrades || []);
+  const draftTradesRef = useRef(draftTrades);
+  useEffect(() => {
+    draftTradesRef.current = draftTrades;
+  }, [draftTrades]);
   const [_teamBudgets, setTeamBudgets] = useState(defaultTeamBudgets?.budgets || []);
   const [_compPicks, setCompPicks] = useState(defaultCompPicks?.comp_picks || []);
   const [_keepers, setKeepers] = useState(seasonYear === 2027 ? (defaultKeepers2027?.keepers || defaultKeepers2027 || []) : (defaultKeepers?.keepers || []));
@@ -5299,21 +5318,19 @@ export default function DraftRoomView({
   };
 
   const displayPicks = useMemo(() => {
-    return (draftMode === 'test' || draftMode === 'mockdraft') && testModePicks.length > 0 ? testModePicks : picks;
-  }, [draftMode, testModePicks, picks]);
+    if (draftMode === 'test' || draftMode === 'mockdraft') {
+      if (testModePicks.length > 0) return testModePicks;
+      const liveCutoff = roomSeason === 2027 ? 55 : 46;
+      return picks.map(p => p['Overall Pick'] >= liveCutoff ? {
+        ...p,
+        'ESPN PlayerID': null,
+        Selection: null
+      } : p);
+    }
+    return picks;
+  }, [draftMode, testModePicks, picks, roomSeason]);
 
   const displayPlayers = useMemo(() => {
-    if (!players || players.length === 0) {
-      return (defaultCalculations?.players || []).map(cp => enrichPlayerWithCalculations({
-        'ESPN PlayerID': String(cp.espn_player_id || cp.player_id || ''),
-        id: cp.player_id,
-        Player: cp.player_name,
-        Position: cp.position || (cp.is_pitcher ? (cp.pitcher_role || 'SP') : 'DH'),
-        Team: cp.team || 'MLB',
-        Availability: 'Available'
-      }, roomSeason));
-    }
-
     const keeperMap = new Map();
     if (roomSeason === 2027) {
       // For 2027 draft, the ONLY players that should show as currently rostered
@@ -5326,7 +5343,18 @@ export default function DraftRoomView({
       });
     }
 
-    return players.map(p => {
+    const baseList = (!players || players.length === 0)
+      ? (defaultCalculations?.players || []).map(cp => ({
+          'ESPN PlayerID': String(cp.espn_player_id || cp.player_id || ''),
+          id: cp.player_id,
+          Player: cp.player_name,
+          Position: cp.position || (cp.is_pitcher ? (cp.pitcher_role || 'SP') : 'DH'),
+          Team: cp.team || 'MLB',
+          Availability: 'Available'
+        }))
+      : players;
+
+    return baseList.map(p => {
       const enriched = enrichPlayerWithCalculations(p, roomSeason);
       if (roomSeason === 2027) {
         const pid = String(enriched['ESPN PlayerID'] || enriched.espn_player_id || enriched.id || '');
@@ -5483,7 +5511,7 @@ export default function DraftRoomView({
   const fetchDraftOrder = useCallback(async () => {
     try {
       if (roomSeason === 2027) {
-        let trades = draftTrades;
+        let trades = draftTradesRef.current;
         let keepers2027 = [];
         let compPicks2027 = [];
         let livePicks2027 = [];
@@ -5495,21 +5523,21 @@ export default function DraftRoomView({
             supabase.from('draft_compensation_picks').select('*').eq('season_year', 2027).order('round_num', { ascending: true }),
             supabase.from('draft_picks').select('*').eq('season_year', 2027).order('overall_pick', { ascending: true })
           ]);
-          if (tradesRes?.data) {
+          if (tradesRes?.data && tradesRes.data.length > 0) {
             trades = tradesRes.data;
-            setDraftTrades(tradesRes.data);
+            setDraftTrades(prev => prev.length === tradesRes.data.length ? prev : tradesRes.data);
           }
           if (keepersRes?.data && keepersRes.data.length > 0) {
             keepers2027 = keepersRes.data;
-            setKeepers(keepersRes.data);
+            setKeepers(prev => prev.length === keepersRes.data.length ? prev : keepersRes.data);
           } else {
             const fallbackKeepers = defaultKeepers2027?.keepers || defaultKeepers2027 || [];
             keepers2027 = fallbackKeepers;
-            setKeepers(fallbackKeepers);
+            setKeepers(prev => (prev.length === fallbackKeepers.length ? prev : fallbackKeepers));
           }
-          if (cpRes?.data) {
+          if (cpRes?.data && cpRes.data.length > 0) {
             compPicks2027 = cpRes.data;
-            setCompPicks(cpRes.data);
+            setCompPicks(prev => prev.length === cpRes.data.length ? prev : cpRes.data);
           }
           if (liveRes?.data) {
             livePicks2027 = liveRes.data;
@@ -5598,10 +5626,18 @@ export default function DraftRoomView({
             supabase.from('draft_compensation_picks').select('*').order('round_num', { ascending: true }),
             supabase.from('draft_keepers').select('*').order('keeper_slot', { ascending: true })
           ]);
-          if (dtData?.data && dtData.data.length > 0) setDraftTrades(dtData.data);
-          if (budgetsRes?.data && budgetsRes.data.length > 0) setTeamBudgets(budgetsRes.data);
-          if (cpRes?.data && cpRes.data.length > 0) setCompPicks(cpRes.data);
-          if (keepersRes?.data && keepersRes.data.length > 0) setKeepers(keepersRes.data);
+          if (dtData?.data && dtData.data.length > 0) {
+            setDraftTrades(prev => prev.length === dtData.data.length ? prev : dtData.data);
+          }
+          if (budgetsRes?.data && budgetsRes.data.length > 0) {
+            setTeamBudgets(prev => prev.length === budgetsRes.data.length ? prev : budgetsRes.data);
+          }
+          if (cpRes?.data && cpRes.data.length > 0) {
+            setCompPicks(prev => prev.length === cpRes.data.length ? prev : cpRes.data);
+          }
+          if (keepersRes?.data && keepersRes.data.length > 0) {
+            setKeepers(prev => prev.length === keepersRes.data.length ? prev : keepersRes.data);
+          }
         } catch (e) {
           console.warn('Supabase supporting data fetch notice:', e);
         }
@@ -5609,7 +5645,7 @@ export default function DraftRoomView({
     } catch (err) {
       console.warn('Draft order fetch error, fallback:', err);
       if (roomSeason === 2027) {
-        setPicks(generate2027DraftOrder(draftTrades, [], []));
+        setPicks(generate2027DraftOrder(draftTradesRef.current, [], []));
       } else if (roomSeason === 2026 && defaultDraft2026?.length > 0) {
         setPicks(defaultDraft2026.map(p => ({
           'Overall Pick': p.overall_pick,
@@ -5625,7 +5661,7 @@ export default function DraftRoomView({
         setPicks(generateDefaultDraftOrder());
       }
     }
-  }, [roomSeason, draftTrades]);
+  }, [roomSeason]);
 
   const fetchStaticData = useCallback(async () => {
     console.log(`📦 Fetching static data...`);
@@ -5784,10 +5820,19 @@ export default function DraftRoomView({
     }
   }, [roomSeason]);
 
+  const fetchStaticDataRef = useRef(fetchStaticData);
+  const fetchDraftOrderRef = useRef(fetchDraftOrder);
+  const handleNewPickRef = useRef(handleNewPick);
+  useEffect(() => {
+    fetchStaticDataRef.current = fetchStaticData;
+    fetchDraftOrderRef.current = fetchDraftOrder;
+    handleNewPickRef.current = handleNewPick;
+  });
+
   useEffect(() => {
     if (!draftMode) return;
 
-    fetchStaticData();
+    fetchStaticDataRef.current();
 
     if (draftMode === 'live' || draftMode === 'multitest' || draftMode === 'mobile' || draftMode === 'host') {
       console.log(`🟢 Starting Polling for ${draftMode} mode (${roomSeason}) (Every 2s)...`);
@@ -5814,7 +5859,7 @@ export default function DraftRoomView({
                 const newCount = updated.filter(p => p['ESPN PlayerID']).length;
                 if (newCount > currCount) {
                   const latestNewPick = updated.filter(p => p['ESPN PlayerID']).slice(-1)[0];
-                  if (latestNewPick) handleNewPick(latestNewPick);
+                  if (latestNewPick) handleNewPickRef.current(latestNewPick);
                   return updated;
                 }
                 return curr;
@@ -5833,7 +5878,7 @@ export default function DraftRoomView({
                 if (currPicked !== newPicked) {
                   const latestNewPick = data.filter(p => p['ESPN PlayerID']).slice(-1)[0];
                   if (latestNewPick) {
-                    handleNewPick(latestNewPick);
+                    handleNewPickRef.current(latestNewPick);
                   }
                   return data;
                 }
@@ -5852,9 +5897,9 @@ export default function DraftRoomView({
         clearInterval(interval);
       };
     } else if (draftMode === 'test' || draftMode === 'mockdraft') {
-      fetchDraftOrder();
+      fetchDraftOrderRef.current();
     }
-  }, [draftMode, roomSeason, fetchStaticData, fetchDraftOrder, handleNewPick]);
+  }, [draftMode, roomSeason]);
 
   useEffect(() => {
     if (picks.length > 0) {
@@ -6099,7 +6144,12 @@ export default function DraftRoomView({
       ? testModePicks
       : (displayPicks || []);
     const takenIds = new Set(activePicks.map(p => String(p['ESPN PlayerID'])).filter(id => id && id !== 'null' && id !== 'undefined'));
-    const available = (displayPlayers || []).filter(p => !takenIds.has(String(p['ESPN PlayerID'])));
+    const available = (displayPlayers || []).filter(p => {
+      const pid = String(p['ESPN PlayerID']);
+      if (takenIds.has(pid)) return false;
+      if (p.isKeeper) return false;
+      return p.Availability === 'Available' || !p.Availability;
+    });
 
     const targetOwner = (isMyTurn && currentUser) ? currentUser : (currentPick?.Owner || currentUser);
     const targetOwnerNormalized = normalizeManager(targetOwner);
