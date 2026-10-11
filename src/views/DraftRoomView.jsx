@@ -263,11 +263,43 @@ const calcIndexByName = new Map();
   if (name && !calcIndexByName.has(name)) calcIndexByName.set(name, p);
 });
 
+function getEffectiveQS(player) {
+  if (!player) return 0;
+  // 1. Explicit calculation stats from keeperCalculations.json
+  const calcQs = parseFloat(player.calc_qs || player.y1_qs || player?.y1?.stats?.QS);
+  if (!isNaN(calcQs) && calcQs > 0) return Math.round(calcQs);
+  // 2. ZiPS Quality Starts if > 0
+  const zips = parseFloat(player.ZIPSQS);
+  if (!isNaN(zips) && zips > 0) return Math.round(zips);
+  // 3. ESPN Quality Starts projection
+  const espn = parseFloat(player.ESPNQS || player.ESPN_QS);
+  if (!isNaN(espn) && espn > 0) return Math.round(espn);
+  // 4. Starting pitcher games started estimate (approx 45% of starts are QS)
+  const isPitcher = (player.Position || '').includes('SP') || (player.Position || '').includes('P') || Boolean(player.Pitcher);
+  if (isPitcher) {
+    const gs = parseFloat(player.ZIPSGS || player.GS || player.G || player.calc_gs || player?.y1?.stats?.GS);
+    if (!isNaN(gs) && gs >= 5) return Math.round(gs * 0.45);
+    const ip = parseFloat(player.ZIPSIP || player.IP || player.ESPNIP || player?.y1?.stats?.IP);
+    if (!isNaN(ip) && ip >= 60) return Math.round((ip / 6) * 0.55);
+  }
+  return 0;
+}
+
 function enrichPlayerWithCalculations(p, roomSeason = 2027) {
   if (!p) return p;
   const pid = String(p['ESPN PlayerID'] || p.espn_player_id || p.id || p.player_id || '').trim();
   const cleanName = normalizeName(p.Player || p.Name || p.player_name || p.name || '');
   const calc = (pid ? calcIndexById.get(pid) : null) || (cleanName ? calcIndexByName.get(cleanName) : null);
+
+  const zipsVal = parseFloat(p.ZIPSQS);
+  const calcVal = parseFloat(calc?.y1?.stats?.QS);
+  const espnVal = parseFloat(p.ESPNQS || p.ESPN_QS);
+  const gsVal = parseFloat(calc?.y1?.stats?.GS || p.ZIPSGS || p.GS);
+  const effectiveQS = (!isNaN(zipsVal) && zipsVal > 0 ? Math.round(zipsVal) : null) ??
+                      (!isNaN(calcVal) && calcVal > 0 ? Math.round(calcVal) : null) ??
+                      (!isNaN(espnVal) && espnVal > 0 ? Math.round(espnVal) : null) ??
+                      (!isNaN(gsVal) && gsVal >= 5 ? Math.round(gsVal * 0.45) : null) ??
+                      0;
 
   if (!calc) {
     const rawRank = parseFloat(p['Hefty Keeper Rank'] ?? p.rank);
@@ -281,7 +313,10 @@ function enrichPlayerWithCalculations(p, roomSeason = 2027) {
       overall_price: 0,
       overall_rank: fallbackRank,
       price: 0,
-      rank: fallbackRank
+      rank: fallbackRank,
+      ZIPSQS: effectiveQS > 0 ? effectiveQS : (p.ZIPSQS || 0),
+      ESPNQS: !isNaN(espnVal) && espnVal > 0 ? espnVal : (effectiveQS > 0 ? effectiveQS : p.ESPNQS),
+      calc_qs: effectiveQS > 0 ? effectiveQS : undefined
     };
   }
 
@@ -311,7 +346,9 @@ function enrichPlayerWithCalculations(p, roomSeason = 2027) {
     ZIPSSB: p.ZIPSSB ?? calc.y1?.stats?.SB,
     ZIPSOBP: p.ZIPSOBP ?? calc.y1?.stats?.OBP,
     ZIPSK: p.ZIPSK ?? calc.y1?.stats?.SO,
-    ZIPSQS: p.ZIPSQS ?? calc.y1?.stats?.QS,
+    ZIPSQS: effectiveQS > 0 ? effectiveQS : (p.ZIPSQS || 0),
+    ESPNQS: !isNaN(espnVal) && espnVal > 0 ? espnVal : (effectiveQS > 0 ? effectiveQS : p.ESPNQS),
+    calc_qs: calcVal > 0 ? calcVal : (effectiveQS > 0 ? effectiveQS : undefined),
     'ZIPSSV+HDs': p['ZIPSSV+HDs'] ?? calc.y1?.stats?.SVHD,
     ZIPSERA: p.ZIPSERA ?? calc.y1?.stats?.ERA,
     ZIPSWHIP: p.ZIPSWHIP ?? calc.y1?.stats?.WHIP,
@@ -509,12 +546,13 @@ function mergeZipsData(playerPool, battersZips = [], pitchersZips = []) {
       res.ZIPSSV = pData.SV ?? player.ZIPSSV ?? 0;
       res.ZIPSHD = pData.HLD ?? pData.HD ?? player.ZIPSHD ?? 0;
       res['ZIPSSV+HDs'] = (res.ZIPSSV || 0) + (res.ZIPSHD || 0);
-      if (pData.QS === undefined) {
-        if (pData.GS && pData.IP) {
-          res.ZIPSQS = Math.round(pData.GS * 0.45);
-        }
-      } else {
+      if (pData.QS !== undefined && pData.QS !== null && !isNaN(parseFloat(pData.QS)) && parseFloat(pData.QS) > 0) {
         res.ZIPSQS = pData.QS;
+      } else if (pData.GS && pData.IP) {
+        res.ZIPSQS = Math.round(pData.GS * 0.45);
+      } else {
+        const fallbackQs = getEffectiveQS({ ...player, ...res, ZIPSGS: pData.GS || player.ZIPSGS });
+        if (fallbackQs > 0) res.ZIPSQS = fallbackQs;
       }
       res.ZIPSWAR_pit = pData.WAR ?? player.ZIPSWAR_pit;
     }
@@ -577,9 +615,22 @@ function generateDefaultDraftOrder() {
 const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
 
 async function callGemini(prompt) {
+  // 1. Try Supabase Edge Function 'gemini-proxy' first (secure backend proxy with Google Gemini access)
+  try {
+    const { data, error } = await supabase.functions.invoke('gemini-proxy', {
+      body: { mode: 'generate', prompt, model: 'gemini-2.5-flash' }
+    });
+    if (!error && data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+      return data.candidates[0].content.parts[0].text;
+    }
+  } catch (err) {
+    console.warn('Supabase gemini-proxy edge function invocation failed, trying direct Gemini API if configured:', err);
+  }
+
+  // 2. Direct Gemini API call if key is configured
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY || (typeof GEMINI_API_KEY !== 'undefined' ? GEMINI_API_KEY : '');
   if (!apiKey || apiKey.startsWith('AIzaSyDQ0eRBz6jSsORZrnG19jR5mzmd0QE0DWg')) {
-    return null; // Stale fallback key bypass
+    return null;
   }
 
   for (const model of GEMINI_MODELS) {
@@ -610,9 +661,10 @@ async function callGemini(prompt) {
 function formatPlayerStats(player) {
   const isPitcher = player.Position?.includes('SP') || player.Position?.includes('RP');
   if (isPitcher) {
-    return `ERA: ${player.ZIPSERA || 'N/A'}, WHIP: ${player.ZIPSWHIP || 'N/A'}, K: ${player.ZIPSK || 'N/A'}, QS: ${player.ZIPSQS || 'N/A'}, SV+H: ${player['ZIPSSV+HDs'] || 'N/A'}`;
+    const effQS = getEffectiveQS(player);
+    return `ERA: ${player.ZIPSERA || player.ESPNERA || 'N/A'}, WHIP: ${player.ZIPSWHIP || player.ESPNWHIP || 'N/A'}, K: ${player.ZIPSK || player.ESPNK || 'N/A'}, QS: ${effQS || player.ZIPSQS || player.ESPNQS || 'N/A'}, SV+H: ${player['ZIPSSV+HDs'] || player['ESPNSV+HDs'] || 'N/A'}`;
   }
-  return `R: ${player.ZIPSR || 'N/A'}, HR: ${player.ZIPSHR || 'N/A'}, RBI: ${player.ZIPSRBI || 'N/A'}, SB: ${player.ZIPSSB || 'N/A'}, OBP: ${player.ZIPSOBP || 'N/A'}`;
+  return `R: ${player.ZIPSR || player.ESPNR || 'N/A'}, HR: ${player.ZIPSHR || player.ESPNHR || 'N/A'}, RBI: ${player.ZIPSRBI || player.ESPNRBI || 'N/A'}, SB: ${player.ZIPSSB || player.ESPNSB || 'N/A'}, OBP: ${player.ZIPSOBP || player.ESPNOBP || 'N/A'}`;
 }
 
 function getEffectiveRank(player) {
@@ -933,11 +985,30 @@ function prepareSpokenScript(htmlText) {
   return text;
 }
 
-async function playPodcastTTS(htmlText, voiceName = 'en-US-Journey-D') {
-  const spokenText = prepareSpokenScript(htmlText);
-  if (!spokenText || spokenText.length < 5) return;
+// --- 2-PERSON PODCAST DIALOGUE & GOOGLE CLOUD HD VOICE ENGINE ---
+let currentPodcastAbortController = null;
+let currentPodcastAudios = [];
 
-  // Stop any currently playing TTS audio or speech synthesis
+function stopPodcastAudio() {
+  if (currentPodcastAbortController) {
+    try {
+      currentPodcastAbortController.abort();
+    } catch {
+      // ignore
+    }
+    currentPodcastAbortController = null;
+  }
+  if (currentPodcastAudios.length > 0) {
+    currentPodcastAudios.forEach(a => {
+      try {
+        a.pause();
+        a.currentTime = 0;
+      } catch {
+        // ignore
+      }
+    });
+    currentPodcastAudios = [];
+  }
   if (currentTtsAudio) {
     try {
       currentTtsAudio.pause();
@@ -948,50 +1019,264 @@ async function playPodcastTTS(htmlText, voiceName = 'en-US-Journey-D') {
     currentTtsAudio = null;
   }
   if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-    window.speechSynthesis.cancel();
-  }
-
-  // 1. Google Cloud Text-to-Speech API with Google's premier Journey Podcast voice
-  const apiKey = import.meta.env.VITE_GOOGLE_TTS_API_KEY || import.meta.env.VITE_GEMINI_API_KEY || '';
-  if (apiKey && !apiKey.startsWith('AIzaSyDQ0eRBz6jSsORZrnG19jR5mzmd0QE0DWg')) {
     try {
-      const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`;
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          input: { text: spokenText },
-          voice: {
-            languageCode: 'en-US',
-            name: voiceName
-          },
-          audioConfig: {
-            audioEncoding: 'MP3',
-            speakingRate: 1.05,
-            pitch: 0.0
-          }
-        })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.audioContent) {
-          const audio = new Audio(`data:audio/mp3;base64,${data.audioContent}`);
-          currentTtsAudio = audio;
-          await audio.play();
-          return;
-        }
-      }
-    } catch (err) {
-      console.warn('Google Cloud TTS API error, falling back to Web Speech:', err);
+      window.speechSynthesis.cancel();
+    } catch {
+      // ignore
     }
   }
+}
 
-  // 2. High-fidelity Web Speech fallback (utilizing Google US English or best available browser voice)
+function generateLocalPodcastDialogue(player, owner, pickNum, teamContext = {}, season = 2027) {
+  const rank = getEffectiveRank(player);
+  const surplus = rank ? (pickNum - rank) : 0;
+  const isPitcher = (player.Position || '').includes('SP') || (player.Position || '').includes('RP') || (player.Position || '').includes('P');
+  const effQS = getEffectiveQS(player);
+  const k = player.ZIPSK || player.ESPNK || 160;
+  const hr = player.ZIPSHR || player.ESPNHR || 22;
+  const sb = parseFloat(player.ZIPSSB || player.ESPNSB || 4);
+  const prevPicks = teamContext?.recentPicks || [];
+
+  let skipLine1 = "";
+  let chipLine1 = "";
+  let skipLine2 = "";
+  let chipLine2 = "";
+
+  if (surplus <= -12) {
+    skipLine1 = `I don't know Chip, ${player.Player} at number ${pickNum}? That is an aggressive reach when his consensus rank is sitting at #${rank || pickNum}.`;
+    chipLine1 = `Skip, you're looking at the board, but ${owner} is looking at the ceiling! In this league, you don't wait around if he's your target.`;
+    skipLine2 = isPitcher
+      ? `He still has to prove the health and workload over a full summer. You left proven top-tier bats on the table.`
+      : `He has real strikeout volatility. If that on-base percentage slips, this pick is going to sting.`;
+    chipLine2 = `Flags fly forever Skip. If ${player.Player} hits his projected ceiling, this is the bold move that wins the entire ${season} championship.`;
+  } else if (surplus >= 10) {
+    skipLine1 = `${player.Player} fell all the way to pick ${pickNum}? Why did eight other managers pass on a consensus top-${rank} stud?`;
+    chipLine1 = `Don't overthink it Skip! Sometimes the draft room gifts you pure gold. ${owner} just smiled and scooped the easiest value of the draft.`;
+    skipLine2 = isPitcher
+      ? `There's always a reason an ace slides. Keep a close eye on the workload limits down the stretch.`
+      : `Just make sure he gets the counting stats around that lineup.`;
+    chipLine2 = `Come on, ${isPitcher ? `${k} strikeouts and ${effQS} quality starts` : `${hr} home runs with elite pedigree`}! That is an absolute highway robbery for ${owner}.`;
+  } else if (isPitcher) {
+    skipLine1 = `Taking ${player.Player} right here feels like a big gamble on pitching stability. Ratios can blow up fast in this category format.`;
+    chipLine1 = `Are you kidding me Skip? The strikeout stuff is filthy. We're talking ${k} punchouts and an anchor for ${effQS} quality starts!`;
+    skipLine2 = `Sure, when he's on the mound, but starters break hearts in fantasy. One bad week can torpedo your WHIP.`;
+    chipLine2 = `${owner} knows you win this league with top-end strikeout leverage. This is an elite rotation cornerstone for ${season}.`;
+  } else if (sb >= 20) {
+    skipLine1 = `Are we chasing stolen bases too early here? ${player.Player} gives you speed, but where's the home run thump?`;
+    chipLine1 = `Skip, in this format, 25-plus steals are practically impossible to find on waivers! That speed wins matchups all on its own.`;
+    skipLine2 = `If he hits down in the order, those run totals are going to dry up quickly.`;
+    chipLine2 = `His wheels create run opportunities out of thin air. ${owner} just locked down one of the fastest players on the board.`;
+  } else {
+    skipLine1 = prevPicks.length > 0
+      ? `${player.Player} at pick ${pickNum} is dependable, but with ${prevPicks[prevPicks.length - 1]} already rostered, does ${owner} have enough ceiling here?`
+      : `${player.Player} at pick ${pickNum} feels pretty fair, but I wonder if ${owner} missed a chance to grab positional scarcity elsewhere.`;
+    chipLine1 = `Look at the profile Skip! That bat delivers ${hr} home runs and dependable counting stats every single week.`;
+    skipLine2 = `Good player, but this feels like taking the safe floor instead of swinging for league-winning upside.`;
+    chipLine2 = `Championship rosters are built on dependable category anchors. ${owner} executed this pick to perfection.`;
+  }
+
+  return [
+    { speaker: 'SKIP', text: skipLine1 },
+    { speaker: 'CHIP', text: chipLine1 },
+    { speaker: 'SKIP', text: skipLine2 },
+    { speaker: 'CHIP', text: chipLine2 }
+  ];
+}
+
+async function generatePodcastDialogue(player, owner, pickNum, teamContext = {}, season = 2027) {
+  const rank = getEffectiveRank(player);
+  const price = getEffectivePrice(player);
+  const surplus = rank ? (pickNum - rank) : null;
+  const statLine = formatPlayerStats(player);
+  const isPitcher = (player.Position || '').includes('SP') || (player.Position || '').includes('RP') || (player.Position || '').includes('P');
+  const effQS = getEffectiveQS(player);
+
+  const prompt = `You are producing a 30-second rapid-fire sports talk podcast reaction to a fantasy baseball draft selection.
+Format: Head-to-Head Each Category (R, HR, RBI, SB, OBP | K, QS, ERA, WHIP, SV+HD).
+
+SELECTION:
+- Manager: ${owner}
+- Player: ${player.Player} (${player.Position} - ${player.Team || 'MLB'})
+- Pick: #${pickNum} (Consensus Rank: #${rank || 'N/A'}, Price: $${price || 'N/A'}, Surplus: ${surplus !== null ? (surplus > 0 ? `+${surplus} spots slide` : `${surplus} spots reach`) : 'Fair market'})
+- Projections: ${statLine} ${isPitcher && effQS ? `| Projected QS: ${effQS}` : ''}
+
+Generate 4 lines of energetic back-and-forth debate between two podcast hosts:
+- SKIP: Skeptical analyst. Questions reaching, spots injury/workload flaws, challenges the pick.
+- CHIP: Enthusiastic hype man. Defends the upside, loves the category juice, hypes up the manager.
+
+Return ONLY a valid JSON array of 4 objects with "speaker" and "text" fields:
+[
+  { "speaker": "SKIP", "text": "..." },
+  { "speaker": "CHIP", "text": "..." },
+  { "speaker": "SKIP", "text": "..." },
+  { "speaker": "CHIP", "text": "..." }
+]`;
+
+  try {
+    const aiResponse = await callGemini(prompt);
+    if (aiResponse) {
+      const jsonMatch = aiResponse.match(/\[\s*\{[\s\S]*\}\s*\]/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        if (Array.isArray(parsed) && parsed.length >= 2) {
+          return parsed.map(item => ({
+            speaker: (item.speaker || 'SKIP').toUpperCase().includes('CHIP') ? 'CHIP' : 'SKIP',
+            text: prepareSpokenScript(item.text || '')
+          }));
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('Podcast script generation failed, falling back to local debate:', err);
+  }
+
+  return generateLocalPodcastDialogue(player, owner, pickNum, teamContext, season);
+}
+
+async function playDualSpeakerPodcast(dialogueScript, callbacks = {}) {
+  const { onLineStart, onComplete, onError } = callbacks;
+  if (!dialogueScript || !Array.isArray(dialogueScript) || dialogueScript.length === 0) {
+    if (onComplete) onComplete();
+    return;
+  }
+
+  stopPodcastAudio();
+  const abortController = new AbortController();
+  currentPodcastAbortController = abortController;
+
+  try {
+    // Pre-fetch audio blobs via Supabase gemini-proxy edge function
+    // SKIP uses 'en-US-Chirp3-HD-Puck', CHIP uses 'en-US-Chirp3-HD-Charon'
+    const audioItems = await Promise.all(
+      dialogueScript.map(async (line) => {
+        const isChip = (line.speaker || '').toUpperCase().trim() === 'CHIP';
+        const voiceName = isChip ? 'en-US-Chirp3-HD-Charon' : 'en-US-Chirp3-HD-Puck';
+        const cleanText = prepareSpokenScript(line.text);
+        if (!cleanText || cleanText.length < 2) return null;
+
+        try {
+          const { data, error } = await supabase.functions.invoke('gemini-proxy', {
+            body: { mode: 'tts', text: cleanText, voice: voiceName }
+          });
+          if (!error && data?.audioContent) {
+            return {
+              audioUrl: `data:audio/mp3;base64,${data.audioContent.trim()}`,
+              speaker: isChip ? 'CHIP' : 'SKIP',
+              text: cleanText
+            };
+          }
+        } catch (err) {
+          console.warn(`Edge function TTS failed for line "${cleanText.slice(0, 20)}...":`, err);
+        }
+        return {
+          fallbackText: cleanText,
+          speaker: isChip ? 'CHIP' : 'SKIP'
+        };
+      })
+    );
+
+    if (abortController.signal.aborted) return;
+
+    // Sequential playback line by line
+    for (let idx = 0; idx < audioItems.length; idx++) {
+      if (abortController.signal.aborted) break;
+      const item = audioItems[idx];
+      if (!item) continue;
+
+      if (onLineStart) onLineStart(idx, item.speaker);
+
+      if (item.audioUrl) {
+        await new Promise((resolve) => {
+          const audio = new Audio(item.audioUrl);
+          currentPodcastAudios.push(audio);
+
+          const cleanup = () => {
+            audio.onended = null;
+            audio.onerror = null;
+            resolve();
+          };
+
+          audio.onended = cleanup;
+          audio.onerror = () => {
+            console.warn('Audio playback error, advancing to next line:', idx);
+            cleanup();
+          };
+
+          if (abortController.signal.aborted) {
+            cleanup();
+            return;
+          }
+
+          audio.play().catch(e => {
+            console.warn('Audio play blocked or interrupted:', e);
+            cleanup();
+          });
+        });
+      } else if (item.fallbackText && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        // High fidelity web speech fallback with differentiated pitch/voice
+        await new Promise((resolve) => {
+          const isChip = item.speaker === 'CHIP';
+          const utterance = new SpeechSynthesisUtterance(item.fallbackText);
+          utterance.rate = isChip ? 1.08 : 0.98;
+          utterance.pitch = isChip ? 1.15 : 0.92;
+
+          const voices = window.speechSynthesis.getVoices();
+          const preferredVoice = voices.find(v => 
+            v.lang.startsWith('en') && (isChip 
+              ? (v.name.includes('Natural') || v.name.includes('Female') || v.name.includes('Samantha') || v.name.includes('Zira'))
+              : (v.name.includes('Google') || v.name.includes('Daniel') || v.name.includes('Guy') || v.name.includes('David')))
+          ) || voices.find(v => v.lang.startsWith('en'));
+
+          if (preferredVoice) utterance.voice = preferredVoice;
+
+          utterance.onend = resolve;
+          utterance.onerror = resolve;
+          window.speechSynthesis.speak(utterance);
+        });
+      }
+
+      // Small natural conversational breath pause (160ms)
+      if (idx < audioItems.length - 1 && !abortController.signal.aborted) {
+        await new Promise(r => setTimeout(r, 160));
+      }
+    }
+  } catch (err) {
+    console.warn('Podcast playback engine error:', err);
+    if (onError) onError(err);
+  } finally {
+    if (!abortController.signal.aborted && onComplete) {
+      onComplete();
+    }
+  }
+}
+
+async function playPodcastTTS(htmlText, voiceName = 'en-US-Chirp3-HD-Puck') {
+  const spokenText = prepareSpokenScript(htmlText);
+  if (!spokenText || spokenText.length < 5) return;
+
+  // Stop any currently playing TTS audio or speech synthesis
+  stopPodcastAudio();
+
+  // 1. Google Cloud Chirp 3 HD via Supabase gemini-proxy edge function
+  try {
+    const { data, error } = await supabase.functions.invoke('gemini-proxy', {
+      body: { mode: 'tts', text: spokenText, voice: voiceName }
+    });
+    if (!error && data?.audioContent) {
+      const audio = new Audio(`data:audio/mp3;base64,${data.audioContent}`);
+      currentTtsAudio = audio;
+      await audio.play();
+      return;
+    }
+  } catch (err) {
+    console.warn('Edge function TTS error, falling back:', err);
+  }
+
+  // 2. High-fidelity Web Speech fallback
   if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
     try {
       const utterance = new SpeechSynthesisUtterance(spokenText);
-      utterance.rate = 1.05;
+      utterance.rate = 1.02;
       utterance.pitch = 1.0;
       
       const voices = window.speechSynthesis.getVoices();
@@ -1124,6 +1409,241 @@ async function fetchPlayerNews(playerId) {
   }
 
   return [];
+}
+
+// --- PODCAST DEBATE BREAKDOWN WIDGET (SKIP & CHIP) ---
+function PodcastBreakdownWidget({
+  script,
+  isGenerating,
+  isPlaying,
+  activeLine,
+  onPlay,
+  onStop,
+  compact = false,
+  playerName = null
+}) {
+  const [showScript, setShowScript] = useState(true);
+
+  if (!script && !isGenerating) return null;
+
+  return (
+    <div style={{
+      marginTop: '12px',
+      background: 'linear-gradient(135deg, rgba(30, 20, 50, 0.7) 0%, rgba(20, 20, 35, 0.85) 100%)',
+      borderRadius: '12px',
+      border: '1px solid rgba(187, 134, 252, 0.35)',
+      padding: compact ? '10px 12px' : '14px 16px',
+      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.4)',
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
+      <style>{`
+        @keyframes soundWave {
+          0%, 100% { height: 4px; }
+          50% { height: 16px; }
+        }
+        @keyframes shimmerPulse {
+          0%, 100% { opacity: 0.6; }
+          50% { opacity: 1; }
+        }
+      `}</style>
+      
+      {/* Header bar */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{
+            fontSize: compact ? '11px' : '12px',
+            color: '#bb86fc',
+            fontWeight: 'bold',
+            letterSpacing: '1px',
+            textTransform: 'uppercase',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px'
+          }}>
+            🎙️ The Skip & Chip Show
+          </span>
+          <span style={{
+            fontSize: '9px',
+            background: 'rgba(3, 218, 198, 0.15)',
+            border: '1px solid rgba(3, 218, 198, 0.4)',
+            color: '#03dac6',
+            padding: '1px 6px',
+            borderRadius: '4px',
+            fontWeight: 'bold'
+          }}>
+            Google Cloud Chirp 3 HD Dual Voices
+          </span>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {/* Waveform indicator if playing */}
+          {isPlaying && (
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', height: '18px', padding: '0 4px' }} title="Speaking via Google Cloud Chirp 3 HD">
+              <span style={{ width: '3px', background: '#ff9800', borderRadius: '2px', animation: 'soundWave 0.8s ease-in-out infinite' }} />
+              <span style={{ width: '3px', background: '#bb86fc', borderRadius: '2px', animation: 'soundWave 0.6s ease-in-out infinite 0.2s' }} />
+              <span style={{ width: '3px', background: '#03dac6', borderRadius: '2px', animation: 'soundWave 0.9s ease-in-out infinite 0.4s' }} />
+              <span style={{ width: '3px', background: '#ff9800', borderRadius: '2px', animation: 'soundWave 0.7s ease-in-out infinite 0.1s' }} />
+            </div>
+          )}
+
+          {/* Play / Stop Button */}
+          {isPlaying ? (
+            <button
+              onClick={onStop}
+              style={{
+                background: 'linear-gradient(135deg, #e53935 0%, #c62828 100%)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '6px',
+                padding: '4px 10px',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                boxShadow: '0 2px 8px rgba(229, 57, 53, 0.4)'
+              }}
+            >
+              ⏹ Stop Debate
+            </button>
+          ) : (
+            <button
+              onClick={onPlay}
+              disabled={isGenerating || !script}
+              style={{
+                background: isGenerating ? '#444' : 'linear-gradient(135deg, #bb86fc 0%, #7c4dff 100%)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '6px',
+                padding: '4px 10px',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                cursor: isGenerating ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                boxShadow: '0 2px 8px rgba(187, 134, 252, 0.3)'
+              }}
+            >
+              ▶ Play Debate
+            </button>
+          )}
+
+          {/* Toggle Script */}
+          {script && (
+            <button
+              onClick={() => setShowScript(prev => !prev)}
+              style={{
+                background: 'rgba(255, 255, 255, 0.08)',
+                color: '#aaa',
+                border: '1px solid #444',
+                borderRadius: '6px',
+                padding: '4px 8px',
+                fontSize: '11px',
+                cursor: 'pointer'
+              }}
+            >
+              {showScript ? 'Hide Script' : 'View Script'}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Generating State */}
+      {isGenerating && (
+        <div style={{
+          color: '#bbb',
+          fontSize: '12px',
+          fontStyle: 'italic',
+          padding: '12px',
+          background: 'rgba(0, 0, 0, 0.3)',
+          borderRadius: '8px',
+          textAlign: 'center',
+          animation: 'shimmerPulse 1.5s ease-in-out infinite'
+        }}>
+          🎙️ Skip & Chip are in the studio debating {playerName ? `the ${playerName} selection` : 'this pick'}...
+        </div>
+      )}
+
+      {/* Script Lines */}
+      {script && showScript && !isGenerating && (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+          maxHeight: compact ? '160px' : '220px',
+          overflowY: 'auto',
+          paddingRight: '4px'
+        }}>
+          {script.map((line, idx) => {
+            const isChip = (line.speaker || '').toUpperCase().trim() === 'CHIP';
+            const isActive = activeLine === idx;
+            return (
+              <div
+                key={idx}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignSelf: isChip ? 'flex-end' : 'flex-start',
+                  maxWidth: '88%',
+                  background: isActive
+                    ? (isChip ? 'rgba(187, 134, 252, 0.25)' : 'rgba(255, 152, 0, 0.25)')
+                    : 'rgba(0, 0, 0, 0.4)',
+                  borderLeft: isChip ? 'none' : `3px solid ${isActive ? '#ffb74d' : '#ff9800'}`,
+                  borderRight: isChip ? `3px solid ${isActive ? '#d1c4e9' : '#bb86fc'}` : 'none',
+                  borderRadius: isChip ? '10px 4px 10px 10px' : '4px 10px 10px 10px',
+                  padding: '8px 12px',
+                  transition: 'all 0.25s ease',
+                  boxShadow: isActive
+                    ? `0 0 14px ${isChip ? 'rgba(187, 134, 252, 0.4)' : 'rgba(255, 152, 0, 0.4)'}`
+                    : 'none'
+                }}
+              >
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  marginBottom: '3px',
+                  justifyContent: isChip ? 'flex-end' : 'flex-start'
+                }}>
+                  <span style={{
+                    fontSize: '10px',
+                    fontWeight: '900',
+                    letterSpacing: '0.5px',
+                    color: isChip ? '#bb86fc' : '#ff9800',
+                    textTransform: 'uppercase'
+                  }}>
+                    {isChip ? '🔥 CHIP (Hype Man)' : '🎙️ SKIP (Skeptical Analyst)'}
+                  </span>
+                  {isActive && (
+                    <span style={{
+                      fontSize: '9px',
+                      background: isChip ? '#bb86fc' : '#ff9800',
+                      color: '#000',
+                      padding: '0 4px',
+                      borderRadius: '3px',
+                      fontWeight: 'bold'
+                    }}>
+                      SPEAKING
+                    </span>
+                  )}
+                </div>
+                <div style={{
+                  fontSize: compact ? '12px' : '13px',
+                  color: isActive ? '#fff' : '#ddd',
+                  lineHeight: '1.45'
+                }}>
+                  {line.text}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 }
 
 // --- PLAYER MODAL ---
@@ -1354,14 +1874,21 @@ function PlayerModal({
         { label: 'xwOBA', key: 'xwoba', desc: false },
         { label: 'xBA', key: 'xba', desc: false },
         { label: 'xSLG', key: 'xslg', desc: false },
+        { label: 'Exit Velo', key: 'exit_velocity_avg', desc: false },
+        { label: 'Hard Hit %', key: 'hard_hit_percent', desc: false },
+        { label: 'Barrel %', key: 'barrel_batted_rate', desc: false },
+        { label: 'Whiff %', key: 'whiff_percent', desc: true },
         { label: 'K %', key: 'k_percent', desc: true },
-        { label: 'BB %', key: 'bb_percent', desc: false },
-        { label: 'Whiff %', key: 'whiff_percent', desc: true }
+        { label: 'BB %', key: 'bb_percent', desc: false }
       ]
     : [
         { label: 'xwOBA', key: 'xwoba', desc: true },
         { label: 'xBA', key: 'xba', desc: true },
         { label: 'xSLG', key: 'xslg', desc: true },
+        { label: 'Exit Velo', key: 'exit_velocity_avg', desc: true },
+        { label: 'Hard Hit %', key: 'hard_hit_percent', desc: true },
+        { label: 'Barrel %', key: 'barrel_batted_rate', desc: true },
+        { label: 'Whiff %', key: 'whiff_percent', desc: false },
         { label: 'K %', key: 'k_percent', desc: false },
         { label: 'BB %', key: 'bb_percent', desc: true }
       ];
@@ -1637,7 +2164,7 @@ function PlayerModal({
                           <td style={{ ...statTableStyles.td, fontWeight: 'bold', color: '#bb86fc' }}>ZiPS</td>
                           <td style={statTableStyles.td}>{player.ZIPSIP || '-'}</td>
                           <td style={statTableStyles.td}>{player.ZIPSK || '-'}</td>
-                          <td style={statTableStyles.td}>{player.ZIPSQS || '-'}</td>
+                          <td style={statTableStyles.td}>{getEffectiveQS(player) || player.ZIPSQS || '-'}</td>
                           <td style={statTableStyles.td}>{player.ZIPSERA ? parseFloat(player.ZIPSERA).toFixed(2) : '-'}</td>
                           <td style={statTableStyles.td}>{player.ZIPSWHIP ? parseFloat(player.ZIPSWHIP).toFixed(2) : '-'}</td>
                           <td style={statTableStyles.td}>{player['ZIPSSV+HDs'] || '-'}</td>
@@ -1646,7 +2173,7 @@ function PlayerModal({
                           <td style={{ ...statTableStyles.td, fontWeight: 'bold', color: '#03dac6' }}>ESPN</td>
                           <td style={statTableStyles.td}>{playerInfo?.ESPN_IP ? (playerInfo.ESPN_IP / 3).toFixed(1) : (player.ESPNIP || '-')}</td>
                           <td style={statTableStyles.td}>{playerInfo?.ESPN_K || player.ESPNK || '-'}</td>
-                          <td style={statTableStyles.td}>{playerInfo?.ESPN_QS || player.ESPNQS || '-'}</td>
+                          <td style={statTableStyles.td}>{playerInfo?.ESPN_QS || player.ESPNQS || getEffectiveQS(player) || '-'}</td>
                           <td style={statTableStyles.td}>{playerInfo?.ESPN_ERA ? parseFloat(playerInfo.ESPN_ERA).toFixed(2) : (player.ESPNERA ? parseFloat(player.ESPNERA).toFixed(2) : '-')}</td>
                           <td style={statTableStyles.td}>{playerInfo?.ESPN_WHIP ? parseFloat(playerInfo.ESPN_WHIP).toFixed(2) : (player.ESPNWHIP ? parseFloat(player.ESPNWHIP).toFixed(2) : '-')}</td>
                           <td style={statTableStyles.td}>
@@ -1991,6 +2518,143 @@ function PlayerModal({
                             : `ESPN ranks ${Math.abs(diff)} spots higher than Hefty`}
                         </div>
                       )
+                    )}
+                    <div style={{ marginTop: '16px', borderTop: '1px solid #2a2a2a' }} />
+                  </div>
+                );
+              })()}
+
+              {/* 3-Year Keeper Outlook & Category Profile Section */}
+              {(() => {
+                const playerCalc = (defaultCalculations?.players || []).find(cp => {
+                  const cpPid = String(cp.espn_player_id || cp.player_id || '');
+                  if (playerId && cpPid === playerId) return true;
+                  if (mlbamId && String(cp.mlbam_id || cp.MLBAMID || '') === mlbamId) return true;
+                  const cpName = normalizeName(cp.player_name || '');
+                  const plName = normalizeName(player.Player || player.Name || '');
+                  return cpName && plName && cpName === plName;
+                });
+
+                const y1Pr = playerCalc?.y1?.pr ?? (parseFloat(player['Projected PR']) || null);
+                const y2Pr = playerCalc?.y2?.pr ?? null;
+                const y3Pr = playerCalc?.y3?.pr ?? null;
+                const surplus = playerCalc?.surplus_value ?? (player['Surplus Value'] !== undefined ? parseFloat(player['Surplus Value']) : null);
+
+                // Category Badges
+                const hr = parseFloat(player.ZIPSHR || player.ESPNHR || 0);
+                const sb = parseFloat(player.ZIPSSB || player.ESPNSB || 0);
+                const obp = parseFloat(player.ZIPSOBP || player.ESPNOBP || 0);
+                const k = parseFloat(player.ZIPSK || player.ESPNK || 0);
+                const qs = getEffectiveQS(player);
+                const era = parseFloat(player.ZIPSERA || player.ESPNERA || 0);
+                const whip = parseFloat(player.ZIPSWHIP || player.ESPNWHIP || 0);
+                const svh = parseFloat(player['ZIPSSV+HDs'] || player['ESPNSV+HDs'] || 0);
+
+                const badges = [];
+                if (!isPitcherPlayer) {
+                  if (hr >= 30) badges.push({ text: `🔥 ${Math.round(hr)} HR Power`, color: '#ef4444' });
+                  if (sb >= 20) badges.push({ text: `💨 ${Math.round(sb)} SB Speed`, color: '#38bdf8' });
+                  if (obp >= 0.365) badges.push({ text: `🎯 .${String(obp.toFixed(3)).replace('0.', '')} OBP Anchor`, color: '#10b981' });
+                } else {
+                  if (k >= 195) badges.push({ text: `👑 ${Math.round(k)} K Ace`, color: '#a855f7' });
+                  if (qs >= 18) badges.push({ text: `💎 ${Math.round(qs)} Quality Starts`, color: '#03dac6' });
+                  if (era > 0 && era <= 3.35) badges.push({ text: `🔒 ${era.toFixed(2)} ERA Anchor`, color: '#10b981' });
+                  if (whip > 0 && whip <= 1.10) badges.push({ text: `🎯 ${whip.toFixed(2)} WHIP`, color: '#6366f1' });
+                  if (svh >= 18) badges.push({ text: `🛡️ ${Math.round(svh)} SV+HD Anchor`, color: '#f59e0b' });
+                }
+
+                return (
+                  <div style={{ marginBottom: '20px' }}>
+                    {/* Category Strengths Badges */}
+                    {badges.length > 0 && (
+                      <div style={{ marginBottom: '14px' }}>
+                        <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>
+                          Category Profile
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                          {badges.map((b, i) => (
+                            <span key={i} style={{
+                              fontSize: '11px',
+                              fontWeight: 'bold',
+                              padding: '3px 8px',
+                              borderRadius: '4px',
+                              background: 'rgba(255, 255, 255, 0.05)',
+                              border: `1px solid ${b.color}`,
+                              color: b.color
+                            }}>
+                              {b.text}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 3-Year Keeper Trajectory */}
+                    {(y1Pr !== null || y2Pr !== null || y3Pr !== null) && (
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                          <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#888', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                            3-Year Keeper Outlook
+                          </span>
+                          {surplus !== null && !isNaN(surplus) && (
+                            <span style={{
+                              fontSize: '11px',
+                              fontWeight: 'bold',
+                              color: surplus >= 0 ? '#10b981' : '#f43f5e',
+                              background: surplus >= 0 ? 'rgba(16, 185, 129, 0.12)' : 'rgba(244, 63, 94, 0.12)',
+                              padding: '1px 6px',
+                              borderRadius: '4px',
+                              border: `1px solid ${surplus >= 0 ? 'rgba(16, 185, 129, 0.3)' : 'rgba(244, 63, 94, 0.3)'}`
+                            }}>
+                              {surplus >= 0 ? `+${surplus} Surplus` : `${surplus} Surplus`}
+                            </span>
+                          )}
+                        </div>
+
+                        <div style={{
+                          display: 'grid',
+                          gridTemplateColumns: '1fr 1fr 1fr',
+                          gap: '6px',
+                          background: '#252525',
+                          padding: '8px',
+                          borderRadius: '6px',
+                          border: '1px solid #333'
+                        }}>
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ fontSize: '10px', color: '#888' }}>2026 (Y1)</div>
+                            <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#bb86fc' }}>
+                              {y1Pr !== null ? `${y1Pr > 0 ? '+' : ''}${parseFloat(y1Pr).toFixed(1)} PR` : '—'}
+                            </div>
+                            {playerCalc?.y1?.rank && (
+                              <div style={{ fontSize: '9px', color: '#aaa' }}>#{playerCalc.y1.rank}</div>
+                            )}
+                          </div>
+                          <div style={{ textAlign: 'center', borderLeft: '1px solid #383838', borderRight: '1px solid #383838' }}>
+                            <div style={{ fontSize: '10px', color: '#888' }}>2027 (Y2)</div>
+                            <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#03dac6' }}>
+                              {y2Pr !== null ? `${y2Pr > 0 ? '+' : ''}${parseFloat(y2Pr).toFixed(1)} PR` : '—'}
+                            </div>
+                            {playerCalc?.y2?.rank && (
+                              <div style={{ fontSize: '9px', color: '#aaa' }}>#{playerCalc.y2.rank}</div>
+                            )}
+                          </div>
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ fontSize: '10px', color: '#888' }}>2028 (Y3)</div>
+                            <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#ffb74d' }}>
+                              {y3Pr !== null ? `${y3Pr > 0 ? '+' : ''}${parseFloat(y3Pr).toFixed(1)} PR` : '—'}
+                            </div>
+                            {playerCalc?.y3?.rank && (
+                              <div style={{ fontSize: '9px', color: '#aaa' }}>#{playerCalc.y3.rank}</div>
+                            )}
+                          </div>
+                        </div>
+
+                        {y1Pr !== null && y2Pr !== null && (
+                          <div style={{ fontSize: '10px', color: '#888', marginTop: '6px', textAlign: 'center' }}>
+                            {y2Pr >= y1Pr ? '🚀 Rising Dynasty Value' : (y1Pr - y3Pr > 4 ? '⏳ Near-Term Window Focus' : '🛡️ Consistent Multi-Year Core')}
+                          </div>
+                        )}
+                      </div>
                     )}
                     <div style={{ marginTop: '16px', borderTop: '1px solid #2a2a2a' }} />
                   </div>
@@ -3036,6 +3700,10 @@ function PlayerPoolPanel({
         const aSafe = isNaN(aVal) || aVal <= 0 ? 999 : aVal;
         const bSafe = isNaN(bVal) || bVal <= 0 ? 999 : bVal;
         comparison = aSafe - bSafe;
+      } else if (sortConfig.key === 'ZIPSQS' || sortConfig.key === 'ESPNQS') {
+        const aVal = getEffectiveQS(a);
+        const bVal = getEffectiveQS(b);
+        comparison = aVal - bVal;
       } else {
         const aVal = a[sortConfig.key] ?? '';
         const bVal = b[sortConfig.key] ?? '';
@@ -3065,6 +3733,7 @@ function PlayerPoolPanel({
     'ZIPSOBP',
     'ZIPSK',
     'ZIPSQS',
+    'ESPNQS',
     'ZIPSSV+HDs'
   ]), []);
 
@@ -3097,9 +3766,9 @@ function PlayerPoolPanel({
   }, [sortedPlayers, tierPos]);
 
   return (
-    <div style={{ display: 'flex', gridColumn: '1 / -1', gap: '20px', height: '100%' }}>
+    <div style={{ display: 'flex', gridColumn: '1 / -1', gap: '20px', height: '100%', minHeight: 0 }}>
       {/* Main Pool */}
-      <div style={{ ...styles.wrColumn, flex: '3' }}>
+      <div style={{ ...styles.wrColumn, flex: '3', minHeight: 0 }}>
         <div style={styles.wrHeader}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
             <span>Available Players {draftMode === 'test' && <span style={{ color: '#ffc107', fontSize: '14px' }}>(TEST MODE)</span>}{draftMode === 'mockdraft' && <span style={{ color: '#bb86fc', fontSize: '14px' }}>(MOCK DRAFT)</span>}</span>
@@ -3478,7 +4147,7 @@ function PlayerPoolPanel({
                       <td style={styles.td}>{isPitcher ? '-' : (p.ZIPSSB || '-')}</td>
                       <td style={styles.td}>{isPitcher ? '-' : (p.ZIPSOBP || '-')}</td>
                       <td style={styles.td}>{!isPitcher ? '-' : (p.ZIPSK || '-')}</td>
-                      <td style={styles.td}>{!isPitcher ? '-' : (p.ZIPSQS || '-')}</td>
+                      <td style={styles.td}>{!isPitcher ? '-' : (() => { const q = getEffectiveQS(p); return q > 0 ? q : (p.ZIPSQS || '-'); })()}</td>
                       <td style={styles.td}>{!isPitcher ? '-' : (p.ZIPSERA || '-')}</td>
                       <td style={styles.td}>{!isPitcher ? '-' : (p.ZIPSWHIP || '-')}</td>
                       <td style={styles.td}>{!isPitcher ? '-' : (p['ZIPSSV+HDs'] || '-')}</td>
@@ -3493,7 +4162,7 @@ function PlayerPoolPanel({
 
       {/* Queue */}
       {!isMobile && (
-        <div style={{ ...styles.wrColumn, flex: '1' }}>
+        <div style={{ ...styles.wrColumn, flex: '1', minHeight: 0 }}>
           <div style={styles.wrHeader}>My Queue ({queue.length})</div>
           <div style={{ overflowY: 'auto', flexGrow: 1 }}>
             {queue.length === 0 ? (
@@ -3566,7 +4235,7 @@ function RosterManagerPanel({ allPicks, players, currentUser }) {
       obp: batters.length > 0 ? 
         batters.reduce((sum, p) => sum + (parseFloat(p.ZIPSOBP) || 0), 0) / batters.length : 0,
       k: pitchers.reduce((sum, p) => sum + (parseFloat(p.ZIPSK) || 0), 0),
-      qs: pitchers.reduce((sum, p) => sum + (parseFloat(p.ZIPSQS) || 0), 0),
+      qs: pitchers.reduce((sum, p) => sum + (getEffectiveQS(p) || parseFloat(p.ZIPSQS) || 0), 0),
       era: pitchers.length > 0 ?
         pitchers.reduce((sum, p) => sum + (parseFloat(p.ZIPSERA) || 0), 0) / pitchers.length : 0,
       whip: pitchers.length > 0 ?
@@ -3576,7 +4245,7 @@ function RosterManagerPanel({ allPicks, players, currentUser }) {
   }, [assignments]);
 
   return (
-    <div style={{ ...styles.wrColumn, width: '100%', gridColumn: '1 / -1' }}>
+    <div style={{ ...styles.wrColumn, width: '100%', gridColumn: '1 / -1', minHeight: 0 }}>
       <div style={styles.wrHeader}>
         <span>Roster Manager</span>
         <div style={{ fontSize: '14px', color: '#ccc', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -3661,7 +4330,7 @@ function RosterManagerPanel({ allPicks, players, currentUser }) {
                   <td style={styles.td}>{player && !isPitcher ? Math.round(player.ZIPSSB || 0) : '-'}</td>
                   <td style={styles.td}>{player && !isPitcher ? parseFloat(player.ZIPSOBP || 0).toFixed(3) : '-'}</td>
                   <td style={styles.td}>{player && isPitcher ? Math.round(player.ZIPSK || 0) : '-'}</td>
-                  <td style={styles.td}>{player && isPitcher ? Math.round(player.ZIPSQS || 0) : '-'}</td>
+                  <td style={styles.td}>{player && isPitcher ? Math.round(getEffectiveQS(player) || player.ZIPSQS || 0) : '-'}</td>
                   <td style={styles.td}>{player && isPitcher ? parseFloat(player.ZIPSERA || 0).toFixed(2) : '-'}</td>
                   <td style={styles.td}>{player && isPitcher ? parseFloat(player.ZIPSWHIP || 0).toFixed(3) : '-'}</td>
                   <td style={styles.td}>{player && isPitcher ? Math.round(player['ZIPSSV+HDs'] || 0) : '-'}</td>
@@ -4772,9 +5441,12 @@ function DraftCapitalPanel({ draftTrades = [], compPicks = [], keepers = [], cur
 }
 
 // --- ANALYSIS HISTORY PANEL ---
-function AnalysisHistoryPanel({ analysisHistory }) {
+function AnalysisHistoryPanel({ analysisHistory, players = [], roomSeason = 2027 }) {
   const [filterOwner, setFilterOwner] = useState('');
   const [searchText, setSearchText] = useState('');
+  const [playingPick, setPlayingPick] = useState(null);
+  const [activeDebateLine, setActiveDebateLine] = useState(null);
+  const [expandedPick, setExpandedPick] = useState(null);
 
   const filteredHistory = useMemo(() => {
     return analysisHistory.filter(item => {
@@ -4786,8 +5458,55 @@ function AnalysisHistoryPanel({ analysisHistory }) {
     });
   }, [analysisHistory, filterOwner, searchText]);
 
+  const handlePlayDebate = (item) => {
+    if (playingPick === item.pickNumber) {
+      stopPodcastAudio();
+      setPlayingPick(null);
+      setActiveDebateLine(null);
+      return;
+    }
+    stopPodcastAudio();
+
+    let script = item.podcastScript;
+    if (!script || !Array.isArray(script) || script.length === 0) {
+      const pl = players.find(p => p.Player === item.playerName) || {
+        Player: item.playerName,
+        Position: item.position,
+        Team: item.team
+      };
+      script = generateLocalPodcastDialogue(pl, item.owner, item.pickNumber, {}, roomSeason);
+    }
+
+    setPlayingPick(item.pickNumber);
+    setExpandedPick(item.pickNumber);
+
+    playDualSpeakerPodcast(script, {
+      onLineStart: (idx) => setActiveDebateLine(idx),
+      onComplete: () => {
+        setPlayingPick(null);
+        setActiveDebateLine(null);
+      },
+      onError: () => {
+        setPlayingPick(null);
+        setActiveDebateLine(null);
+      }
+    });
+  };
+
+  const getEffectiveItemScript = (item) => {
+    if (item.podcastScript && Array.isArray(item.podcastScript) && item.podcastScript.length > 0) {
+      return item.podcastScript;
+    }
+    const pl = players.find(p => p.Player === item.playerName) || {
+      Player: item.playerName,
+      Position: item.position,
+      Team: item.team
+    };
+    return generateLocalPodcastDialogue(pl, item.owner, item.pickNumber, {}, roomSeason);
+  };
+
   return (
-    <div style={{ ...styles.wrColumn, width: '100%', gridColumn: '1 / -1' }}>
+    <div style={{ ...styles.wrColumn, width: '100%', gridColumn: '1 / -1', minHeight: 0 }}>
       <div style={styles.wrHeader}>
         <span>Analysis History ({analysisHistory.length} picks analyzed)</span>
         <div style={{ display: 'flex', gap: '10px' }}>
@@ -4811,84 +5530,200 @@ function AnalysisHistoryPanel({ analysisHistory }) {
         </div>
       </div>
       
-      <div style={styles.poolTableContainer}>
+      <div style={{ ...styles.poolTableContainer, minHeight: 0 }}>
         {filteredHistory.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
             {analysisHistory.length === 0 ? 
-              'No analyses generated yet. Make draft picks to see Gemini AI commentary!' :
+              'No analyses generated yet. Make draft picks to see Gemini AI commentary and Skip & Chip podcast debate!' :
               'No analyses match your filters.'
             }
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-            {filteredHistory.map((item, idx) => (
-              <div key={idx} style={{
-                background: '#222',
-                padding: '15px',
-                borderRadius: '8px',
-                borderLeft: '4px solid var(--accent)'
-              }}>
-                <div style={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  marginBottom: '10px',
-                  paddingBottom: '10px',
-                  borderBottom: '1px solid #333'
+            {filteredHistory.map((item, idx) => {
+              const isThisPlaying = playingPick === item.pickNumber;
+              const isThisExpanded = expandedPick === item.pickNumber;
+              const itemScript = getEffectiveItemScript(item);
+
+              return (
+                <div key={idx} style={{
+                  background: '#222',
+                  padding: '16px',
+                  borderRadius: '10px',
+                  borderLeft: `4px solid ${isThisPlaying ? '#ff9800' : 'var(--accent)'}`,
+                  boxShadow: isThisPlaying ? '0 0 16px rgba(255, 152, 0, 0.25)' : 'none',
+                  transition: 'all 0.3s ease'
                 }}>
-                  <div>
-                    <span style={{ color: '#888', fontSize: '12px' }}>
-                      Pick #{item.pickNumber} • Round {item.round}
-                    </span>
-                    <div style={{ marginTop: '5px' }}>
-                      <span style={{ color: 'var(--highlight)', fontWeight: 'bold', fontSize: '16px' }}>
-                        {item.owner}
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    marginBottom: '10px',
+                    paddingBottom: '10px',
+                    borderBottom: '1px solid #333',
+                    flexWrap: 'wrap',
+                    gap: '8px'
+                  }}>
+                    <div>
+                      <span style={{ color: '#888', fontSize: '12px' }}>
+                        Pick #{item.pickNumber} • Round {item.round}
                       </span>
-                      <span style={{ color: '#888', margin: '0 8px' }}>→</span>
-                      <span style={{ color: '#fff', fontWeight: 'bold', fontSize: '16px' }}>
-                        {item.playerName}
-                      </span>
-                      <span style={{ color: '#888', marginLeft: '8px', fontSize: '12px' }}>
-                        {item.position} • {item.team}
-                      </span>
+                      <div style={{ marginTop: '5px' }}>
+                        <span style={{ color: 'var(--highlight)', fontWeight: 'bold', fontSize: '16px' }}>
+                          {item.owner}
+                        </span>
+                        <span style={{ color: '#888', margin: '0 8px' }}>→</span>
+                        <span style={{ color: '#fff', fontWeight: 'bold', fontSize: '16px' }}>
+                          {item.playerName}
+                        </span>
+                        <span style={{ color: '#888', marginLeft: '8px', fontSize: '12px' }}>
+                          {item.position} • {item.team}
+                        </span>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
+                      <div style={{ color: '#666', fontSize: '11px', textAlign: 'right' }}>
+                        {item.timestamp}
+                      </div>
+                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                        {item.commentary && (
+                          <button
+                            onClick={() => playPodcastTTS(item.commentary)}
+                            style={{
+                              background: 'rgba(187, 134, 252, 0.15)',
+                              border: '1px solid #bb86fc',
+                              color: '#bb86fc',
+                              borderRadius: '4px',
+                              padding: '2px 8px',
+                              fontSize: '11px',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px'
+                            }}
+                            title="Play single-speaker reaction"
+                          >
+                            🔊 Reaction
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handlePlayDebate(item)}
+                          style={{
+                            background: isThisPlaying ? 'rgba(255, 152, 0, 0.35)' : 'rgba(255, 152, 0, 0.15)',
+                            border: `1px solid ${isThisPlaying ? '#ffb74d' : '#ff9800'}`,
+                            color: '#ffb74d',
+                            borderRadius: '4px',
+                            padding: '2px 8px',
+                            fontSize: '11px',
+                            fontWeight: 'bold',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}
+                          title="Play Skip & Chip 2-person debate podcast (Google Cloud Chirp 3 HD)"
+                        >
+                          {isThisPlaying ? '⏹ Stop Debate' : '🎙️ Skip & Chip Debate'}
+                        </button>
+                        <button
+                          onClick={() => setExpandedPick(prev => prev === item.pickNumber ? null : item.pickNumber)}
+                          style={{
+                            background: 'rgba(255, 255, 255, 0.06)',
+                            border: '1px solid #444',
+                            color: '#aaa',
+                            borderRadius: '4px',
+                            padding: '2px 6px',
+                            fontSize: '10px',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          {isThisExpanded ? 'Hide Debate' : 'View Debate'}
+                        </button>
+                      </div>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
-                    <div style={{ color: '#666', fontSize: '11px', textAlign: 'right' }}>
-                      {item.timestamp}
+
+                  {/* Written Instant Reaction */}
+                  <div 
+                    style={{ 
+                      color: '#ccc', 
+                      fontSize: '13px', 
+                      lineHeight: '1.6',
+                      fontStyle: 'italic',
+                      marginBottom: isThisExpanded ? '12px' : '0'
+                    }}
+                    dangerouslySetInnerHTML={{ __html: item.commentary }}
+                  />
+
+                  {/* Expanded Skip & Chip Dialogue */}
+                  {isThisExpanded && itemScript && (
+                    <div style={{
+                      marginTop: '10px',
+                      padding: '12px',
+                      background: 'rgba(15, 15, 25, 0.75)',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(187, 134, 252, 0.25)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '8px'
+                    }}>
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        fontSize: '11px',
+                        color: '#bb86fc',
+                        fontWeight: 'bold',
+                        letterSpacing: '0.5px'
+                      }}>
+                        <span>🎙️ SKIP & CHIP 2-HOST DEBATE SCRIPT</span>
+                        <span style={{ fontSize: '9px', color: '#03dac6', border: '1px solid rgba(3, 218, 198, 0.3)', padding: '1px 4px', borderRadius: '3px' }}>
+                          Google Cloud Chirp 3 HD
+                        </span>
+                      </div>
+                      {itemScript.map((line, lIdx) => {
+                        const isChip = (line.speaker || '').toUpperCase().trim() === 'CHIP';
+                        const isLineActive = isThisPlaying && activeDebateLine === lIdx;
+                        return (
+                          <div
+                            key={lIdx}
+                            style={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignSelf: isChip ? 'flex-end' : 'flex-start',
+                              maxWidth: '85%',
+                              background: isLineActive
+                                ? (isChip ? 'rgba(187, 134, 252, 0.3)' : 'rgba(255, 152, 0, 0.3)')
+                                : 'rgba(0, 0, 0, 0.35)',
+                              borderLeft: isChip ? 'none' : `3px solid ${isLineActive ? '#ffb74d' : '#ff9800'}`,
+                              borderRight: isChip ? `3px solid ${isLineActive ? '#d1c4e9' : '#bb86fc'}` : 'none',
+                              borderRadius: isChip ? '8px 2px 8px 8px' : '2px 8px 8px 8px',
+                              padding: '6px 10px',
+                              transition: 'all 0.2s ease',
+                              boxShadow: isLineActive
+                                ? `0 0 10px ${isChip ? 'rgba(187, 134, 252, 0.4)' : 'rgba(255, 152, 0, 0.4)'}`
+                                : 'none'
+                            }}
+                          >
+                            <span style={{
+                              fontSize: '10px',
+                              fontWeight: 'bold',
+                              color: isChip ? '#bb86fc' : '#ff9800',
+                              marginBottom: '2px',
+                              textAlign: isChip ? 'right' : 'left'
+                            }}>
+                              {isChip ? '🔥 CHIP' : '🎙️ SKIP'} {isLineActive && '• SPEAKING'}
+                            </span>
+                            <span style={{ fontSize: '12px', color: isLineActive ? '#fff' : '#ddd', lineHeight: '1.4' }}>
+                              {line.text}
+                            </span>
+                          </div>
+                        );
+                      })}
                     </div>
-                    {item.commentary && (
-                      <button
-                        onClick={() => playPodcastTTS(item.commentary)}
-                        style={{
-                          background: 'rgba(187, 134, 252, 0.15)',
-                          border: '1px solid #bb86fc',
-                          color: '#bb86fc',
-                          borderRadius: '4px',
-                          padding: '2px 8px',
-                          fontSize: '11px',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px'
-                        }}
-                        title="Play podcast-style spoken analysis"
-                      >
-                        🔊 Listen
-                      </button>
-                    )}
-                  </div>
+                  )}
                 </div>
-                <div 
-                  style={{ 
-                    color: '#ccc', 
-                    fontSize: '13px', 
-                    lineHeight: '1.6',
-                    fontStyle: 'italic'
-                  }}
-                  dangerouslySetInnerHTML={{ __html: item.commentary }}
-                />
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -5021,7 +5856,7 @@ function DraftLogPanel({ allPicks, players, onPlayerClick }) {
                   <td style={styles.td}>{isPitcher ? '-' : (player.ZIPSSB || '-')}</td>
                   <td style={styles.td}>{isPitcher ? '-' : (player.ZIPSOBP || '-')}</td>
                   <td style={styles.td}>{!isPitcher ? '-' : (player.ZIPSK || '-')}</td>
-                  <td style={styles.td}>{!isPitcher ? '-' : (player.ZIPSQS || '-')}</td>
+                  <td style={styles.td}>{!isPitcher ? '-' : (getEffectiveQS(player) || player.ZIPSQS || '-')}</td>
                   <td style={styles.td}>{!isPitcher ? '-' : (player.ZIPSERA || '-')}</td>
                   <td style={styles.td}>{!isPitcher ? '-' : (player.ZIPSWHIP || '-')}</td>
                   <td style={styles.td}>{!isPitcher ? '-' : (player['ZIPSSV+HDs'] || '-')}</td>
@@ -5270,6 +6105,42 @@ export default function DraftRoomView({
   const [lastPickCommentary, setLastPickCommentary] = useState("Draft has not started.");
   const [generatingCommentary, setGeneratingCommentary] = useState(false);
   
+  // 2-Person Podcast Debate state (Skip & Chip Google Cloud Chirp 3 HD)
+  const [lastPodcastScript, setLastPodcastScript] = useState(null);
+  const [generatingPodcast, setGeneratingPodcast] = useState(false);
+  const [isPlayingPodcast, setIsPlayingPodcast] = useState(false);
+  const [activePodcastLine, setActivePodcastLine] = useState(null);
+
+  // Audio control callbacks
+  const handlePlayPodcast = useCallback((customScript = null) => {
+    const scriptToPlay = customScript || lastPodcastScript;
+    if (!scriptToPlay || !scriptToPlay.length) return;
+    if (isPlayingPodcast) {
+      stopPodcastAudio();
+      setIsPlayingPodcast(false);
+      setActivePodcastLine(null);
+      return;
+    }
+    setIsPlayingPodcast(true);
+    playDualSpeakerPodcast(scriptToPlay, {
+      onLineStart: (idx) => setActivePodcastLine(idx),
+      onComplete: () => {
+        setIsPlayingPodcast(false);
+        setActivePodcastLine(null);
+      },
+      onError: () => {
+        setIsPlayingPodcast(false);
+        setActivePodcastLine(null);
+      }
+    });
+  }, [isPlayingPodcast, lastPodcastScript]);
+
+  const handleStopPodcast = useCallback(() => {
+    stopPodcastAudio();
+    setIsPlayingPodcast(false);
+    setActivePodcastLine(null);
+  }, []);
+  
   // Analysis history storage
   const [analysisHistory, setAnalysisHistory] = useState([]);
   
@@ -5306,6 +6177,10 @@ export default function DraftRoomView({
       setTestModePicks([]);
       setAnalysisHistory([]);
       setLastPickCommentary(seasonYear === 2026 ? "Viewing 2026 completed draft archive." : "Draft has not started.");
+      setLastPodcastScript(null);
+      setIsPlayingPodcast(false);
+      setActivePodcastLine(null);
+      stopPodcastAudio();
     }
   }, [seasonYear, roomSeason]);
 
@@ -5314,6 +6189,10 @@ export default function DraftRoomView({
     setTestModePicks([]);
     setAnalysisHistory([]);
     setLastPickCommentary(newYear === 2026 ? "Viewing 2026 completed draft archive." : "Draft has not started.");
+    setLastPodcastScript(null);
+    setIsPlayingPodcast(false);
+    setActivePodcastLine(null);
+    stopPodcastAudio();
     if (onSeasonYearChange) onSeasonYearChange(newYear);
   };
 
@@ -5411,6 +6290,8 @@ export default function DraftRoomView({
     // If pick already comes with commentary, display immediately without regenerating
     if (pick.ai_commentary) {
       setLastPickCommentary(pick.ai_commentary);
+      const script = pick.podcast_script || generateLocalPodcastDialogue(player, pick.Owner, pick['Overall Pick'], {}, roomSeason);
+      setLastPodcastScript(script);
       const historyEntry = {
         pickNumber: pick['Overall Pick'],
         round: pick.Round,
@@ -5419,6 +6300,7 @@ export default function DraftRoomView({
         position: player.Position,
         team: player.Team,
         commentary: pick.ai_commentary,
+        podcastScript: script,
         timestamp: new Date().toLocaleTimeString()
       };
       setAnalysisHistory(prev => {
@@ -5429,6 +6311,7 @@ export default function DraftRoomView({
     }
     
     setGeneratingCommentary(true);
+    setGeneratingPodcast(true);
 
     const currentPicks = picksRef.current || [];
     const currentPlayers = playersRef.current || [];
@@ -5461,21 +6344,43 @@ export default function DraftRoomView({
       totalTeamPicks: ownerPriorPicks.length + 1
     };
     
-    const commentary = await generateDraftCommentary(
-      player,
-      pick.Owner,
-      pick['Overall Pick'],
-      teamContext,
-      roomSeason
-    );
+    const [commentary, podcastDialogue] = await Promise.all([
+      generateDraftCommentary(
+        player,
+        pick.Owner,
+        pick['Overall Pick'],
+        teamContext,
+        roomSeason
+      ),
+      generatePodcastDialogue(
+        player,
+        pick.Owner,
+        pick['Overall Pick'],
+        teamContext,
+        roomSeason
+      )
+    ]);
     
     setLastPickCommentary(commentary);
     setGeneratingCommentary(false);
+    setLastPodcastScript(podcastDialogue);
+    setGeneratingPodcast(false);
 
-    // Podcast-style TTS voice analysis plays after the pick if audio is enabled
-    if (audioEnabledRef.current) {
+    // Skip & Chip dual-voice podcast analysis plays if audio is enabled
+    if (audioEnabledRef.current && podcastDialogue && podcastDialogue.length > 0) {
       setTimeout(() => {
-        playPodcastTTS(commentary);
+        setIsPlayingPodcast(true);
+        playDualSpeakerPodcast(podcastDialogue, {
+          onLineStart: (idx) => setActivePodcastLine(idx),
+          onComplete: () => {
+            setIsPlayingPodcast(false);
+            setActivePodcastLine(null);
+          },
+          onError: () => {
+            setIsPlayingPodcast(false);
+            setActivePodcastLine(null);
+          }
+        });
       }, 700);
     }
     
@@ -5487,6 +6392,7 @@ export default function DraftRoomView({
       position: player.Position,
       team: player.Team,
       commentary: commentary,
+      podcastScript: podcastDialogue,
       timestamp: new Date().toLocaleTimeString()
     };
     setAnalysisHistory(prev => {
@@ -6103,6 +7009,10 @@ export default function DraftRoomView({
       setPicks(prev => prev.map(p => p['Overall Pick'] >= liveCutoff ? { ...p, 'ESPN PlayerID': null, Selection: null } : p));
       setLastPickCommentary(roomSeason === 2026 ? "Viewing 2026 completed draft archive." : "Draft has not started.");
       setAnalysisHistory([]);
+      setLastPodcastScript(null);
+      setIsPlayingPodcast(false);
+      setActivePodcastLine(null);
+      stopPodcastAudio();
       alert("Draft reset successfully!");
     } catch (e) {
       console.error("Reset error:", e);
@@ -6478,7 +7388,7 @@ export default function DraftRoomView({
           borderRight: '1px solid #333',
           background: isExpired ? 'radial-gradient(ellipse at center, #2d1a1a 0%, #1a0000 100%)' : 'radial-gradient(ellipse at center, #1a1a2e 0%, #000 100%)',
           gap: '16px',
-          overflow: 'hidden'
+          overflowY: 'auto'
         }}>
           <div style={{
             flex: 1,
@@ -6488,7 +7398,8 @@ export default function DraftRoomView({
             borderRadius: '16px',
             padding: '24px',
             border: '2px solid #333',
-            position: 'relative'
+            position: 'relative',
+            overflowY: 'auto'
           }}>
             <div style={{ fontSize: '16px', color: '#888', textTransform: 'uppercase', letterSpacing: '2px', textAlign: 'center', marginBottom: '16px' }}>
               {lastPick ? `Round ${lastPick.Round} • Pick ${lastPick['Overall Pick']}` : 'Waiting for first pick...'}
@@ -6533,7 +7444,7 @@ export default function DraftRoomView({
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'rgba(0,0,0,0.4)', padding: '6px 14px', borderRadius: '6px', border: '1px solid #444', minWidth: '55px' }}>
                           <span style={{ fontSize: '10px', color: '#888' }}>QS</span>
-                          <span style={{ fontSize: '16px', color: '#fff', fontWeight: 'bold' }}>{lastPickPlayer.ZIPSQS || '—'}</span>
+                          <span style={{ fontSize: '16px', color: '#fff', fontWeight: 'bold' }}>{getEffectiveQS(lastPickPlayer) || lastPickPlayer.ZIPSQS || '—'}</span>
                         </div>
                       </>
                     ) : (
@@ -6624,6 +7535,17 @@ export default function DraftRoomView({
                 )}
               </div>
             </div>
+
+            {/* Skip & Chip 2-Person Podcast Debate Widget */}
+            <PodcastBreakdownWidget
+              script={lastPodcastScript}
+              isGenerating={generatingPodcast}
+              isPlaying={isPlayingPodcast}
+              activeLine={activePodcastLine}
+              onPlay={() => handlePlayPodcast()}
+              onStop={handleStopPodcast}
+              playerName={lastPickPlayer?.Player}
+            />
           </div>
         </div>
 
@@ -7243,6 +8165,18 @@ export default function DraftRoomView({
                 <span dangerouslySetInnerHTML={{ __html: lastPickCommentary }} />
               )}
             </div>
+
+            {/* Skip & Chip 2-Person Podcast Debate Widget */}
+            <PodcastBreakdownWidget
+              script={lastPodcastScript}
+              isGenerating={generatingPodcast}
+              isPlaying={isPlayingPodcast}
+              activeLine={activePodcastLine}
+              onPlay={() => handlePlayPodcast()}
+              onStop={handleStopPodcast}
+              compact={true}
+              playerName={lastPickPlayer?.Player}
+            />
           </div>
         </div>
 
@@ -7338,6 +8272,8 @@ export default function DraftRoomView({
             <div style={{ ...styles.panelContent, display: activeTab === 'Analysis' ? 'grid' : 'none' }}>
               <AnalysisHistoryPanel
                 analysisHistory={analysisHistory}
+                players={displayPlayers}
+                roomSeason={roomSeason}
               />
             </div>
 
@@ -7645,7 +8581,7 @@ const styles = {
     zIndex: 100,
     padding: '16px 20px',
     boxSizing: 'border-box',
-    gridTemplateRows: '40px 1fr',
+    gridTemplateRows: '40px minmax(0, 1fr)',
     gap: '15px',
     boxShadow: '0 -10px 30px rgba(0,0,0,0.8)'
   },
@@ -7677,6 +8613,7 @@ const styles = {
   },
   panelContent: {
     height: '100%',
+    minHeight: 0,
     overflow: 'hidden',
     gridTemplateColumns: '3fr 1fr',
     gap: '15px',
@@ -7689,6 +8626,7 @@ const styles = {
     padding: '12px 16px',
     borderRadius: '8px',
     height: '100%',
+    minHeight: 0,
     overflow: 'hidden'
   },
   wrHeader: {
@@ -7706,6 +8644,7 @@ const styles = {
   },
   poolTableContainer: {
     flexGrow: 1,
+    minHeight: 0,
     overflowY: 'auto',
     overflowX: 'auto',
     marginTop: '6px'
