@@ -119,6 +119,11 @@ const HASH_TO_VIEW = {
   'teams/history': 'history',
   finishes: 'history',
   'draft/finishes': 'history',
+  'history/standings': 'history',
+  'history/highlights': 'history',
+  'history/records': 'history',
+  'history/hall-of-fame': 'history',
+  'history/hall': 'history',
   fantasycast: 'fantasycast',
   stats: 'players',
   players: 'players',
@@ -229,7 +234,12 @@ function getSubTabsFromHash() {
 
   if (hash.includes('career') || hash.includes('all-time')) playerOwnerMode = 'career';
 
-  return { keepersSubTab, draftSubTab, teamsSubTab, playerOwnerMode };
+  let historySubTab = 'standings';
+  if (hash.includes('history/highlight') || hash.includes('history-highlight')) historySubTab = 'highlights';
+  else if (hash.includes('history/record') || hash.includes('history/hall') || hash.includes('franchise-hall')) historySubTab = 'records';
+  else if (hash.includes('history/standing') || hash.includes('finis')) historySubTab = 'standings';
+
+  return { keepersSubTab, draftSubTab, teamsSubTab, playerOwnerMode, historySubTab };
 }
 
 function App() {
@@ -240,6 +250,7 @@ function App() {
   const [draftSubTab, setDraftSubTab] = useState(() => getSubTabsFromHash().draftSubTab);
   const [teamsSubTab, setTeamsSubTab] = useState(() => getSubTabsFromHash().teamsSubTab);
   const [playerOwnerMode, setPlayerOwnerMode] = useState(() => getSubTabsFromHash().playerOwnerMode);
+  const [historySubTab, setHistorySubTab] = useState(() => getSubTabsFromHash().historySubTab);
   const [openDropdown, setOpenDropdown] = useState(null); // 'teams' | 'players' | 'keepers' | 'draft' | null
 
   const [rawData, setRawData] = useState([]);
@@ -287,6 +298,10 @@ function App() {
       else if (draftSubTab === 'history') slug = 'draft/trade-history';
       else if (draftSubTab === '2026board') slug = 'draft/2026-board';
       else slug = 'draft/traded-board';
+    } else if (currentView === 'history') {
+      if (historySubTab === 'highlights') slug = 'history/highlights';
+      else if (historySubTab === 'records') slug = 'history/records';
+      else slug = 'history/standings';
     } else if (currentView === 'drafthistory') {
       slug = 'draft/history';
     } else if (currentView === 'teams') {
@@ -303,7 +318,7 @@ function App() {
       window.location.hash = targetHash;
     }
     setActiveGroup(OFFSEASON_VIEWS.has(currentView) ? 'offseason' : 'season');
-  }, [currentView, keepersSubTab, draftSubTab, teamsSubTab]);
+  }, [currentView, keepersSubTab, draftSubTab, teamsSubTab, historySubTab]);
 
   const handleGroupChange = (group) => {
     setActiveGroup(group);
@@ -320,12 +335,13 @@ function App() {
   useEffect(() => {
     const handleHashChange = () => {
       const newView = getViewFromHash();
-      const { keepersSubTab: kTab, draftSubTab: dTab, teamsSubTab: tTab, playerOwnerMode: poMode } = getSubTabsFromHash();
+      const { keepersSubTab: kTab, draftSubTab: dTab, teamsSubTab: tTab, playerOwnerMode: poMode, historySubTab: hTab } = getSubTabsFromHash();
       setCurrentView((prev) => (prev !== newView ? newView : prev));
       setKeepersSubTab(kTab);
       setDraftSubTab(dTab);
       setTeamsSubTab(tTab);
       setPlayerOwnerMode(poMode);
+      setHistorySubTab(hTab);
     };
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
@@ -1010,8 +1026,8 @@ function App() {
                           {currentView === 'highlights' && <span className="text-[10px] text-blue-200">●</span>}
                         </a>
                         <a
-                          href="#/history"
-                          onClick={(e) => { e.preventDefault(); setCurrentView('history'); setOpenDropdown(null); }}
+                          href="#/history/standings"
+                          onClick={(e) => { e.preventDefault(); setCurrentView('history'); setHistorySubTab('standings'); setOpenDropdown(null); }}
                           className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-between transition cursor-pointer ${
                             currentView === 'history' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                           }`}
@@ -1276,8 +1292,8 @@ function App() {
                           {currentView === 'drafthistory' && <span className="text-[10px] text-amber-200">●</span>}
                         </a>
                         <a
-                          href="#/history"
-                          onClick={(e) => { e.preventDefault(); setCurrentView('history'); setOpenDropdown(null); }}
+                          href="#/history/standings"
+                          onClick={(e) => { e.preventDefault(); setCurrentView('history'); setHistorySubTab('standings'); setOpenDropdown(null); }}
                           className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-between transition cursor-pointer ${
                             currentView === 'history' ? 'bg-amber-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                           }`}
@@ -1522,6 +1538,7 @@ function App() {
                 <LeagueHistoryView
                   selectedSeason={selectedSeason}
                   onOwnerClick={(team) => setSelectedOwner(team)}
+                  subTab={historySubTab}
                 />
               )}
               {currentView === 'fantasycast' && (
