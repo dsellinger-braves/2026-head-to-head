@@ -408,9 +408,9 @@
     "semantic_hash": ""
   },
   "src/views/DraftRoomView.jsx": {
-    "mtime": 1791764466.1760159,
-    "seen": 1791764645.351001,
-    "ast_hash": "5d0fa4c5fa83bd5780625314729f69bb",
+    "mtime": 1791765228.4076097,
+    "seen": 1791765553.3330617,
+    "ast_hash": "f1c6bb5fed445c62eedfb94b3fe624bf",
     "semantic_hash": ""
   },
   "src/views/FullRosterView.jsx": {
@@ -1047,6 +1047,42 @@
     "mtime": 1791764072.9696944,
     "seen": 1791764645.354932,
     "ast_hash": "b9b8765c66129c05f2c00c24bc7a5037",
+    "semantic_hash": ""
+  },
+  "src/views/draft/components/DesktopHeader.jsx": {
+    "mtime": 1791764934.339463,
+    "seen": 1791765553.3364737,
+    "ast_hash": "b102505fc90dccd4db4f753d77b8674c",
+    "semantic_hash": ""
+  },
+  "src/views/draft/components/MockDraftController.jsx": {
+    "mtime": 1791764894.4432905,
+    "seen": 1791765553.3369112,
+    "ast_hash": "0de7f16069f088e3dd3c307c3bdeb462",
+    "semantic_hash": ""
+  },
+  "src/views/draft/components/WarRoomDrawer.jsx": {
+    "mtime": 1791764908.3653512,
+    "seen": 1791765553.3377202,
+    "ast_hash": "ed61f3d9fdb9e18cfda47d6b2b96304f",
+    "semantic_hash": ""
+  },
+  "src/views/draft/hooks/useMockDraftEngine.js": {
+    "mtime": 1791765276.3227804,
+    "seen": 1791765553.3377233,
+    "ast_hash": "cabe27091861960bd7ca3f507c7a3dca",
+    "semantic_hash": ""
+  },
+  "src/views/draft/views/HostBroadcastView.jsx": {
+    "mtime": 1791764975.3506355,
+    "seen": 1791765553.3381066,
+    "ast_hash": "d06c34d872a543a30b61bc012532d934",
+    "semantic_hash": ""
+  },
+  "src/views/draft/views/MobileDraftView.jsx": {
+    "mtime": 1791764994.9977164,
+    "seen": 1791765553.3381097,
+    "ast_hash": "2e8657bcbc4c3ec2f4b093c380a71a52",
     "semantic_hash": ""
   }
 }

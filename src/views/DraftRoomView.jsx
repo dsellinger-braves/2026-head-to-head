@@ -10,23 +10,19 @@ import defaultCalculations from '../data/keeperCalculations.json';
 import HistoricalDraftView from './HistoricalDraftView';
 import { getPlayerHeadshotUrl, handleHeadshotError, updateGlobalPlayerLookup } from '../utils/headshotUtils';
 import {
-  OWNER_ARCHETYPES,
   normalizeManager,
   computeLiveDraftRoto,
   detectPositionalRun,
-  getSmartDraftRecommendations,
-  getPlayerProjectionStats
+  getSmartDraftRecommendations
 } from '../utils/draftRotoEngine';
 import styles from './draft/styles/draftRoomStyles';
 import {
   mappedDraft2026History,
   normalizeName,
-  getEffectiveQS,
   enrichPlayerWithCalculations,
   mergeEspnData,
   mergeZipsData,
   DRAFT_OWNERS,
-  OWNER_AVATARS,
   generateDefaultDraftOrder,
   getInjuryIndicator,
   generate2027DraftOrder
@@ -50,32 +46,27 @@ import {
 
 export { DRAFT_OWNERS };
 
-// --- SUB-COMPONENTS (PHASE 2 MODULARIZATION) ---
+// --- SUB-COMPONENTS & VIEWS (MODULARIZATION) ---
+import HostBroadcastView from './draft/views/HostBroadcastView';
+import MobileDraftView from './draft/views/MobileDraftView';
+import useMockDraftEngine from './draft/hooks/useMockDraftEngine';
+import DesktopHeader from './draft/components/DesktopHeader';
+import WarRoomDrawer from './draft/components/WarRoomDrawer';
+import MockDraftController from './draft/components/MockDraftController';
 import PodcastBreakdownWidget from './draft/components/PodcastBreakdownWidget';
 import PlayerModal from './draft/components/PlayerModal';
 import PlayerNameButton from './draft/components/PlayerNameButton';
 import ModeSelectionModal from './draft/components/ModeSelectionModal';
 import LoginModal from './draft/components/LoginModal';
 import {
-  CountdownTimer,
   Ticker,
   OnDeckSidebar,
   TeamNeedsSummary,
   RecentActivityWidget,
   QueuePreviewWidget,
   PositionalRunRadar,
-  CategoryDeficitHUD,
-  DraftAssistantWidget
+  CategoryDeficitHUD
 } from './draft/components/DraftWidgets';
-import PlayerPoolPanel from './draft/components/PlayerPoolPanel';
-import RosterManagerPanel from './draft/components/RosterManagerPanel';
-import MyPicksPanel from './draft/components/MyPicksPanel';
-import DraftCapitalPanel from './draft/components/DraftCapitalPanel';
-import AnalysisHistoryPanel from './draft/components/AnalysisHistoryPanel';
-import DraftLogPanel from './draft/components/DraftLogPanel';
-import StandingsPanel from './draft/components/StandingsPanel';
-
-const DEFAULT_OWNER_PROFILES = OWNER_ARCHETYPES;
 
 export default function DraftRoomView({ 
   onOpenPlayerModal, 
@@ -175,8 +166,6 @@ export default function DraftRoomView({
   }, [audioEnabled]);
   const lastAnnouncedPickRef = useRef(null);
 
-  const [isRunningMock, setIsRunningMock] = useState(false);
-  const [mockSpeed, setMockSpeed] = useState(1000);
   const [resetting, setResetting] = useState(false);
 
   // Sync roomSeason when parent seasonYear prop changes
@@ -863,137 +852,23 @@ export default function DraftRoomView({
     setCurrentUser(null);
   };
 
-  const stepMockPick = useCallback(() => {
-    const current = currentPick;
-    if (!current || current.Owner === currentUser) {
-      setIsRunningMock(false);
-      return;
-    }
-
-    const takenIds = new Set(displayPicks.map(p => String(p['ESPN PlayerID'])).filter(Boolean));
-    const available = playersRef.current.filter(p => !takenIds.has(String(p['ESPN PlayerID'])));
-    if (!available.length) return;
-
-    const ownerRoster = displayPicks
-      .filter(p => p.Owner === current.Owner && p['ESPN PlayerID'])
-      .map(p => playersRef.current.find(pl => String(pl['ESPN PlayerID']) === String(p['ESPN PlayerID'])))
-      .filter(Boolean);
-
-    const pickNum = current['Overall Pick'];
-    const windowOffset = pickNum <= 65 ? 20 : pickNum <= 120 ? 25 : pickNum <= 180 ? 35 : 60;
-
-    const candidates = available.filter(p => {
-      const adp = parseFloat(p.ADP);
-      return isNaN(adp) || adp >= 900 ? pickNum > 150 : adp <= pickNum + windowOffset;
-    });
-
-    const poolToScore = candidates.length > 0 ? candidates : available.slice(0, 50);
-
-    const slotLimits = { C: 1, '1B': 1, '2B': 1, '3B': 1, SS: 1, OF: 6, DH: 1, SP: 4, RP: 2 };
-    const currentCounts = {};
-    ownerRoster.forEach(rp => {
-      Object.keys(slotLimits).forEach(slot => {
-        if ((rp.Position || '').includes(slot)) {
-          currentCounts[slot] = (currentCounts[slot] || 0) + 1;
-        }
-      });
-    });
-
-    const scored = poolToScore.map(player => {
-      const pos = player.Position || '';
-      const isSP = pos.includes('SP');
-      const isRP = pos.includes('RP');
-      const isP = isSP || isRP;
-
-      const pr = parseFloat(player['Projected PR']) || 0;
-      const valScore = Math.max(0, Math.min(100, (pr + 3) / 6 * 100));
-
-      let needScore = 40;
-      Object.entries(slotLimits).forEach(([slot, limit]) => {
-        if (!pos.includes(slot)) return;
-        const count = currentCounts[slot] || 0;
-        const ratio = count / limit;
-        const s = ratio === 0 ? 100 : ratio < 0.5 ? 85 : ratio < 1 ? 65 : ratio < 1.5 ? 35 : 10;
-        needScore = Math.max(needScore, s);
-      });
-
-      const profile = OWNER_ARCHETYPES[current.Owner] || OWNER_ARCHETYPES[normalizeManager(current.Owner)] || DEFAULT_OWNER_PROFILES[current.Owner];
-      let ownerScore = 50;
-      if (profile) {
-        const pitcherBias = profile.pitcherBias ?? 0.35;
-        if (isP) {
-          ownerScore = pitcherBias > 0.45 ? 76 : pitcherBias > 0.35 ? 64 : pitcherBias < 0.25 ? 30 : 44;
-        } else {
-          const hitBias = 1 - pitcherBias;
-          ownerScore = hitBias > 0.75 ? 76 : hitBias > 0.6 ? 64 : hitBias < 0.5 ? 40 : 50;
-        }
-
-        // Positional bias
-        if (profile.boostPositions && profile.boostPositions.some(bp => pos.includes(bp))) {
-          ownerScore += 16;
-        }
-        if (profile.fadePositions && profile.fadePositions.some(fp => pos.includes(fp))) {
-          ownerScore -= 18;
-        }
-
-        // Target stats bias
-        const st = getPlayerProjectionStats(player, roomSeason);
-        if (profile.targetStats) {
-          if (profile.targetStats.includes('HR') && (parseFloat(st.HR) || 0) >= 28) ownerScore += 12;
-          if (profile.targetStats.includes('SB') && (parseFloat(st.SB) || 0) >= 18) ownerScore += 14;
-          if (profile.targetStats.includes('K') && (parseFloat(st.SO || st.K) || 0) >= 150) ownerScore += 14;
-          if (profile.targetStats.includes('QS') && (parseFloat(st.QS) || 0) >= 12) ownerScore += 12;
-          if (profile.targetStats.includes('SVHD') && (isRP || (parseFloat(st.SVHD || st.SV_HD) || 0) >= 15)) ownerScore += 16;
-          if (profile.targetStats.includes('OBP') && (parseFloat(st.OBP) || 0) >= 0.360) ownerScore += 12;
-          if (profile.targetStats.includes('ERA') && (parseFloat(st.ERA) || 9) <= 3.35 && (parseFloat(st.IP) || 0) >= 60) ownerScore += 12;
-          if (profile.targetStats.includes('WHIP') && (parseFloat(st.WHIP) || 9) <= 1.12 && (parseFloat(st.IP) || 0) >= 60) ownerScore += 12;
-        }
-
-        // ADP Value hunter (Garrett / Adrian / etc.)
-        const adp = parseFloat(player.ADP) || 999;
-        if (adp < pickNum - 10) {
-          ownerScore += 14;
-        }
-      }
-
-      const totalScore = (valScore * 0.4 + needScore * 0.35 + ownerScore * 0.25) * (0.92 + Math.random() * 0.16);
-      return { player, score: totalScore };
-    }).sort((a, b) => b.score - a.score);
-
-    const chosen = scored[0]?.player;
-    if (!chosen) return;
-
-    setPickStartTime(Date.now());
-    setTestModePicks(prev => {
-      const base = prev.length > 0 ? prev : displayPicks;
-      return base.map(p => 
-        p['Overall Pick'] === current['Overall Pick'] 
-          ? { ...p, 'ESPN PlayerID': chosen['ESPN PlayerID'], Selection: chosen.Player }
-          : p
-      );
-    });
-
-    handleNewPick({
-      ...current,
-      'ESPN PlayerID': chosen['ESPN PlayerID'],
-      Round: current.Round
-    });
-  }, [currentPick, displayPicks, currentUser, handleNewPick, roomSeason]);
-
-  useEffect(() => {
-    if (draftMode !== 'mockdraft' || !isRunningMock) return;
-
-    if (!currentPick || currentPick.Owner === currentUser) {
-      setIsRunningMock(false);
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      stepMockPick();
-    }, mockSpeed);
-
-    return () => clearTimeout(timer);
-  }, [draftMode, isRunningMock, mockSpeed, currentPick, currentUser, stepMockPick]);
+  const {
+    isRunningMock,
+    setIsRunningMock,
+    mockSpeed,
+    setMockSpeed,
+    stepMockPick
+  } = useMockDraftEngine({
+    draftMode,
+    currentPick,
+    currentUser,
+    displayPicks,
+    playersRef,
+    roomSeason,
+    setPickStartTime,
+    setTestModePicks,
+    handleNewPick
+  });
 
   const handleResetDraft = async () => {
     const liveCutoff = roomSeason === 2027 ? 55 : 46;
@@ -1248,546 +1123,75 @@ export default function DraftRoomView({
   const recentPicks = displayPicks.filter(p => p['ESPN PlayerID']);
 
   if (draftMode === 'host') {
-    const elapsed = Math.floor((Date.now() - pickStartTime) / 1000);
-    const secondsLeft = Math.max(0, 60 - elapsed);
-    const isWarning = secondsLeft <= 30 && secondsLeft > 0;
-    const isUrgent = secondsLeft <= 15 && secondsLeft > 0;
-    const isExpired = secondsLeft === 0;
-
-    const timerColor = isExpired ? '#f44336' : isUrgent ? '#ff5722' : isWarning ? '#ffc107' : '#03dac6';
-    const timerBg = isExpired ? '#f44336' : isUrgent ? '#ff5722' : isWarning ? '#ffc107' : '#222';
-    const timerTextColor = isExpired || isUrgent ? '#fff' : isWarning ? '#000' : '#03dac6';
-    const timerClass = isExpired ? 'monospace timer-expired' : isUrgent ? 'monospace urgent-warning' : isWarning ? 'monospace timer-warning' : 'monospace';
-    const headerBg = isExpired
-      ? 'linear-gradient(180deg, #3d1a1a 0%, #2d1616 100%)'
-      : isUrgent
-      ? 'linear-gradient(180deg, #3d2a1a 0%, #2d1f16 100%)'
-      : isWarning
-      ? 'linear-gradient(180deg, #3d3a1a 0%, #2d2916 100%)'
-      : 'linear-gradient(180deg, #1a1a2e 0%, #16213e 100%)';
-
-    const isPitcher = lastPickPlayer ? (lastPickPlayer.Position || '').includes('SP') || (lastPickPlayer.Position || '').includes('RP') : false;
-
     return (
-      <div className={`host-mode-container ${isExpired ? 'container-expired' : ''}`} style={{
-        backgroundColor: '#000',
-        color: '#e0e0e0',
-        height: '100vh',
-        overflow: 'hidden',
-        display: 'grid',
-        gridTemplateColumns: '60% 40%',
-        gridTemplateRows: '90px 1fr 50px',
-        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-      }}>
-        <style>{`
-          .host-mode-container, .host-mode-container * {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-          }
-          .host-mode-container .monospace {
-            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', monospace !important;
-          }
-          @keyframes timerWarning { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
-          .timer-warning { animation: timerWarning 1s ease-in-out infinite !important; }
-          @keyframes timerPulse { 0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(244, 67, 54, 0.5); } 50% { transform: scale(1.05); box-shadow: 0 0 40px rgba(244, 67, 54, 0.8); } }
-          @keyframes borderFlash { 0%, 100% { border-color: #f44336; } 50% { border-color: #ff8a80; } }
-          @keyframes headerPulse { 0%, 100% { background: linear-gradient(180deg, #3d1a1a 0%, #2d1616 100%); } 50% { background: linear-gradient(180deg, #5d2a2a 0%, #3d1a1a 100%); } }
-          @keyframes textFlash { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
-          @keyframes urgentPulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.8; transform: scale(1.02); } }
-          @keyframes redVignette { 0%, 100% { box-shadow: inset 0 0 150px 50px rgba(244, 67, 54, 0.3); } 50% { box-shadow: inset 0 0 200px 80px rgba(244, 67, 54, 0.5); } }
-          @keyframes cardGlow { 0%, 100% { box-shadow: 0 0 30px rgba(244, 67, 54, 0.4), 0 0 60px rgba(244, 67, 54, 0.2); } 50% { box-shadow: 0 0 50px rgba(244, 67, 54, 0.6), 0 0 100px rgba(244, 67, 54, 0.3); } }
-          @keyframes screenShake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-2px); } 75% { transform: translateX(2px); } }
-          .timer-expired { animation: timerPulse 0.8s ease-in-out infinite !important; }
-          .header-expired { animation: headerPulse 1s ease-in-out infinite, borderFlash 0.5s ease-in-out infinite !important; }
-          .times-up-flash { animation: textFlash 0.5s ease-in-out infinite !important; }
-          .urgent-warning { animation: urgentPulse 0.5s ease-in-out infinite !important; }
-          .container-expired { animation: screenShake 0.3s ease-in-out infinite !important; }
-        `}</style>
-
-        {/* Host Header */}
-        <div className={isExpired ? 'header-expired' : ''} style={{
-          gridColumn: '1 / -1',
-          background: headerBg,
-          borderBottom: `4px solid ${timerColor}`,
-          display: 'flex',
-          alignItems: 'center',
-          padding: '0 25px',
-          justifyContent: 'space-between',
-          transition: 'all 0.3s ease'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-            <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#fff', letterSpacing: '2px' }}>
-              ⚾ HEFTY WAR ROOM {roomSeason}
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '10px', paddingLeft: '15px', borderLeft: '2px solid #444', overflow: 'hidden' }}>
-              {[currentPick, ...upcomingPicks].filter(Boolean).slice(0, 10).map((p, idx) => {
-                const isCurrent = idx === 0;
-                const avatar = OWNER_AVATARS[p.Owner] || OWNER_AVATARS.default;
-                return (
-                  <div key={p['Overall Pick']} style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    background: isCurrent ? 'rgba(3, 218, 198, 0.15)' : '#1a1a2e',
-                    border: `1px solid ${isCurrent ? '#03dac6' : '#333'}`,
-                    padding: '4px 10px',
-                    borderRadius: '20px',
-                    minWidth: '100px'
-                  }}>
-                    <div style={{ width: '24px', height: '24px', borderRadius: '50%', overflow: 'hidden', border: `2px solid ${isCurrent ? '#03dac6' : '#555'}` }}>
-                      <img src={avatar} alt={p.Owner} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.target.style.display = 'none'; }} />
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span style={{ fontSize: '9px', color: isCurrent ? '#03dac6' : '#888', fontWeight: 'bold' }}>#{p['Overall Pick']}</span>
-                      <span style={{ fontSize: '11px', color: '#fff', fontWeight: 'bold', whiteSpace: 'nowrap' }}>{p.Owner}</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-            {isUrgent && !isExpired && (
-              <div className="urgent-warning" style={{ background: '#ff5722', color: '#fff', padding: '6px 14px', borderRadius: '8px', fontSize: '14px', fontWeight: 'bold' }}>
-                ⚠️ HURRY!
-              </div>
-            )}
-            {isExpired && (
-              <div className="times-up-flash" style={{ background: '#f44336', color: '#fff', padding: '6px 14px', borderRadius: '8px', fontSize: '15px', fontWeight: 'bold' }}>
-                ⏰ TIME'S UP!
-              </div>
-            )}
-            <div className={timerClass} style={{
-              fontSize: '34px',
-              background: timerBg,
-              padding: '4px 16px',
-              borderRadius: '8px',
-              border: `3px solid ${timerColor}`,
-              color: timerTextColor,
-              minWidth: '90px',
-              textAlign: 'center',
-              fontWeight: 900
-            }}>
-              {secondsLeft}s
-            </div>
-            <button
-              onClick={handleResetMode}
-              style={{ background: 'transparent', color: '#888', border: '1px solid #555', padding: '6px 10px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer' }}
-            >
-              Exit Host
-            </button>
-            {onSwitchView && (
-              <button
-                onClick={() => onSwitchView('summary')}
-                style={{ background: '#1e3a8a', color: '#fff', border: '1px solid #3b82f6', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer', fontWeight: 'bold' }}
-              >
-                📊 League Site
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* 60% Left Stage */}
-        <div style={{
-          gridColumn: '1 / 2',
-          gridRow: '2 / 3',
-          display: 'flex',
-          flexDirection: 'column',
-          padding: '24px',
-          borderRight: '1px solid #333',
-          background: isExpired ? 'radial-gradient(ellipse at center, #2d1a1a 0%, #1a0000 100%)' : 'radial-gradient(ellipse at center, #1a1a2e 0%, #000 100%)',
-          gap: '16px',
-          overflowY: 'auto'
-        }}>
-          <div style={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            background: 'linear-gradient(135deg, #1e1e2f 0%, #252540 100%)',
-            borderRadius: '16px',
-            padding: '24px',
-            border: '2px solid #333',
-            position: 'relative',
-            overflowY: 'auto'
-          }}>
-            <div style={{ fontSize: '16px', color: '#888', textTransform: 'uppercase', letterSpacing: '2px', textAlign: 'center', marginBottom: '16px' }}>
-              {lastPick ? `Round ${lastPick.Round} • Pick ${lastPick['Overall Pick']}` : 'Waiting for first pick...'}
-            </div>
-
-            {lastPickPlayer ? (
-              <div style={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-                <div style={{ width: '120px', height: '120px', borderRadius: '16px', border: '3px solid #bb86fc', overflow: 'hidden', background: '#111', flexShrink: 0, boxShadow: '0 4px 20px rgba(187, 134, 252, 0.4)' }}>
-                  <img
-                    src={getPlayerHeadshotUrl(lastPickPlayer)}
-                    alt={lastPickPlayer.Player}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    onError={(e) => handleHeadshotError(e, lastPickPlayer)}
-                  />
-                </div>
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 16px' }}>
-                  <div style={{ fontSize: '38px', fontWeight: '900', lineHeight: '1.1', color: '#fff', textAlign: 'center', marginBottom: '10px' }}>
-                    {lastPickPlayer.Player}
-                  </div>
-                  <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '14px' }}>
-                    <span style={{ background: 'linear-gradient(135deg, #bb86fc 0%, #9c5dd9 100%)', padding: '4px 14px', borderRadius: '20px', fontSize: '14px', fontWeight: 'bold', color: '#fff' }}>
-                      {lastPickPlayer.Position}
-                    </span>
-                    <span style={{ background: 'linear-gradient(135deg, #03dac6 0%, #00a896 100%)', padding: '4px 14px', borderRadius: '20px', fontSize: '14px', fontWeight: 'bold', color: '#000' }}>
-                      {lastPickPlayer.Team}
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                    {isPitcher ? (
-                      <>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'rgba(0,0,0,0.4)', padding: '6px 14px', borderRadius: '6px', border: '1px solid #444', minWidth: '55px' }}>
-                          <span style={{ fontSize: '10px', color: '#888' }}>ERA</span>
-                          <span style={{ fontSize: '16px', color: '#fff', fontWeight: 'bold' }}>{lastPickPlayer.ZIPSERA || '—'}</span>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'rgba(0,0,0,0.4)', padding: '6px 14px', borderRadius: '6px', border: '1px solid #444', minWidth: '55px' }}>
-                          <span style={{ fontSize: '10px', color: '#888' }}>WHIP</span>
-                          <span style={{ fontSize: '16px', color: '#fff', fontWeight: 'bold' }}>{lastPickPlayer.ZIPSWHIP || '—'}</span>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'rgba(0,0,0,0.4)', padding: '6px 14px', borderRadius: '6px', border: '1px solid #444', minWidth: '55px' }}>
-                          <span style={{ fontSize: '10px', color: '#888' }}>K</span>
-                          <span style={{ fontSize: '16px', color: '#fff', fontWeight: 'bold' }}>{lastPickPlayer.ZIPSK || '—'}</span>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'rgba(0,0,0,0.4)', padding: '6px 14px', borderRadius: '6px', border: '1px solid #444', minWidth: '55px' }}>
-                          <span style={{ fontSize: '10px', color: '#888' }}>QS</span>
-                          <span style={{ fontSize: '16px', color: '#fff', fontWeight: 'bold' }}>{getEffectiveQS(lastPickPlayer) || lastPickPlayer.ZIPSQS || '—'}</span>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'rgba(0,0,0,0.4)', padding: '6px 14px', borderRadius: '6px', border: '1px solid #444', minWidth: '55px' }}>
-                          <span style={{ fontSize: '10px', color: '#888' }}>HR</span>
-                          <span style={{ fontSize: '16px', color: '#fff', fontWeight: 'bold' }}>{lastPickPlayer.ZIPSHR || '—'}</span>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'rgba(0,0,0,0.4)', padding: '6px 14px', borderRadius: '6px', border: '1px solid #444', minWidth: '55px' }}>
-                          <span style={{ fontSize: '10px', color: '#888' }}>RBI</span>
-                          <span style={{ fontSize: '16px', color: '#fff', fontWeight: 'bold' }}>{lastPickPlayer.ZIPSRBI || '—'}</span>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'rgba(0,0,0,0.4)', padding: '6px 14px', borderRadius: '6px', border: '1px solid #444', minWidth: '55px' }}>
-                          <span style={{ fontSize: '10px', color: '#888' }}>SB</span>
-                          <span style={{ fontSize: '16px', color: '#fff', fontWeight: 'bold' }}>{lastPickPlayer.ZIPSSB || '—'}</span>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'rgba(0,0,0,0.4)', padding: '6px 14px', borderRadius: '6px', border: '1px solid #444', minWidth: '55px' }}>
-                          <span style={{ fontSize: '10px', color: '#888' }}>OBP</span>
-                          <span style={{ fontSize: '16px', color: '#fff', fontWeight: 'bold' }}>{lastPickPlayer.ZIPSOBP || '—'}</span>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-                <div style={{ width: '110px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                  <div style={{ width: '90px', height: '90px', borderRadius: '50%', border: '3px solid #03dac6', overflow: 'hidden', background: '#111' }}>
-                    <img
-                      src={OWNER_AVATARS[lastPick?.Owner] || OWNER_AVATARS.default}
-                      alt={lastPick?.Owner}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      onError={e => { e.target.style.display = 'none'; }}
-                    />
-                  </div>
-                  <div style={{ textAlign: 'center', background: 'rgba(0,0,0,0.5)', padding: '4px 10px', borderRadius: '8px', border: '1px solid #03dac644' }}>
-                    <div style={{ fontSize: '9px', color: '#03dac6', fontWeight: 'bold', textTransform: 'uppercase' }}>Selected By</div>
-                    <div style={{ fontSize: '14px', color: '#fff', fontWeight: 'bold' }}>{lastPick?.Owner}</div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div style={{ fontSize: '32px', color: '#444', fontWeight: 'bold', textAlign: 'center', padding: '40px 0' }}>
-                WAR ROOM READY
-              </div>
-            )}
-
-            {/* AI Commentary in Host Mode */}
-            <div style={{
-              flex: 1,
-              minHeight: '110px',
-              background: 'rgba(0,0,0,0.3)',
-              padding: '16px',
-              borderRadius: '12px',
-              borderLeft: '5px solid #bb86fc',
-              display: 'flex',
-              flexDirection: 'column',
-              overflow: 'hidden'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                <span style={{ fontSize: '12px', color: '#bb86fc', fontWeight: 'bold', textTransform: 'uppercase' }}>
-                  🎙️ HeftyMatic 3000 Instant Reaction
-                </span>
-                {lastPickCommentary && lastPickCommentary !== 'Draft has not started.' && !generatingCommentary && (
-                  <button
-                    onClick={() => playPodcastTTS(lastPickCommentary)}
-                    style={{
-                      background: 'rgba(187, 134, 252, 0.15)',
-                      border: '1px solid #bb86fc',
-                      color: '#bb86fc',
-                      borderRadius: '6px',
-                      padding: '2px 8px',
-                      fontSize: '11px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px'
-                    }}
-                    title="Play podcast-style spoken analysis"
-                  >
-                    🔊 Listen
-                  </button>
-                )}
-              </div>
-              <div style={{ flex: 1, overflowY: 'auto', fontSize: '15px', color: '#ddd', lineHeight: '1.5' }}>
-                {generatingCommentary ? (
-                  <span style={{ color: '#888', fontStyle: 'italic' }}>🤔 HeftyMatic 3000 is analyzing this pick...</span>
-                ) : (
-                  <span dangerouslySetInnerHTML={{ __html: lastPickCommentary }} />
-                )}
-              </div>
-            </div>
-
-            {/* Skip & Chip 2-Person Podcast Debate Widget */}
-            <PodcastBreakdownWidget
-              script={lastPodcastScript}
-              isGenerating={generatingPodcast}
-              isPlaying={isPlayingPodcast}
-              activeLine={activePodcastLine}
-              onPlay={() => handlePlayPodcast()}
-              onStop={handleStopPodcast}
-              playerName={lastPickPlayer?.Player}
-            />
-          </div>
-        </div>
-
-        {/* 40% Right Stage */}
-        <div style={{
-          gridColumn: '2 / 3',
-          gridRow: '2 / 3',
-          background: '#111',
-          padding: '20px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '15px',
-          overflow: 'hidden'
-        }}>
-          <OnDeckSidebar upcomingPicks={upcomingPicks} currentUser={currentUser} />
-          <div style={{ flex: 1, overflowY: 'auto' }}>
-            <RecentActivityWidget
-              recentPicks={recentPicks}
-              players={displayPlayers}
-              onPlayerClick={setSelectedPlayer}
-              playerInfo={playerInfo}
-            />
-          </div>
-        </div>
-
-        {/* Bottom Ticker */}
-        <div style={{ gridColumn: '1 / -1', gridRow: '3 / 4', borderTop: '2px solid #333' }}>
-          <Ticker recentPicks={recentPicks} players={displayPlayers} />
-        </div>
-
-        {selectedPlayer && (
-          <PlayerModal
-            player={selectedPlayer}
-            onClose={() => setSelectedPlayer(null)}
-            onOpenInDepthModal={onOpenPlayerModal}
-            players={displayPlayers}
-            draftHistory={draftHistory}
-            historicalFinish={historicalFinish}
-            savantBatters={savantBatters}
-            savantPitchers={savantPitchers}
-            battersZips={battersZips}
-            pitchersZips={pitchersZips}
-          />
-        )}
-      </div>
+      <HostBroadcastView
+        roomSeason={roomSeason}
+        pickStartTime={pickStartTime}
+        currentPick={currentPick}
+        upcomingPicks={upcomingPicks}
+        lastPick={lastPick}
+        lastPickPlayer={lastPickPlayer}
+        lastPickCommentary={lastPickCommentary}
+        generatingCommentary={generatingCommentary}
+        playPodcastTTS={playPodcastTTS}
+        lastPodcastScript={lastPodcastScript}
+        generatingPodcast={generatingPodcast}
+        isPlayingPodcast={isPlayingPodcast}
+        activePodcastLine={activePodcastLine}
+        handlePlayPodcast={handlePlayPodcast}
+        handleStopPodcast={handleStopPodcast}
+        recentPicks={recentPicks}
+        displayPlayers={displayPlayers}
+        selectedPlayer={selectedPlayer}
+        setSelectedPlayer={setSelectedPlayer}
+        playerInfo={playerInfo}
+        handleResetMode={handleResetMode}
+        onSwitchView={onSwitchView}
+        onOpenPlayerModal={onOpenPlayerModal}
+        draftHistory={draftHistory}
+        historicalFinish={historicalFinish}
+        savantBatters={savantBatters}
+        savantPitchers={savantPitchers}
+        battersZips={battersZips}
+        pitchersZips={pitchersZips}
+      />
     );
   }
 
   if (draftMode === 'mobile') {
     return (
-      <div style={{
-        ...styles.body,
-        gridTemplateColumns: '1fr',
-        gridTemplateRows: '50px 1fr 50px',
-        height: '100vh'
-      }}>
-        {/* Mobile Header */}
-        <div style={{
-          gridColumn: '1 / -1',
-          background: '#1f1f1f',
-          borderBottom: '2px solid #bb86fc',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '0 15px',
-          zIndex: 10
-        }}>
-          <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#bb86fc' }}>
-            HWR '{String(roomSeason).slice(-2)}
-          </div>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-            <div style={{
-              fontSize: '12px',
-              fontWeight: 'bold',
-              color: isMyTurn ? '#03dac6' : '#888',
-              animation: isMyTurn ? 'pulse 1s infinite' : 'none'
-            }}>
-              {currentPick ? `${currentPick.Owner} (#${currentPick['Overall Pick']})` : 'COMPLETE'}
-            </div>
-            <CountdownTimer pickStartTime={pickStartTime} />
-            <button
-              onClick={handleResetMode}
-              style={{ background: 'transparent', color: '#888', border: '1px solid #444', padding: '3px 6px', borderRadius: '4px', fontSize: '10px', cursor: 'pointer' }}
-            >
-              Mode
-            </button>
-            {onSwitchView && (
-              <button
-                onClick={() => onSwitchView('summary')}
-                style={{ background: '#1e3a8a', color: '#fff', border: '1px solid #3b82f6', padding: '3px 8px', borderRadius: '4px', fontSize: '10px', cursor: 'pointer', fontWeight: 'bold' }}
-              >
-                League
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Mobile Content Area */}
-        <div style={{ gridColumn: '1 / -1', overflow: 'hidden', background: '#121212', padding: '10px' }}>
-          {activePositionalRun && (
-            <div style={{ marginBottom: '10px' }}>
-              <PositionalRunRadar run={activePositionalRun} />
-            </div>
-          )}
-          {activeTab === 'Pool' && (
-            <PlayerPoolPanel
-              players={displayPlayers}
-              onDraft={handleDraft}
-              isMyTurn={isMyTurn}
-              queue={queue}
-              onAddToQueue={addToQueue}
-              onRemoveFromQueue={removeFromQueue}
-              draftMode={draftMode}
-              testModePicks={testModePicks}
-              allPicks={displayPicks}
-              onPlayerClick={setSelectedPlayer}
-              playerInfo={playerInfo}
-              isMobile={true}
-              currentUser={currentUser}
-              recommendations={smartRecommendations}
-            />
-          )}
-          {activeTab === 'Queue' && (
-            <div style={{ height: '100%', overflowY: 'auto' }}>
-              <div style={styles.wrHeader}>My Queue ({queue.length})</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {queue.length === 0 ? (
-                  <div style={{ color: '#888', textAlign: 'center', padding: '20px' }}>No players in queue. Star players in the pool to add them here!</div>
-                ) : (
-                  queue.map(p => (
-                    <div key={p['ESPN PlayerID']} style={{ ...styles.queueItem, background: '#222' }}>
-                      <div>
-                        <div style={{ color: '#fff', fontWeight: 'bold' }}>{p.Player}</div>
-                        <div style={{ fontSize: '12px', color: '#888' }}>{p.Position} - {p.Team}</div>
-                      </div>
-                      <button onClick={() => removeFromQueue(p['ESPN PlayerID'])} style={styles.btnStarActive}>✕</button>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          )}
-          {activeTab === 'Roster' && (
-            <RosterManagerPanel
-              allPicks={displayPicks}
-              players={displayPlayers}
-              currentUser={currentUser}
-            />
-          )}
-          {activeTab === 'Feed' && (
-            <div style={{ height: '100%', overflowY: 'auto' }}>
-              <div style={styles.wrHeader}>Draft Feed</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {recentPicks.slice().reverse().map(p => {
-                  const playerObj = displayPlayers.find(pl => String(pl['ESPN PlayerID']) === String(p['ESPN PlayerID']));
-                  return (
-                    <div key={p['Overall Pick']} style={{
-                      padding: '10px',
-                      background: '#222',
-                      borderRadius: '4px',
-                      borderLeft: `4px solid ${p.Owner === currentUser ? '#03dac6' : '#555'}`
-                    }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#888', fontSize: '11px' }}>
-                        <span>Pick #{p['Overall Pick']}</span>
-                        <span>{p.Owner}</span>
-                      </div>
-                      <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>
-                        {playerObj?.Player || p.Selection || 'Pick Made'}
-                      </div>
-                      <div style={{ color: '#aaa', fontSize: '12px' }}>
-                        {playerObj?.Position} - {playerObj?.Team}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Mobile Bottom Nav */}
-        <div style={{
-          gridColumn: '1 / -1',
-          background: '#2c2c2c',
-          borderTop: '1px solid #444',
-          display: 'flex',
-          justifyContent: 'space-around',
-          alignItems: 'center'
-        }}>
-          {[
-            { id: 'Pool', label: 'Pool', icon: '📋' },
-            { id: 'Queue', label: 'Queue', icon: '⭐' },
-            { id: 'Roster', label: 'Roster', icon: '👥' },
-            { id: 'Feed', label: 'Feed', icon: '📢' }
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: activeTab === tab.id ? '#03dac6' : '#888',
-                padding: '8px',
-                fontSize: '11px',
-                fontWeight: 'bold',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                cursor: 'pointer'
-              }}
-            >
-              <span style={{ fontSize: '18px', marginBottom: '2px' }}>{tab.icon}</span>
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {selectedPlayer && (
-          <PlayerModal
-            player={selectedPlayer}
-            onClose={() => setSelectedPlayer(null)}
-            onOpenInDepthModal={onOpenPlayerModal}
-            players={displayPlayers}
-            draftHistory={draftHistory}
-            historicalFinish={historicalFinish}
-            savantBatters={savantBatters}
-            savantPitchers={savantPitchers}
-            battersZips={battersZips}
-            pitchersZips={pitchersZips}
-            isMobile={true}
-          />
-        )}
-      </div>
+      <MobileDraftView
+        roomSeason={roomSeason}
+        isMyTurn={isMyTurn}
+        currentPick={currentPick}
+        pickStartTime={pickStartTime}
+        handleResetMode={handleResetMode}
+        onSwitchView={onSwitchView}
+        activePositionalRun={activePositionalRun}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        displayPlayers={displayPlayers}
+        handleDraft={handleDraft}
+        queue={queue}
+        addToQueue={addToQueue}
+        removeFromQueue={removeFromQueue}
+        draftMode={draftMode}
+        testModePicks={testModePicks}
+        displayPicks={displayPicks}
+        selectedPlayer={selectedPlayer}
+        setSelectedPlayer={setSelectedPlayer}
+        playerInfo={playerInfo}
+        currentUser={currentUser}
+        smartRecommendations={smartRecommendations}
+        recentPicks={recentPicks}
+        onOpenPlayerModal={onOpenPlayerModal}
+        draftHistory={draftHistory}
+        historicalFinish={historicalFinish}
+        savantBatters={savantBatters}
+        savantPitchers={savantPitchers}
+        battersZips={battersZips}
+        pitchersZips={pitchersZips}
+      />
     );
   }
 
@@ -1815,255 +1219,22 @@ export default function DraftRoomView({
       
       <div style={styles.body}>
         {/* Header */}
-        <div style={styles.header}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-            <div style={styles.leagueLogo}>
-              ⚾ Hefty War Room {roomSeason}
-            </div>
-
-            {/* In-Room Season Switcher */}
-            <div style={{ display: 'flex', background: '#111', borderRadius: '6px', padding: '2px', border: '1px solid #333' }}>
-              <button
-                onClick={() => handleSeasonChange(2027)}
-                style={{
-                  background: roomSeason === 2027 ? '#bb86fc' : 'transparent',
-                  color: roomSeason === 2027 ? '#000' : '#888',
-                  border: 'none',
-                  borderRadius: '4px',
-                  padding: '3px 9px',
-                  fontSize: '11px',
-                  fontWeight: 'bold',
-                  cursor: 'pointer'
-                }}
-              >
-                🚀 2027 Draft
-              </button>
-              <button
-                onClick={() => handleSeasonChange(2026)}
-                style={{
-                  background: roomSeason === 2026 ? '#03dac6' : 'transparent',
-                  color: roomSeason === 2026 ? '#000' : '#888',
-                  border: 'none',
-                  borderRadius: '4px',
-                  padding: '3px 9px',
-                  fontSize: '11px',
-                  fontWeight: 'bold',
-                  cursor: 'pointer'
-                }}
-              >
-                🏛️ 2026 Archive
-              </button>
-            </div>
-            {draftMode === 'test' && (
-              <span style={{ 
-                fontSize: '12px', 
-                background: '#ffc10722', 
-                color: '#ffc107', 
-                border: '1px solid #ffc107', 
-                padding: '3px 8px', 
-                borderRadius: '4px', 
-                fontWeight: 'bold' 
-              }}>
-                [TEST]
-              </span>
-            )}
-            {draftMode === 'multitest' && (
-              <span style={{ 
-                fontSize: '12px', 
-                background: '#ff980022', 
-                color: '#ff9800', 
-                border: '1px solid #ff9800', 
-                padding: '3px 8px', 
-                borderRadius: '4px', 
-                fontWeight: 'bold' 
-              }}>
-                [MULTIPLAYER TEST]
-              </span>
-            )}
-            {draftMode === 'mockdraft' && (
-              <span style={{ 
-                fontSize: '12px', 
-                background: '#bb86fc22', 
-                color: '#bb86fc', 
-                border: '1px solid #bb86fc', 
-                padding: '3px 8px', 
-                borderRadius: '4px', 
-                fontWeight: 'bold' 
-              }}>
-                [MOCK DRAFT]
-              </span>
-            )}
-            {draftMode === 'multitest' && (
-              <button
-                onClick={handleResetDraft}
-                disabled={resetting}
-                style={{
-                  background: resetting ? '#666' : '#f44336',
-                  color: '#fff',
-                  border: 'none',
-                  padding: '4px 10px',
-                  borderRadius: '4px',
-                  cursor: resetting ? 'wait' : 'pointer',
-                  fontSize: '11px',
-                  fontWeight: 'bold'
-                }}
-              >
-                {resetting ? 'Resetting...' : '🔄 Reset Draft'}
-              </button>
-            )}
-            <button
-              onClick={handleResetMode}
-              style={{
-                background: 'transparent',
-                color: '#888',
-                border: '1px solid #444',
-                padding: '4px 8px',
-                borderRadius: '4px',
-                fontSize: '11px',
-                cursor: 'pointer'
-              }}
-              title="Switch between Live and Test Mode"
-            >
-              Switch Mode
-            </button>
-            <button
-              onClick={handleResetUser}
-              style={{
-                background: 'transparent',
-                color: '#888',
-                border: '1px solid #444',
-                padding: '4px 8px',
-                borderRadius: '4px',
-                fontSize: '11px',
-                cursor: 'pointer'
-              }}
-              title="Change active team"
-            >
-              Switch Team ({currentUser})
-            </button>
-          </div>
-
-          <div style={{ textAlign: 'center', color: '#fff' }}>
-            <div style={{ fontSize: '11px', color: '#888', letterSpacing: '1px' }}>ON THE CLOCK</div>
-            <div style={{ fontSize: '22px', color: 'var(--highlight)', fontWeight: 'bold' }}>
-              {currentPick ? currentPick.Owner : 'DRAFT COMPLETE'}
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-            <button
-              onClick={() => setAudioEnabled(!audioEnabled)}
-              style={{
-                background: audioEnabled ? '#4caf50' : '#444',
-                color: '#fff',
-                border: 'none',
-                padding: '8px 14px',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '13px',
-                fontWeight: 'bold',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
-              }}
-              title="Toggle draft audio announcements"
-            >
-              <span>{audioEnabled ? '🔊' : '🔇'}</span>
-              <span>Audio {audioEnabled ? 'ON' : 'OFF'}</span>
-            </button>
-
-            {draftMode === 'test' && (
-              <button
-                onClick={() => {
-                  if (!audioEnabled) {
-                    alert('Please enable audio first by clicking the Audio ON button');
-                    return;
-                  }
-                  playOwnerSound(currentUser);
-                }}
-                style={{
-                  background: '#ffc107',
-                  color: '#000',
-                  border: 'none',
-                  padding: '8px 12px',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '13px',
-                  fontWeight: 'bold'
-                }}
-              >
-                🧪 Test Audio
-              </button>
-            )}
-
-            <CountdownTimer pickStartTime={pickStartTime} />
-
-            {onSwitchView && (
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <button
-                  onClick={() => onSwitchView('capital')}
-                  style={{
-                    background: '#2e1065',
-                    color: '#d8b4fe',
-                    border: '1px solid #7e22ce',
-                    padding: '8px 12px',
-                    borderRadius: '6px',
-                    fontSize: '13px',
-                    fontWeight: 'bold',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    cursor: 'pointer'
-                  }}
-                  title="View 2027 Draft Capital & Traded Picks"
-                >
-                  <span>🎟️</span>
-                  <span>Draft Capital</span>
-                </button>
-                <button
-                  onClick={() => onSwitchView('keepers')}
-                  style={{
-                    background: '#064e3b',
-                    color: '#6ee7b7',
-                    border: '1px solid #059669',
-                    padding: '8px 12px',
-                    borderRadius: '6px',
-                    fontSize: '13px',
-                    fontWeight: 'bold',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    cursor: 'pointer'
-                  }}
-                  title="View Keepers & Budgets Panel"
-                >
-                  <span>💎</span>
-                  <span>Keepers & Budget</span>
-                </button>
-                <button
-                  onClick={() => onSwitchView('weekly')}
-                  style={{
-                    background: '#1e3a8a',
-                    color: '#fff',
-                    border: '1px solid #3b82f6',
-                    padding: '8px 12px',
-                    borderRadius: '6px',
-                    fontSize: '13px',
-                    fontWeight: 'bold',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    cursor: 'pointer'
-                  }}
-                  title="Return to Main League Site"
-                >
-                  <span>⚾</span>
-                  <span>League Site</span>
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
+        <DesktopHeader
+          roomSeason={roomSeason}
+          handleSeasonChange={handleSeasonChange}
+          draftMode={draftMode}
+          handleResetDraft={handleResetDraft}
+          resetting={resetting}
+          handleResetMode={handleResetMode}
+          handleResetUser={handleResetUser}
+          currentUser={currentUser}
+          currentPick={currentPick}
+          audioEnabled={audioEnabled}
+          setAudioEnabled={setAudioEnabled}
+          playOwnerSound={playOwnerSound}
+          pickStartTime={pickStartTime}
+          onSwitchView={onSwitchView}
+        />
 
         {/* War Room Drawer Toggle */}
         <button 
@@ -2212,180 +1383,40 @@ export default function DraftRoomView({
         <Ticker recentPicks={recentPicks} players={displayPlayers} />
 
         {/* War Room Drawer / Panel */}
-        {showDashboard && (
-          <div style={styles.warRoomPanel}>
-            <div style={styles.panelNav}>
-              {['Pool', 'Roster', 'MyPicks', 'DraftLog', 'Analysis', 'Standings'].map(tab => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  style={activeTab === tab ? styles.navBtnActive : styles.navBtn}
-                >
-                  {tab === 'Pool' ? 'Draft Pool' : 
-                   tab === 'Roster' ? 'Roster Manager' : 
-                   tab === 'MyPicks' ? 'My Picks' :
-                   tab === 'DraftLog' ? 'Draft Log' :
-                   tab === 'Analysis' ? 'Analysis History' :
-                   '🏆 Projected Roto'}
-                </button>
-              ))}
-              <div style={{ marginLeft: 'auto', color: '#888', fontSize: '13px', display: 'flex', alignItems: 'center' }}>
-                Logged in as: <span style={{ color: 'var(--highlight)', fontWeight: 'bold', marginLeft: '5px' }}>{currentUser}</span>
-              </div>
-            </div>
-
-            <div style={{ ...styles.panelContent, display: activeTab === 'Pool' ? 'grid' : 'none' }}>
-              <PlayerPoolPanel
-                players={displayPlayers}
-                onDraft={handleDraft}
-                isMyTurn={isMyTurn}
-                queue={queue}
-                onAddToQueue={addToQueue}
-                onRemoveFromQueue={removeFromQueue}
-                draftMode={draftMode}
-                testModePicks={testModePicks}
-                allPicks={displayPicks}
-                onPlayerClick={setSelectedPlayer}
-                playerInfo={playerInfo}
-                currentUser={currentUser}
-                recommendations={smartRecommendations}
-              />
-            </div>
-
-            <div style={{ ...styles.panelContent, display: activeTab === 'Roster' ? 'grid' : 'none' }}>
-              <RosterManagerPanel
-                allPicks={displayPicks}
-                players={displayPlayers}
-                currentUser={currentUser}
-              />
-            </div>
-
-            <div style={{ ...styles.panelContent, display: activeTab === 'MyPicks' ? 'grid' : 'none' }}>
-              <MyPicksPanel
-                allPicks={displayPicks}
-                players={displayPlayers}
-                currentUser={currentUser}
-                draftTrades={draftTrades}
-                roomSeason={roomSeason}
-              />
-            </div>
-
-            <div style={{ ...styles.panelContent, display: activeTab === 'DraftLog' ? 'grid' : 'none' }}>
-              <DraftLogPanel
-                allPicks={displayPicks}
-                players={displayPlayers}
-                onPlayerClick={setSelectedPlayer}
-              />
-            </div>
-
-            <div style={{ ...styles.panelContent, display: activeTab === 'Analysis' ? 'grid' : 'none' }}>
-              <AnalysisHistoryPanel
-                analysisHistory={analysisHistory}
-                players={displayPlayers}
-                roomSeason={roomSeason}
-              />
-            </div>
-
-            <div style={{ ...styles.panelContent, display: activeTab === 'Standings' ? 'grid' : 'none' }}>
-              <StandingsPanel 
-                allPicks={displayPicks}
-                keepers={_keepers}
-                roomSeason={roomSeason}
-              />
-            </div>
-          </div>
-        )}
+        <WarRoomDrawer
+          isOpen={showDashboard}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          currentUser={currentUser}
+          displayPlayers={displayPlayers}
+          handleDraft={handleDraft}
+          isMyTurn={isMyTurn}
+          queue={queue}
+          addToQueue={addToQueue}
+          removeFromQueue={removeFromQueue}
+          draftMode={draftMode}
+          testModePicks={testModePicks}
+          displayPicks={displayPicks}
+          setSelectedPlayer={setSelectedPlayer}
+          playerInfo={playerInfo}
+          smartRecommendations={smartRecommendations}
+          draftTrades={draftTrades}
+          roomSeason={roomSeason}
+          analysisHistory={analysisHistory}
+          keepers={_keepers}
+        />
 
         {/* Mock Draft Floating Controller */}
         {draftMode === 'mockdraft' && (
-          <div style={{
-            position: 'fixed',
-            bottom: '55px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            background: '#1a1a2e',
-            border: '1px solid #bb86fc44',
-            borderRadius: '12px',
-            padding: '8px 18px',
-            zIndex: 150,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.6)'
-          }}>
-            <span style={{ color: '#bb86fc', fontSize: '11px', fontWeight: 'bold', letterSpacing: '1px' }}>
-              🤖 MOCK DRAFT
-            </span>
-            <div style={{ width: '1px', height: '20px', background: '#444' }} />
-            <button
-              onClick={() => setIsRunningMock(r => !r)}
-              style={{
-                background: isRunningMock ? '#f44336' : '#4caf50',
-                color: '#fff',
-                border: 'none',
-                padding: '6px 16px',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-                fontSize: '12px'
-              }}
-            >
-              {isRunningMock ? '⏸ PAUSE' : '▶ RUN'}
-            </button>
-            {!isRunningMock && (
-              <button
-                onClick={stepMockPick}
-                disabled={currentPick?.Owner === currentUser}
-                title="Advance one pick"
-                style={{
-                  background: currentPick?.Owner === currentUser ? '#444' : '#ffc107',
-                  color: currentPick?.Owner === currentUser ? '#666' : '#000',
-                  border: 'none',
-                  padding: '6px 14px',
-                  borderRadius: '6px',
-                  cursor: currentPick?.Owner === currentUser ? 'not-allowed' : 'pointer',
-                  fontWeight: 'bold',
-                  fontSize: '12px'
-                }}
-              >
-                ⏭ STEP
-              </button>
-            )}
-            <div style={{ width: '1px', height: '20px', background: '#444' }} />
-            <span style={{ color: '#888', fontSize: '11px' }}>Speed:</span>
-            {[
-              { label: '🐢', title: 'Slow (3s)', val: 3000 },
-              { label: '⚡', title: 'Fast (1s)', val: 1000 },
-              { label: '🚀', title: 'Turbo (300ms)', val: 300 }
-            ].map(s => (
-              <button
-                key={s.val}
-                onClick={() => setMockSpeed(s.val)}
-                title={s.title}
-                style={{
-                  background: mockSpeed === s.val ? '#bb86fc' : '#333',
-                  color: mockSpeed === s.val ? '#000' : '#ccc',
-                  border: 'none',
-                  padding: '5px 10px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontSize: '14px'
-                }}
-              >
-                {s.label}
-              </button>
-            ))}
-            <div style={{ width: '1px', height: '20px', background: '#444' }} />
-            {currentPick?.Owner === currentUser ? (
-              <span style={{ color: '#ffc107', fontWeight: 'bold', fontSize: '12px', animation: 'pulse 1s infinite' }}>
-                ⭐ YOUR PICK!
-              </span>
-            ) : (
-              <span style={{ color: '#888', fontSize: '12px' }}>
-                On clock: <span style={{ color: '#03dac6', fontWeight: 'bold' }}>{currentPick?.Owner || '—'}</span>
-              </span>
-            )}
-          </div>
+          <MockDraftController
+            isRunningMock={isRunningMock}
+            setIsRunningMock={setIsRunningMock}
+            stepMockPick={stepMockPick}
+            currentPick={currentPick}
+            currentUser={currentUser}
+            mockSpeed={mockSpeed}
+            setMockSpeed={setMockSpeed}
+          />
         )}
       </div>
       
