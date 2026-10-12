@@ -1,17 +1,7 @@
-// 1. DEFINE TEAMS
-// We added ID 9 for the new 9th owner, and ID 99 for the Ghost team
-export const TEAMS = {
-  1: { id: 1, name: "Tim", owner: "Tim" },
-  2: { id: 2, name: "Adrian", owner: "Adrian" },
-  3: { id: 3, name: "Garrett", owner: "Garrett" },
-  5: { id: 5, name: "Daniel", owner: "Daniel" }, 
-  6: { id: 6, name: "Anil", owner: "Anil" },
-  8: { id: 8, name: "Alex", owner: "Alex" },
-  12: { id: 12, name: "Will", owner: "Will" },
-  13: { id: 13, name: "Mark", owner: "Mark" },
-  14: { id: 14, name: "Preston", owner: "Preston" }, // <-- The 9th Team
-  99: { id: 99, name: "League Average", owner: "The House" } // <-- The Ghost Team
-};
+// 1. IMPORT & RE-EXPORT TEAMS FROM CENTRAL CONSTANTS
+import { TEAMS } from './constants/league';
+export { TEAMS };
+
 
 // 2. DEFINE DATES
 const SEASON_DATES = [

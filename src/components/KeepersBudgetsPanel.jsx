@@ -11,7 +11,8 @@ import {
   DRAFT_MANAGERS,
   normalizeManager,
   getActualFinish,
-  calculateKeeperCostFromRank
+  calculateKeeperCostFromRank,
+  isSameOwner
 } from './keepers/services/keeperPricing';
 
 import KeepersHeaderNav from './keepers/components/KeepersHeaderNav';
@@ -685,9 +686,7 @@ export default function KeepersBudgetsPanel({
       return;
     }
 
-    const isTargetMe = profile?.owner_name?.toLowerCase() === plannerOwner?.toLowerCase() ||
-      (profile?.owner_name === 'Dan' && plannerOwner === 'Daniel') ||
-      (profile?.owner_name === 'Daniel' && plannerOwner === 'Dan');
+    const isTargetMe = isSameOwner(profile?.owner_name, plannerOwner);
 
     if (isDeadlinePassed && !isCommissioner) {
       alert('The keeper selection deadline has passed. Only Commissioner (Adrian) or Admin (Dan) can submit keeper changes now.');
@@ -787,9 +786,7 @@ export default function KeepersBudgetsPanel({
       return;
     }
 
-    const isTargetMe = profile?.owner_name?.toLowerCase() === simulatedOwner?.toLowerCase() ||
-      (profile?.owner_name === 'Dan' && simulatedOwner === 'Daniel') ||
-      (profile?.owner_name === 'Daniel' && simulatedOwner === 'Dan');
+    const isTargetMe = isSameOwner(profile?.owner_name, simulatedOwner);
 
     if (!isCommissioner && !isTargetMe) {
       alert(`You are logged in as ${profile?.owner_name}. You can only submit consolation picks for your own team.`);

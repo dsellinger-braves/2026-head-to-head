@@ -3,7 +3,9 @@ import React, { useState, useMemo } from 'react';
 import historicalTrades from '../data/historicalTrades.json' with { type: 'json' };
 import { gradeTrade } from '../utils/tradeGrading';
 import { TEAMS } from '../schedule';
+import { isSameOwner } from '../constants/league';
 import TeamAvatar from '../components/TeamAvatar';
+
 
 const ALL_MANAGERS = [
   'All Managers',
@@ -193,9 +195,7 @@ export default function TradeRepositoryView({ onPlayerClick, onOwnerClick, allSt
     if (selectedManager !== 'All Managers') {
       const matchManager = (name) => {
         if (!name) return false;
-        if (selectedManager === 'Daniel' && (name === 'Dan' || name === 'Daniel')) return true;
-        if (selectedManager === 'Joe' && (name === 'Joe' || name === 'Joseph')) return true;
-        return name.toLowerCase() === selectedManager.toLowerCase();
+        return isSameOwner(name, selectedManager);
       };
       list = list.filter(t => t.participants?.some(matchManager));
     }

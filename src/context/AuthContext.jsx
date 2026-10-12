@@ -1,7 +1,7 @@
 // src/context/AuthContext.jsx
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '../supabaseClient';
-import { LEAGUE_OWNERS } from '../utils/mlbTeams';
+import { LEAGUE_OWNERS, STATIC_LEAGUE_PROFILES } from '../constants/league';
 import { AuthContext } from './authContextDef';
 
 // Utility to immediately clean sensitive or stale OAuth tokens from the browser URL hash
@@ -29,29 +29,8 @@ function cleanupOAuthHash() {
   }
 }
 
-const STATIC_LEAGUE_PROFILES = {
-  dsellinger: { team_id: 5, owner_name: 'Daniel', role: 'admin' },
-  dan: { team_id: 5, owner_name: 'Daniel', role: 'admin' },
-  daniel: { team_id: 5, owner_name: 'Daniel', role: 'admin' },
-  adriaxx: { team_id: 2, owner_name: 'Adrian', role: 'commissioner' },
-  adrian: { team_id: 2, owner_name: 'Adrian', role: 'commissioner' },
-  aznchuy: { team_id: 1, owner_name: 'Tim', role: 'owner' },
-  tim: { team_id: 1, owner_name: 'Tim', role: 'owner' },
-  ghutch: { team_id: 3, owner_name: 'Garrett', role: 'owner' },
-  garrett: { team_id: 3, owner_name: 'Garrett', role: 'owner' },
-  anilbhairo: { team_id: 6, owner_name: 'Anil', role: 'owner' },
-  anil: { team_id: 6, owner_name: 'Anil', role: 'owner' },
-  ay0h: { team_id: 8, owner_name: 'Alex', role: 'owner' },
-  alex: { team_id: 8, owner_name: 'Alex', role: 'owner' },
-  senorspice: { team_id: 12, owner_name: 'Will', role: 'owner' },
-  will: { team_id: 12, owner_name: 'Will', role: 'owner' },
-  mrussell38: { team_id: 13, owner_name: 'Mark', role: 'owner' },
-  mark: { team_id: 13, owner_name: 'Mark', role: 'owner' },
-  pston3: { team_id: 14, owner_name: 'Preston', role: 'owner' },
-  preston: { team_id: 14, owner_name: 'Preston', role: 'owner' },
-};
-
 export function AuthProvider({ children }) {
+
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [allProfiles, setAllProfiles] = useState([]);

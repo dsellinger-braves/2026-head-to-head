@@ -1,28 +1,13 @@
 // src/utils/scoring.js
 
-export const LINEUP_SLOTS = {
-  0: 'C', 1: '1B', 2: '2B', 3: '3B', 4: 'SS', 
-  5: 'OF', 6: '2B/SS', 7: '1B/3B', 11: 'DH', 12: 'UTIL',
-  13: 'P', 14: 'SP', 15: 'RP',
-  16: 'Bench', 17: 'IL', 19: 'IF'
-};
+import {
+  LINEUP_SLOTS,
+  SCORING_CATS,
+  ESPN_STAT_IDS
+} from '../constants/league';
 
-// 1. Define your scoring categories
-export const SCORING_CATS = {
-  // Hitting
-  R: { label: 'Runs', name: 'Runs Scored', type: 'high' },
-  HR: { label: 'HR', name: 'Home Runs', type: 'high' },
-  RBI: { label: 'RBI', name: 'Runs Batted In', type: 'high' },
-  SB: { label: 'SB', name: 'Stolen Bases', type: 'high' },
-  OBP: { label: 'OBP', name: 'On-Base Percentage', type: 'high', isRate: true },
+export { LINEUP_SLOTS, SCORING_CATS };
 
-  // Pitching
-  K: { label: 'K', name: 'Strikeouts', type: 'high' },
-  QS: { label: 'Quality Starts', name: 'Quality Starts', type: 'high' },
-  'SV+HDs': { label: 'Save+Holds', name: 'Saves + Holds', type: 'high' },
-  ERA: { label: 'ERA', name: 'Earned Run Average', type: 'low' },
-  WHIP: { label: 'WHIP', name: 'Walks + Hits per Inning Pitched', type: 'low', isRate: true }
-};
 
 export const CATEGORIES = Object.keys(SCORING_CATS).map(key => ({
   id: key,
@@ -72,50 +57,9 @@ export const getStatMeta = (cat) => {
   return MINUTIAE_STATS[cat] || SCORING_CATS[cat] || { label: cat, name: cat, type: 'high' };
 };
 
-// 2. ESPN numeric stat ID → named key used throughout aggregateStats
-const ESPN_STAT_IDS = {
-  // Batting
-  '0':  'AB',
-  '1':  'H',
-  '2':  'AVG_raw',
-  '3':  '2B',
-  '4':  '3B',
-  '5':  'HR',
-  '6':  'TB_raw',
-  '8':  'TB',
-  '10': 'BB',
-  '12': 'HBP',
-  '13': 'SF',
-  '16': 'PA',
-  '17': 'OBP',
-  '20': 'R',
-  '21': 'RBI',
-  '23': 'SB',
-  '24': 'CS',
-  '26': 'GDP',
-  '27': 'SO',
-  '72': 'E',
+// 2. ESPN numeric stat ID map is imported and re-exported from league constants
+export { ESPN_STAT_IDS };
 
-  // Pitching
-  '32': 'W_app',
-  '33': 'GS',
-  '34': 'IP_raw',
-  '35': 'TBF',
-  '36': 'Pitches',
-  '37': 'H_Allowed',
-  '39': 'BB_Allowed',
-  '44': 'R_Allowed',
-  '45': 'ER',
-  '46': 'HR_Allowed',
-  '48': 'K',
-  '50': 'WP',
-  '53': 'W',
-  '54': 'L',
-  '57': 'SV',
-  '58': 'BS',
-  '60': 'HD',
-  '63': 'QS',
-};
 
 // 3. Helper to aggregate stats
 

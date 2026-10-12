@@ -138,17 +138,8 @@ export const teamsMatch = (str1, str2) => {
   return norm1 === norm2 || norm1.includes(norm2) || norm2.includes(norm1);
 };
 
-export const LEAGUE_OWNERS = [
-  { id: 1, name: 'Tim' },
-  { id: 2, name: 'Adrian' },
-  { id: 3, name: 'Garrett' },
-  { id: 5, name: 'Daniel' },
-  { id: 6, name: 'Anil' },
-  { id: 8, name: 'Alex' },
-  { id: 12, name: 'Will' },
-  { id: 13, name: 'Mark' },
-  { id: 14, name: 'Preston' },
-];
+export { LEAGUE_OWNERS } from '../constants/league';
+
 
 export const PROMINENT_AWARD_CANDIDATES = {
   al_mvp: ['Aaron Judge', 'Bobby Witt Jr.', 'Gunnar Henderson', 'Juan Soto', 'Corey Seager', 'Jose Ramirez', 'Kyle Tucker', 'Yordan Alvarez', 'Adley Rutschman', 'Rafael Devers', 'Vladimir Guerrero Jr.', 'Jarren Duran', 'Julio Rodriguez'],

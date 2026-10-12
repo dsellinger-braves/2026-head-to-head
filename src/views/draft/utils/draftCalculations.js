@@ -1,33 +1,24 @@
 import defaultCalculations from '../../../data/keeperCalculations.json';
 import defaultDraft2026 from '../../../data/draft2026.json';
 
-// --- OWNER & MAPPING HELPERS ---
-export function getFriendlyOwnerName(raw) {
-  if (!raw && raw !== 0) return 'Unknown';
-  const str = String(raw).trim();
-  const match = str.match(/^team\s*(\d+)$/i);
-  const id = match ? parseInt(match[1], 10) : (isNaN(parseInt(str, 10)) ? null : parseInt(str, 10));
-  
-  if (id !== null) {
-    if (id === 1) return 'Tim';
-    if (id === 2) return 'Adrian';
-    if (id === 3) return 'Garrett';
-    if (id === 5) return 'Daniel';
-    if (id === 6 || id === 10) return 'Anil';
-    if (id === 8) return 'Alex';
-    if (id === 11) return 'Owens';
-    if (id === 12) return 'Will';
-    if (id === 13) return 'Mark';
-    if (id === 9 || id === 14) return 'Preston';
-  }
-  
-  const lower = str.toLowerCase();
-  if (lower === 'dan' || lower === 'dsellinger') return 'Daniel';
-  if (lower === 'timothy') return 'Tim';
-  if (lower === 'owens' || lower === 'team owens') return 'Owens';
-  if (lower === 'joseph mattingly') return 'Joseph';
-  return str;
-}
+import {
+  DRAFT_OWNERS,
+  ROSTER_SLOTS,
+  OWNER_AVATARS,
+  getFriendlyOwnerName,
+  normalizeOwner,
+  isSameOwner
+} from '../../../constants/league';
+
+export {
+  DRAFT_OWNERS,
+  ROSTER_SLOTS,
+  OWNER_AVATARS,
+  getFriendlyOwnerName,
+  normalizeOwner,
+  isSameOwner
+};
+
 
 export const mappedDraft2026History = (defaultDraft2026 || []).map(p => ({
   Year: '2026',
@@ -371,46 +362,7 @@ export function mergeZipsData(playerPool, battersZips = [], pitchersZips = []) {
   return merged;
 }
 
-// --- CONSTANTS ---
-export const DRAFT_OWNERS = ["Adrian", "Alex", "Anil", "Daniel", "Garrett", "Mark", "Preston", "Tim", "Will"].sort();
 
-export const ROSTER_SLOTS = [
-  { id: 'C1', label: 'C', eligible: ['C'] },
-  { id: 'C2', label: 'C', eligible: ['C'] },
-  { id: '1B', label: '1B', eligible: ['1B'] },
-  { id: '2B', label: '2B', eligible: ['2B'] },
-  { id: '3B', label: '3B', eligible: ['3B'] },
-  { id: 'SS', label: 'SS', eligible: ['SS'] },
-  { id: 'OF1', label: 'OF', eligible: ['OF'] },
-  { id: 'OF2', label: 'OF', eligible: ['OF'] },
-  { id: 'OF3', label: 'OF', eligible: ['OF'] },
-  { id: 'OF4', label: 'OF', eligible: ['OF'] },
-  { id: 'OF5', label: 'OF', eligible: ['OF'] },
-  { id: 'DH', label: 'DH', eligible: ['DH', 'C', '1B', '2B', '3B', 'SS', 'OF'] },
-  { id: 'SP1', label: 'SP', eligible: ['SP'] },
-  { id: 'SP2', label: 'SP', eligible: ['SP'] },
-  { id: 'SP3', label: 'SP', eligible: ['SP'] },
-  { id: 'SP4', label: 'SP', eligible: ['SP'] },
-  { id: 'RP1', label: 'RP', eligible: ['RP'] },
-  { id: 'RP2', label: 'RP', eligible: ['RP'] },
-  { id: 'BN1', label: 'Bench', eligible: ['ALL'] },
-  { id: 'BN2', label: 'Bench', eligible: ['ALL'] },
-  { id: 'BN3', label: 'Bench', eligible: ['ALL'] }
-];
-
-export const OWNER_AVATARS = {
-  Dan: 'https://raw.githubusercontent.com/dsellinger-braves/fantasy-draft/gh-pages/images/owners/dan.png',
-  Daniel: 'https://raw.githubusercontent.com/dsellinger-braves/fantasy-draft/gh-pages/images/owners/dan.png',
-  Alex: 'https://raw.githubusercontent.com/dsellinger-braves/fantasy-draft/gh-pages/images/owners/alex.png',
-  Adrian: 'https://raw.githubusercontent.com/dsellinger-braves/fantasy-draft/gh-pages/images/owners/adrian.png',
-  Garrett: 'https://raw.githubusercontent.com/dsellinger-braves/fantasy-draft/gh-pages/images/owners/garrett.png',
-  Mark: 'https://raw.githubusercontent.com/dsellinger-braves/fantasy-draft/gh-pages/images/owners/mark.png',
-  Preston: 'https://raw.githubusercontent.com/dsellinger-braves/fantasy-draft/gh-pages/images/owners/preston.png',
-  Tim: 'https://raw.githubusercontent.com/dsellinger-braves/fantasy-draft/gh-pages/images/owners/tim.png',
-  Will: 'https://raw.githubusercontent.com/dsellinger-braves/fantasy-draft/gh-pages/images/owners/will.png',
-  Anil: 'https://raw.githubusercontent.com/dsellinger-braves/fantasy-draft/gh-pages/images/owners/anil.png',
-  default: 'https://raw.githubusercontent.com/dsellinger-braves/fantasy-draft/gh-pages/images/owners/default.png'
-};
 
 export function generateDefaultDraftOrder() {
   const order = [];

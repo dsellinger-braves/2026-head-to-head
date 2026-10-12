@@ -3,8 +3,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../supabaseClient';
 import defaultKeepers from '../data/keeperInput2026.json';
 import { TEAMS } from '../schedule';
+import { DRAFT_OWNERS as FANTASY_MANAGERS, normalizeOwner } from '../constants/league';
 
-const FANTASY_MANAGERS = ["Adrian", "Alex", "Anil", "Daniel", "Garrett", "Mark", "Preston", "Tim", "Will"];
 
 export default function PlayerValuationsView({
   allStats = [],
@@ -69,7 +69,7 @@ export default function PlayerValuationsView({
       const pid = parseInt(k.espn_player_id || k.player_id);
       if (pid) {
         map[pid] = {
-          owner: k.owner === 'Dan' ? 'Daniel' : k.owner,
+          owner: normalizeOwner(k.owner, 'draft'),
           teamId: k.team_id,
           isKeeper: true,
           cost: k.cost,
@@ -95,7 +95,7 @@ export default function PlayerValuationsView({
         const teamInfo = TEAMS[obj.teamId];
         if (teamInfo && teamInfo.id !== 99) {
           map[pid] = {
-            owner: teamInfo.name === 'Dan' ? 'Daniel' : teamInfo.name,
+            owner: normalizeOwner(teamInfo.name, 'draft'),
             teamId: obj.teamId,
             isKeeper: map[pid]?.isKeeper || false,
             cost: map[pid]?.cost,

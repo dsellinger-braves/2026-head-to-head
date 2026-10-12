@@ -1,25 +1,10 @@
 import historicalFinishes from './historicalFinishes.json';
 import { TEAMS } from '../schedule';
 
-// Canonical owner name mapping
-export const CANONICAL_OWNERS = {
-  tim: 'Tim',
-  adrian: 'Adrian',
-  garrett: 'Garrett',
-  daniel: 'Dan',
-  dan: 'Dan',
-  anil: 'Anil',
-  alex: 'Alex',
-  will: 'Will',
-  mark: 'Mark',
-  preston: 'Preston'
-};
+// Canonical owner mapping and normalization re-exported from single source of truth
+import { CANONICAL_OWNERS, normalizeOwner } from '../constants/league';
+export { CANONICAL_OWNERS, normalizeOwner };
 
-export const normalizeOwner = (raw) => {
-  if (!raw) return 'Unknown';
-  const k = raw.trim().toLowerCase();
-  return CANONICAL_OWNERS[k] || raw.trim();
-};
 
 export function getHistoricalSeasons(active2026Data = null) {
   // Deep clone bundled finishes (2012-2025)

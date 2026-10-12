@@ -35,12 +35,14 @@ export const DRAFT_MANAGERS = [
   'Tim', 'Daniel', 'Will', 'Adrian', 'Garrett', 'Alex', 'Mark', 'Preston', 'Anil'
 ];
 
+import { normalizeOwner, isSameOwner } from '../../../constants/league';
+
 export function normalizeManager(mgr) {
   if (!mgr) return '';
-  const s = String(mgr).trim();
-  if (s.toLowerCase() === 'dan') return 'Daniel';
-  return s;
+  return normalizeOwner(mgr, 'draft');
 }
+export { isSameOwner };
+
 
 // Canonical league finishes to guarantee correct #1-#9 display regardless of DB schema team IDs
 export const CANONICAL_FINISHES = {
