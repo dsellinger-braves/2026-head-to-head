@@ -136,6 +136,10 @@ const HASH_TO_VIEW = {
   'draft/ledgers': 'capital',
   'draft/trade-proposals': 'capital',
   'draft/proposals': 'capital',
+  'draft/trade-history': 'capital',
+  'draft/trades': 'capital',
+  'draft/2026-board': 'capital',
+  'draft/2026': 'capital',
   'keepers-budgets': 'keepers',
   keepers: 'keepers',
   'keepers/prices': 'keepers',
@@ -144,6 +148,8 @@ const HASH_TO_VIEW = {
   'keepers/planner': 'keepers',
   'keepers/calculations': 'keepers',
   'keepers/math': 'keepers',
+  'keepers/settings': 'keepers',
+  'keeper-settings': 'keepers',
   'keeper-calculations': 'keepers',
   'keeper-calc': 'keepers',
   'keeper-math': 'keepers',
@@ -194,11 +200,14 @@ function getSubTabsFromHash() {
   else if (hash.includes('comp') || (hash.includes('simulator') && hash.includes('keepers'))) keepersSubTab = 'simulator';
   else if (hash.includes('planner')) keepersSubTab = 'planner';
   else if (hash.includes('calc') || hash.includes('math')) keepersSubTab = 'calculations';
+  else if (hash.includes('settings')) keepersSubTab = 'settings';
   else if (hash.includes('prices') || hash.includes('matrix') || hash.includes('summary')) keepersSubTab = 'matrix';
 
   if (hash.includes('proposal')) draftSubTab = 'proposals';
   else if (hash.includes('ledgers')) draftSubTab = 'ledgers';
-  else if (hash.includes('traded') || hash.includes('board')) draftSubTab = 'board';
+  else if (hash.includes('trade-history') || hash.includes('trades')) draftSubTab = 'history';
+  else if (hash.includes('2026')) draftSubTab = '2026board';
+  else if (hash.includes('traded') || hash.includes('board') || hash.includes('capital')) draftSubTab = 'board';
 
   if (hash.includes('best-lineup') || hash.includes('optimal')) teamsSubTab = 'best-lineup';
   else if (hash.includes('what-if') || hash.includes('teams/simulator') || hash.includes('impact') || hash === 'simulator' || hash === 'what-if') teamsSubTab = 'simulator';
@@ -259,10 +268,13 @@ function App() {
       else if (keepersSubTab === 'simulator') slug = 'keepers/comp-picks';
       else if (keepersSubTab === 'planner') slug = 'keepers/planner';
       else if (keepersSubTab === 'calculations') slug = 'keeper-calculations';
+      else if (keepersSubTab === 'settings') slug = 'keepers/settings';
       else slug = 'keepers/summary';
     } else if (currentView === 'capital') {
       if (draftSubTab === 'proposals') slug = 'draft/trade-proposals';
       else if (draftSubTab === 'ledgers') slug = 'draft/ledgers';
+      else if (draftSubTab === 'history') slug = 'draft/trade-history';
+      else if (draftSubTab === '2026board') slug = 'draft/2026-board';
       else slug = 'draft/traded-board';
     } else if (currentView === 'drafthistory') {
       slug = 'draft/history';
@@ -1159,6 +1171,16 @@ function App() {
                           <span className="flex items-center gap-2"><span>🏷️</span><span>Keeper Prices</span></span>
                           {currentView === 'keepers' && keepersSubTab === 'calculations' && <span className="text-[10px] text-emerald-200">●</span>}
                         </a>
+                        <a
+                          href="#/keepers/settings"
+                          onClick={(e) => { e.preventDefault(); setCurrentView('keepers'); setKeepersSubTab('settings'); setOpenDropdown(null); }}
+                          className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-between transition cursor-pointer ${
+                            currentView === 'keepers' && keepersSubTab === 'settings' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2"><span>⚙️</span><span>League Settings</span></span>
+                          {currentView === 'keepers' && keepersSubTab === 'settings' && <span className="text-[10px] text-emerald-200">●</span>}
+                        </a>
                       </div>
                     )}
                   </div>
@@ -1213,13 +1235,33 @@ function App() {
                           {currentView === 'capital' && draftSubTab === 'proposals' && <span className="text-[10px] text-amber-200">●</span>}
                         </a>
                         <a
+                          href="#/draft/trade-history"
+                          onClick={(e) => { e.preventDefault(); setCurrentView('capital'); setDraftSubTab('history'); setOpenDropdown(null); }}
+                          className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-between transition cursor-pointer ${
+                            currentView === 'capital' && draftSubTab === 'history' ? 'bg-amber-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2"><span>📜</span><span>Traded Assets Log</span></span>
+                          {currentView === 'capital' && draftSubTab === 'history' && <span className="text-[10px] text-amber-200">●</span>}
+                        </a>
+                        <a
+                          href="#/draft/2026-board"
+                          onClick={(e) => { e.preventDefault(); setCurrentView('capital'); setDraftSubTab('2026board'); setOpenDropdown(null); }}
+                          className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-between transition cursor-pointer ${
+                            currentView === 'capital' && draftSubTab === '2026board' ? 'bg-amber-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2"><span>🏛️</span><span>2026 Ground Truth</span></span>
+                          {currentView === 'capital' && draftSubTab === '2026board' && <span className="text-[10px] text-amber-200">●</span>}
+                        </a>
+                        <a
                           href="#/draft/history"
                           onClick={(e) => { e.preventDefault(); setCurrentView('drafthistory'); setOpenDropdown(null); }}
                           className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-between transition cursor-pointer ${
                             currentView === 'drafthistory' ? 'bg-amber-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                           }`}
                         >
-                          <span className="flex items-center gap-2"><span>📜</span><span>Draft History</span></span>
+                          <span className="flex items-center gap-2"><span>📋</span><span>Draft History Recap</span></span>
                           {currentView === 'drafthistory' && <span className="text-[10px] text-amber-200">●</span>}
                         </a>
                         <a
