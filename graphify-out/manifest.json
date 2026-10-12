@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "src/App.jsx": {
-    "mtime": 1791768288.045326,
-    "seen": 1791768455.403974,
-    "ast_hash": "37bda2002161caa761219ed52da33462",
+    "mtime": 1791769045.4896271,
+    "seen": 1791769196.0544994,
+    "ast_hash": "b185224f6bb83aa0f2806e803f2a0c73",
     "semantic_hash": ""
   },
   "src/components/BoxScoreModal.jsx": {
@@ -438,9 +438,9 @@
     "semantic_hash": ""
   },
   "src/views/LeagueHistoryView.jsx": {
-    "mtime": 1789695246.2957623,
-    "seen": 1790798888.2085264,
-    "ast_hash": "8597f510a2403641f536daacfe1a2f39",
+    "mtime": 1791768980.4951456,
+    "seen": 1791769196.057991,
+    "ast_hash": "a9b70c44b56b862ea70f8677029d9477",
     "semantic_hash": ""
   },
   "src/views/LiveScoreboardView.jsx": {
@@ -1179,6 +1179,42 @@
     "mtime": 1791766612.7442784,
     "seen": 1791766978.2446291,
     "ast_hash": "c651a4c133157919707494802913b37d",
+    "semantic_hash": ""
+  },
+  "src/views/history/components/HistoryHeaderNav.jsx": {
+    "mtime": 1791768711.6396186,
+    "seen": 1791769196.0611756,
+    "ast_hash": "8433042d126e0a49477ca71d9bebb00d",
+    "semantic_hash": ""
+  },
+  "src/views/history/modals/EraAdjustmentModal.jsx": {
+    "mtime": 1791768728.2084475,
+    "seen": 1791769196.0611782,
+    "ast_hash": "f21e589f1f174db06aa11e4b2e692f34",
+    "semantic_hash": ""
+  },
+  "src/views/history/services/historyFinishesService.js": {
+    "mtime": 1791768696.574777,
+    "seen": 1791769196.0611799,
+    "ast_hash": "0c4691c71466e61e48f6d215063e7041",
+    "semantic_hash": ""
+  },
+  "src/views/history/tabs/FranchiseHallOfFameTab.jsx": {
+    "mtime": 1791768904.3467875,
+    "seen": 1791769196.0611815,
+    "ast_hash": "5eaf78e40a77b81a213e3a35f44ba2ea",
+    "semantic_hash": ""
+  },
+  "src/views/history/tabs/HistoryHighlightsTab.jsx": {
+    "mtime": 1791768964.895274,
+    "seen": 1791769196.0611827,
+    "ast_hash": "48adb689570d97c70c95fee26ca01882",
+    "semantic_hash": ""
+  },
+  "src/views/history/tabs/HistoryStandingsTab.jsx": {
+    "mtime": 1791768770.732021,
+    "seen": 1791769196.061184,
+    "ast_hash": "bffd0977c6fc87bdffad0bd006f38efa",
     "semantic_hash": ""
   }
 }
