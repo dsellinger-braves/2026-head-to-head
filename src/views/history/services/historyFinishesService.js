@@ -9,25 +9,10 @@ import {
 import leagueContextData from '../../../data/league_context.json';
 import historicalRawStats from '../../../data/historicalRawStats.json';
 
-export const CANONICAL_OWNERS = {
-  tim: 'Tim',
-  adrian: 'Adrian',
-  garrett: 'Garrett',
-  daniel: 'Dan',
-  dan: 'Dan',
-  anil: 'Anil',
-  alex: 'Alex',
-  will: 'Will',
-  'will alexander': 'Will',
-  mark: 'Mark',
-  preston: 'Preston',
-};
+import { CANONICAL_OWNERS, normalizeOwner } from '../../../constants/league';
+export { CANONICAL_OWNERS, normalizeOwner };
 
-export const normalizeOwner = (raw) => {
-  if (!raw) return 'Unknown';
-  const k = raw.trim().toLowerCase();
-  return CANONICAL_OWNERS[k] || raw.trim();
-};
+
 
 export const formatRawStat = (key, val) => {
   if (val === null || val === undefined || val === '') return '—';

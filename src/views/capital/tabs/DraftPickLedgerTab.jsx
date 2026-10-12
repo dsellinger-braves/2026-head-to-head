@@ -1,4 +1,6 @@
 import React from 'react';
+import { normalizeOwner } from '../../../constants/league';
+
 
 export default function DraftPickLedgerTab({
   roundFilter,
@@ -89,7 +91,7 @@ export default function DraftPickLedgerTab({
                           <span className="text-[9px] text-amber-400/80 font-medium mt-0.5">
                             via {(() => {
                               const s = pick.tradeDetails?.sending_owner || pick.originalOwner;
-                              return s === 'Dan' ? 'Daniel' : s || 'Trade';
+                              return normalizeOwner(s, 'draft') || 'Trade';
                             })()}
                           </span>
                         )}

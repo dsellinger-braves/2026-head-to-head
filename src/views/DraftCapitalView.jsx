@@ -5,7 +5,7 @@ import defaultDraftAssetTrades from '../data/draftAssetTrades2026.json';
 import defaultCompPicks from '../data/compensationPicks2026.json';
 import defaultKeepers from '../data/keeperInput2026.json';
 import { useAuth } from '../context/useAuth';
-import { LEAGUE_OWNERS } from '../utils/mlbTeams';
+import { LEAGUE_OWNERS, isSameOwner, normalizeOwner } from '../constants/league';
 
 import {
   DRAFT_OWNERS,
@@ -170,7 +170,7 @@ export default function DraftCapitalView({
 
       (pdsRes?.data || []).forEach(r => {
         const ownerObj = LEAGUE_OWNERS.find(lo => lo.id === r.team_id);
-        const ownerName = ownerObj ? (ownerObj.name === 'Dan' ? 'Daniel' : ownerObj.name) : null;
+        const ownerName = ownerObj ? normalizeOwner(ownerObj.name, 'draft') : null;
         if (!ownerName || !rostersByOwner[ownerName]) return;
 
         const poolPlayer = poolMap.get(String(r.player_id)) || poolMap.get(r.full_name?.toLowerCase().trim());
@@ -550,9 +550,7 @@ export default function DraftCapitalView({
       return;
     }
 
-    const isMe = profile?.owner_name?.toLowerCase() === proposal.target_owner?.toLowerCase() ||
-      (profile?.owner_name === 'Dan' && proposal.target_owner === 'Daniel') ||
-      (profile?.owner_name === 'Daniel' && proposal.target_owner === 'Dan');
+    const isMe = isSameOwner(profile?.owner_name, proposal.target_owner);
 
     if (!isCommissioner && !isMe) {
       alert(`Only ${proposal.target_owner}, Commissioner (Adrian), or Admin (Dan) can accept this proposal.`);

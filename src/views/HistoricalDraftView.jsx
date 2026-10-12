@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { getPlayerHeadshotUrl, handleHeadshotError } from '../utils/headshotUtils';
+import { DRAFT_OWNERS } from '../constants/league';
 
-const DRAFT_OWNERS = ['Adrian', 'Alex', 'Anil', 'Daniel', 'Garrett', 'Mark', 'Preston', 'Tim', 'Will'];
 
 const OWNER_COLORS = {
   Adrian: '#4fc3f7',

@@ -1,4 +1,6 @@
 import React from 'react';
+import { isSameOwner } from '../../../constants/league';
+
 
 export default function TradeProposalsTab({
   viewPerspectiveOwner,
@@ -182,13 +184,10 @@ export default function TradeProposalsTab({
             return (
               <div className="grid grid-cols-1 gap-4">
                 {listToRender.map(prop => {
-                  const isSender = profile?.owner_name?.toLowerCase() === prop.proposing_owner?.toLowerCase() ||
-                    (profile?.owner_name === 'Dan' && prop.proposing_owner === 'Daniel') ||
-                    (profile?.owner_name === 'Daniel' && prop.proposing_owner === 'Dan');
+                  const isSender = isSameOwner(profile?.owner_name, prop.proposing_owner);
+                  const isTarget = isSameOwner(profile?.owner_name, prop.target_owner);
 
-                  const isTarget = profile?.owner_name?.toLowerCase() === prop.target_owner?.toLowerCase() ||
-                    (profile?.owner_name === 'Dan' && prop.target_owner === 'Daniel') ||
-                    (profile?.owner_name === 'Daniel' && prop.target_owner === 'Dan');
+
 
                   const isAwaitingCommish = prop.status === 'accepted_by_partner';
                   const isLoading = actionLoadingId === prop.id;

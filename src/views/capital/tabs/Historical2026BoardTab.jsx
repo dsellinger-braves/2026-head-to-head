@@ -1,4 +1,6 @@
 import React from 'react';
+import { isSameOwner } from '../../../constants/league';
+
 
 export default function Historical2026BoardTab({
   roundFilter,
@@ -75,7 +77,7 @@ export default function Historical2026BoardTab({
                       if (isKeeperRound) {
                         const keeperObj = (keepers || []).find(
                           k => k.round_num === rNum &&
-                            (k.manager === owner || (owner === 'Daniel' && k.manager === 'Dan'))
+                            isSameOwner(k.manager, owner)
                         );
                         return (
                           <td key={owner} className="py-2 px-2 text-center bg-amber-950/10">

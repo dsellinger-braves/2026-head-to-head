@@ -1,38 +1,23 @@
 import { supabase } from '../../../supabaseClient';
-import { LEAGUE_OWNERS } from '../../../utils/mlbTeams';
+import {
+  DRAFT_OWNERS,
+  LEAGUE_OWNERS,
+  LEAGUE_OWNERS_NORMALIZED,
+  getTeamId,
+  normalizeOwner,
+  isSameOwner
+} from '../../../constants/league';
 
-export const DRAFT_OWNERS = ["Adrian", "Alex", "Anil", "Daniel", "Garrett", "Mark", "Preston", "Tim", "Will"];
-
-export const LEAGUE_OWNERS_NORMALIZED = {
-  adrian: { id: 2, name: 'Adrian' },
-  adriaxx: { id: 2, name: 'Adrian' },
-  alex: { id: 8, name: 'Alex' },
-  ay0h: { id: 8, name: 'Alex' },
-  anil: { id: 6, name: 'Anil' },
-  anilbhairo: { id: 6, name: 'Anil' },
-  dan: { id: 5, name: 'Daniel' },
-  daniel: { id: 5, name: 'Daniel' },
-  dsellinger: { id: 5, name: 'Daniel' },
-  garrett: { id: 3, name: 'Garrett' },
-  ghutch: { id: 3, name: 'Garrett' },
-  mark: { id: 13, name: 'Mark' },
-  mrussell38: { id: 13, name: 'Mark' },
-  preston: { id: 14, name: 'Preston' },
-  pston3: { id: 14, name: 'Preston' },
-  tim: { id: 1, name: 'Tim' },
-  aznchuy: { id: 1, name: 'Tim' },
-  will: { id: 12, name: 'Will' },
-  senorspice: { id: 12, name: 'Will' },
+export {
+  DRAFT_OWNERS,
+  LEAGUE_OWNERS,
+  LEAGUE_OWNERS_NORMALIZED,
+  getTeamId,
+  isSameOwner,
+  normalizeOwner
 };
 
-export const getTeamId = (ownerName) => {
-  if (!ownerName) return 0;
-  const key = String(ownerName).toLowerCase().trim();
-  const match = LEAGUE_OWNERS_NORMALIZED[key];
-  if (match) return match.id;
-  const found = LEAGUE_OWNERS.find(lo => lo.name.toLowerCase() === key);
-  return found ? found.id : 0;
-};
+
 
 export const canonicalOwnerName = (ownerName) => {
   if (!ownerName) return '';
@@ -128,8 +113,9 @@ export function compute2027DraftPicks(draftTrades = []) {
   assetTrades.forEach(trade => {
     const round = parseInt(trade.round_num, 10);
     if (!round) return;
-    const sending = trade.sending_owner === 'Dan' ? 'Daniel' : trade.sending_owner;
-    const receiving = trade.receiving_owner === 'Dan' ? 'Daniel' : trade.receiving_owner;
+    const sending = normalizeOwner(trade.sending_owner, 'draft');
+    const receiving = normalizeOwner(trade.receiving_owner, 'draft');
+
 
     // Find the pick in this round currently owned by 'sending'
     const pick = picks.find(p => p.round === round && p.currentOwner === sending);
