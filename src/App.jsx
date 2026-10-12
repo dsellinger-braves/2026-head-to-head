@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useMemo, useRef, lazy, Suspense } from 'react';
 import { supabase } from './supabaseClient';
 import { get, set, del } from 'idb-keyval';
 
@@ -7,31 +7,42 @@ import { calculateStandings } from './utils/standings';
 // NOTE: Make sure to export calculateTrioMatchupResult from scoring.js!
 import { aggregateStats, calculateMatchupResult, calculateTrioMatchupResult } from './utils/scoring';
 
-import WeeklyView from './views/WeeklyView';
-import SummaryView from './views/SummaryView';
-import TeamsView from './views/TeamsView';
-import PlayersView from './views/PlayersView';
-import ProgressionView from './views/ProgressionView';
-import HighlightsView from './views/HighlightsView';
-import OwnerDisparitiesView from './views/OwnerDisparitiesView';
-import OwnerDetailModal from './components/OwnerDetailModal';
-import PlayerHistoryModal from './components/PlayerHistoryModal';
-import LiveScoreboardView from './views/LiveScoreboardView';
-import TransactionsView from './views/TransactionsView';
-import TradeRepositoryView from './views/TradeRepositoryView';
-import DraftRoomView from './views/DraftRoomView';
-import PlayerValuationsView from './views/PlayerValuationsView';
-import PickemView from './views/PickemView';
-import DraftCapitalView from './views/DraftCapitalView';
-import KeepersBudgetsView from './views/KeepersBudgetsView';
-import OwnerLandingView from './views/OwnerLandingView';
-import DraftHistoryView from './views/DraftHistoryView';
-import FullRosterView from './views/FullRosterView';
 import UserNavWidget from './components/UserNavWidget';
 import CommishActiveBanner from './components/CommishActiveBanner';
 import { useAuth } from './context/useAuth';
-import LeagueHistoryView from './views/LeagueHistoryView';
-import PlayerOwnerStatsView from './views/PlayerOwnerStatsView';
+
+// Lazy-loaded Views for code splitting and lightweight initial bundle
+const WeeklyView = lazy(() => import('./views/WeeklyView'));
+const SummaryView = lazy(() => import('./views/SummaryView'));
+const TeamsView = lazy(() => import('./views/TeamsView'));
+const PlayersView = lazy(() => import('./views/PlayersView'));
+const ProgressionView = lazy(() => import('./views/ProgressionView'));
+const HighlightsView = lazy(() => import('./views/HighlightsView'));
+const OwnerDisparitiesView = lazy(() => import('./views/OwnerDisparitiesView'));
+const OwnerDetailModal = lazy(() => import('./components/OwnerDetailModal'));
+const PlayerHistoryModal = lazy(() => import('./components/PlayerHistoryModal'));
+const LiveScoreboardView = lazy(() => import('./views/LiveScoreboardView'));
+const TransactionsView = lazy(() => import('./views/TransactionsView'));
+const TradeRepositoryView = lazy(() => import('./views/TradeRepositoryView'));
+const DraftRoomView = lazy(() => import('./views/DraftRoomView'));
+const PlayerValuationsView = lazy(() => import('./views/PlayerValuationsView'));
+const PickemView = lazy(() => import('./views/PickemView'));
+const DraftCapitalView = lazy(() => import('./views/DraftCapitalView'));
+const KeepersBudgetsView = lazy(() => import('./views/KeepersBudgetsView'));
+const OwnerLandingView = lazy(() => import('./views/OwnerLandingView'));
+const DraftHistoryView = lazy(() => import('./views/DraftHistoryView'));
+const FullRosterView = lazy(() => import('./views/FullRosterView'));
+const LeagueHistoryView = lazy(() => import('./views/LeagueHistoryView'));
+const PlayerOwnerStatsView = lazy(() => import('./views/PlayerOwnerStatsView'));
+
+function ViewLoadingFallback() {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[380px] py-16 space-y-4">
+      <div className="w-10 h-10 border-4 border-slate-700 border-t-blue-500 rounded-full animate-spin"></div>
+      <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest animate-pulse">Loading View...</p>
+    </div>
+  );
+}
 
 const AVAILABLE_SEASONS = [2027, ...Array.from({ length: 2026 - 2012 + 1 }, (_, i) => 2026 - i)];
 
@@ -1308,12 +1319,14 @@ function App() {
       )}
 
       {currentView === 'draft' ? (
-        <DraftRoomView
-          onOpenPlayerModal={(id, name) => setSelectedPlayer({ id, name })}
-          onSwitchView={(view) => setCurrentView(view)}
-          seasonYear={offseasonYear}
-          onSeasonYearChange={handleOffseasonYearChange}
-        />
+        <Suspense fallback={<ViewLoadingFallback />}>
+          <DraftRoomView
+            onOpenPlayerModal={(id, name) => setSelectedPlayer({ id, name })}
+            onSwitchView={(view) => setCurrentView(view)}
+            seasonYear={offseasonYear}
+            onSeasonYearChange={handleOffseasonYearChange}
+          />
+        </Suspense>
       ) : (
         <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
           {loading && !OFFSEASON_VIEWS.has(currentView) ? (
@@ -1407,7 +1420,7 @@ function App() {
               </div>
             </div>
           ) : (
-            <>
+            <Suspense fallback={<ViewLoadingFallback />}>
               {currentView === 'dashboard' && (
                 <OwnerLandingView
                   allStats={rawData}
@@ -1556,31 +1569,35 @@ function App() {
                   subTab={keepersSubTab}
                 />
               )}
-            </>
+            </Suspense>
           )}
         </main>
       )}
 
       {/* --- MODAL LAYER --- */}
       {selectedOwner && (
-        <OwnerDetailModal
-          team={selectedOwner}
-          allStats={rawData}
-          onClose={() => setSelectedOwner(null)}
-          onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
-        />
+        <Suspense fallback={null}>
+          <OwnerDetailModal
+            team={selectedOwner}
+            allStats={rawData}
+            onClose={() => setSelectedOwner(null)}
+            onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
+          />
+        </Suspense>
       )}
 
       {selectedPlayer && (
         <div style={{ zIndex: 90, position: 'relative' }}>
-          <PlayerHistoryModal
-            playerId={selectedPlayer.id}
-            playerName={selectedPlayer.name}
-            teamId={selectedPlayer.teamId}
-            allStats={rawData}
-            selectedSeason={selectedSeason}
-            onClose={() => setSelectedPlayer(null)}
-          />
+          <Suspense fallback={null}>
+            <PlayerHistoryModal
+              playerId={selectedPlayer.id}
+              playerName={selectedPlayer.name}
+              teamId={selectedPlayer.teamId}
+              allStats={rawData}
+              selectedSeason={selectedSeason}
+              onClose={() => setSelectedPlayer(null)}
+            />
+          </Suspense>
         </div>
       )}
     </div>
