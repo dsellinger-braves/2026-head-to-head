@@ -138,7 +138,8 @@ export function useMockDraftEngine({
     handleNewPick({
       ...current,
       'ESPN PlayerID': chosen['ESPN PlayerID'],
-      Round: current.Round
+      Round: current.Round,
+      Selection: chosen.Player
     });
   }, [currentPick, displayPicks, currentUser, handleNewPick, roomSeason, playersRef, setPickStartTime, setTestModePicks]);
 

@@ -41,7 +41,7 @@ export default function AnalysisHistoryPanel({ analysisHistory, players = [], ro
         Position: item.position,
         Team: item.team
       };
-      script = generateLocalPodcastDialogue(pl, item.owner, item.pickNumber, {}, roomSeason);
+      script = generateLocalPodcastDialogue(pl, item.owner, item.pickNumber, {}, roomSeason, item.nextOwner);
     }
 
     setPlayingPick(item.pickNumber);
@@ -69,7 +69,7 @@ export default function AnalysisHistoryPanel({ analysisHistory, players = [], ro
       Position: item.position,
       Team: item.team
     };
-    return generateLocalPodcastDialogue(pl, item.owner, item.pickNumber, {}, roomSeason);
+    return generateLocalPodcastDialogue(pl, item.owner, item.pickNumber, {}, roomSeason, item.nextOwner);
   };
 
   return (
@@ -187,9 +187,9 @@ export default function AnalysisHistoryPanel({ analysisHistory, players = [], ro
                             alignItems: 'center',
                             gap: '4px'
                           }}
-                          title="Play Skip & Chip 2-person debate podcast (Google Cloud Chirp 3 HD)"
+                          title="Play pick announcement & Skip and Chip debate (Google Cloud Voice Engine)"
                         >
-                          {isThisPlaying ? '⏹ Stop Debate' : '🎙️ Skip & Chip Debate'}
+                          {isThisPlaying ? '⏹ Stop Broadcast' : '🎙️ Broadcast & Debate'}
                         </button>
                         <button
                           onClick={() => setExpandedPick(prev => prev === item.pickNumber ? null : item.pickNumber)}
@@ -203,7 +203,7 @@ export default function AnalysisHistoryPanel({ analysisHistory, players = [], ro
                             cursor: 'pointer'
                           }}
                         >
-                          {isThisExpanded ? 'Hide Debate' : 'View Debate'}
+                          {isThisExpanded ? 'Hide Broadcast' : 'View Broadcast'}
                         </button>
                       </div>
                     </div>
@@ -221,7 +221,7 @@ export default function AnalysisHistoryPanel({ analysisHistory, players = [], ro
                     dangerouslySetInnerHTML={{ __html: item.commentary }}
                   />
 
-                  {/* Expanded Skip & Chip Dialogue */}
+                  {/* Expanded Broadcast & Dialogue */}
                   {isThisExpanded && itemScript && (
                     <div style={{
                       marginTop: '10px',
@@ -242,14 +242,53 @@ export default function AnalysisHistoryPanel({ analysisHistory, players = [], ro
                         fontWeight: 'bold',
                         letterSpacing: '0.5px'
                       }}>
-                        <span>🎙️ SKIP & CHIP 2-HOST DEBATE SCRIPT</span>
+                        <span>🎙️ DRAFT BROADCAST & PODCAST DEBATE</span>
                         <span style={{ fontSize: '9px', color: '#03dac6', border: '1px solid rgba(3, 218, 198, 0.3)', padding: '1px 4px', borderRadius: '3px' }}>
-                          Google Cloud Chirp 3 HD
+                          Google Cloud Voice Engine
                         </span>
                       </div>
                       {itemScript.map((line, lIdx) => {
-                        const isChip = (line.speaker || '').toUpperCase().trim() === 'CHIP';
+                        const speaker = (line.speaker || '').toUpperCase().trim();
+                        const isAnnouncer = speaker === 'ANNOUNCER' || speaker === 'COMMISSIONER';
+                        const isChip = speaker === 'CHIP';
                         const isLineActive = isThisPlaying && activeDebateLine === lIdx;
+
+                        if (isAnnouncer) {
+                          return (
+                            <div
+                              key={lIdx}
+                              style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignSelf: 'stretch',
+                                background: isLineActive
+                                  ? 'rgba(0, 229, 255, 0.22)'
+                                  : 'rgba(0, 0, 0, 0.5)',
+                                border: isLineActive ? '1px solid #00e5ff' : '1px solid rgba(0, 229, 255, 0.3)',
+                                borderLeft: `3px solid ${isLineActive ? '#00e5ff' : '#0288d1'}`,
+                                borderRadius: '6px',
+                                padding: '6px 10px',
+                                transition: 'all 0.2s ease',
+                                boxShadow: isLineActive
+                                  ? '0 0 12px rgba(0, 229, 255, 0.4)'
+                                  : 'none'
+                              }}
+                            >
+                              <span style={{
+                                fontSize: '10px',
+                                fontWeight: 'bold',
+                                color: '#00e5ff',
+                                marginBottom: '2px'
+                              }}>
+                                📢 OFFICIAL PICK ANNOUNCEMENT {isLineActive && '• ANNOUNCING'}
+                              </span>
+                              <span style={{ fontSize: '12px', color: isLineActive ? '#fff' : '#e0f7fa', lineHeight: '1.4' }}>
+                                {line.text}
+                              </span>
+                            </div>
+                          );
+                        }
+
                         return (
                           <div
                             key={lIdx}
