@@ -17,6 +17,7 @@ export default function DesktopHeader({
   currentPick,
   audioEnabled,
   setAudioEnabled,
+  onTestAudio,
   playOwnerSound,
   pickStartTime,
   onSwitchView
@@ -186,7 +187,11 @@ export default function DesktopHeader({
                 alert('Please enable audio first by clicking the Audio ON button');
                 return;
               }
-              playOwnerSound(currentUser);
+              if (onTestAudio) {
+                onTestAudio();
+              } else if (playOwnerSound) {
+                playOwnerSound(currentUser);
+              }
             }}
             style={{
               background: '#ffc107',

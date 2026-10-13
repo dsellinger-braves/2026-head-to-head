@@ -114,23 +114,25 @@ export default function WarRoomDrawer({
       </div>
 
       <div style={{ ...styles.panelContent, display: activeTab === 'Tiers' ? 'block' : 'none', overflowY: 'auto' }}>
-        <TierBoard
-          players={displayPlayers}
-          tiers={tierState.tiers}
-          playerTiers={tierState.playerTiers}
-          playerTags={tierState.playerTags}
-          playerNotes={tierState.playerNotes}
-          queue={queue}
-          onMovePlayerToTier={handleMovePlayerToTier}
-          onToggleTag={handleToggleTag}
-          onUpdateNote={handleUpdateNote}
-          onAddToQueue={addToQueue}
-          onRemoveFromQueue={removeFromQueue}
-          onOpenPlayerModal={setSelectedPlayer}
-          isLiveDraft={true}
-          isMyTurn={isMyTurn}
-          onDraftPlayer={handleDraft}
-        />
+        {activeTab === 'Tiers' && (
+          <TierBoard
+            players={displayPlayers}
+            tiers={tierState.tiers}
+            playerTiers={tierState.playerTiers}
+            playerTags={tierState.playerTags}
+            playerNotes={tierState.playerNotes}
+            queue={queue}
+            onMovePlayerToTier={handleMovePlayerToTier}
+            onToggleTag={handleToggleTag}
+            onUpdateNote={handleUpdateNote}
+            onAddToQueue={addToQueue}
+            onRemoveFromQueue={removeFromQueue}
+            onOpenPlayerModal={setSelectedPlayer}
+            isLiveDraft={true}
+            isMyTurn={isMyTurn}
+            onDraftPlayer={handleDraft}
+          />
+        )}
       </div>
 
       <div style={{ ...styles.panelContent, display: activeTab === 'Roster' ? 'grid' : 'none' }}>

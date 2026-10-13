@@ -287,23 +287,23 @@ export default function DraftPrepView({
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-8 space-y-6">
+    <div className="min-h-screen bg-slate-950 text-slate-100 p-3 sm:p-6 lg:p-8 space-y-6 max-w-[1920px] mx-auto">
       {/* Header Banner */}
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-6">
+      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-5">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <span className="text-4xl">📋</span>
+          <div className="flex items-center gap-3.5">
+            <span className="text-3xl sm:text-4xl">📋</span>
             <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">
-                  Draft Prep & Strategy Board
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight">
+                  Draft Prep & Tier Strategy Board
                 </h1>
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-teal-500/20 text-teal-300 border border-teal-500/40">
                   Pre-Draft War Room
                 </span>
               </div>
               <p className="text-slate-400 text-xs mt-1">
-                Customize positional tiers, assign targets, add private scouting notes, and build your draft night queue outside the lobby.
+                Customize positional tiers, drag-and-drop targets, add private scouting notes, and stage your draft night queue.
               </p>
             </div>
           </div>
@@ -345,9 +345,9 @@ export default function DraftPrepView({
           </div>
         </div>
 
-        {/* Manager Selector & Season Switcher */}
+        {/* Manager Selector & Season Switcher Toolbar */}
         <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-800">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <span className="text-xs font-bold text-slate-400">Prepping Board For:</span>
             <select
               value={selectedOwner}
@@ -389,18 +389,19 @@ export default function DraftPrepView({
           </div>
 
           {/* Tools & Reset */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={handleResetToAutoTiers}
-              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl transition cursor-pointer"
+              className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl transition cursor-pointer flex items-center gap-1.5"
               title="Reset tier placements to default rankings"
             >
-              🔄 Auto-Tier by Rank
+              <span>🔄</span>
+              <span>Auto-Tier by Rank</span>
             </button>
 
             <button
               onClick={() => setIsQueueOpen(prev => !prev)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
                 isQueueOpen
                   ? 'bg-amber-500 text-slate-950 shadow-md'
                   : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
@@ -413,22 +414,22 @@ export default function DraftPrepView({
         </div>
 
         {/* Manager's Locked Keeper Summary Card */}
-        <div className="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1">
+        <div className="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="space-y-1.5 min-w-0">
             <div className="flex items-center gap-2">
               <span className="text-xs font-black text-teal-400 uppercase tracking-wider">
                 🔒 Locked Keepers ({ownerKeepers.length} / {selectedSeason >= 2027 ? 6 : 5} Slots)
               </span>
               <span className="text-[10px] text-slate-500">Rounds 1–{selectedSeason >= 2027 ? 6 : 5} Locked</span>
             </div>
-            <div className="flex flex-wrap gap-2 pt-1">
+            <div className="flex flex-wrap gap-2 pt-0.5">
               {ownerKeepers.length === 0 ? (
                 <span className="text-xs text-slate-500 italic">No keepers locked yet for {selectedOwner}.</span>
               ) : (
                 ownerKeepers.map(k => (
                   <span
                     key={k.id || k.Player}
-                    className="px-2.5 py-1 bg-slate-900 border border-slate-700 rounded-xl text-xs font-bold text-white flex items-center gap-1.5"
+                    className="px-2.5 py-1 bg-slate-900 border border-slate-700/80 rounded-xl text-xs font-bold text-white flex items-center gap-1.5"
                   >
                     <span>{k.Player}</span>
                     <span className="text-[10px] text-teal-400 font-mono">({k.Position})</span>
@@ -443,20 +444,20 @@ export default function DraftPrepView({
 
           {/* Stats Banked From Keepers */}
           {ownerKeepers.length > 0 && (
-            <div className="flex items-center gap-4 bg-slate-900/60 px-4 py-2 rounded-xl border border-slate-800 flex-shrink-0 text-xs">
-              <div className="text-center">
+            <div className="flex items-center gap-3 sm:gap-4 bg-slate-900/80 px-4 py-2 rounded-xl border border-slate-800 flex-shrink-0 text-xs flex-wrap">
+              <div className="text-center min-w-[50px]">
                 <div className="text-[10px] text-slate-500 font-bold uppercase">Banked HR</div>
                 <div className="font-mono font-black text-emerald-400 text-sm">{keeperBankedStats.hr}</div>
               </div>
-              <div className="text-center">
+              <div className="text-center min-w-[50px]">
                 <div className="text-[10px] text-slate-500 font-bold uppercase">Banked SB</div>
                 <div className="font-mono font-black text-cyan-400 text-sm">{keeperBankedStats.sb}</div>
               </div>
-              <div className="text-center">
+              <div className="text-center min-w-[50px]">
                 <div className="text-[10px] text-slate-500 font-bold uppercase">Banked K</div>
                 <div className="font-mono font-black text-purple-400 text-sm">{keeperBankedStats.k}</div>
               </div>
-              <div className="text-center">
+              <div className="text-center min-w-[50px]">
                 <div className="text-[10px] text-slate-500 font-bold uppercase">Banked QS</div>
                 <div className="font-mono font-black text-amber-400 text-sm">{keeperBankedStats.qs}</div>
               </div>
@@ -466,12 +467,12 @@ export default function DraftPrepView({
       </div>
 
       {/* Main Workspace: Tier Board + Slide-out Queue */}
-      <div className="flex gap-6 items-start">
+      <div className="flex gap-6 items-start relative min-w-0">
         {/* Main Tier Board */}
         <div className="flex-1 min-w-0">
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-20 space-y-3">
-              <div className="w-10 h-10 border-4 border-slate-800 border-t-teal-400 rounded-full animate-spin" />
+            <div className="flex flex-col items-center justify-center py-24 space-y-3">
+              <div className="w-12 h-12 border-4 border-slate-800 border-t-teal-400 rounded-full animate-spin" />
               <p className="text-xs font-bold text-slate-400 uppercase tracking-widest animate-pulse">
                 Loading Player Pool & Custom Tiers...
               </p>
@@ -498,30 +499,31 @@ export default function DraftPrepView({
 
         {/* Collapsible Personal Draft Queue Sidebar */}
         {isQueueOpen && (
-          <div className="w-80 lg:w-96 bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-2xl flex-shrink-0 space-y-4 sticky top-6 animate-fade-in max-h-[85vh] flex flex-col">
+          <div className="w-80 lg:w-96 bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-2xl flex-shrink-0 space-y-4 sticky top-6 animate-fade-in max-h-[85vh] flex flex-col z-20">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div>
                 <h3 className="font-black text-sm text-white flex items-center gap-1.5">
-                  <span>★</span>
+                  <span className="text-amber-400">★</span>
                   <span>Draft Night Queue</span>
                 </h3>
                 <p className="text-[11px] text-slate-400 mt-0.5">
-                  Auto-picks fall back to this queue on the clock
+                  Priority queue during your turns on the clock
                 </p>
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5">
                 {queue.length > 0 && (
                   <button
                     onClick={handleClearQueue}
-                    className="text-[10px] text-slate-500 hover:text-rose-400 p-1 cursor-pointer font-bold"
+                    className="text-[10px] text-slate-500 hover:text-rose-400 px-2 py-1 rounded bg-slate-950/60 hover:bg-slate-950 cursor-pointer font-bold transition"
                     title="Clear queue"
                   >
-                    Clear
+                    Clear All
                   </button>
                 )}
                 <button
                   onClick={() => setIsQueueOpen(false)}
                   className="text-slate-500 hover:text-white p-1 text-xs cursor-pointer"
+                  title="Close Queue Sidebar"
                 >
                   ✕
                 </button>
@@ -548,7 +550,7 @@ export default function DraftPrepView({
                       key={pid}
                       className="bg-slate-950 border border-slate-800 rounded-xl p-2.5 flex items-center justify-between gap-2 hover:border-slate-700 transition"
                     >
-                      <div className="flex items-center gap-2 min-w-0">
+                      <div className="flex items-center gap-2.5 min-w-0">
                         {/* Queue Order / Projected Pick Badge */}
                         <div className="text-center flex-shrink-0 w-8">
                           <span className="font-black text-amber-400 text-xs">#{idx + 1}</span>
@@ -577,10 +579,12 @@ export default function DraftPrepView({
                           >
                             {p.Player || p.player_name}
                           </div>
-                          <div className="text-[10px] text-slate-400 truncate">
-                            {p.Position} • {p.Team}
+                          <div className="text-[10px] text-slate-400 truncate flex items-center gap-1.5">
+                            <span className="text-teal-300 font-bold">{p.Position}</span>
+                            <span>•</span>
+                            <span>{p.Team}</span>
                             {assignedSnakePick && (
-                              <span className="text-teal-400 ml-1 font-mono">
+                              <span className="text-amber-400 font-mono text-[9px]">
                                 (Pick #{assignedSnakePick.overallPick})
                               </span>
                             )}
@@ -593,7 +597,7 @@ export default function DraftPrepView({
                         <button
                           disabled={idx === 0}
                           onClick={() => handleMoveQueueItem(idx, idx - 1)}
-                          className="p-1 text-slate-500 hover:text-white disabled:opacity-20 cursor-pointer disabled:cursor-not-allowed text-xs"
+                          className="p-1.5 text-slate-500 hover:text-white disabled:opacity-20 cursor-pointer disabled:cursor-not-allowed text-xs"
                           title="Move Up"
                         >
                           ▲
@@ -601,14 +605,14 @@ export default function DraftPrepView({
                         <button
                           disabled={idx === queue.length - 1}
                           onClick={() => handleMoveQueueItem(idx, idx + 1)}
-                          className="p-1 text-slate-500 hover:text-white disabled:opacity-20 cursor-pointer disabled:cursor-not-allowed text-xs"
+                          className="p-1.5 text-slate-500 hover:text-white disabled:opacity-20 cursor-pointer disabled:cursor-not-allowed text-xs"
                           title="Move Down"
                         >
                           ▼
                         </button>
                         <button
                           onClick={() => handleRemoveFromQueue(pid)}
-                          className="p-1 text-slate-600 hover:text-rose-400 cursor-pointer text-xs ml-1"
+                          className="p-1.5 text-slate-600 hover:text-rose-400 cursor-pointer text-xs ml-0.5"
                           title="Remove from queue"
                         >
                           ✕
@@ -626,6 +630,18 @@ export default function DraftPrepView({
               <span className="text-teal-400 font-bold">Auto-saved to lobby</span>
             </div>
           </div>
+        )}
+
+        {/* Floating Queue Re-Open Button when Queue is Closed */}
+        {!isQueueOpen && (
+          <button
+            onClick={() => setIsQueueOpen(true)}
+            className="fixed bottom-6 right-6 z-40 px-4 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-2xl shadow-2xl flex items-center gap-2 cursor-pointer ring-2 ring-amber-300 transition-transform hover:scale-105"
+            title="Open Draft Night Queue"
+          >
+            <span className="text-sm">★</span>
+            <span>Draft Queue ({queue.length})</span>
+          </button>
         )}
       </div>
     </div>

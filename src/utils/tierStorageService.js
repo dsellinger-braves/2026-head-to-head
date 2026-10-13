@@ -17,33 +17,42 @@ export const TAG_OPTIONS = [
   { id: 'fade', label: 'Do Not Draft / Fade', icon: '🚫', color: '#ef4444', bg: 'rgba(239, 68, 68, 0.2)' }
 ];
 
+const tiersMemoryCache = new Map();
+
 function getTiersStorageKey(seasonYear, owner) {
   const norm = normalizeOwner(owner || 'Daniel', 'draft') || 'Daniel';
   return `hefty_draft_tiers_${seasonYear || 2026}_${norm}`;
 }
 
 /**
- * Loads user tier assignments, custom tier definitions, tags, and notes.
+ * Loads user tier assignments, custom tier definitions, tags, and notes with in-memory caching.
  */
 export function loadUserTiers(seasonYear, owner) {
   const key = getTiersStorageKey(seasonYear, owner);
+  if (tiersMemoryCache.has(key)) {
+    return tiersMemoryCache.get(key);
+  }
   try {
-    const raw = localStorage.getItem(key);
+    const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(key) : null;
+    let res;
     if (!raw) {
-      return {
+      res = {
         tiers: [...DEFAULT_TIERS],
         playerTiers: {}, // { [playerId]: tierId }
         playerTags: {},  // { [playerId]: ['target', 'speed'] }
         playerNotes: {}  // { [playerId]: 'private note text' }
       };
+    } else {
+      const parsed = JSON.parse(raw);
+      res = {
+        tiers: (parsed.tiers && parsed.tiers.length > 0) ? parsed.tiers : [...DEFAULT_TIERS],
+        playerTiers: parsed.playerTiers || {},
+        playerTags: parsed.playerTags || {},
+        playerNotes: parsed.playerNotes || {}
+      };
     }
-    const parsed = JSON.parse(raw);
-    return {
-      tiers: (parsed.tiers && parsed.tiers.length > 0) ? parsed.tiers : [...DEFAULT_TIERS],
-      playerTiers: parsed.playerTiers || {},
-      playerTags: parsed.playerTags || {},
-      playerNotes: parsed.playerNotes || {}
-    };
+    tiersMemoryCache.set(key, res);
+    return res;
   } catch (err) {
     console.error(`Error loading draft tiers from ${key}:`, err);
     return {
@@ -61,7 +70,10 @@ export function loadUserTiers(seasonYear, owner) {
 export function saveUserTiers(seasonYear, owner, data) {
   const key = getTiersStorageKey(seasonYear, owner);
   try {
-    localStorage.setItem(key, JSON.stringify(data));
+    tiersMemoryCache.set(key, data);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(key, JSON.stringify(data));
+    }
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('hefty_tiers_updated', {
         detail: { seasonYear, owner: normalizeOwner(owner, 'draft'), data }

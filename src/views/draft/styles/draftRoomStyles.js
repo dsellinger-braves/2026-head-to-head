@@ -95,16 +95,16 @@ export const styles = {
     fontWeight: 'bold'
   },
   aiBox: {
-    marginTop: '20px',
+    marginTop: '16px',
     background: 'rgba(187, 134, 252, 0.08)',
     borderLeft: '4px solid #bb86fc',
+    borderRadius: '8px',
     padding: '14px 20px',
     textAlign: 'left',
-    fontSize: '16px',
+    fontSize: '15px',
     lineHeight: '1.5',
-    fontStyle: 'italic',
     color: '#ccc',
-    maxHeight: '150px',
+    maxHeight: '440px',
     overflowY: 'auto'
   },
   sidebar: {

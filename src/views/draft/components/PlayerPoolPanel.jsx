@@ -145,13 +145,21 @@ export default function PlayerPoolPanel({
 
   const isQueued = (playerId) => queue.some(p => String(p['ESPN PlayerID']) === String(playerId));
 
-  // Compute Positional Tiers for Tiers View
+  // Fast O(1) tier lookup map
+  const tierMap = useMemo(() => {
+    const map = new Map();
+    (userTiers?.tiers || []).forEach(t => map.set(t.id, t));
+    return map;
+  }, [userTiers?.tiers]);
+
+  // Compute Positional Tiers for Tiers View only when viewMode === 'tiers'
   const positionalTiers = useMemo(() => {
+    if (viewMode !== 'tiers') return {};
     return getPositionalTiers({
       availablePlayers: sortedPlayers,
       position: tierPos
     });
-  }, [sortedPlayers, tierPos]);
+  }, [sortedPlayers, tierPos, viewMode]);
 
   return (
     <div style={{ display: 'flex', gridColumn: '1 / -1', gap: '20px', height: '100%', minHeight: 0 }}>
@@ -509,7 +517,7 @@ export default function PlayerPoolPanel({
                           {(() => {
                             const pid = String(p['ESPN PlayerID'] || p.espn_player_id || p.id || '');
                             const assignedTierId = userTiers?.playerTiers?.[pid];
-                            const assignedTier = userTiers?.tiers?.find(t => t.id === assignedTierId);
+                            const assignedTier = assignedTierId ? tierMap.get(assignedTierId) : null;
                             const activeTags = userTiers?.playerTags?.[pid] || [];
                             const playerNote = userTiers?.playerNotes?.[pid];
 

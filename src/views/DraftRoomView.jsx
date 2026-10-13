@@ -45,8 +45,7 @@ import {
   generateLocalPodcastDialogue,
   generatePodcastDialogue,
   playDualSpeakerPodcast,
-  playPodcastTTS,
-  playOwnerSound
+  playPodcastTTS
 } from './draft/services/draftAudio';
 
 export { DRAFT_OWNERS };
@@ -58,7 +57,6 @@ import useMockDraftEngine from './draft/hooks/useMockDraftEngine';
 import DesktopHeader from './draft/components/DesktopHeader';
 import WarRoomDrawer from './draft/components/WarRoomDrawer';
 import MockDraftController from './draft/components/MockDraftController';
-import PodcastBreakdownWidget from './draft/components/PodcastBreakdownWidget';
 import PlayerModal from './draft/components/PlayerModal';
 import PlayerNameButton from './draft/components/PlayerNameButton';
 import ModeSelectionModal from './draft/components/ModeSelectionModal';
@@ -173,7 +171,6 @@ export default function DraftRoomView({
   useEffect(() => {
     audioEnabledRef.current = audioEnabled;
   }, [audioEnabled]);
-  const lastAnnouncedPickRef = useRef(null);
 
   const [resetting, setResetting] = useState(false);
 
@@ -275,19 +272,6 @@ export default function DraftRoomView({
     }
     return displayPicks.find(p => !p['ESPN PlayerID']);
   }, [displayPicks, roomSeason]);
-
-  const currentPickId = currentPick?.['Overall Pick'];
-  const currentPickOwner = currentPick?.Owner;
-
-  // Sound effect when current pick changes
-  useEffect(() => {
-    if (currentPickOwner && audioEnabled && currentPickId) {
-      if (currentPickId !== lastAnnouncedPickRef.current) {
-        lastAnnouncedPickRef.current = currentPickId;
-        playOwnerSound(currentPickOwner);
-      }
-    }
-  }, [currentPickId, currentPickOwner, audioEnabled]);
 
   // Commentary callback - stable reference using playersRef
   const handleNewPick = useCallback(async (pick) => {
@@ -1290,7 +1274,7 @@ export default function DraftRoomView({
           currentPick={currentPick}
           audioEnabled={audioEnabled}
           setAudioEnabled={setAudioEnabled}
-          playOwnerSound={playOwnerSound}
+          onTestAudio={() => playPodcastTTS(`Audio test for ${currentUser}. Live speech system is active.`)}
           pickStartTime={pickStartTime}
           onSwitchView={onSwitchView}
         />
@@ -1373,30 +1357,54 @@ export default function DraftRoomView({
               {lastPick ? `Selected by ${lastPick.Owner}` : '--'}
             </div>
             <div style={styles.aiBox}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '6px' }}>
                 <span style={{ fontSize: '11px', color: '#bb86fc', fontWeight: 'bold', textTransform: 'uppercase' }}>
-                  🎙️ Instant Reaction
+                  🎙️ Instant Reaction & Grade
                 </span>
-                {lastPickCommentary && lastPickCommentary !== 'Draft has not started.' && !generatingCommentary && (
-                  <button
-                    onClick={() => playPodcastTTS(lastPickCommentary)}
-                    style={{
-                      background: 'rgba(187, 134, 252, 0.15)',
-                      border: '1px solid #bb86fc',
-                      color: '#bb86fc',
-                      borderRadius: '4px',
-                      padding: '2px 6px',
-                      fontSize: '10px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '3px'
-                    }}
-                    title="Play podcast-style spoken analysis"
-                  >
-                    🔊 Listen
-                  </button>
-                )}
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  {lastPodcastScript && lastPodcastScript.length > 0 && (
+                    <button
+                      onClick={() => isPlayingPodcast ? handleStopPodcast() : handlePlayPodcast()}
+                      style={{
+                        background: isPlayingPodcast ? 'rgba(239, 68, 68, 0.2)' : 'rgba(3, 218, 198, 0.15)',
+                        border: `1px solid ${isPlayingPodcast ? '#ef4444' : '#03dac6'}`,
+                        color: isPlayingPodcast ? '#ef4444' : '#03dac6',
+                        borderRadius: '4px',
+                        padding: '2px 7px',
+                        fontSize: '10px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '3px'
+                      }}
+                      title={isPlayingPodcast ? "Stop podcast debate" : "Play Skip & Chip podcast debate audio"}
+                    >
+                      {isPlayingPodcast ? '⏹️ Stop Debate' : '🎙️ Play Debate'}
+                    </button>
+                  )}
+                  {lastPickCommentary && lastPickCommentary !== 'Draft has not started.' && !generatingCommentary && (
+                    <button
+                      onClick={() => playPodcastTTS(lastPickCommentary)}
+                      style={{
+                        background: 'rgba(187, 134, 252, 0.15)',
+                        border: '1px solid #bb86fc',
+                        color: '#bb86fc',
+                        borderRadius: '4px',
+                        padding: '2px 7px',
+                        fontSize: '10px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '3px'
+                      }}
+                      title="Play podcast-style spoken analysis"
+                    >
+                      🔊 Listen
+                    </button>
+                  )}
+                </div>
               </div>
               {generatingCommentary ? (
                 <span>🤔 Gemini is analyzing this selection...</span>
@@ -1404,18 +1412,6 @@ export default function DraftRoomView({
                 <span dangerouslySetInnerHTML={{ __html: lastPickCommentary }} />
               )}
             </div>
-
-            {/* Skip & Chip 2-Person Podcast Debate Widget */}
-            <PodcastBreakdownWidget
-              script={lastPodcastScript}
-              isGenerating={generatingPodcast}
-              isPlaying={isPlayingPodcast}
-              activeLine={activePodcastLine}
-              onPlay={() => handlePlayPodcast()}
-              onStop={handleStopPodcast}
-              compact={true}
-              playerName={lastPickPlayer?.Player}
-            />
           </div>
         </div>
 
