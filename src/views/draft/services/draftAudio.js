@@ -1,10 +1,65 @@
-import { supabase } from '../../../supabaseClient';
+import { supabase } from '../../../supabaseClient.js';
 import {
   getEffectiveRank,
   getEffectivePrice,
   getEffectiveQS,
   formatPlayerStats
-} from '../utils/draftCalculations';
+} from '../utils/draftCalculations.js';
+import { findMlbTeam } from '../../../utils/mlbTeams.js';
+
+// --- SPOKEN PRONUNCIATION & ABBREVIATION DICTIONARIES ---
+export function formatPositionForSpeech(pos) {
+  if (!pos || typeof pos !== 'string') return 'player';
+  const mapping = {
+    '1B': 'first base',
+    '2B': 'second base',
+    '3B': 'third base',
+    'SS': 'shortstop',
+    'C': 'catcher',
+    'OF': 'outfield',
+    'LF': 'left field',
+    'CF': 'center field',
+    'RF': 'right field',
+    'DH': 'designated hitter',
+    'SP': 'starting pitcher',
+    'RP': 'relief pitcher',
+    'CP': 'closer',
+    'CL': 'closer',
+    'P': 'pitcher',
+    'UTIL': 'utility',
+    'IF': 'infield',
+    'INF': 'infield',
+    'CI': 'corner infield',
+    'MI': 'middle infield'
+  };
+
+  // Handle slash, comma, or whitespace delimited positions like "2B/SS", "1B, 3B", "SP/RP"
+  const rawTokens = pos.split(/[/,\s+]+/).map(p => p.trim()).filter(Boolean);
+  if (rawTokens.length === 0) return 'player';
+  const spokenTokens = rawTokens.map(tok => mapping[tok.toUpperCase()] || tok);
+  if (spokenTokens.length === 1) return spokenTokens[0];
+  if (spokenTokens.length === 2) return `${spokenTokens[0]} and ${spokenTokens[1]}`;
+  return `${spokenTokens.slice(0, -1).join(', ')}, and ${spokenTokens[spokenTokens.length - 1]}`;
+}
+
+export function formatTeamForSpeech(team) {
+  if (!team || typeof team !== 'string') return '';
+  const clean = team.trim();
+  const upper = clean.toUpperCase();
+  if (upper === 'FA' || upper === 'FREE AGENT') return 'Free Agent';
+  if (upper === 'MLB' || upper === 'NONE' || upper === 'N/A') return '';
+  const matched = findMlbTeam(clean);
+  if (matched?.name) return matched.name;
+  return clean;
+}
+
+export function generatePickAnnouncement({ pickNumber, owner, playerName, position, team, nextOwner }) {
+  const spokenPos = formatPositionForSpeech(position);
+  const spokenTeam = formatTeamForSpeech(team);
+  const teamPart = spokenTeam ? `, ${spokenTeam}` : '';
+  const nextOwnerPart = nextOwner ? ` ${nextOwner} is on the clock.` : '';
+  return `With pick ${pickNumber}, ${owner} selects ${playerName}, ${spokenPos}${teamPart}.${nextOwnerPart}`;
+}
 
 // --- CONFIGURATION ---
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyDQ0eRBz6jSsORZrnG19jR5mzmd0QE0DWg';
@@ -328,8 +383,19 @@ export function prepareSpokenScript(htmlText) {
   text = text.replace(/Board:\s*#?\d*.*?MLB:\s*[\w\s]*/gi, ' ');
   // Remove emojis
   text = text.replace(/[\u{1F300}-\u{1FAFF}]|[\u{2600}-\u{27BF}]/gu, ' ');
-  // Expand fantasy abbreviations so pronunciation sounds like an athletic sports broadcaster
+  // Expand fantasy and baseball abbreviations so pronunciation sounds like an athletic sports broadcaster
   text = text
+    .replace(/\b1B\b/g, 'first base')
+    .replace(/\b2B\b/g, 'second base')
+    .replace(/\b3B\b/g, 'third base')
+    .replace(/\bSS\b/g, 'shortstop')
+    .replace(/\bSP\b/g, 'starting pitcher')
+    .replace(/\bRP\b/g, 'relief pitcher')
+    .replace(/\bDH\b/g, 'designated hitter')
+    .replace(/\bOF\b/g, 'outfield')
+    .replace(/\bLF\b/g, 'left field')
+    .replace(/\bCF\b/g, 'center field')
+    .replace(/\bRF\b/g, 'right field')
     .replace(/\bHRs?\b/g, 'home runs')
     .replace(/\bRBIs?\b/g, 'RBIs')
     .replace(/\bSB\b/g, 'stolen bases')
@@ -388,7 +454,7 @@ export function stopPodcastAudio() {
   }
 }
 
-export function generateLocalPodcastDialogue(player, owner, pickNum, teamContext = {}, season = 2027) {
+export function generateLocalPodcastDialogue(player, owner, pickNum, teamContext = {}, season = 2027, nextOwner = null) {
   const rank = getEffectiveRank(player);
   const surplus = rank ? (pickNum - rank) : 0;
   const isPitcher = (player.Position || '').includes('SP') || (player.Position || '').includes('RP') || (player.Position || '').includes('P');
@@ -398,13 +464,23 @@ export function generateLocalPodcastDialogue(player, owner, pickNum, teamContext
   const sb = parseFloat(player.ZIPSSB || player.ESPNSB || 4);
   const prevPicks = teamContext?.recentPicks || [];
 
+  // Official Pick Announcement as opening line
+  const announcementText = generatePickAnnouncement({
+    pickNumber: pickNum,
+    owner,
+    playerName: player.Player,
+    position: player.Position,
+    team: player.Team,
+    nextOwner
+  });
+
   let skipLine1 = "";
   let chipLine1 = "";
   let skipLine2 = "";
   let chipLine2 = "";
 
   if (surplus <= -12) {
-    skipLine1 = `I don't know Chip, ${player.Player} at number ${pickNum}? That is an aggressive reach when his consensus rank is sitting at #${rank || pickNum}.`;
+    skipLine1 = `I don't know Chip, ${player.Player} at number ${pickNum}? That is an aggressive reach when his consensus rank is sitting at number ${rank || pickNum}.`;
     chipLine1 = `Skip, you're looking at the board, but ${owner} is looking at the ceiling! In this league, you don't wait around if he's your target.`;
     skipLine2 = isPitcher
       ? `He still has to prove the health and workload over a full summer. You left proven top-tier bats on the table.`
@@ -437,6 +513,7 @@ export function generateLocalPodcastDialogue(player, owner, pickNum, teamContext
   }
 
   return [
+    { speaker: 'ANNOUNCER', text: announcementText },
     { speaker: 'SKIP', text: skipLine1 },
     { speaker: 'CHIP', text: chipLine1 },
     { speaker: 'SKIP', text: skipLine2 },
@@ -444,13 +521,24 @@ export function generateLocalPodcastDialogue(player, owner, pickNum, teamContext
   ];
 }
 
-export async function generatePodcastDialogue(player, owner, pickNum, teamContext = {}, season = 2027) {
+export async function generatePodcastDialogue(player, owner, pickNum, teamContext = {}, season = 2027, nextOwner = null) {
   const rank = getEffectiveRank(player);
   const price = getEffectivePrice(player);
   const surplus = rank ? (pickNum - rank) : null;
   const statLine = formatPlayerStats(player);
   const isPitcher = (player.Position || '').includes('SP') || (player.Position || '').includes('RP') || (player.Position || '').includes('P');
   const effQS = getEffectiveQS(player);
+
+  // Official Pick Announcement as opening line
+  const announcementText = generatePickAnnouncement({
+    pickNumber: pickNum,
+    owner,
+    playerName: player.Player,
+    position: player.Position,
+    team: player.Team,
+    nextOwner
+  });
+  const announcementLine = { speaker: 'ANNOUNCER', text: announcementText };
 
   const prompt = `You are producing a 30-second rapid-fire sports talk podcast reaction to a fantasy baseball draft selection.
 Format: Head-to-Head Each Category (R, HR, RBI, SB, OBP | K, QS, ERA, WHIP, SV+HD).
@@ -480,10 +568,11 @@ Return ONLY a valid JSON array of 4 objects with "speaker" and "text" fields:
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
         if (Array.isArray(parsed) && parsed.length >= 2) {
-          return parsed.map(item => ({
+          const debateLines = parsed.map(item => ({
             speaker: (item.speaker || 'SKIP').toUpperCase().includes('CHIP') ? 'CHIP' : 'SKIP',
             text: prepareSpokenScript(item.text || '')
           }));
+          return [announcementLine, ...debateLines];
         }
       }
     }
@@ -491,7 +580,7 @@ Return ONLY a valid JSON array of 4 objects with "speaker" and "text" fields:
     console.warn('Podcast script generation failed, falling back to local debate:', err);
   }
 
-  return generateLocalPodcastDialogue(player, owner, pickNum, teamContext, season);
+  return generateLocalPodcastDialogue(player, owner, pickNum, teamContext, season, nextOwner);
 }
 
 export async function playDualSpeakerPodcast(dialogueScript, callbacks = {}) {
@@ -507,11 +596,15 @@ export async function playDualSpeakerPodcast(dialogueScript, callbacks = {}) {
 
   try {
     // Pre-fetch audio blobs via Supabase gemini-proxy edge function
-    // SKIP uses 'en-US-Chirp3-HD-Puck', CHIP uses 'en-US-Chirp3-HD-Charon'
+    // ANNOUNCER uses 'en-US-Journey-D', SKIP uses 'en-US-Chirp3-HD-Puck', CHIP uses 'en-US-Chirp3-HD-Charon'
     const audioItems = await Promise.all(
       dialogueScript.map(async (line) => {
-        const isChip = (line.speaker || '').toUpperCase().trim() === 'CHIP';
-        const voiceName = isChip ? 'en-US-Chirp3-HD-Charon' : 'en-US-Chirp3-HD-Puck';
+        const speaker = (line.speaker || '').toUpperCase().trim();
+        const isAnnouncer = speaker === 'ANNOUNCER' || speaker === 'COMMISSIONER';
+        const isChip = speaker === 'CHIP';
+        const voiceName = isAnnouncer 
+          ? 'en-US-Journey-D'
+          : (isChip ? 'en-US-Chirp3-HD-Charon' : 'en-US-Chirp3-HD-Puck');
         const cleanText = prepareSpokenScript(line.text);
         if (!cleanText || cleanText.length < 2) return null;
 
@@ -522,7 +615,7 @@ export async function playDualSpeakerPodcast(dialogueScript, callbacks = {}) {
           if (!error && data?.audioContent) {
             return {
               audioUrl: `data:audio/mp3;base64,${data.audioContent.trim()}`,
-              speaker: isChip ? 'CHIP' : 'SKIP',
+              speaker: isAnnouncer ? 'ANNOUNCER' : (isChip ? 'CHIP' : 'SKIP'),
               text: cleanText
             };
           }
@@ -531,7 +624,7 @@ export async function playDualSpeakerPodcast(dialogueScript, callbacks = {}) {
         }
         return {
           fallbackText: cleanText,
-          speaker: isChip ? 'CHIP' : 'SKIP'
+          speaker: isAnnouncer ? 'ANNOUNCER' : (isChip ? 'CHIP' : 'SKIP')
         };
       })
     );
@@ -576,19 +669,44 @@ export async function playDualSpeakerPodcast(dialogueScript, callbacks = {}) {
       } else if (item.fallbackText && typeof window !== 'undefined' && 'speechSynthesis' in window) {
         // High fidelity web speech fallback with differentiated pitch/voice
         await new Promise((resolve) => {
-          const isChip = item.speaker === 'CHIP';
+          const speaker = (item.speaker || '').toUpperCase().trim();
+          const isAnnouncer = speaker === 'ANNOUNCER';
+          const isChip = speaker === 'CHIP';
           const utterance = new SpeechSynthesisUtterance(item.fallbackText);
-          utterance.rate = isChip ? 1.08 : 0.98;
-          utterance.pitch = isChip ? 1.15 : 0.92;
+          
+          if (isAnnouncer) {
+            utterance.rate = 1.0;
+            utterance.pitch = 0.95;
+          } else if (isChip) {
+            utterance.rate = 1.08;
+            utterance.pitch = 1.15;
+          } else {
+            utterance.rate = 0.98;
+            utterance.pitch = 0.92;
+          }
 
           const voices = window.speechSynthesis.getVoices();
-          const preferredVoice = voices.find(v => 
-            v.lang.startsWith('en') && (isChip 
-              ? (v.name.includes('Natural') || v.name.includes('Female') || v.name.includes('Samantha') || v.name.includes('Zira'))
-              : (v.name.includes('Google') || v.name.includes('Daniel') || v.name.includes('Guy') || v.name.includes('David')))
-          ) || voices.find(v => v.lang.startsWith('en'));
+          let preferredVoice = null;
+          if (isAnnouncer) {
+            preferredVoice = voices.find(v => 
+              v.lang.startsWith('en') && (v.name.includes('David') || v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Guy'))
+            );
+          } else if (isChip) {
+            preferredVoice = voices.find(v => 
+              v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Female') || v.name.includes('Samantha') || v.name.includes('Zira'))
+            );
+          } else {
+            preferredVoice = voices.find(v => 
+              v.lang.startsWith('en') && (v.name.includes('Google') || v.name.includes('Daniel') || v.name.includes('Guy') || v.name.includes('David'))
+            );
+          }
 
-          if (preferredVoice) utterance.voice = preferredVoice;
+          if (preferredVoice) {
+            utterance.voice = preferredVoice;
+          } else {
+            const defaultEn = voices.find(v => v.lang.startsWith('en'));
+            if (defaultEn) utterance.voice = defaultEn;
+          }
 
           utterance.onend = resolve;
           utterance.onerror = resolve;
@@ -596,9 +714,10 @@ export async function playDualSpeakerPodcast(dialogueScript, callbacks = {}) {
         });
       }
 
-      // Small natural conversational breath pause (160ms)
+      // Natural pause: slightly longer breath after official pick announcement (420ms), conversational between debate hosts (160ms)
+      const pauseDuration = item.speaker === 'ANNOUNCER' ? 420 : 160;
       if (idx < audioItems.length - 1 && !abortController.signal.aborted) {
-        await new Promise(r => setTimeout(r, 160));
+        await new Promise(r => setTimeout(r, pauseDuration));
       }
     }
   } catch (err) {

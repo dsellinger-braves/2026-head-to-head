@@ -49,7 +49,7 @@ export default function PodcastBreakdownWidget({
             alignItems: 'center',
             gap: '6px'
           }}>
-            🎙️ The Skip & Chip Show
+            🎙️ Draft Broadcast & Skip / Chip Debate
           </span>
           <span style={{
             fontSize: '9px',
@@ -60,18 +60,18 @@ export default function PodcastBreakdownWidget({
             borderRadius: '4px',
             fontWeight: 'bold'
           }}>
-            Google Cloud Chirp 3 HD Dual Voices
+            Google Cloud Broadcast Voices
           </span>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           {/* Waveform indicator if playing */}
           {isPlaying && (
-            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', height: '18px', padding: '0 4px' }} title="Speaking via Google Cloud Chirp 3 HD">
-              <span style={{ width: '3px', background: '#ff9800', borderRadius: '2px', animation: 'soundWave 0.8s ease-in-out infinite' }} />
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', height: '18px', padding: '0 4px' }} title="Speaking via Google Cloud Voice Engine">
+              <span style={{ width: '3px', background: '#00e5ff', borderRadius: '2px', animation: 'soundWave 0.7s ease-in-out infinite' }} />
+              <span style={{ width: '3px', background: '#ff9800', borderRadius: '2px', animation: 'soundWave 0.8s ease-in-out infinite 0.1s' }} />
               <span style={{ width: '3px', background: '#bb86fc', borderRadius: '2px', animation: 'soundWave 0.6s ease-in-out infinite 0.2s' }} />
-              <span style={{ width: '3px', background: '#03dac6', borderRadius: '2px', animation: 'soundWave 0.9s ease-in-out infinite 0.4s' }} />
-              <span style={{ width: '3px', background: '#ff9800', borderRadius: '2px', animation: 'soundWave 0.7s ease-in-out infinite 0.1s' }} />
+              <span style={{ width: '3px', background: '#03dac6', borderRadius: '2px', animation: 'soundWave 0.9s ease-in-out infinite 0.3s' }} />
             </div>
           )}
 
@@ -94,14 +94,14 @@ export default function PodcastBreakdownWidget({
                 boxShadow: '0 2px 8px rgba(229, 57, 53, 0.4)'
               }}
             >
-              ⏹ Stop Debate
+              ⏹ Stop Broadcast
             </button>
           ) : (
             <button
               onClick={onPlay}
               disabled={isGenerating || !script}
               style={{
-                background: isGenerating ? '#444' : 'linear-gradient(135deg, #bb86fc 0%, #7c4dff 100%)',
+                background: isGenerating ? '#444' : 'linear-gradient(135deg, #00b0ff 0%, #7c4dff 100%)',
                 color: '#fff',
                 border: 'none',
                 borderRadius: '6px',
@@ -112,10 +112,10 @@ export default function PodcastBreakdownWidget({
                 display: 'flex',
                 alignItems: 'center',
                 gap: '5px',
-                boxShadow: '0 2px 8px rgba(187, 134, 252, 0.3)'
+                boxShadow: '0 2px 8px rgba(0, 176, 255, 0.3)'
               }}
             >
-              ▶ Play Debate
+              ▶ Play Broadcast
             </button>
           )}
 
@@ -151,7 +151,7 @@ export default function PodcastBreakdownWidget({
           textAlign: 'center',
           animation: 'shimmerPulse 1.5s ease-in-out infinite'
         }}>
-          🎙️ Skip & Chip are in the studio debating {playerName ? `the ${playerName} selection` : 'this pick'}...
+          🎙️ Preparing draft announcement and Skip & Chip reaction {playerName ? `for ${playerName}` : 'for this pick'}...
         </div>
       )}
 
@@ -161,13 +161,78 @@ export default function PodcastBreakdownWidget({
           display: 'flex',
           flexDirection: 'column',
           gap: '8px',
-          maxHeight: compact ? '160px' : '220px',
+          maxHeight: compact ? '170px' : '240px',
           overflowY: 'auto',
           paddingRight: '4px'
         }}>
           {script.map((line, idx) => {
-            const isChip = (line.speaker || '').toUpperCase().trim() === 'CHIP';
+            const speaker = (line.speaker || '').toUpperCase().trim();
+            const isAnnouncer = speaker === 'ANNOUNCER' || speaker === 'COMMISSIONER';
+            const isChip = speaker === 'CHIP';
             const isActive = activeLine === idx;
+
+            if (isAnnouncer) {
+              return (
+                <div
+                  key={idx}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignSelf: 'stretch',
+                    background: isActive
+                      ? 'rgba(0, 229, 255, 0.22)'
+                      : 'rgba(15, 23, 42, 0.75)',
+                    border: isActive ? '1px solid #00e5ff' : '1px solid rgba(0, 229, 255, 0.3)',
+                    borderLeft: `4px solid ${isActive ? '#00e5ff' : '#0288d1'}`,
+                    borderRadius: '8px',
+                    padding: '8px 12px',
+                    transition: 'all 0.25s ease',
+                    boxShadow: isActive
+                      ? '0 0 16px rgba(0, 229, 255, 0.45)'
+                      : 'none'
+                  }}
+                >
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    marginBottom: '3px'
+                  }}>
+                    <span style={{
+                      fontSize: '10px',
+                      fontWeight: '900',
+                      letterSpacing: '0.6px',
+                      color: '#00e5ff',
+                      textTransform: 'uppercase'
+                    }}>
+                      📢 Official Pick Announcement
+                    </span>
+                    {isActive && (
+                      <span style={{
+                        fontSize: '9px',
+                        background: '#00e5ff',
+                        color: '#000',
+                        padding: '0 4px',
+                        borderRadius: '3px',
+                        fontWeight: 'bold',
+                        letterSpacing: '0.5px'
+                      }}>
+                        ANNOUNCING
+                      </span>
+                    )}
+                  </div>
+                  <div style={{
+                    fontSize: compact ? '12px' : '13px',
+                    color: isActive ? '#fff' : '#e0f7fa',
+                    fontWeight: '500',
+                    lineHeight: '1.45'
+                  }}>
+                    {line.text}
+                  </div>
+                </div>
+              );
+            }
+
             return (
               <div
                 key={idx}

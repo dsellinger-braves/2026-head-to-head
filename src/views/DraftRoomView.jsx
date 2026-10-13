@@ -285,10 +285,19 @@ export default function DraftRoomView({
     const player = playersRef.current.find(p => String(p['ESPN PlayerID']) === String(pick['ESPN PlayerID']));
     if (!player) return;
 
+    const currentPicks = picksRef.current || [];
+    const currentPlayers = playersRef.current || [];
+    const currentOverall = Number(pick['Overall Pick']);
+
+    // Find the very next pick in the serpentine schedule to announce who is on the clock
+    const nextPick = currentPicks.find(p => Number(p['Overall Pick']) === currentOverall + 1) ||
+                     currentPicks.find(p => Number(p['Overall Pick']) > currentOverall && !p['ESPN PlayerID']);
+    const nextOwner = nextPick?.Owner || null;
+
     // If pick already comes with commentary, display immediately without regenerating
     if (pick.ai_commentary) {
       setLastPickCommentary(pick.ai_commentary);
-      const script = pick.podcast_script || generateLocalPodcastDialogue(player, pick.Owner, pick['Overall Pick'], {}, roomSeason);
+      const script = pick.podcast_script || generateLocalPodcastDialogue(player, pick.Owner, pick['Overall Pick'], {}, roomSeason, nextOwner);
       setLastPodcastScript(script);
       const historyEntry = {
         pickNumber: pick['Overall Pick'],
@@ -299,6 +308,7 @@ export default function DraftRoomView({
         team: player.Team,
         commentary: pick.ai_commentary,
         podcastScript: script,
+        nextOwner,
         timestamp: new Date().toLocaleTimeString()
       };
       setAnalysisHistory(prev => {
@@ -310,9 +320,6 @@ export default function DraftRoomView({
     
     setGeneratingCommentary(true);
     setGeneratingPodcast(true);
-
-    const currentPicks = picksRef.current || [];
-    const currentPlayers = playersRef.current || [];
 
     // Find all previous picks by this owner
     const ownerPriorPicks = currentPicks.filter(p => 
@@ -355,7 +362,8 @@ export default function DraftRoomView({
         pick.Owner,
         pick['Overall Pick'],
         teamContext,
-        roomSeason
+        roomSeason,
+        nextOwner
       )
     ]);
     
@@ -364,7 +372,7 @@ export default function DraftRoomView({
     setLastPodcastScript(podcastDialogue);
     setGeneratingPodcast(false);
 
-    // Skip & Chip dual-voice podcast analysis plays if audio is enabled
+    // Official pick announcement + Skip & Chip dual-voice debate plays if audio is enabled
     if (audioEnabledRef.current && podcastDialogue && podcastDialogue.length > 0) {
       setTimeout(() => {
         setIsPlayingPodcast(true);
@@ -379,7 +387,7 @@ export default function DraftRoomView({
             setActivePodcastLine(null);
           }
         });
-      }, 700);
+      }, 500);
     }
     
     const historyEntry = {
@@ -391,6 +399,7 @@ export default function DraftRoomView({
       team: player.Team,
       commentary: commentary,
       podcastScript: podcastDialogue,
+      nextOwner,
       timestamp: new Date().toLocaleTimeString()
     };
     setAnalysisHistory(prev => {
@@ -403,7 +412,10 @@ export default function DraftRoomView({
       try {
         await supabase
           .from('draft_picks')
-          .update({ ai_commentary: commentary })
+          .update({ 
+            ai_commentary: commentary,
+            podcast_script: podcastDialogue 
+          })
           .eq('season_year', 2027)
           .eq('overall_pick', pick['Overall Pick']);
       } catch (err) {
@@ -999,7 +1011,7 @@ export default function DraftRoomView({
           : p
       ));
       
-      await handleNewPick({ ...currentPick, 'ESPN PlayerID': player['ESPN PlayerID'], Round: currentPick.Round });
+      await handleNewPick({ ...currentPick, 'ESPN PlayerID': player['ESPN PlayerID'], Round: currentPick.Round, Selection: player.Player });
     } else {
       if (roomSeason === 2027) {
         const { error } = await supabase

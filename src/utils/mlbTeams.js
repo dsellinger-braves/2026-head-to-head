@@ -138,7 +138,7 @@ export const teamsMatch = (str1, str2) => {
   return norm1 === norm2 || norm1.includes(norm2) || norm2.includes(norm1);
 };
 
-export { LEAGUE_OWNERS } from '../constants/league';
+export { LEAGUE_OWNERS } from '../constants/league.js';
 
 
 export const PROMINENT_AWARD_CANDIDATES = {
