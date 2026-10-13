@@ -1,11 +1,15 @@
-import { useEffect, useState, useMemo, useRef, lazy, Suspense } from 'react';
-import { supabase } from './supabaseClient';
-import { get, set, del } from 'idb-keyval';
+import { useEffect, useState, useMemo, lazy, Suspense } from 'react';
 
-import { generateSchedule, TEAMS, getPeriodRangeForWeek } from './schedule';
-import { calculateStandings } from './utils/standings';
-// NOTE: Make sure to export calculateTrioMatchupResult from scoring.js!
-import { aggregateStats, calculateMatchupResult, calculateTrioMatchupResult } from './utils/scoring';
+import { generateSchedule } from './schedule';
+import {
+  AVAILABLE_SEASONS,
+  OFFSEASON_VIEWS,
+  getViewFromHash,
+  getSubTabsFromHash,
+  getHashForRoute,
+} from './routes';
+import { useSeasonData } from './hooks/useSeasonData';
+import { useProcessedSchedule } from './hooks/useProcessedSchedule';
 
 import UserNavWidget from './components/UserNavWidget';
 import CommishActiveBanner from './components/CommishActiveBanner';
@@ -44,207 +48,10 @@ function ViewLoadingFallback() {
   );
 }
 
-const AVAILABLE_SEASONS = [2027, ...Array.from({ length: 2026 - 2012 + 1 }, (_, i) => 2026 - i)];
 
-const VIEW_TO_HASH = {
-  dashboard: 'dashboard',
-  weekly: 'matchups',
-  summary: 'standings',
-  teams: 'teams',
-  rosters: 'rosters',
-  transactions: 'transactions',
-  trades: 'trades',
-  players: 'players',
-  disparities: 'disparities',
-  progression: 'progression',
-  highlights: 'highlights',
-  history: 'history',
-  fantasycast: 'fantasycast',
-  valuations: 'keeper-prices',
-  draft: 'draft',
-  drafthistory: 'draft/history',
-  pickem: 'pickem',
-  capital: 'draft-capital',
-  keepers: 'keepers-budgets',
-  'player-owners': 'player-owners',
-};
-
-const HASH_TO_VIEW = {
-  '': 'dashboard',
-  dashboard: 'dashboard',
-  home: 'dashboard',
-  landing: 'dashboard',
-  roto: 'teams',
-  teams: 'teams',
-  'teams/roto': 'teams',
-  'teams/what-if': 'teams',
-  'what-if': 'teams',
-  'teams/simulator': 'teams',
-  'teams/bench': 'teams',
-  'teams/gap': 'teams',
-  'teams/minutiae': 'teams',
-  'teams/best-lineup': 'teams',
-  'best-lineup': 'teams',
-  'teams/optimal': 'teams',
-  'optimal': 'teams',
-  'simulator/best-lineup': 'teams',
-  'player-simulator': 'teams',
-  'impact-simulator': 'teams',
-  'player-owners': 'player-owners',
-  'player-owner': 'player-owners',
-  'players/owner-season': 'player-owners',
-  'players/owner-seasons': 'player-owners',
-  'players/owner-career': 'player-owners',
-  'players/owners': 'player-owners',
-  'owner-players': 'player-owners',
-  rosters: 'rosters',
-  roster: 'rosters',
-  lineups: 'rosters',
-  lineup: 'rosters',
-  'teams/rosters': 'rosters',
-  'teams/lineups': 'rosters',
-  standings: 'summary',
-  summary: 'summary',
-  'h2h-standings': 'summary',
-  'teams/standings': 'summary',
-  matchups: 'weekly',
-  weekly: 'weekly',
-  'teams/matchups': 'weekly',
-  progression: 'progression',
-  'teams/progression': 'progression',
-  highlights: 'highlights',
-  'teams/highlights': 'highlights',
-  history: 'history',
-  'league-history': 'history',
-  'teams/history': 'history',
-  finishes: 'history',
-  'draft/finishes': 'history',
-  'history/standings': 'history',
-  'history/highlights': 'history',
-  'history/records': 'history',
-  'history/hall-of-fame': 'history',
-  'history/hall': 'history',
-  fantasycast: 'fantasycast',
-  stats: 'players',
-  players: 'players',
-  'players/stats': 'players',
-  transactions: 'transactions',
-  'players/transactions': 'transactions',
-  trades: 'trades',
-  'trade-repository': 'trades',
-  'trades/history': 'trades',
-  'players/trades': 'trades',
-  disparities: 'disparities',
-  'players/disparities': 'disparities',
-  'keeper-prices': 'keepers',
-  'keeper-pricing': 'keepers',
-  valuations: 'valuations',
-  pricing: 'keepers',
-  draft: 'draft',
-  'draft/lobby': 'draft',
-  'draft/history': 'drafthistory',
-  'draft-history': 'drafthistory',
-  drafthistory: 'drafthistory',
-  pickem: 'pickem',
-  'draft-capital': 'capital',
-  capital: 'capital',
-  'draft/traded-board': 'capital',
-  'draft/ledgers': 'capital',
-  'draft/trade-proposals': 'capital',
-  'draft/proposals': 'capital',
-  'draft/trade-history': 'capital',
-  'draft/trades': 'capital',
-  'draft/2026-board': 'capital',
-  'draft/2026': 'capital',
-  'keepers-budgets': 'keepers',
-  keepers: 'keepers',
-  'keepers/prices': 'keepers',
-  'keepers/rosters': 'keepers',
-  'keepers/comp-picks': 'keepers',
-  'keepers/planner': 'keepers',
-  'keepers/calculations': 'keepers',
-  'keepers/math': 'keepers',
-  'keepers/settings': 'keepers',
-  'keeper-settings': 'keepers',
-  'keeper-calculations': 'keepers',
-  'keeper-calc': 'keepers',
-  'keeper-math': 'keepers',
-  'calculations': 'keepers',
-  'pr-math': 'keepers',
-  budgets: 'keepers',
-};
-
-const OFFSEASON_VIEWS = new Set(['valuations', 'draft', 'pickem', 'capital', 'keepers', 'drafthistory']);
-
-function getViewFromHash() {
-  if (typeof window === 'undefined') return 'dashboard';
-  const rawHash = window.location.hash || '';
-  // If the URL contains OAuth return tokens (access_token=, refresh_token=, error=),
-  // don't treat the token string as a view slug. Restore saved pre-login route if available.
-  if (rawHash.includes('access_token=') || rawHash.includes('refresh_token=') || rawHash.includes('error=')) {
-    try {
-      const saved = sessionStorage.getItem('oauth_pre_login_hash');
-      if (saved) {
-        const cleanSaved = saved.replace(/^#\/?/, '').trim().toLowerCase();
-        const route = cleanSaved.split('?')[0];
-        if (HASH_TO_VIEW[route]) return HASH_TO_VIEW[route];
-        const baseRoute = route.split('/')[0];
-        if (HASH_TO_VIEW[baseRoute]) return HASH_TO_VIEW[baseRoute];
-      }
-    } catch {
-      // ignore
-    }
-    return 'dashboard';
-  }
-  const hash = rawHash.replace(/^#\/?/, '').trim().toLowerCase();
-  const route = hash.split('?')[0];
-  if (HASH_TO_VIEW[route]) return HASH_TO_VIEW[route];
-  const baseRoute = route.split('/')[0];
-  return HASH_TO_VIEW[baseRoute] || 'dashboard';
-}
-
-function getSubTabsFromHash() {
-  if (typeof window === 'undefined') return { keepersSubTab: 'matrix', draftSubTab: 'board', teamsSubTab: 'raw' };
-  const rawHash = window.location.hash || '';
-  const hash = rawHash.replace(/^#\/?/, '').trim().toLowerCase();
-  let keepersSubTab = 'matrix';
-  let draftSubTab = 'board';
-  let teamsSubTab = 'raw';
-  let playerOwnerMode = 'season';
-
-  if (hash.includes('rosters') && !hash.includes('teams')) keepersSubTab = 'rosters';
-  else if (hash.includes('comp') || (hash.includes('simulator') && hash.includes('keepers'))) keepersSubTab = 'simulator';
-  else if (hash.includes('planner')) keepersSubTab = 'planner';
-  else if (hash.includes('calc') || hash.includes('math')) keepersSubTab = 'calculations';
-  else if (hash.includes('settings')) keepersSubTab = 'settings';
-  else if (hash.includes('prices') || hash.includes('matrix') || hash.includes('summary')) keepersSubTab = 'matrix';
-
-  if (hash.includes('proposal')) draftSubTab = 'proposals';
-  else if (hash.includes('ledgers')) draftSubTab = 'ledgers';
-  else if (hash.includes('trade-history') || hash.includes('trades')) draftSubTab = 'history';
-  else if (hash.includes('2026')) draftSubTab = '2026board';
-  else if (hash.includes('traded') || hash.includes('board') || hash.includes('capital')) draftSubTab = 'board';
-
-  if (hash.includes('best-lineup') || hash.includes('optimal')) teamsSubTab = 'best-lineup';
-  else if (hash.includes('what-if') || hash.includes('teams/simulator') || hash.includes('impact') || hash === 'simulator' || hash === 'what-if') teamsSubTab = 'simulator';
-  else if (hash.includes('bench')) teamsSubTab = 'bench';
-  else if (hash.includes('gap')) teamsSubTab = 'gap';
-  else if (hash.includes('minutiae')) teamsSubTab = 'minutiae';
-  else if (hash.includes('roto')) teamsSubTab = 'roto';
-
-  if (hash.includes('career') || hash.includes('all-time')) playerOwnerMode = 'career';
-
-  let historySubTab = 'standings';
-  if (hash.includes('history/highlight') || hash.includes('history-highlight')) historySubTab = 'highlights';
-  else if (hash.includes('history/record') || hash.includes('history/hall') || hash.includes('franchise-hall')) historySubTab = 'records';
-  else if (hash.includes('history/standing') || hash.includes('finis')) historySubTab = 'standings';
-
-  return { keepersSubTab, draftSubTab, teamsSubTab, playerOwnerMode, historySubTab };
-}
 
 function App() {
   const { user, signOut, effectiveOwner, isCommissioner } = useAuth();
-  const [loading, setLoading] = useState(true);
   const [currentView, setCurrentView] = useState(getViewFromHash);
   const [keepersSubTab, setKeepersSubTab] = useState(() => getSubTabsFromHash().keepersSubTab);
   const [draftSubTab, setDraftSubTab] = useState(() => getSubTabsFromHash().draftSubTab);
@@ -253,20 +60,28 @@ function App() {
   const [historySubTab, setHistorySubTab] = useState(() => getSubTabsFromHash().historySubTab);
   const [openDropdown, setOpenDropdown] = useState(null); // 'teams' | 'players' | 'keepers' | 'draft' | null
 
-  const [rawData, setRawData] = useState([]);
-  const [loadStatus, setLoadStatus] = useState("Initializing...");
   const [selectedSeason, setSelectedSeason] = useState(2026);
   const [offseasonYear, setOffseasonYear] = useState(2027);
-  const fetchingRef = useRef(false);
 
   const [selectedOwner, setSelectedOwner] = useState(null);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
-  const [allSeasonData, setAllSeasonData] = useState({});
 
-  const [activeGroup, setActiveGroup] = useState(() => {
-    const initialView = getViewFromHash();
-    return OFFSEASON_VIEWS.has(initialView) ? 'offseason' : 'season';
-  });
+  // Group is cleanly derived from the active view (avoids cascading state effects)
+  const activeGroup = OFFSEASON_VIEWS.has(currentView) ? 'offseason' : 'season';
+
+  // Season data fetching & caching hook
+  const {
+    rawData,
+    setRawData,
+    loading,
+    loadStatus,
+    allSeasonData,
+    downloadAllProgress,
+    todaysRecords,
+    loadSeason,
+    downloadAllSeasons,
+    refreshSeasonData,
+  } = useSeasonData(selectedSeason);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -284,44 +99,18 @@ function App() {
     if (window.location.hash && (window.location.hash.includes('access_token=') || window.location.hash.includes('error='))) {
       return;
     }
-    let slug = VIEW_TO_HASH[currentView] || currentView;
-    if (currentView === 'keepers') {
-      if (keepersSubTab === 'rosters') slug = 'keepers/rosters';
-      else if (keepersSubTab === 'simulator') slug = 'keepers/comp-picks';
-      else if (keepersSubTab === 'planner') slug = 'keepers/planner';
-      else if (keepersSubTab === 'calculations') slug = 'keeper-calculations';
-      else if (keepersSubTab === 'settings') slug = 'keepers/settings';
-      else slug = 'keepers/summary';
-    } else if (currentView === 'capital') {
-      if (draftSubTab === 'proposals') slug = 'draft/trade-proposals';
-      else if (draftSubTab === 'ledgers') slug = 'draft/ledgers';
-      else if (draftSubTab === 'history') slug = 'draft/trade-history';
-      else if (draftSubTab === '2026board') slug = 'draft/2026-board';
-      else slug = 'draft/traded-board';
-    } else if (currentView === 'history') {
-      if (historySubTab === 'highlights') slug = 'history/highlights';
-      else if (historySubTab === 'records') slug = 'history/records';
-      else slug = 'history/standings';
-    } else if (currentView === 'drafthistory') {
-      slug = 'draft/history';
-    } else if (currentView === 'teams') {
-      if (teamsSubTab === 'simulator') slug = 'teams/what-if';
-      else if (teamsSubTab === 'bench') slug = 'teams/bench';
-      else if (teamsSubTab === 'gap') slug = 'teams/gap';
-      else if (teamsSubTab === 'minutiae') slug = 'teams/minutiae';
-      else if (teamsSubTab === 'roto') slug = 'teams/roto';
-      else slug = 'teams';
-    }
-
-    const targetHash = `#/${slug}`;
+    const targetHash = getHashForRoute(currentView, {
+      keepersSubTab,
+      draftSubTab,
+      teamsSubTab,
+      historySubTab,
+    });
     if (window.location.hash !== targetHash) {
       window.location.hash = targetHash;
     }
-    setActiveGroup(OFFSEASON_VIEWS.has(currentView) ? 'offseason' : 'season');
   }, [currentView, keepersSubTab, draftSubTab, teamsSubTab, historySubTab]);
 
   const handleGroupChange = (group) => {
-    setActiveGroup(group);
     setOpenDropdown(null);
     if (group === 'season' && OFFSEASON_VIEWS.has(currentView)) {
       setCurrentView('dashboard');
@@ -349,209 +138,8 @@ function App() {
 
   const baseSchedule = useMemo(() => generateSchedule(), []);
 
-  // historical_data rows are flat CSVs from the Python scraper.
-  // Reshape them to match the player_daily_stats schema the rest of the app expects.
-  const normalizeHistoricalRecord = (row) => {
-    const stats = {};
-    for (const [k, v] of Object.entries(row)) {
-      // ESPN stat IDs are always purely numeric column names ('5', '20', '34', …).
-      // Everything else is a metadata column we handle explicitly below.
-      if (/^\d+$/.test(k) && v !== null && v !== '' && v !== undefined) {
-        stats[k] = v;
-      }
-    }
-    return {
-      season_year: row.season_year,
-      team_id: row.team_id,
-      scoring_period_id: row.scoring_period_id,
-      player_id: row.id,
-      full_name: row.fullName,
-      lineup_slot_id: row.lineupSlotID != null ? parseInt(row.lineupSlotID) : null,
-      stats,
-    };
-  };
-
-  // Core fetch: check cache → Supabase. Returns normalized records, touches no state.
-  const fetchRawSeason = async (season, onProgress) => {
-    if (season > 2026) {
-      return [];
-    }
-    const cacheKey = `fantasy_data_v2_${season}`;
-    try {
-      const cachePromise = get(cacheKey);
-      const cacheTimeout = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('IndexedDB read timeout')), 2500)
-      );
-      const cached = await Promise.race([cachePromise, cacheTimeout]);
-      if (cached?.length > 0) return cached;
-    } catch (cacheErr) {
-      console.warn('Local cache read notice or timeout:', cacheErr);
-    }
-
-    const isHistorical = season < 2026;
-    const tableName = isHistorical ? 'historical_data' : 'player_daily_stats';
-    const pageSize = 1000;
-
-    let countQuery = supabase
-      .from(tableName)
-      .select('*', { count: 'exact', head: true });
-
-    if (!isHistorical) {
-      countQuery = countQuery.eq('league_id', 130215);
-    } else {
-      countQuery = countQuery.eq('league_id', 130215).eq('season_year', season);
-    }
-
-    const { count, error: countErr } = await countQuery;
-    if (countErr) throw countErr;
-
-    const totalPages = Math.max(1, Math.ceil((count || 0) / pageSize));
-    let allRecords = [];
-    const batchSize = 6;
-
-    for (let b = 0; b < totalPages; b += batchSize) {
-      const promises = [];
-      for (let p = b; p < Math.min(b + batchSize, totalPages); p++) {
-        let q = supabase
-          .from(tableName)
-          .select('*')
-          .range(p * pageSize, (p + 1) * pageSize - 1);
-
-        if (!isHistorical) {
-          q = q.eq('league_id', 130215).order('id', { ascending: true });
-        } else {
-          q = q.eq('league_id', 130215).eq('season_year', season).order('_db_id', { ascending: true });
-        }
-        promises.push(q);
-      }
-
-      const results = await Promise.all(promises);
-      for (const res of results) {
-        if (res.error) throw res.error;
-        if (res.data?.length > 0) {
-          allRecords.push(...res.data);
-        }
-      }
-      onProgress?.(`Downloading ${season}… (${Math.min(allRecords.length, count || allRecords.length)} of ${count || allRecords.length} records)`);
-    }
-
-    const normalized = isHistorical
-      ? allRecords.map(normalizeHistoricalRecord)
-      : allRecords;
-
-    // Remove duplicate rows (e.g. from a CSV uploaded to Supabase more than once).
-    // Key: season + team + period + player — all four must match to be a duplicate.
-    const seen = new Set();
-    const deduped = normalized.filter(r => {
-      const k = `${r.season_year}__${r.team_id}__${r.scoring_period_id}__${r.player_id}__${r.full_name}`;
-      if (seen.has(k)) return false;
-      seen.add(k);
-      return true;
-    });
-
-    try {
-      await set(cacheKey, deduped);
-    } catch (cacheWriteErr) {
-      console.warn('Local cache write notice:', cacheWriteErr);
-    }
-
-    return deduped;
-  };
-
-  const fetchAllData = async (season) => {
-    if (fetchingRef.current) return;
-    fetchingRef.current = true;
-    try {
-      setLoading(true);
-      setLoadStatus("Checking local cache...");
-      const records = await fetchRawSeason(season, setLoadStatus);
-      setRawData(records || []);
-    } catch (err) {
-      console.error("App Error:", err);
-      try {
-        const cachePromise = get(`fantasy_data_${season}`);
-        const cacheTimeout = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('IndexedDB recovery timeout')), 2000)
-        );
-        const cached = await Promise.race([cachePromise, cacheTimeout]);
-        if (cached?.length > 0) {
-          console.warn(`Recovered ${cached.length} records from local cache following server error`);
-          setRawData(cached);
-          return;
-        }
-      } catch (cacheErr) {
-        console.error("Cache recovery failed:", cacheErr);
-      }
-      setLoadStatus("Notice: In-season statistics could not be loaded.");
-    } finally {
-      fetchingRef.current = false;
-      setLoading(false);
-    }
-  };
-
-  // Download every season into allSeasonData without switching the active view.
-  const [downloadAllProgress, setDownloadAllProgress] = useState(null);
-
-  const downloadAllSeasons = async () => {
-    const missing = AVAILABLE_SEASONS.filter(y => y <= 2026 && !allSeasonData[y]?.length);
-    if (!missing.length) return;
-    setDownloadAllProgress({ done: 0, total: missing.length, current: null });
-    for (let i = 0; i < missing.length; i++) {
-      const year = missing[i];
-      setDownloadAllProgress({ done: i, total: missing.length, current: year });
-      try {
-        const data = await fetchRawSeason(year);
-        if (data?.length > 0) {
-          setAllSeasonData(prev => ({ ...prev, [year]: data }));
-        }
-      } catch (e) {
-        console.error(`Failed to load ${year}:`, e);
-      }
-    }
-    setDownloadAllProgress(null);
-  };
-
-  const loadSeason = async (season) => {
-    if (allSeasonData[season]?.length) return allSeasonData[season];
-    try {
-      const data = await fetchRawSeason(season);
-      if (data?.length > 0) {
-        setAllSeasonData(prev => ({ ...prev, [season]: data }));
-        return data;
-      }
-    } catch (e) {
-      console.error(`Failed to load season ${season}:`, e);
-    }
-    return [];
-  };
-
-  const todaysRecords = useMemo(() => {
-    if (!rawData.length) return [];
-    let maxPeriodId = -1;
-    for (let i = 0; i < rawData.length; i++) {
-      if (rawData[i].scoring_period_id > maxPeriodId) {
-        maxPeriodId = rawData[i].scoring_period_id;
-      }
-    }
-    return rawData.filter(r => r.scoring_period_id === maxPeriodId);
-  }, [rawData]);
-
-  useEffect(() => {
-    fetchAllData(selectedSeason);
-  }, [selectedSeason]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Accumulate every loaded season so HighlightsView can span multiple years.
-  useEffect(() => {
-    if (rawData.length > 0) {
-      setAllSeasonData(prev => ({ ...prev, [selectedSeason]: rawData }));
-    }
-  }, [rawData]); // eslint-disable-line react-hooks/exhaustive-deps
-
   const handleRefresh = async () => {
-    // Clear every season's cache so deduplication runs fresh on the next fetch.
-    await Promise.all(AVAILABLE_SEASONS.map(y => Promise.all([del(`fantasy_data_${y}`), del(`fantasy_data_v2_${y}`)])));
-    setAllSeasonData({});
-    fetchAllData(selectedSeason);
+    await refreshSeasonData();
   };
 
   const handleSeasonChange = (year) => {
@@ -566,287 +154,7 @@ function App() {
   };
 
 
-  // --- CORE LOGIC: PROCESS SCHEDULE & STATS ---
-  const processedWeeks = useMemo(() => {
-    if (!rawData.length) return [];
-
-    const resolveMatchupStats = (matchup, week) => {
-
-      // ---------------------------------------------------
-      // 1. TRIO MATCHUPS (Phases 1 & 2)
-      // ---------------------------------------------------
-      if (matchup.teamIds) {
-        // Handle Placeholders (e.g. SEED_1)
-        if (matchup.teamIds.some(id => typeof id === 'string')) {
-          return {
-            ...matchup,
-            isPlaceholder: true,
-            type: 'trio',
-            teams: matchup.teamIds.map(id => ({ name: id, owner: 'TBD', id: null })),
-            teamStats: {},
-            teamRecords: {},
-            result: {}
-          };
-        }
-
-        const { startId, endId } = getPeriodRangeForWeek(week);
-        const teamRecords = {};
-        matchup.teamIds.forEach(id => teamRecords[id] = []);
-
-        for (const r of rawData) {
-          if (r.scoring_period_id >= startId && r.scoring_period_id <= endId) {
-            if (teamRecords[r.team_id]) {
-              teamRecords[r.team_id].push(r);
-            }
-          }
-        }
-
-        const teamStats = {};
-        matchup.teamIds.forEach(id => {
-          teamStats[id] = aggregateStats(teamRecords[id]);
-        });
-
-        // Fail gracefully if trio scoring isn't built yet
-        let result = {};
-        if (typeof calculateTrioMatchupResult === 'function') {
-          result = calculateTrioMatchupResult(teamStats, matchup.teamIds);
-        }
-
-        const teams = matchup.teamIds.map(id => ({ ...(TEAMS[id] || { name: 'Unknown', owner: '' }), id }));
-
-        return {
-          matchupId: matchup.id,
-          type: 'trio',
-          label: matchup.label,
-          teams,
-          teamStats,
-          teamRecords,
-          result,
-          isPlaceholder: false
-        };
-      }
-
-      // ---------------------------------------------------
-      // 2. HEAD-TO-HEAD MATCHUPS (Phases 3 & 4)
-      // ---------------------------------------------------
-      if (typeof matchup.homeTeamId === 'string' || typeof matchup.awayTeamId === 'string') {
-        return {
-          ...matchup,
-          isPlaceholder: true,
-          type: 'h2h',
-          homeTeam: { name: matchup.homeTeamId, owner: 'TBD', id: null },
-          awayTeam: { name: matchup.awayTeamId, owner: 'TBD', id: null },
-          homeStats: {}, awayStats: {},
-          result: { homeScore: 0, awayScore: 0, ties: 0 },
-          homeRecords: [], awayRecords: []
-        };
-      }
-
-      const { startId, endId } = getPeriodRangeForWeek(week);
-      const homeRecords = [];
-      const awayRecords = [];
-      const allHumanRecords = [];
-
-      for (const r of rawData) {
-        if (r.scoring_period_id >= startId && r.scoring_period_id <= endId) {
-          if (r.team_id == matchup.homeTeamId) homeRecords.push(r);
-          else if (r.team_id == matchup.awayTeamId) awayRecords.push(r);
-
-          if (r.team_id != 99) allHumanRecords.push(r);
-        }
-      }
-
-      const computeAverageTeamStats = (records) => {
-        const totalStats = aggregateStats(records);
-        const avgStats = { ...totalStats };
-        const numTeams = 9; // 9 human teams in the league
-
-        // Divide counting components by 9 to get the average
-        const fieldsToDivide = [
-          'R', 'HR', 'RBI', 'SB', 'K', 'QS', 'SV+HDs', 'ER', 'IP',
-          'BB_Allowed', 'H_Allowed', 'OBP_num', 'OBP_denom', 'PA',
-          'AB', 'H', 'BB', 'HBP', 'SF'
-        ];
-        fieldsToDivide.forEach(key => {
-          if (avgStats[key]) avgStats[key] = avgStats[key] / numTeams;
-        });
-
-        // Recalculate rate stats from the divided components
-        const obpDenom = (avgStats.AB + avgStats.BB + avgStats.HBP + avgStats.SF) || avgStats.OBP_denom || avgStats.PA;
-        const obpNum = (avgStats.H + avgStats.BB + avgStats.HBP) || avgStats.OBP_num;
-        const obpRaw = obpDenom > 0 ? obpNum / obpDenom : 0;
-        avgStats.OBP_raw = obpRaw;
-        avgStats.OBP = obpDenom > 0 ? obpRaw.toFixed(4) : ".0000";
-        avgStats.ERA = avgStats.IP > 0 ? ((avgStats.ER * 9) / avgStats.IP).toFixed(2) : "0.00";
-        avgStats.WHIP = avgStats.IP > 0 ? ((avgStats.BB_Allowed + avgStats.H_Allowed) / avgStats.IP).toFixed(2) : "0.00";
-
-        return avgStats;
-      };
-
-      const homeStats = matchup.homeTeamId == 99 ? computeAverageTeamStats(allHumanRecords) : aggregateStats(homeRecords);
-      const awayStats = matchup.awayTeamId == 99 ? computeAverageTeamStats(allHumanRecords) : aggregateStats(awayRecords);
-      const result = calculateMatchupResult(homeStats, awayStats);
-
-      const homeTeamInfo = TEAMS[matchup.homeTeamId] || { name: 'Unknown', owner: '' };
-      const awayTeamInfo = TEAMS[matchup.awayTeamId] || { name: 'Unknown', owner: '' };
-
-      return {
-        matchupId: matchup.id,
-        type: 'h2h',
-        label: matchup.label,
-        homeTeam: { ...homeTeamInfo, id: matchup.homeTeamId },
-        awayTeam: { ...awayTeamInfo, id: matchup.awayTeamId },
-        homeStats, awayStats, result, homeRecords, awayRecords,
-        isPlaceholder: false
-      };
-    };
-
-    let resolvedSchedule = [];
-
-    // --- STEP A: PROCESS PHASE 1 (Weeks 1-12) ---
-    for (let i = 0; i < 12; i++) {
-      const week = baseSchedule[i];
-      if (!week) continue;
-      const resolvedMatchups = week.matchups.map(m => resolveMatchupStats(m, week));
-      resolvedSchedule.push({ ...week, matchups: resolvedMatchups });
-    }
-
-    // --- STEP B: PROCESS PHASE 2 (Weeks 13-14) MID-SEASON CHAMPIONSHIP ---
-    const standingsAfter12 = calculateStandings(resolvedSchedule, 12);
-    const midSeeds = {};
-    standingsAfter12.forEach((team, index) => {
-      midSeeds[`SEED_${index + 1}`] = team.id;
-    });
-
-    for (let i = 12; i < 14; i++) {
-      const week = baseSchedule[i];
-      if (!week) continue;
-      const dynamicMatchups = week.matchups.map(m => {
-        if (m.teamIds) {
-          const realIds = m.teamIds.map(id => typeof id === 'string' ? midSeeds[id] : id);
-          return { ...m, teamIds: realIds };
-        }
-        return m;
-      });
-      const resolvedMatchups = dynamicMatchups.map(m => resolveMatchupStats(m, week));
-      resolvedSchedule.push({ ...week, matchups: resolvedMatchups });
-    }
-
-    // --- STEP C: PROCESS PHASE 3 (Weeks 15-23) SPLIT LEAGUES ---
-    const standingsAfter14 = calculateStandings(resolvedSchedule, 14);
-    const splitSeeds = {};
-    standingsAfter14.forEach((team, index) => {
-      splitSeeds[`SEED_${index + 1}`] = team.id;
-    });
-
-    for (let i = 14; i < 23; i++) {
-      const week = baseSchedule[i];
-      if (!week) continue;
-      const dynamicMatchups = week.matchups.map(m => {
-        if (m.homeTeamId !== undefined && m.awayTeamId !== undefined) {
-          const realHome = typeof m.homeTeamId === 'string' ? splitSeeds[m.homeTeamId] : m.homeTeamId;
-          const realAway = typeof m.awayTeamId === 'string' ? splitSeeds[m.awayTeamId] : m.awayTeamId;
-          return { ...m, homeTeamId: realHome, awayTeamId: realAway };
-        }
-        return m;
-      });
-
-      const resolvedMatchups = dynamicMatchups.map(m => resolveMatchupStats(m, week));
-      resolvedSchedule.push({ ...week, matchups: resolvedMatchups });
-    }
-
-    // --- STEP D: PROCESS PHASE 4 (Weeks 24-25) PLAYOFFS ---
-    // Option 1: Seeding is determined by Phase 3 (Weeks 15-23) head-to-head records
-    // within each respective tier (Winners League Seeds 1-4, Consolation League Seeds 5-9).
-    const phase3Standings = calculateStandings(resolvedSchedule, { startWeek: 15, upToWeek: 23, phase: 3 });
-    const standingsAfter23 = calculateStandings(resolvedSchedule, 23);
-
-    const getFullSeasonRank = (teamId) => {
-      const idx = standingsAfter23.findIndex(t => t.id === teamId);
-      return idx >= 0 ? idx : 999;
-    };
-
-    const sortTier = (teamA, teamB) => {
-      const totalA = teamA.wins + teamA.losses + teamA.ties;
-      const totalB = teamB.wins + teamB.losses + teamB.ties;
-      const pctA = totalA > 0 ? (teamA.wins + teamA.ties * 0.5) / totalA : 0;
-      const pctB = totalB > 0 ? (teamB.wins + teamB.ties * 0.5) / totalB : 0;
-      if (Math.abs(pctB - pctA) > 0.0001) return pctB - pctA;
-      if (teamB.score !== teamA.score) return teamB.score - teamA.score;
-      return getFullSeasonRank(teamA.id) - getFullSeasonRank(teamB.id);
-    };
-
-    const winnersTeamIds = [
-      splitSeeds.SEED_1,
-      splitSeeds.SEED_2,
-      splitSeeds.SEED_3,
-      splitSeeds.SEED_4
-    ].filter(Boolean);
-
-    const champSeeds = winnersTeamIds
-      .map(id => phase3Standings.find(t => t.id === id) || { id, wins: 0, losses: 0, ties: 0, score: 0 })
-      .sort(sortTier);
-
-    const consolTeamIds = [
-      splitSeeds.SEED_5,
-      splitSeeds.SEED_6,
-      splitSeeds.SEED_7,
-      splitSeeds.SEED_8,
-      splitSeeds.SEED_9
-    ].filter(Boolean);
-
-    const consolSeeds = consolTeamIds
-      .map(id => phase3Standings.find(t => t.id === id) || { id, wins: 0, losses: 0, ties: 0, score: 0 })
-      .sort(sortTier);
-
-    if (baseSchedule[23]) {
-      const week24 = baseSchedule[23];
-      const sfMatchups = [
-        { id: 'sf1', homeTeamId: champSeeds[0]?.id, awayTeamId: champSeeds[3]?.id, label: "Semi-Final A" },
-        { id: 'sf2', homeTeamId: champSeeds[1]?.id, awayTeamId: champSeeds[2]?.id, label: "Semi-Final B" },
-        { id: 'c1', homeTeamId: consolSeeds[0]?.id, awayTeamId: consolSeeds[3]?.id, label: "Consolation A" },
-        { id: 'c2', homeTeamId: consolSeeds[1]?.id, awayTeamId: consolSeeds[2]?.id, label: "Consolation B" }
-      ];
-
-      const resolvedSF = sfMatchups.map(m => resolveMatchupStats(m, week24));
-      resolvedSchedule.push({ ...week24, matchups: resolvedSF });
-    }
-
-    if (baseSchedule[24]) {
-      const week25 = baseSchedule[24];
-      const prevWeek = resolvedSchedule[23];
-
-      const isUnplayed = (m) => {
-        if (!m || !m.result) return true;
-        return m.result.homeScore === 0 && m.result.awayScore === 0 && (m.result.ties === 0 || m.result.ties === undefined);
-      };
-
-      const getWinner = (matchId) => {
-        const m = prevWeek?.matchups.find(pm => pm.id === matchId || pm.matchupId === matchId);
-        if (isUnplayed(m)) return "TBD";
-        return m.result.homeScore >= m.result.awayScore ? m.homeTeam?.id : m.awayTeam?.id;
-      };
-
-      const getLoser = (matchId) => {
-        const m = prevWeek?.matchups.find(pm => pm.id === matchId || pm.matchupId === matchId);
-        if (isUnplayed(m)) return "TBD";
-        return m.result.homeScore >= m.result.awayScore ? m.awayTeam?.id : m.homeTeam?.id;
-      };
-
-      const finalMatchups = [
-        { id: 'final', homeTeamId: getWinner('sf1'), awayTeamId: getWinner('sf2'), label: "🏆 Championship" },
-        { id: '3rd', homeTeamId: getLoser('sf1'), awayTeamId: getLoser('sf2'), label: "3rd Place Match" },
-        { id: 'c_final', homeTeamId: getWinner('c1'), awayTeamId: getWinner('c2'), label: "Consolation Final (5th Place)" },
-        { id: 'c_3rd', homeTeamId: getLoser('c1'), awayTeamId: getLoser('c2'), label: "7th Place Match" }
-      ];
-
-      const resolvedFinals = finalMatchups.map(m => resolveMatchupStats(m, week25));
-      resolvedSchedule.push({ ...week25, matchups: resolvedFinals });
-    }
-
-    return resolvedSchedule;
-
-  }, [rawData, baseSchedule]);
+  const processedWeeks = useProcessedSchedule(rawData, baseSchedule);
 
   // --- RENDER ---
   return (
@@ -1365,7 +673,6 @@ function App() {
                 <button
                   type="button"
                   onClick={() => {
-                    setActiveGroup('offseason');
                     setCurrentView('keepers');
                   }}
                   className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition cursor-pointer shadow-xs"
@@ -1403,7 +710,6 @@ function App() {
                 <button
                   type="button"
                   onClick={() => {
-                    setActiveGroup('offseason');
                     setCurrentView('capital');
                   }}
                   className="px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl shadow-md transition cursor-pointer flex items-center gap-1.5"
@@ -1414,7 +720,6 @@ function App() {
                 <button
                   type="button"
                   onClick={() => {
-                    setActiveGroup('offseason');
                     setCurrentView('keepers');
                   }}
                   className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md transition cursor-pointer flex items-center gap-1.5"
@@ -1425,7 +730,6 @@ function App() {
                 <button
                   type="button"
                   onClick={() => {
-                    setActiveGroup('offseason');
                     setCurrentView('draft');
                   }}
                   className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl shadow-md transition cursor-pointer flex items-center gap-1.5"
