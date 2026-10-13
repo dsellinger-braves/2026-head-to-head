@@ -25,7 +25,9 @@ import {
   DRAFT_OWNERS,
   generateDefaultDraftOrder,
   getInjuryIndicator,
-  generate2027DraftOrder
+  generate2027DraftOrder,
+  getEffectiveRank,
+  getEffectivePrice
 } from './draft/utils/draftCalculations';
 import {
   fetchFromGCS,
@@ -36,6 +38,9 @@ import {
 } from './draft/services/draftDataService';
 import {
   generateDraftCommentary,
+  generateLocalDraftCommentary,
+  renderPickSummaryCard,
+  getPlayerDraftHistory,
   stopPodcastAudio,
   generateLocalPodcastDialogue,
   generatePodcastDialogue,
@@ -151,6 +156,10 @@ export default function DraftRoomView({
   // Static and merged draft data states
   const [_endingRoster, setEndingRoster] = useState([]);
   const [draftHistory, setDraftHistory] = useState([]);
+  const draftHistoryRef = useRef(draftHistory);
+  useEffect(() => {
+    draftHistoryRef.current = draftHistory;
+  }, [draftHistory]);
   const [historicalFinish, setHistoricalFinish] = useState([]);
   const [battersZips, setBattersZips] = useState([]);
   const [pitchersZips, setPitchersZips] = useState([]);
@@ -294,9 +303,24 @@ export default function DraftRoomView({
                      currentPicks.find(p => Number(p['Overall Pick']) > currentOverall && !p['ESPN PlayerID']);
     const nextOwner = nextPick?.Owner || null;
 
-    // If pick already comes with commentary, display immediately without regenerating
-    if (pick.ai_commentary) {
-      setLastPickCommentary(pick.ai_commentary);
+    // If pick already comes with commentary, display immediately without regenerating (unless containing placeholder #9999 artifact)
+    if (pick.ai_commentary && !pick.ai_commentary.includes('-9944') && !pick.ai_commentary.includes('#9999')) {
+      let commentary = pick.ai_commentary;
+      if (!commentary.includes('PICK_SUMMARY_CARD') && !commentary.includes('PICK GRADE')) {
+        const rank = getEffectiveRank(player);
+        const price = getEffectivePrice(player);
+        const surplus = rank ? (Number(pick['Overall Pick']) - rank) : null;
+        const playerHistory = getPlayerDraftHistory(player, draftHistoryRef.current);
+        commentary = `${commentary}${renderPickSummaryCard({
+          player,
+          pickNum: Number(pick['Overall Pick']),
+          rank,
+          price,
+          surplus,
+          playerDraftHistory: playerHistory
+        })}`;
+      }
+      setLastPickCommentary(commentary);
       const script = pick.podcast_script || generateLocalPodcastDialogue(player, pick.Owner, pick['Overall Pick'], {}, roomSeason, nextOwner);
       setLastPodcastScript(script);
       const historyEntry = {
@@ -306,7 +330,7 @@ export default function DraftRoomView({
         playerName: player.Player,
         position: player.Position,
         team: player.Team,
-        commentary: pick.ai_commentary,
+        commentary,
         podcastScript: script,
         nextOwner,
         timestamp: new Date().toLocaleTimeString()
@@ -355,7 +379,8 @@ export default function DraftRoomView({
         pick.Owner,
         pick['Overall Pick'],
         teamContext,
-        roomSeason
+        roomSeason,
+        draftHistoryRef.current
       ),
       generatePodcastDialogue(
         player,
@@ -458,17 +483,39 @@ export default function DraftRoomView({
           if (liveRes?.data) {
             livePicks2027 = liveRes.data;
             const existingComments = liveRes.data
-              .filter(lp => lp.ai_commentary)
-              .map(lp => ({
-                pickNumber: lp.overall_pick,
-                round: lp.round,
-                owner: lp.team_owner,
-                playerName: lp.player_name,
-                position: lp.player_position || '',
-                team: lp.player_team || '',
-                commentary: lp.ai_commentary,
-                timestamp: lp.picked_at ? new Date(lp.picked_at).toLocaleTimeString() : ''
-              }));
+              .filter(lp => lp.player_id)
+              .map(lp => {
+                let commentary = lp.ai_commentary || '';
+                const pl = (playersRef.current || []).find(x => String(x['ESPN PlayerID']) === String(lp.player_id));
+                if (pl) {
+                  if (!commentary || commentary.trim().length === 0 || commentary.includes('-9944') || commentary.includes('#9999')) {
+                    commentary = generateLocalDraftCommentary(pl, lp.team_owner, Number(lp.overall_pick), {}, draftHistoryRef.current);
+                  } else if (!commentary.includes('PICK_SUMMARY_CARD') && !commentary.includes('PICK GRADE')) {
+                    const rank = getEffectiveRank(pl);
+                    const price = getEffectivePrice(pl);
+                    const surplus = rank ? (Number(lp.overall_pick) - rank) : null;
+                    const playerHistory = getPlayerDraftHistory(pl, draftHistoryRef.current);
+                    commentary = `${commentary}${renderPickSummaryCard({
+                      player: pl,
+                      pickNum: Number(lp.overall_pick),
+                      rank,
+                      price,
+                      surplus,
+                      playerDraftHistory: playerHistory
+                    })}`;
+                  }
+                }
+                return {
+                  pickNumber: lp.overall_pick,
+                  round: lp.round,
+                  owner: lp.team_owner,
+                  playerName: lp.player_name,
+                  position: lp.player_position || '',
+                  team: lp.player_team || '',
+                  commentary,
+                  timestamp: lp.picked_at ? new Date(lp.picked_at).toLocaleTimeString() : ''
+                };
+              });
             if (existingComments.length > 0) {
               setAnalysisHistory(prev => {
                 const map = new Map(prev.map(item => [item.pickNumber, item]));
