@@ -404,7 +404,7 @@ export function getEffectiveRank(player) {
             player.ADP ?? 
             player.rank;
   const num = parseFloat(r);
-  return isNaN(num) || num <= 0 ? null : Math.round(num);
+  return isNaN(num) || num <= 0 || num >= 1500 ? null : Math.round(num);
 }
 
 export function getEffectivePrice(player) {
