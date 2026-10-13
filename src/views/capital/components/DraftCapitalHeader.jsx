@@ -94,6 +94,22 @@ export default function DraftCapitalHeader({
             ) : null}
           </button>
           <a
+            href="#/keepers/comp-picks"
+            className="px-3.5 py-2 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 text-teal-300 hover:text-white hover:bg-teal-950/60 border border-teal-500/40 text-xs font-black"
+            title="Open Compensation Pick Valuation & Purchase Calculator"
+          >
+            <span>🎲</span>
+            <span>Comp Pick Calculator</span>
+          </a>
+          <a
+            href="#/draft/tiers"
+            className="px-3.5 py-2 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 text-amber-300 hover:text-white hover:bg-amber-950/60 border border-amber-500/40 text-xs font-black"
+            title="Open Drag-and-Drop Tier Sheets & Draft Queue"
+          >
+            <span>📋</span>
+            <span>Draft Prep & Tiers</span>
+          </a>
+          <a
             href="#/trades"
             className="px-3.5 py-2 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 text-indigo-300 hover:text-white hover:bg-indigo-950/60 border border-indigo-500/40 text-xs font-black"
             title="View Graded Multi-Year Trade Archive"

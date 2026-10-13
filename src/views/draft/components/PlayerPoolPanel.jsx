@@ -1,10 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import styles from '../styles/draftRoomStyles';
 import { getPlayerHeadshotUrl, handleHeadshotError } from '../../../utils/headshotUtils';
 import { getInjuryIndicator, getEffectiveQS } from '../utils/draftCalculations';
 import { getPositionalTiers } from '../../../utils/draftRotoEngine';
 import PlayerNameButton from './PlayerNameButton';
 import { DraftAssistantWidget } from './DraftWidgets';
+import { loadUserTiers, TAG_OPTIONS } from '../../../utils/tierStorageService';
 
 export default function PlayerPoolPanel({
   players,
@@ -19,8 +20,19 @@ export default function PlayerPoolPanel({
   onPlayerClick,
   playerInfo,
   isMobile = false,
-  recommendations = []
+  recommendations = [],
+  currentUser = 'Daniel'
 }) {
+  const [userTiers, setUserTiers] = useState(() => loadUserTiers(2027, currentUser));
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setUserTiers(loadUserTiers(2027, currentUser));
+    };
+    window.addEventListener('hefty_tiers_updated', handleUpdate);
+    return () => window.removeEventListener('hefty_tiers_updated', handleUpdate);
+  }, [currentUser]);
+
   const [viewMode, setViewMode] = useState('list'); // 'list' | 'tiers'
   const [tierPos, setTierPos] = useState('SP');
   const [showAssistant, setShowAssistant] = useState(true);
@@ -494,6 +506,52 @@ export default function PlayerPoolPanel({
                             onClick={onPlayerClick}
                             style={{ color: injury ? injury.color : '#fff', fontWeight: 'bold' }}
                           />
+                          {(() => {
+                            const pid = String(p['ESPN PlayerID'] || p.espn_player_id || p.id || '');
+                            const assignedTierId = userTiers?.playerTiers?.[pid];
+                            const assignedTier = userTiers?.tiers?.find(t => t.id === assignedTierId);
+                            const activeTags = userTiers?.playerTags?.[pid] || [];
+                            const playerNote = userTiers?.playerNotes?.[pid];
+
+                            return (
+                              <>
+                                {assignedTier && (
+                                  <span
+                                    style={{
+                                      fontSize: '9px',
+                                      fontWeight: 'bold',
+                                      padding: '1px 4px',
+                                      borderRadius: '4px',
+                                      border: `1px solid ${assignedTier.color || '#03dac6'}`,
+                                      color: assignedTier.color || '#03dac6',
+                                      background: 'rgba(0,0,0,0.5)',
+                                      marginLeft: '4px',
+                                      flexShrink: 0
+                                    }}
+                                    title={assignedTier.name}
+                                  >
+                                    {assignedTier.name.split(':')[0]}
+                                  </span>
+                                )}
+                                {activeTags.length > 0 && (
+                                  <span style={{ display: 'flex', gap: '2px', marginLeft: '2px', flexShrink: 0 }}>
+                                    {activeTags.map(tId => {
+                                      const tag = TAG_OPTIONS.find(t => t.id === tId);
+                                      return tag ? <span key={tId} title={tag.label} style={{ fontSize: '10px' }}>{tag.icon}</span> : null;
+                                    })}
+                                  </span>
+                                )}
+                                {playerNote && (
+                                  <span
+                                    style={{ marginLeft: '2px', fontSize: '10px', cursor: 'help', flexShrink: 0 }}
+                                    title={`Scouting Note: ${playerNote}`}
+                                  >
+                                    💡
+                                  </span>
+                                )}
+                              </>
+                            );
+                          })()}
                           {injury && (
                             <span style={{
                               marginLeft: '4px',

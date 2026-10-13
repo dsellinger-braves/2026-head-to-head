@@ -462,15 +462,15 @@
     "semantic_hash": ""
   },
   "src/views/PickemView.jsx": {
-    "mtime": 1791850449.8310115,
-    "seen": 1791850544.7743614,
+    "mtime": 1791850641.034437,
+    "seen": 1791850981.326217,
     "ast_hash": "240f3f4078e8435b1e35a344d306c067",
     "semantic_hash": ""
   },
   "src/views/PlayerImpactSimulatorView.jsx": {
-    "mtime": 1790042239.3303494,
-    "seen": 1790798888.2085526,
-    "ast_hash": "8aab97765a73de3c0b000ce65e512999",
+    "mtime": 1791850858.0284019,
+    "seen": 1791850981.3262239,
+    "ast_hash": "226742ecf0db2d3a67bde9a299d4213a",
     "semantic_hash": ""
   },
   "src/views/PlayerValuationsView.jsx": {
@@ -1242,45 +1242,81 @@
     "semantic_hash": ""
   },
   "src/views/pickem/components/PickemHeader.jsx": {
-    "mtime": 1791850434.6487203,
-    "seen": 1791850544.777939,
+    "mtime": 1791850641.0346415,
+    "seen": 1791850981.333878,
     "ast_hash": "25f77495564dd3ca9bdb5bf04e486aa1",
     "semantic_hash": ""
   },
   "src/views/pickem/modals/PickemMethodologyModal.jsx": {
-    "mtime": 1791850175.859476,
-    "seen": 1791850544.777942,
+    "mtime": 1791850641.0348923,
+    "seen": 1791850981.333884,
     "ast_hash": "36bd81eeef17e3d31d2fadcf53438b89",
     "semantic_hash": ""
   },
   "src/views/pickem/services/pickemScoringService.js": {
-    "mtime": 1791850165.6152556,
-    "seen": 1791850544.7779438,
+    "mtime": 1791850641.0348923,
+    "seen": 1791850981.3338888,
     "ast_hash": "b7714b0e0b190701ff89000ba74bb5fb",
     "semantic_hash": ""
   },
   "src/views/pickem/tabs/PickemAdminTab.jsx": {
-    "mtime": 1791850336.7248027,
-    "seen": 1791850544.7779453,
+    "mtime": 1791850641.0348923,
+    "seen": 1791850981.3338938,
     "ast_hash": "3eb52ecf5c1f21a7d83544e0f5e55f3d",
     "semantic_hash": ""
   },
   "src/views/pickem/tabs/PickemBoardTab.jsx": {
-    "mtime": 1791850226.202544,
-    "seen": 1791850544.777947,
+    "mtime": 1791850641.0356185,
+    "seen": 1791850981.333899,
     "ast_hash": "aef90a59115376dcb19701a3e40c1e77",
     "semantic_hash": ""
   },
   "src/views/pickem/tabs/PickemEntryTab.jsx": {
-    "mtime": 1791850313.0753284,
-    "seen": 1791850544.7779484,
+    "mtime": 1791850641.0356185,
+    "seen": 1791850981.333904,
     "ast_hash": "ca7cb7cb94c556b1bcb883d308616d4e",
     "semantic_hash": ""
   },
   "src/views/pickem/tabs/PickemHistoryTab.jsx": {
-    "mtime": 1791850323.8935459,
-    "seen": 1791850544.7779503,
+    "mtime": 1791850641.0356185,
+    "seen": 1791850981.3339093,
     "ast_hash": "e80d71efe1c7f4fd0d19d9593109a835",
+    "semantic_hash": ""
+  },
+  "src/views/simulator/components/SimulatorHeader.jsx": {
+    "mtime": 1791850749.9685128,
+    "seen": 1791850981.333914,
+    "ast_hash": "d8329c27ff9860bc06aa649f4cabf100",
+    "semantic_hash": ""
+  },
+  "src/views/simulator/components/SimulatorReplacementControls.jsx": {
+    "mtime": 1791850796.5323315,
+    "seen": 1791850981.333919,
+    "ast_hash": "9f592e4bb05edc386bd2543016fad9b0",
+    "semantic_hash": ""
+  },
+  "src/views/simulator/components/SimulatorRosterWorkbench.jsx": {
+    "mtime": 1791850819.34673,
+    "seen": 1791850981.333923,
+    "ast_hash": "67e91736dee7fa204fb2bbf14e84a6c7",
+    "semantic_hash": ""
+  },
+  "src/views/simulator/components/SimulatorRotoSummary.jsx": {
+    "mtime": 1791850773.1609213,
+    "seen": 1791850981.333927,
+    "ast_hash": "3a6b70c94d4178ab36858ae0eca8a28d",
+    "semantic_hash": ""
+  },
+  "src/views/simulator/components/SimulatorStandingsRipple.jsx": {
+    "mtime": 1791850830.5259247,
+    "seen": 1791850981.3339307,
+    "ast_hash": "5a0397ac8ec7c3385c9150574317f233",
+    "semantic_hash": ""
+  },
+  "src/views/simulator/services/simulatorEngine.js": {
+    "mtime": 1791850736.7482789,
+    "seen": 1791850981.3339345,
+    "ast_hash": "d08a0d7b8f22f64948da21dee1f54675",
     "semantic_hash": ""
   }
 }
