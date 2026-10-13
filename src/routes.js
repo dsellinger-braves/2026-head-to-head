@@ -26,6 +26,7 @@ export const VIEW_TO_HASH = {
   capital: 'draft-capital',
   keepers: 'keepers-budgets',
   'player-owners': 'player-owners',
+  draftprep: 'draft/tiers',
 };
 
 export const HASH_TO_VIEW = {
@@ -101,6 +102,10 @@ export const HASH_TO_VIEW = {
   pricing: 'keepers',
   draft: 'draft',
   'draft/lobby': 'draft',
+  'draft/tiers': 'draftprep',
+  'draft/prep': 'draftprep',
+  'draft-prep': 'draftprep',
+  tiers: 'draftprep',
   'draft/history': 'drafthistory',
   'draft-history': 'drafthistory',
   drafthistory: 'drafthistory',
@@ -133,7 +138,7 @@ export const HASH_TO_VIEW = {
   budgets: 'keepers',
 };
 
-export const OFFSEASON_VIEWS = new Set(['valuations', 'draft', 'pickem', 'capital', 'keepers', 'drafthistory']);
+export const OFFSEASON_VIEWS = new Set(['valuations', 'draft', 'pickem', 'capital', 'keepers', 'drafthistory', 'draftprep']);
 
 /**
  * Parses the view identifier from the current window hash, safely handling OAuth tokens.
@@ -242,6 +247,8 @@ export function getHashForRoute(currentView, { keepersSubTab, draftSubTab, teams
     else slug = 'history/standings';
   } else if (currentView === 'drafthistory') {
     slug = 'draft/history';
+  } else if (currentView === 'draftprep') {
+    slug = 'draft/tiers';
   } else if (currentView === 'teams') {
     if (teamsSubTab === 'simulator') slug = 'teams/what-if';
     else if (teamsSubTab === 'bench') slug = 'teams/bench';

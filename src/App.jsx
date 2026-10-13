@@ -38,6 +38,7 @@ const DraftHistoryView = lazy(() => import('./views/DraftHistoryView'));
 const FullRosterView = lazy(() => import('./views/FullRosterView'));
 const LeagueHistoryView = lazy(() => import('./views/LeagueHistoryView'));
 const PlayerOwnerStatsView = lazy(() => import('./views/PlayerOwnerStatsView'));
+const DraftPrepView = lazy(() => import('./views/DraftPrepView'));
 
 function ViewLoadingFallback() {
   return (
@@ -610,6 +611,16 @@ function App() {
                           {currentView === 'history' && <span className="text-[10px] text-amber-200">●</span>}
                         </a>
                         <a
+                          href="#/draft/tiers"
+                          onClick={(e) => { e.preventDefault(); setCurrentView('draftprep'); setOpenDropdown(null); }}
+                          className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-between transition cursor-pointer ${
+                            currentView === 'draftprep' ? 'bg-amber-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2"><span>📋</span><span>Draft Prep & Tiers</span></span>
+                          {currentView === 'draftprep' && <span className="text-[10px] text-amber-200">●</span>}
+                        </a>
+                        <a
                           href="#/draft/lobby"
                           onClick={(e) => { e.preventDefault(); setCurrentView('draft'); setOpenDropdown(null); }}
                           className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-between transition cursor-pointer ${
@@ -888,6 +899,15 @@ function App() {
                   onSeasonYearChange={handleOffseasonYearChange}
                   onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
                   subTab={keepersSubTab}
+                />
+              )}
+              {currentView === 'draftprep' && (
+                <DraftPrepView
+                  currentUser={effectiveOwner || 'Daniel'}
+                  seasonYear={offseasonYear}
+                  onSeasonYearChange={handleOffseasonYearChange}
+                  onPlayerClick={(id, name) => setSelectedPlayer({ id, name })}
+                  onNavigate={(view) => setCurrentView(view)}
                 />
               )}
             </Suspense>

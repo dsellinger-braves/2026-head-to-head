@@ -208,6 +208,26 @@ export default function DesktopHeader({
         {onSwitchView && (
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             <button
+              onClick={() => onSwitchView('draftprep')}
+              style={{
+                background: '#451a03',
+                color: '#fcd34d',
+                border: '1px solid #d97706',
+                padding: '8px 12px',
+                borderRadius: '6px',
+                fontSize: '13px',
+                fontWeight: 'bold',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                cursor: 'pointer'
+              }}
+              title="Open Custom Draft Prep & Positional Tier Sheets"
+            >
+              <span>📋</span>
+              <span>Prep & Tiers</span>
+            </button>
+            <button
               onClick={() => onSwitchView('capital')}
               style={{
                 background: '#2e1065',
