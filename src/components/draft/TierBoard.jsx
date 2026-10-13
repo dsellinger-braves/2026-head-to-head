@@ -1,8 +1,70 @@
 // src/components/draft/TierBoard.jsx
 import React, { useState, useMemo } from 'react';
 import { getPlayerHeadshotUrl, handleHeadshotError } from '../../utils/headshotUtils';
-import { formatPlayerStats, getEffectiveRank } from '../../views/draft/utils/draftCalculations';
+import { getEffectiveRank } from '../../views/draft/utils/draftCalculations';
 import { TAG_OPTIONS } from '../../utils/tierStorageService';
+
+function renderPlayerStatBadges(p) {
+  const pos = (p.Position || '').toUpperCase();
+  const isPitcher = pos.includes('SP') || pos.includes('RP') || p.Pitcher;
+
+  if (isPitcher) {
+    const era = p.ZIPSERA || p.ESPNERA || '—';
+    const whip = p.ZIPSWHIP || p.ESPNWHIP || '—';
+    const k = p.ZIPSK || p.ESPNK || '—';
+    const qs = p.ZIPSQS || p.ESPNQS || '—';
+    const svHd = p['ZIPSSV+HDs'] || p['ESPNSV+HDs'] || p.ZIPSSV || null;
+
+    return (
+      <div className="flex items-center gap-1.5 flex-wrap font-mono text-[10px]">
+        <span className="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-300">
+          ERA <strong className="text-white">{era}</strong>
+        </span>
+        <span className="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-300">
+          WHIP <strong className="text-white">{whip}</strong>
+        </span>
+        <span className="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-300">
+          K <strong className="text-teal-300">{k}</strong>
+        </span>
+        <span className="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-300">
+          QS <strong className="text-amber-300">{qs}</strong>
+        </span>
+        {svHd && svHd !== '—' && Number(svHd) > 0 && (
+          <span className="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-300">
+            SV+HD <strong className="text-purple-300">{svHd}</strong>
+          </span>
+        )}
+      </div>
+    );
+  }
+
+  const hr = p.ZIPSHR || p.ESPNHR || '—';
+  const rbi = p.ZIPSRBI || p.ESPNRBI || '—';
+  const r = p.ZIPSR || p.ESPNR || '—';
+  const sb = p.ZIPSSB || p.ESPNSB || '—';
+  const obp = p.ZIPSOBP || p.ESPNOBP || '—';
+  const avg = p.ZIPSAVG || p.ESPNAVG || null;
+
+  return (
+    <div className="flex items-center gap-1.5 flex-wrap font-mono text-[10px]">
+      <span className="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-300">
+        HR <strong className="text-rose-300">{hr}</strong>
+      </span>
+      <span className="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-300">
+        RBI <strong className="text-white">{rbi}</strong>
+      </span>
+      <span className="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-300">
+        R <strong className="text-white">{r}</strong>
+      </span>
+      <span className="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-300">
+        SB <strong className="text-cyan-300">{sb}</strong>
+      </span>
+      <span className="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-300">
+        {obp !== '—' ? 'OBP' : 'AVG'} <strong className="text-emerald-300">{obp !== '—' ? obp : avg || '—'}</strong>
+      </span>
+    </div>
+  );
+}
 
 export default function TierBoard({
   players = [],
@@ -32,6 +94,7 @@ export default function TierBoard({
   const [isAddingTier, setIsAddingTier] = useState(false);
   const [newTierName, setNewTierName] = useState('');
   const [newTierColor, setNewTierColor] = useState('#03dac6');
+  const [tierLimits, setTierLimits] = useState({});
 
   // Filter players based on pos, search, and availability
   const filteredPlayers = useMemo(() => {
@@ -160,10 +223,17 @@ export default function TierBoard({
     setIsAddingTier(false);
   };
 
+  const handleShowMorePlayers = (tierId) => {
+    setTierLimits(prev => ({
+      ...prev,
+      [tierId]: (prev[tierId] || 40) + 50
+    }));
+  };
+
   const POSITIONS = ['ALL', 'HITTERS', 'PITCHERS', 'C', '1B', '2B', '3B', 'SS', 'OF', 'SP', 'RP'];
 
   return (
-    <div className="flex flex-col h-full space-y-4">
+    <div className="flex flex-col h-full space-y-4 min-w-0">
       {/* Top Filter & Action Bar */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-wrap items-center justify-between gap-3">
         {/* Positional Tabs */}
@@ -194,6 +264,14 @@ export default function TierBoard({
               onChange={e => setSearchQuery(e.target.value)}
               className="pl-8 pr-3 py-1.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-teal-400 w-52"
             />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 top-2 text-slate-500 hover:text-white text-xs cursor-pointer"
+              >
+                ✕
+              </button>
+            )}
           </div>
 
           <label className="flex items-center gap-2 text-xs font-bold text-slate-300 cursor-pointer bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
@@ -220,14 +298,14 @@ export default function TierBoard({
 
       {/* Add Custom Tier Modal / Input Staging */}
       {isAddingTier && (
-        <form onSubmit={handleCreateTierSubmit} className="bg-slate-900 border border-purple-500/40 rounded-2xl p-4 shadow-xl flex items-center gap-3 animate-fade-in">
+        <form onSubmit={handleCreateTierSubmit} className="bg-slate-900 border border-purple-500/40 rounded-2xl p-4 shadow-xl flex items-center gap-3 animate-fade-in flex-wrap">
           <span className="text-sm font-black text-purple-300">New Tier:</span>
           <input
             type="text"
-            placeholder="Tier Name (e.g. Must-Draft Aces, Speed Sleepers)"
+            placeholder="Tier Name (e.g. High-Stakes Aces, Speed Sleepers)"
             value={newTierName}
             onChange={e => setNewTierName(e.target.value)}
-            className="flex-1 px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-400"
+            className="flex-1 min-w-[200px] px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-400"
             autoFocus
           />
           <input
@@ -253,11 +331,14 @@ export default function TierBoard({
         </form>
       )}
 
-      {/* Tier Columns Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 flex-1 items-start overflow-x-auto pb-4">
+      {/* Spacious Horizontal Kanban Lanes */}
+      <div className="flex gap-4 items-start overflow-x-auto pb-6 pt-1 min-w-0 flex-1">
         {tiers.map((tier, tierIdx) => {
           const tierPlayers = playersByTier[tier.id] || [];
           const isOver = draggedOverTierId === tier.id;
+          const displayLimit = tierLimits[tier.id] || 40;
+          const visiblePlayers = tierPlayers.slice(0, displayLimit);
+          const hasMore = tierPlayers.length > displayLimit;
 
           return (
             <div
@@ -265,9 +346,9 @@ export default function TierBoard({
               onDragOver={(e) => handleDragOver(e, tier.id)}
               onDragLeave={(e) => handleDragLeave(e, tier.id)}
               onDrop={(e) => handleDrop(e, tier.id)}
-              className={`bg-slate-900/90 border rounded-2xl flex flex-col min-h-[500px] transition-all duration-150 ${
+              className={`w-[325px] sm:w-[340px] flex-shrink-0 bg-slate-900/95 border rounded-2xl flex flex-col max-h-[820px] transition-all duration-150 shadow-xl ${
                 isOver
-                  ? 'border-teal-400 ring-2 ring-teal-400/40 bg-slate-800/80 scale-[1.01]'
+                  ? 'border-teal-400 ring-2 ring-teal-400/40 bg-slate-800/90 scale-[1.01]'
                   : 'border-slate-800 hover:border-slate-700'
               }`}
             >
@@ -276,16 +357,18 @@ export default function TierBoard({
                 className="p-3.5 border-b border-slate-800 rounded-t-2xl flex items-center justify-between"
                 style={{ borderTop: `4px solid ${tier.color || '#03dac6'}` }}
               >
-                <div>
+                <div className="min-w-0 pr-2">
                   <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: tier.color }} />
-                    <h3 className="font-black text-sm text-white tracking-tight">{tier.name}</h3>
+                    <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: tier.color }} />
+                    <h3 className="font-black text-sm text-white tracking-tight break-words">{tier.name}</h3>
                   </div>
-                  <div className="text-[11px] text-slate-400 mt-0.5 flex items-center gap-2">
-                    <span>{tierPlayers.length} player{tierPlayers.length === 1 ? '' : 's'}</span>
+                  <div className="text-[11px] text-slate-400 mt-1 flex items-center gap-2 flex-wrap">
+                    <span className="px-1.5 py-0.2 bg-slate-800 text-slate-300 rounded font-bold">
+                      {tierPlayers.length} player{tierPlayers.length === 1 ? '' : 's'}
+                    </span>
                     {tierPlayers.length > 0 && (
-                      <span>
-                        • Avg Rank #{Math.round(tierPlayers.reduce((acc, p) => acc + (getEffectiveRank(p) || 100), 0) / tierPlayers.length)}
+                      <span className="text-slate-400 font-mono text-[10px]">
+                        Avg #{Math.round(tierPlayers.reduce((acc, p) => acc + (getEffectiveRank(p) || 100), 0) / tierPlayers.length)}
                       </span>
                     )}
                   </div>
@@ -298,7 +381,7 @@ export default function TierBoard({
                         onDeleteTier(tier.id);
                       }
                     }}
-                    className="text-slate-600 hover:text-rose-400 text-xs p-1 transition cursor-pointer"
+                    className="text-slate-600 hover:text-rose-400 text-xs p-1.5 transition cursor-pointer flex-shrink-0"
                     title="Delete custom tier"
                   >
                     🗑️
@@ -307,13 +390,13 @@ export default function TierBoard({
               </div>
 
               {/* Player Cards Container */}
-              <div className="p-2 space-y-2 flex-1 overflow-y-auto max-h-[750px]">
+              <div className="p-2.5 space-y-2.5 flex-1 overflow-y-auto">
                 {tierPlayers.length === 0 ? (
                   <div className="h-32 border-2 border-dashed border-slate-800/80 rounded-xl flex items-center justify-center text-slate-600 text-xs font-bold text-center p-4">
                     Drag players here or use ▲/▼ buttons
                   </div>
                 ) : (
-                  tierPlayers.map(p => {
+                  visiblePlayers.map(p => {
                     const pid = String(p['ESPN PlayerID'] || p.espn_player_id || p.id || '');
                     const isQueued = queue.some(q => String(q['ESPN PlayerID'] || q.id || q.espn_player_id) === pid);
                     const trueSnakeRank = trueSnakeRankMap.get(pid);
@@ -327,18 +410,18 @@ export default function TierBoard({
                         key={pid}
                         draggable
                         onDragStart={(e) => handleDragStart(e, p)}
-                        className={`bg-slate-950 border rounded-xl p-2.5 shadow-sm transition-all hover:border-slate-600 cursor-grab active:cursor-grabbing ${
+                        className={`bg-slate-950 border rounded-xl p-3 shadow-md transition-all hover:border-slate-600 cursor-grab active:cursor-grabbing ${
                           activeTags.includes('fade')
-                            ? 'opacity-60 border-rose-900/60 bg-rose-950/20'
+                            ? 'opacity-65 border-rose-900/60 bg-rose-950/20'
                             : activeTags.includes('target')
-                            ? 'border-emerald-500/60 ring-1 ring-emerald-500/30'
+                            ? 'border-emerald-500/70 ring-1 ring-emerald-500/30'
                             : 'border-slate-800'
                         }`}
                       >
-                        {/* Header: Photo, Name, Team, Positions */}
+                        {/* Header: Photo, Name, Team, Positions, Actions */}
                         <div className="flex items-start justify-between gap-2">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <div className="w-9 h-9 rounded-full overflow-hidden bg-slate-800 flex-shrink-0 border border-slate-700">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-800 flex-shrink-0 border border-slate-700">
                               <img
                                 src={getPlayerHeadshotUrl(pid)}
                                 alt={p.Player}
@@ -351,18 +434,19 @@ export default function TierBoard({
                             <div className="min-w-0">
                               <div
                                 onClick={() => onOpenPlayerModal && onOpenPlayerModal(p)}
-                                className="font-black text-xs text-white hover:text-teal-300 truncate cursor-pointer"
+                                className="font-black text-sm text-white hover:text-teal-300 cursor-pointer leading-tight break-words"
                                 title="View player scouting card"
                               >
                                 {p.Player || p.player_name}
                               </div>
-                              <div className="text-[10px] text-slate-400 flex items-center gap-1.5 flex-wrap">
-                                <span className="font-bold text-slate-300">{p.Position}</span>
-                                <span>•</span>
-                                <span>{p.Team}</span>
+                              <div className="text-[11px] text-slate-400 flex items-center gap-1.5 flex-wrap mt-0.5">
+                                <span className="font-bold text-teal-300 bg-teal-950/60 px-1.5 py-0.2 rounded border border-teal-800/50">
+                                  {p.Position}
+                                </span>
+                                <span className="text-slate-300 font-medium">{p.Team}</span>
                                 {trueSnakeRank && (
-                                  <span className="px-1 py-0.2 bg-teal-950 text-teal-300 border border-teal-800/80 rounded font-black text-[9px]">
-                                    🐍 #{trueSnakeRank}
+                                  <span className="px-1.5 py-0.2 bg-slate-900 text-teal-300 border border-teal-800/80 rounded font-black text-[10px]">
+                                    🐍 Pick #{trueSnakeRank}
                                   </span>
                                 )}
                               </div>
@@ -374,7 +458,7 @@ export default function TierBoard({
                             {isLiveDraft && isMyTurn && onDraftPlayer && (
                               <button
                                 onClick={() => onDraftPlayer(p)}
-                                className="px-2 py-0.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-[10px] rounded transition cursor-pointer"
+                                className="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-[11px] rounded transition cursor-pointer shadow-sm"
                               >
                                 DRAFT
                               </button>
@@ -388,9 +472,9 @@ export default function TierBoard({
                                   onAddToQueue && onAddToQueue(p);
                                 }
                               }}
-                              className={`p-1 rounded text-xs transition cursor-pointer ${
+                              className={`p-1.5 rounded-lg text-xs transition cursor-pointer ${
                                 isQueued
-                                  ? 'bg-amber-400 text-slate-950 font-black'
+                                  ? 'bg-amber-400 text-slate-950 font-black shadow-xs'
                                   : 'text-slate-500 hover:text-amber-400 hover:bg-slate-800'
                               }`}
                               title={isQueued ? 'Remove from Queue' : 'Add to Queue'}
@@ -400,13 +484,13 @@ export default function TierBoard({
                           </div>
                         </div>
 
-                        {/* Stats line */}
-                        <div className="text-[10px] text-slate-400 mt-1.5 bg-slate-900/60 p-1 rounded font-mono truncate">
-                          {formatPlayerStats(p)}
+                        {/* High-Contrast Projections Chip Bar */}
+                        <div className="mt-2.5 bg-slate-900/90 p-1.5 rounded-lg border border-slate-800/80">
+                          {renderPlayerStatBadges(p)}
                         </div>
 
                         {/* Priority Tags Row */}
-                        <div className="flex items-center gap-1 mt-2 flex-wrap">
+                        <div className="flex items-center gap-1 mt-2.5 flex-wrap">
                           {TAG_OPTIONS.map(tag => {
                             const isTagged = activeTags.includes(tag.id);
                             return (
@@ -416,7 +500,7 @@ export default function TierBoard({
                                 className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition cursor-pointer border ${
                                   isTagged
                                     ? 'border-teal-400 shadow-xs'
-                                    : 'border-transparent text-slate-600 hover:text-slate-400 bg-slate-900/40'
+                                    : 'border-transparent text-slate-500 hover:text-slate-300 bg-slate-900/50'
                                 }`}
                                 style={{
                                   backgroundColor: isTagged ? tag.bg : undefined,
@@ -442,8 +526,8 @@ export default function TierBoard({
                             }}
                             className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition cursor-pointer border ${
                               currentNote
-                                ? 'bg-indigo-950/60 text-indigo-300 border-indigo-700/60'
-                                : 'text-slate-600 hover:text-slate-300 border-transparent bg-slate-900/40'
+                                ? 'bg-indigo-950/70 text-indigo-300 border-indigo-700/70'
+                                : 'text-slate-500 hover:text-slate-300 border-transparent bg-slate-900/50'
                             }`}
                             title={currentNote ? `Note: ${currentNote}` : 'Add private scouting note'}
                           >
@@ -453,13 +537,13 @@ export default function TierBoard({
 
                         {/* Inline Note Editor */}
                         {isEditingThisNote && (
-                          <div className="mt-2 pt-2 border-t border-slate-800 space-y-1.5 animate-fade-in">
+                          <div className="mt-2.5 pt-2 border-t border-slate-800 space-y-1.5 animate-fade-in">
                             <textarea
                               rows={2}
                               value={editingNoteText}
                               onChange={e => setEditingNoteText(e.target.value)}
-                              placeholder="Private scouting note (e.g. Target at turn, watch elbow)..."
-                              className="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-teal-400 resize-none"
+                              placeholder="Private scouting note (e.g. Target at turn, injury risk)..."
+                              className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-teal-400 resize-none"
                             />
                             <div className="flex items-center justify-end gap-1.5">
                               <button
@@ -480,28 +564,28 @@ export default function TierBoard({
 
                         {/* Saved Note Display if not editing */}
                         {!isEditingThisNote && currentNote && (
-                          <div className="mt-1.5 text-[10px] text-indigo-300 bg-indigo-950/30 border border-indigo-900/40 rounded p-1 italic truncate">
+                          <div className="mt-2 text-[11px] text-indigo-300 bg-indigo-950/40 border border-indigo-900/50 rounded-lg p-1.5 italic line-clamp-2">
                             💡 {currentNote}
                           </div>
                         )}
 
                         {/* Tier Quick-Shift Arrows */}
-                        <div className="flex items-center justify-between text-[10px] text-slate-500 mt-2 pt-1 border-t border-slate-900">
+                        <div className="flex items-center justify-between text-[10px] text-slate-500 mt-2.5 pt-1.5 border-t border-slate-900">
                           <button
                             disabled={tierIdx === 0}
                             onClick={() => onMovePlayerToTier && onMovePlayerToTier(pid, tiers[tierIdx - 1]?.id)}
-                            className="hover:text-teal-400 disabled:opacity-20 cursor-pointer disabled:cursor-not-allowed"
+                            className="hover:text-teal-400 disabled:opacity-20 cursor-pointer disabled:cursor-not-allowed font-medium"
                             title="Move to higher tier"
                           >
                             ▲ Up Tier
                           </button>
-                          <span className="text-[9px] text-slate-600 font-bold">
-                            Overall #{effectiveRank || '--'}
+                          <span className="text-[10px] text-slate-500 font-mono font-bold">
+                            Consensus #{effectiveRank || '--'}
                           </span>
                           <button
                             disabled={tierIdx === tiers.length - 1}
                             onClick={() => onMovePlayerToTier && onMovePlayerToTier(pid, tiers[tierIdx + 1]?.id)}
-                            className="hover:text-amber-400 disabled:opacity-20 cursor-pointer disabled:cursor-not-allowed"
+                            className="hover:text-amber-400 disabled:opacity-20 cursor-pointer disabled:cursor-not-allowed font-medium"
                             title="Move to lower tier"
                           >
                             ▼ Down Tier
@@ -510,6 +594,16 @@ export default function TierBoard({
                       </div>
                     );
                   })
+                )}
+
+                {/* Show More Players Button */}
+                {hasMore && (
+                  <button
+                    onClick={() => handleShowMorePlayers(tier.id)}
+                    className="w-full py-2 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-xs font-bold text-slate-300 transition cursor-pointer text-center"
+                  >
+                    ⚡ Show {tierPlayers.length - displayLimit} More Players
+                  </button>
                 )}
               </div>
             </div>

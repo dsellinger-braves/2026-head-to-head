@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { OWNER_AVATARS, getEffectiveQS } from '../utils/draftCalculations';
 import { getPlayerHeadshotUrl, handleHeadshotError } from '../../../utils/headshotUtils';
-import PodcastBreakdownWidget from '../components/PodcastBreakdownWidget';
 import { OnDeckSidebar, RecentActivityWidget, Ticker } from '../components/DraftWidgets';
 import PlayerModal from '../components/PlayerModal';
 
@@ -21,9 +20,7 @@ export default function HostBroadcastView({
   generatingCommentary,
   playPodcastTTS,
   lastPodcastScript,
-  generatingPodcast,
   isPlayingPodcast,
-  activePodcastLine,
   handlePlayPodcast,
   handleStopPodcast,
   recentPicks = [],
@@ -301,42 +298,69 @@ export default function HostBroadcastView({
             </div>
           )}
 
-          {/* AI Commentary in Host Mode */}
+          {/* AI Commentary in Host Mode - Full visibility for text summary and grading */}
           <div style={{
             flex: 1,
-            minHeight: '110px',
-            background: 'rgba(0,0,0,0.3)',
-            padding: '16px',
-            borderRadius: '12px',
+            background: 'rgba(0,0,0,0.35)',
+            padding: '20px',
+            borderRadius: '14px',
             borderLeft: '5px solid #bb86fc',
+            border: '1px solid rgba(187, 134, 252, 0.2)',
             display: 'flex',
             flexDirection: 'column',
+            minHeight: '260px',
             overflow: 'hidden'
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-              <span style={{ fontSize: '12px', color: '#bb86fc', fontWeight: 'bold', textTransform: 'uppercase' }}>
-                🎙️ HeftyMatic 3000 Instant Reaction
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
+              <span style={{ fontSize: '13px', color: '#bb86fc', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                🎙️ HeftyMatic 3000 Instant Reaction & Grade
               </span>
-              {lastPickCommentary && lastPickCommentary !== 'Draft has not started.' && !generatingCommentary && (
-                <button
-                  onClick={() => playPodcastTTS(lastPickCommentary)}
-                  style={{
-                    background: 'rgba(187, 134, 252, 0.15)',
-                    border: '1px solid #bb86fc',
-                    color: '#bb86fc',
-                    borderRadius: '6px',
-                    padding: '2px 8px',
-                    fontSize: '11px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px'
-                  }}
-                  title="Play podcast-style spoken analysis"
-                >
-                  🔊 Listen
-                </button>
-              )}
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                {lastPodcastScript && lastPodcastScript.length > 0 && (
+                  <button
+                    onClick={() => isPlayingPodcast ? handleStopPodcast() : handlePlayPodcast()}
+                    style={{
+                      background: isPlayingPodcast ? 'rgba(239, 68, 68, 0.2)' : 'rgba(3, 218, 198, 0.15)',
+                      border: `1px solid ${isPlayingPodcast ? '#ef4444' : '#03dac6'}`,
+                      color: isPlayingPodcast ? '#ef4444' : '#03dac6',
+                      borderRadius: '6px',
+                      padding: '3px 10px',
+                      fontSize: '11px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      transition: 'all 0.2s'
+                    }}
+                    title={isPlayingPodcast ? "Stop Skip & Chip debate" : "Play Skip & Chip spoken debate audio"}
+                  >
+                    {isPlayingPodcast ? '⏹️ Stop Debate' : '🎙️ Play Debate'}
+                  </button>
+                )}
+                {lastPickCommentary && lastPickCommentary !== 'Draft has not started.' && !generatingCommentary && (
+                  <button
+                    onClick={() => playPodcastTTS(lastPickCommentary)}
+                    style={{
+                      background: 'rgba(187, 134, 252, 0.15)',
+                      border: '1px solid #bb86fc',
+                      color: '#bb86fc',
+                      borderRadius: '6px',
+                      padding: '3px 10px',
+                      fontSize: '11px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      transition: 'all 0.2s'
+                    }}
+                    title="Play podcast-style spoken analysis"
+                  >
+                    🔊 Listen
+                  </button>
+                )}
+              </div>
             </div>
             <div style={{ flex: 1, overflowY: 'auto', fontSize: '15px', color: '#ddd', lineHeight: '1.5' }}>
               {generatingCommentary ? (
@@ -346,17 +370,6 @@ export default function HostBroadcastView({
               )}
             </div>
           </div>
-
-          {/* Skip & Chip 2-Person Podcast Debate Widget */}
-          <PodcastBreakdownWidget
-            script={lastPodcastScript}
-            isGenerating={generatingPodcast}
-            isPlaying={isPlayingPodcast}
-            activeLine={activePodcastLine}
-            onPlay={() => handlePlayPodcast()}
-            onStop={handleStopPodcast}
-            playerName={lastPickPlayer?.Player}
-          />
         </div>
       </div>
 
